@@ -12,6 +12,7 @@ import Spark from './pages/Spark'
 import Delta from './pages/Delta'
 import Production from './pages/Production'
 import Interview from './pages/Interview'
+import Airflow from './pages/Airflow'
 import './styles/globals.css'
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/delta"       element={<Delta       completed={completed} onComplete={refreshProgress} />} />
         <Route path="/production"  element={<Production  completed={completed} onComplete={refreshProgress} />} />
         <Route path="/interview"   element={<Interview   completed={completed} />} />
+        <Route path="/airflow"    element={<Airflow     completed={completed} onComplete={refreshProgress} />} />
       </Routes>
     </BrowserRouter>
   )

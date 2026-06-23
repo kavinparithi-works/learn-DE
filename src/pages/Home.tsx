@@ -12,6 +12,7 @@ const LEVELS = [
   { num: '7',   title: 'Apache Spark and PySpark Mastery', desc: 'Catalyst optimizer, DAG, partitions, shuffles, DataFrames, UDFs, Structured Streaming, AQE.', tags: ['Catalyst', 'Shuffles', 'Streaming', 'AQE'], hours: '80+ hrs', color: '#f97316', path: '/spark', id: 'spark' },
   { num: '8',   title: 'Delta Lake + Databricks + Unity Catalog', desc: 'Transaction log, ACID, MERGE, time travel, DLT pipelines, Unity Catalog, Lakeflow.', tags: ['Delta ACID', 'DLT', 'Unity Catalog', 'Auto Loader'], hours: '100+ hrs', color: '#ef4444', path: '/delta', id: 'delta' },
   { num: '9',   title: 'Production Data Engineering', desc: 'System design, data mesh, CI/CD with GitHub Actions, Terraform, observability, cost optimization.', tags: ['System Design', 'CI/CD', 'Terraform', 'Observability'], hours: '80+ hrs', color: '#8b5cf6', path: '/production', id: 'production' },
+  { num: '10',  title: 'Apache Airflow + Orchestration', desc: 'DAGs, TaskFlow API, sensors, Kubernetes executor, CI/CD for pipelines, Airflow vs Databricks Workflows.', tags: ['DAGs', 'TaskFlow', 'KubernetesPodOperator', 'Sensors'], hours: '40+ hrs', color: '#00ad46', path: '/airflow', id: 'airflow' },
   { num: '✓',  title: 'Interview Prep + Certifications', desc: '100+ curated questions across SQL, PySpark, Azure, System Design, Behavioral, and Scenario.', tags: ['SQL', 'PySpark', 'Azure', 'System Design'], hours: '105 Questions', color: 'linear-gradient(135deg,#4f8ef7,#8b5cf6)', path: '/interview', id: 'interview' },
 ]
 

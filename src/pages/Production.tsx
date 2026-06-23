@@ -109,6 +109,12 @@ const SECTIONS = [
     { id: 'prod-patterns', label: 'Enterprise Patterns' },
     { id: 'prod-interview-project', label: 'End-to-End Capstone Project' },
   ]},
+  { title: 'Data Modeling Mastery', items: [
+    { id: 'model-star', label: 'Star Schema Deep Dive' },
+    { id: 'model-snowflake', label: 'Snowflake Schema vs Star Schema' },
+    { id: 'model-datavault', label: 'Data Vault 2.0' },
+    { id: 'model-scd-code', label: 'SCD Implementation Code (All Types)' },
+  ]},
 ]
 
 export default function Production({ completed, onComplete }: Props) {
@@ -2007,6 +2013,856 @@ def erase_customer(customer_id: str):
             { question: "What happens when the GDPR erasure function runs on a customer who made 3 years of purchases?", options: ["Their orders are deleted from all tables", "Their PII columns (email, phone, name) are replaced with a tombstone hash across bronze/silver/gold — order history is preserved for financial compliance but the customer is no longer identifiable", "Only the customer dimension table is updated", "The pipeline stops and waits for manual review"], correct: 1 },
           ]} />
           {completeBtn('prod-interview-project')}
+        </section>
+
+        {/* ── model-star ── */}
+        <section id="model-star" ref={el => { if (el) sectionRefs.current['model-star'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Data Modeling Mastery</div>
+            <h1 className="topic-title">Star Schema Deep Dive</h1>
+            <p className="topic-desc">The star schema is the foundation of dimensional modeling in data warehousing. Its center is the grain — the single most important design decision, defining exactly what one row in your fact table represents. Everything else flows from the grain.</p>
+          </div>
+          <CodeBlock lang="text">{`THE GRAIN — MOST IMPORTANT DECISION IN DATA MODELING
+═══════════════════════════════════════════════════════════════
+The grain = "what does one row in the fact table represent?"
+  Too fine:  one row per order line item  → high cardinality, flexible analytics
+  Too coarse: one row per customer per month → less flexible, pre-aggregated
+
+Define grain first, then identify dimensions and measures.
+Example: "One row per order line item per store per day"
+
+FACT TABLE TYPES
+═══════════════════════════════════════════════════════════════
+Transaction Fact (most common)
+  One row per business event (order placed, item scanned, payment made)
+  Grain is at the event level; append-only; highest granularity
+  Example: fact_sales — one row per product sold per transaction
+
+Periodic Snapshot
+  One row per period (day/month) per entity, regardless of activity
+  Used for: account balances, inventory levels, headcount
+  Example: fact_inventory_daily — one row per SKU per day
+
+Accumulating Snapshot
+  One row per business process lifecycle (tracks stages over time)
+  Row is UPDATED as the process progresses (multiple date stamps)
+  Example: fact_order_lifecycle — one row per order, columns for order_date,
+           ship_date, deliver_date, return_date (filled as they occur)
+
+MEASURE TYPES
+═══════════════════════════════════════════════════════════════
+Additive:      Can SUM across all dimensions  → revenue, quantity, cost
+Semi-additive: Can SUM across some dims only  → account_balance (sum by account,
+               NOT by date — would double-count)
+Non-additive:  Cannot SUM at all             → ratios, percentages, margins
+               (store margin% + store margin% ≠ total margin%)
+               Strategy: store numerator + denominator; compute ratio at query time
+
+DIMENSION TABLE DESIGN
+═══════════════════════════════════════════════════════════════
+Wide and denormalized: all attributes in one flat table (no sub-tables)
+Surrogate key: system-generated integer (not the business key)
+  Why: source system keys change, merge, or contain nulls; surrogates are stable
+Natural/business key: original source identifier (preserved for traceability)
+Slowly changing attributes: handled with SCD patterns (Type 1/2/3)
+
+SPECIAL DIMENSION PATTERNS
+═══════════════════════════════════════════════════════════════
+Conformed Dimensions
+  Same dimension table shared across multiple fact tables
+  Example: dim_date used by fact_sales, fact_inventory, fact_hr
+  Benefit: consistent date labels, fiscal periods, holidays across all reports
+
+Role-Playing Dimensions
+  Same physical dimension table used multiple times in a query with different roles
+  Example: dim_date used as OrderDate, ShipDate, DeliveryDate in fact_orders
+  Implementation: create views — vw_order_date, vw_ship_date → point to dim_date
+
+Degenerate Dimensions
+  A dimension with no attributes beyond its key — stored on the fact table
+  Example: order_id, invoice_number, transaction_number on fact_sales
+  No separate dimension table needed; acts as a grouping/drill-through key
+
+Junk Dimensions
+  Low-cardinality flags and indicators grouped into one dimension table
+  Example: is_gift_wrap (Y/N), is_express (Y/N), payment_type (credit/debit/cash)
+  Avoids cluttering fact table with many boolean columns; reduces cardinality`}</CodeBlock>
+          <CodeBlock lang="sql">{`-- RETAIL STAR SCHEMA — Full DDL
+-- Grain: one row per product sold per transaction (line item level)
+
+-- ── Dimension Tables ─────────────────────────────────────────────
+
+CREATE TABLE dim_date (
+    date_key          INT           NOT NULL,   -- surrogate key: YYYYMMDD format
+    full_date         DATE          NOT NULL,
+    day_of_week       VARCHAR(10)   NOT NULL,   -- 'Monday', 'Tuesday', ...
+    day_of_month      TINYINT       NOT NULL,
+    month_number      TINYINT       NOT NULL,
+    month_name        VARCHAR(10)   NOT NULL,
+    quarter           TINYINT       NOT NULL,
+    year              SMALLINT      NOT NULL,
+    is_weekend        BOOLEAN       NOT NULL,
+    is_holiday        BOOLEAN       NOT NULL,
+    fiscal_period     VARCHAR(10)   NOT NULL,   -- e.g., 'FY2024-Q3'
+    PRIMARY KEY (date_key)
+);
+
+CREATE TABLE dim_customer (
+    customer_key      BIGINT        NOT NULL,   -- surrogate key (SCD2)
+    customer_id       VARCHAR(50)   NOT NULL,   -- natural/business key
+    first_name        VARCHAR(100),
+    last_name         VARCHAR(100),
+    email             VARCHAR(255),
+    city              VARCHAR(100),
+    state             VARCHAR(50),
+    country           VARCHAR(50),
+    customer_segment  VARCHAR(50),             -- 'Gold', 'Silver', 'Bronze'
+    acquisition_channel VARCHAR(50),
+    is_current        BOOLEAN       NOT NULL DEFAULT TRUE,
+    effective_from    DATE          NOT NULL,
+    effective_to      DATE          NOT NULL DEFAULT '9999-12-31',
+    PRIMARY KEY (customer_key)
+);
+
+CREATE TABLE dim_product (
+    product_key       BIGINT        NOT NULL,   -- surrogate key
+    product_id        VARCHAR(50)   NOT NULL,   -- natural key / SKU
+    product_name      VARCHAR(255)  NOT NULL,
+    category          VARCHAR(100)  NOT NULL,
+    sub_category      VARCHAR(100),
+    brand             VARCHAR(100),
+    unit_cost         DECIMAL(10,2),
+    is_active         BOOLEAN       NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (product_key)
+);
+
+CREATE TABLE dim_store (
+    store_key         INT           NOT NULL,   -- surrogate key
+    store_id          VARCHAR(50)   NOT NULL,   -- natural key
+    store_name        VARCHAR(255)  NOT NULL,
+    city              VARCHAR(100),
+    state             VARCHAR(50),
+    country           VARCHAR(50),
+    store_type        VARCHAR(50),             -- 'Flagship', 'Outlet', 'Online'
+    open_date         DATE,
+    PRIMARY KEY (store_key)
+);
+
+-- ── Fact Table ───────────────────────────────────────────────────
+
+CREATE TABLE fact_sales (
+    sale_key          BIGINT        NOT NULL,   -- surrogate key for the fact row
+    -- Foreign keys to all dimensions
+    order_date_key    INT           NOT NULL REFERENCES dim_date(date_key),
+    ship_date_key     INT                    REFERENCES dim_date(date_key),  -- role-playing
+    customer_key      BIGINT        NOT NULL REFERENCES dim_customer(customer_key),
+    product_key       BIGINT        NOT NULL REFERENCES dim_product(product_key),
+    store_key         INT           NOT NULL REFERENCES dim_store(store_key),
+    -- Degenerate dimension (no separate table needed)
+    order_id          VARCHAR(50)   NOT NULL,
+    order_line_number SMALLINT      NOT NULL,
+    -- Additive measures
+    quantity          INT           NOT NULL,
+    unit_price        DECIMAL(10,2) NOT NULL,
+    discount_amount   DECIMAL(10,2) NOT NULL DEFAULT 0,
+    gross_revenue     DECIMAL(12,2) NOT NULL,   -- quantity * unit_price
+    net_revenue       DECIMAL(12,2) NOT NULL,   -- gross_revenue - discount_amount
+    cost_of_goods     DECIMAL(12,2),            -- additive: can SUM across all dims
+    -- Non-additive (store numerator/denominator; compute margin at query time)
+    -- margin_pct: do NOT store here; compute as (net_revenue - cost_of_goods) / net_revenue
+    PRIMARY KEY (sale_key)
+);
+
+-- ── Query Example: Role-playing dimensions ───────────────────────
+SELECT
+    od.year             AS order_year,
+    od.month_name       AS order_month,
+    sd.month_name       AS ship_month,      -- ship_date role
+    p.category,
+    SUM(f.net_revenue)  AS total_net_revenue,
+    SUM(f.net_revenue - f.cost_of_goods) / NULLIF(SUM(f.net_revenue), 0) AS margin_pct
+FROM fact_sales f
+JOIN dim_date    od ON f.order_date_key = od.date_key   -- OrderDate role
+JOIN dim_date    sd ON f.ship_date_key  = sd.date_key   -- ShipDate role
+JOIN dim_product p  ON f.product_key    = p.product_key
+WHERE od.year = 2024
+GROUP BY 1, 2, 3, 4
+ORDER BY total_net_revenue DESC;`}</CodeBlock>
+          <Quiz topicId="model-star" questions={[
+            { question: "What is the 'grain' of a fact table and why is it the most important design decision?", options: ["The number of rows in the table", "The exact definition of what one row represents — it determines which dimensions are valid, which measures are additive, and whether queries will double-count data", "The primary key column type", "The partition column chosen for performance"], correct: 1 },
+            { question: "What is a role-playing dimension?", options: ["A dimension used only in staging tables", "The same physical dimension table used multiple times in one fact table under different aliases — e.g., dim_date used as order_date, ship_date, and deliver_date all in fact_orders", "A dimension that changes slowly over time", "A dimension with boolean flags grouped together"], correct: 1 },
+            { question: "Why are account balances considered semi-additive measures (not fully additive)?", options: ["They are stored as text, not numbers", "You can SUM balances across accounts (valid) but not across time periods — adding Jan balance + Feb balance double-counts the same money", "They require a separate fact table", "Semi-additive measures cannot be aggregated at all"], correct: 1 },
+          ]} />
+          {completeBtn('model-star')}
+        </section>
+
+        {/* ── model-snowflake ── */}
+        <section id="model-snowflake" ref={el => { if (el) sectionRefs.current['model-snowflake'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Data Modeling Mastery</div>
+            <h1 className="topic-title">Snowflake Schema vs Star Schema</h1>
+            <p className="topic-desc">The snowflake schema normalizes dimension tables into sub-dimensions. Understanding when to use star, snowflake, or galaxy (fact constellation) schemas — and the foundational Kimball vs Inmon debate — is essential for senior data modeling interviews.</p>
+          </div>
+          <CodeBlock lang="text">{`SNOWFLAKE SCHEMA — NORMALIZED DIMENSIONS
+═══════════════════════════════════════════════════════════════
+Snowflake: dimension tables are further normalized into sub-dimension tables.
+  dim_product → dim_category → dim_department
+  dim_customer → dim_city → dim_state → dim_country
+
+Example: instead of dim_product with category_name + department_name columns,
+  you have dim_product (product_key, category_key)
+           dim_category (category_key, category_name, dept_key)
+           dim_department (dept_key, dept_name)
+
+STAR vs SNOWFLAKE — COMPARISON TABLE
+═══════════════════════════════════════════════════════════════
+Dimension         Star Schema              Snowflake Schema
+──────────────    ──────────────────────   ──────────────────────────────
+Query complexity  Simple (few JOINs)       Complex (many JOINs per query)
+Query speed       Faster (fewer JOINs)     Slower (more JOINs, more I/O)
+Storage           More (denormalized)      Less (normalized, no redundancy)
+ETL complexity    Simpler to load          More complex (load in order)
+BI tool support   Excellent                Moderate (tools handle extra JOINs)
+Maintainability   Easy                     Harder (changes cascade through layers)
+When to use       BI / ad-hoc queries      Storage-constrained; ETL normalizes naturally
+
+GALAXY SCHEMA (Fact Constellation)
+═══════════════════════════════════════════════════════════════
+Multiple fact tables sharing conformed dimension tables.
+Example:
+  fact_sales   uses → dim_date, dim_customer, dim_product, dim_store
+  fact_returns uses → dim_date, dim_customer, dim_product (no dim_store)
+  fact_budget  uses → dim_date, dim_product, dim_department
+
+This is the real-world state of mature data warehouses — not one clean star,
+but a constellation of fact tables sharing conformed dimensions.
+
+KIMBALL vs INMON DEBATE
+═══════════════════════════════════════════════════════════════
+Kimball (Ralph Kimball) — Dimensional Modeling
+  Bottom-up: build data marts first; integrated via conformed dimensions
+  Schema: star schemas in each data mart
+  Philosophy: design for analytics users (business-friendly, fast queries)
+  Process: identify business process → declare grain → choose dimensions → facts
+  Adopted by: most BI-driven teams, dbt shops, Databricks Gold layer
+
+Inmon (Bill Inmon) — Corporate Information Factory
+  Top-down: build enterprise 3NF DW first; then dependent data marts
+  Schema: 3rd Normal Form (3NF) in the central DW; star schemas in marts
+  Philosophy: single source of truth first; marts are derived
+  Adopted by: large enterprises with complex operational reporting needs
+
+Modern Consensus (2024)
+  Cloud DW teams almost universally use Kimball-style star schemas in the Gold layer.
+  Why: columnar storage (Parquet/Delta) makes denormalization cheap — storage costs
+  are negligible; query speed with denormalized dims is dramatically better.
+  The "3NF wastes storage" argument that drove Kimball is even less relevant on ADLS.
+  Inmon's top-down governance model is still influential for enterprise DW programs.`}</CodeBlock>
+          <CodeBlock lang="sql">{`-- STAR vs SNOWFLAKE SCHEMA — side by side DDL
+
+-- ── STAR: dim_product (fully denormalized) ───────────────────────
+CREATE TABLE star.dim_product (
+    product_key       BIGINT        NOT NULL,
+    product_id        VARCHAR(50)   NOT NULL,
+    product_name      VARCHAR(255)  NOT NULL,
+    -- Category attributes denormalized directly onto product
+    category_id       VARCHAR(50),
+    category_name     VARCHAR(100),
+    -- Department attributes also denormalized here
+    department_id     VARCHAR(50),
+    department_name   VARCHAR(100),
+    PRIMARY KEY (product_key)
+);
+-- One JOIN to get product + category + department in any query
+
+-- ── SNOWFLAKE: normalized sub-dimensions ─────────────────────────
+CREATE TABLE snowflake.dim_department (
+    dept_key          INT           NOT NULL,
+    dept_id           VARCHAR(50)   NOT NULL,
+    dept_name         VARCHAR(100)  NOT NULL,
+    PRIMARY KEY (dept_key)
+);
+
+CREATE TABLE snowflake.dim_category (
+    category_key      INT           NOT NULL,
+    category_id       VARCHAR(50)   NOT NULL,
+    category_name     VARCHAR(100)  NOT NULL,
+    dept_key          INT           NOT NULL REFERENCES snowflake.dim_department(dept_key),
+    PRIMARY KEY (category_key)
+);
+
+CREATE TABLE snowflake.dim_product (
+    product_key       BIGINT        NOT NULL,
+    product_id        VARCHAR(50)   NOT NULL,
+    product_name      VARCHAR(255)  NOT NULL,
+    category_key      INT           NOT NULL REFERENCES snowflake.dim_category(category_key),
+    -- No category_name or dept_name here — they live in sub-dimensions
+    PRIMARY KEY (product_key)
+);
+-- Three JOINs (fact → dim_product → dim_category → dim_department)
+-- to get the same result as one JOIN in the star schema
+
+-- ── GALAXY SCHEMA — shared conformed dimensions ───────────────────
+-- fact_sales and fact_returns both use the same dim_date, dim_product
+SELECT
+    d.year,
+    p.category_name,
+    SUM(s.net_revenue)   AS gross_sales,
+    SUM(r.refund_amount) AS total_returns,
+    SUM(s.net_revenue) - SUM(r.refund_amount) AS net_revenue
+FROM fact_sales s
+JOIN fact_returns r  ON s.product_key = r.product_key
+                    AND s.order_date_key = r.return_date_key
+JOIN star.dim_date    d ON s.order_date_key = d.date_key
+JOIN star.dim_product p ON s.product_key    = p.product_key
+WHERE d.year = 2024
+GROUP BY 1, 2
+ORDER BY net_revenue DESC;
+
+-- ── dbt Kimball-style Gold layer (modern practice) ────────────────
+-- models/marts/sales/fct_sales.sql
+{{
+  config(
+    materialized='incremental',
+    unique_key='sale_key',
+    incremental_strategy='merge'
+  )
+}}
+SELECT
+    {{ dbt_utils.generate_surrogate_key(['order_id', 'line_number']) }} AS sale_key,
+    s.order_id,
+    s.line_number,
+    dd.date_key              AS order_date_key,
+    dc.customer_key,
+    dp.product_key,
+    s.quantity,
+    s.unit_price,
+    s.quantity * s.unit_price AS gross_revenue
+FROM {{ ref('stg_orders') }} s
+JOIN {{ ref('dim_date') }}     dd ON s.order_date = dd.full_date
+JOIN {{ ref('dim_customer') }} dc ON s.customer_id = dc.customer_id AND dc.is_current
+JOIN {{ ref('dim_product') }}  dp ON s.product_id  = dp.product_id
+{% if is_incremental() %}
+WHERE s.order_date >= (SELECT MAX(order_date) FROM {{ this }}) - INTERVAL 3 DAYS
+{% endif %}`}</CodeBlock>
+          <Quiz topicId="model-snowflake" questions={[
+            { question: "What is the main trade-off of snowflake schema vs star schema?", options: ["Snowflake is always better — it is newer", "Star schema has faster queries with fewer JOINs and is simpler for BI tools; snowflake schema reduces storage redundancy but requires more JOINs and is harder to maintain", "Snowflake schema only works with the Snowflake cloud database", "Star schema only works for small datasets"], correct: 1 },
+            { question: "What is a galaxy (fact constellation) schema?", options: ["A schema with more than 100 dimension tables", "Multiple fact tables that share conformed dimension tables — the natural evolution of a mature data warehouse with multiple business processes", "A proprietary Snowflake Inc. data model", "A schema pattern only used in streaming pipelines"], correct: 1 },
+            { question: "What is the core difference between Kimball and Inmon's approach to data warehousing?", options: ["Kimball uses SQL; Inmon uses NoSQL", "Kimball builds data marts first (bottom-up, star schemas, designed for analytics); Inmon builds an enterprise 3NF DW first (top-down, single source of truth), then derives marts", "Kimball is for batch; Inmon is for streaming", "They are the same methodology with different branding"], correct: 1 },
+          ]} />
+          {completeBtn('model-snowflake')}
+        </section>
+
+        {/* ── model-datavault ── */}
+        <section id="model-datavault" ref={el => { if (el) sectionRefs.current['model-datavault'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Data Modeling Mastery</div>
+            <h1 className="topic-title">Data Vault 2.0</h1>
+            <p className="topic-desc">Data Vault 2.0 is a modeling methodology built for enterprise data warehouse agility and auditability. Unlike star schemas, it handles multiple source systems naturally and provides a full, immutable audit trail — every row ever loaded is preserved forever.</p>
+          </div>
+          <CodeBlock lang="text">{`DATA VAULT 2.0 — THREE ENTITY TYPES
+═══════════════════════════════════════════════════════════════
+Hubs — Business Keys
+  One Hub per business concept: HUB_CUSTOMER, HUB_ORDER, HUB_PRODUCT
+  Contains ONLY the business key (natural key from source system)
+  No descriptive attributes — just the key + metadata columns
+  Columns: hash_key (PK), business_key, load_date, record_source
+  Rule: never update or delete; append-only
+
+Links — Relationships Between Hubs
+  One Link per relationship: LINK_ORDER_CUSTOMER, LINK_ORDER_PRODUCT
+  Models the many-to-many relationships between business concepts
+  Columns: hash_key (PK), hub_A_hash_key (FK), hub_B_hash_key (FK),
+           load_date, record_source
+  Rule: relationships are facts — once a link exists, it's preserved
+
+Satellites — Descriptive Attributes
+  One Satellite per source system + attribute group, per Hub or Link
+  Contains all context/descriptive data with full history
+  Example: SAT_CUSTOMER_CRM (from CRM), SAT_CUSTOMER_ERP (from ERP)
+  Columns: parent_hash_key (FK), load_date (PK composite), record_source,
+           hash_diff (hash of all payload columns — change detection),
+           + all descriptive attributes
+  Rule: append-only; new row when hash_diff changes
+
+ALWAYS APPEND-ONLY — THE CORE PRINCIPLE
+═══════════════════════════════════════════════════════════════
+Never UPDATE or DELETE in a raw Data Vault.
+Every change produces a new row with a new load_date.
+The latest row per parent_hash_key in a Satellite = current state.
+Full history is always preserved — perfect audit trail.
+
+HASH KEYS — MD5 / SHA-256 of business key
+  Purpose: consistent surrogate key across source systems; enables parallel loading
+  Pattern: UPPER(MD5(TRIM(COALESCE(business_key, '^^'))))
+  SHA-256 preferred for collision resistance in large volumes
+
+WHY DATA VAULT?
+═══════════════════════════════════════════════════════════════
+  Multiple source systems: each system gets its own Satellite — no schema conflicts
+  Full audit trail: every version of every record preserved; regulators love this
+  No historization gaps: unlike SCD2 which requires careful MERGE logic
+  Agile: add new source system by adding a new Satellite — no restructuring Hubs/Links
+  Parallel loading: Hubs, Links, Satellites can all load independently
+
+LIMITATIONS
+═══════════════════════════════════════════════════════════════
+  Complex queries: answering "what is customer's current address?" requires
+    3+ JOINs (Hub → Satellite; find latest row in Satellite)
+  Not BI-friendly: analysts cannot query raw Data Vault directly
+  Requires Business Vault: computed fields, soft rules applied on top of raw vault
+  Requires Information Mart: star schema layer for BI tools (Kimball-style on top of DV)
+  Overhead: more tables to load and maintain vs direct star schema approach`}</CodeBlock>
+          <CodeBlock lang="sql">{`-- DATA VAULT 2.0 — Full DDL for HUB_CUSTOMER, LINK_ORDER_CUSTOMER, SAT_CUSTOMER_CRM
+
+-- ── Hub: HUB_CUSTOMER ────────────────────────────────────────────
+CREATE TABLE raw_vault.HUB_CUSTOMER (
+    customer_hash_key  CHAR(32)      NOT NULL,   -- MD5 of customer_id
+    customer_id        VARCHAR(50)   NOT NULL,   -- business key from source
+    load_date          TIMESTAMP     NOT NULL,   -- when row was loaded into DV
+    record_source      VARCHAR(100)  NOT NULL,   -- 'CRM', 'ERP', 'WEB'
+    PRIMARY KEY (customer_hash_key)
+);
+
+-- ── Hub: HUB_ORDER ───────────────────────────────────────────────
+CREATE TABLE raw_vault.HUB_ORDER (
+    order_hash_key     CHAR(32)      NOT NULL,
+    order_id           VARCHAR(50)   NOT NULL,
+    load_date          TIMESTAMP     NOT NULL,
+    record_source      VARCHAR(100)  NOT NULL,
+    PRIMARY KEY (order_hash_key)
+);
+
+-- ── Link: LINK_ORDER_CUSTOMER ────────────────────────────────────
+CREATE TABLE raw_vault.LINK_ORDER_CUSTOMER (
+    link_order_customer_hash_key  CHAR(32)  NOT NULL,  -- MD5 of order_id + customer_id
+    order_hash_key                CHAR(32)  NOT NULL REFERENCES raw_vault.HUB_ORDER(order_hash_key),
+    customer_hash_key             CHAR(32)  NOT NULL REFERENCES raw_vault.HUB_CUSTOMER(customer_hash_key),
+    load_date                     TIMESTAMP NOT NULL,
+    record_source                 VARCHAR(100) NOT NULL,
+    PRIMARY KEY (link_order_customer_hash_key)
+);
+
+-- ── Satellite: SAT_CUSTOMER_CRM (CRM source system attributes) ───
+CREATE TABLE raw_vault.SAT_CUSTOMER_CRM (
+    customer_hash_key  CHAR(32)      NOT NULL REFERENCES raw_vault.HUB_CUSTOMER(customer_hash_key),
+    load_date          TIMESTAMP     NOT NULL,
+    -- composite PK — one row per customer per load_date
+    PRIMARY KEY (customer_hash_key, load_date),
+    record_source      VARCHAR(100)  NOT NULL,
+    hash_diff          CHAR(32)      NOT NULL,   -- MD5 of all payload columns; new row only when changed
+    load_end_date      TIMESTAMP,               -- NULL = current; populated when superseded
+    -- Payload (all CRM attributes)
+    first_name         VARCHAR(100),
+    last_name          VARCHAR(100),
+    email              VARCHAR(255),
+    phone              VARCHAR(50),
+    crm_segment        VARCHAR(50),
+    crm_status         VARCHAR(50)
+);
+
+-- ── Satellite: SAT_CUSTOMER_ERP (ERP source — different attributes) ──
+CREATE TABLE raw_vault.SAT_CUSTOMER_ERP (
+    customer_hash_key  CHAR(32)      NOT NULL REFERENCES raw_vault.HUB_CUSTOMER(customer_hash_key),
+    load_date          TIMESTAMP     NOT NULL,
+    PRIMARY KEY (customer_hash_key, load_date),
+    record_source      VARCHAR(100)  NOT NULL,
+    hash_diff          CHAR(32)      NOT NULL,
+    -- ERP-specific attributes (different system, different columns)
+    billing_address    VARCHAR(255),
+    payment_terms      VARCHAR(50),
+    credit_limit       DECIMAL(12,2),
+    erp_account_type   VARCHAR(50)
+);
+
+-- ── Query: Current customer profile (join Hub + latest Satellite row) ──
+SELECT
+    h.customer_id,
+    s.first_name,
+    s.last_name,
+    s.email,
+    s.crm_segment
+FROM raw_vault.HUB_CUSTOMER h
+JOIN raw_vault.SAT_CUSTOMER_CRM s
+    ON h.customer_hash_key = s.customer_hash_key
+   AND s.load_end_date IS NULL   -- NULL end date = current row
+WHERE h.customer_id = 'CUST-12345';`}</CodeBlock>
+          <CodeBlock lang="python">{`# DATA VAULT PYSPARK LOAD PATTERNS
+import hashlib
+from pyspark.sql import functions as F
+from pyspark.sql.types import StringType
+
+# ── Hash Key UDF ─────────────────────────────────────────────────
+def make_hash_key(*keys):
+    """MD5 of concatenated business keys — consistent surrogate"""
+    combined = "||".join([str(k).strip().upper() if k else "^^" for k in keys])
+    return hashlib.md5(combined.encode()).hexdigest().upper()
+
+hash_key_udf = F.udf(make_hash_key, StringType())
+
+# ── Load Hub ─────────────────────────────────────────────────────
+def load_hub(source_df, hub_table: str, business_key_col: str, record_source: str):
+    """
+    Insert only NEW business keys — never update a hub.
+    Hub is the first entity loaded; satellites depend on it.
+    """
+    hub_df = (source_df
+              .withColumn("customer_hash_key",
+                          hash_key_udf(F.col(business_key_col)))
+              .withColumn("load_date", F.current_timestamp())
+              .withColumn("record_source", F.lit(record_source))
+              .select("customer_hash_key", business_key_col, "load_date", "record_source")
+              .dropDuplicates(["customer_hash_key"]))
+
+    # Insert only keys not already in the hub
+    if spark.catalog.tableExists(hub_table):
+        existing_keys = spark.table(hub_table).select("customer_hash_key")
+        hub_df = hub_df.join(existing_keys, "customer_hash_key", "left_anti")
+
+    if hub_df.count() > 0:
+        hub_df.write.format("delta").mode("append").saveAsTable(hub_table)
+    print(f"Hub {hub_table}: {hub_df.count()} new keys inserted")
+
+# ── Load Link ─────────────────────────────────────────────────────
+def load_link(source_df, link_table: str, hub_keys: list[str], record_source: str):
+    """
+    Links connect hubs. Insert only NEW combinations.
+    Must be loaded AFTER all referenced hubs are populated.
+    """
+    # Build composite hash key from all hub keys
+    link_df = (source_df
+               .withColumn("link_hash_key",
+                           hash_key_udf(*[F.col(k) for k in hub_keys]))
+               .withColumn("load_date", F.current_timestamp())
+               .withColumn("record_source", F.lit(record_source))
+               .dropDuplicates(["link_hash_key"]))
+
+    if spark.catalog.tableExists(link_table):
+        existing = spark.table(link_table).select("link_hash_key")
+        link_df = link_df.join(existing, "link_hash_key", "left_anti")
+
+    if link_df.count() > 0:
+        link_df.write.format("delta").mode("append").saveAsTable(link_table)
+
+# ── Load Satellite ────────────────────────────────────────────────
+def load_satellite(source_df, sat_table: str, parent_hash_key_col: str,
+                   payload_cols: list[str], record_source: str):
+    """
+    Load only CHANGED rows — detect changes via hash_diff.
+    New row inserted only when payload columns change.
+    Previous row's load_end_date is set to new load_date (optional pattern).
+    """
+    payload_hash = F.md5(F.concat_ws("||", *[F.coalesce(F.col(c).cast("string"), F.lit(""))
+                                               for c in payload_cols]))
+    new_df = (source_df
+              .withColumn("hash_diff", payload_hash)
+              .withColumn("load_date", F.current_timestamp())
+              .withColumn("record_source", F.lit(record_source))
+              .withColumn("load_end_date", F.lit(None).cast("timestamp")))
+
+    if spark.catalog.tableExists(sat_table):
+        # Get latest hash_diff per parent key
+        latest = (spark.table(sat_table)
+                  .filter(F.col("load_end_date").isNull())
+                  .select(parent_hash_key_col, "hash_diff"))
+
+        # Only insert rows where hash_diff changed
+        changed = (new_df.alias("n")
+                   .join(latest.alias("l"), parent_hash_key_col, "left_outer")
+                   .filter(F.col("l.hash_diff").isNull() |
+                           (F.col("n.hash_diff") != F.col("l.hash_diff")))
+                   .select("n.*"))
+    else:
+        changed = new_df
+
+    if changed.count() > 0:
+        changed.write.format("delta").mode("append").saveAsTable(sat_table)
+    print(f"Satellite {sat_table}: {changed.count()} changed rows inserted")`}</CodeBlock>
+          <Quiz topicId="model-datavault" questions={[
+            { question: "In Data Vault 2.0, what does a Hub represent and what does it contain?", options: ["A fact table with measures and foreign keys", "The business key for one business concept — no descriptive attributes, just the natural key, load_date, and record_source. It is the anchor that Links and Satellites attach to", "A normalized dimension table with all attributes", "A temporary staging table for raw data"], correct: 1 },
+            { question: "Why does Data Vault use hash keys instead of sequential surrogate integers?", options: ["Hash keys are smaller than integers", "Hash keys are deterministic — the same business key always produces the same hash regardless of which system or pipeline generates it, enabling parallel loads across multiple source systems without coordination", "Hash keys are required by GDPR", "Sequential integers don't work in distributed systems"], correct: 1 },
+            { question: "What is the main limitation of querying a raw Data Vault for BI reporting?", options: ["Data Vault doesn't support SQL queries", "Answering a simple question like 'what is a customer's current address' requires multiple JOINs across Hub + Satellite + filtering for the latest row — BI tools need a simpler Information Mart (star schema) layer built on top", "Data Vault tables are too large to query", "Raw Vault tables are write-only"], correct: 1 },
+          ]} />
+          {completeBtn('model-datavault')}
+        </section>
+
+        {/* ── model-scd-code ── */}
+        <section id="model-scd-code" ref={el => { if (el) sectionRefs.current['model-scd-code'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Data Modeling Mastery</div>
+            <h1 className="topic-title">SCD Implementation Code (All Types)</h1>
+            <p className="topic-desc">Full implementation of all SCD types using Delta Lake and PySpark. SCD Type 2 is the most common in production — mastering the MERGE pattern for slowly changing history is a core senior data engineering skill.</p>
+          </div>
+          <CodeBlock lang="text">{`SCD TYPE DECISION TABLE
+═══════════════════════════════════════════════════════════════
+Type  History?  Storage  Complexity  Best For
+────  ────────  ───────  ──────────  ────────────────────────────────────────
+0     None      Low      Trivial     Static reference data (country codes, units)
+1     None      Low      Low         Fixing errors; current-state-only reporting
+2     Full      High     High        Customer address, employee dept, product category
+3     Limited   Medium   Medium      Only need one previous value; simple rollback view
+4     Full      Medium   Medium      High-churn dimensions; rarely query history
+6     Full      High     Very High   Enterprise dims needing current + historical in one row
+
+SCD TYPE 1 — Overwrite (no history)
+  MERGE INTO target WHEN MATCHED AND source differs THEN UPDATE SET all columns
+  Simple. Fast. History is lost — previous value is gone forever.
+
+SCD TYPE 2 — Add New Row (full history)
+  On change: expire old row (is_current=False, valid_to=now)
+             insert new row (is_current=True, valid_from=now, valid_to=9999-12-31)
+  Surrogate key on fact table points to correct dimension version at event time.
+  Query current:      WHERE is_current = True
+  Query point-in-time: WHERE valid_from <= '2024-03-15' AND valid_to > '2024-03-15'
+
+SCD TYPE 3 — Previous Value Column
+  Add column: prev_email, prev_region alongside current_email, current_region
+  On change: UPDATE SET prev_col = current_col, current_col = new_value
+  Limitation: only 1 level of history per tracked column
+
+SCD TYPE 4 — History Table
+  Main table: current record only (fast lookups)
+  History table: all previous versions with valid_from / valid_to
+  On change: copy current row to history table, then UPDATE main table
+
+SCD TYPE 6 — Hybrid (Type 1 + 2 + 3 combined)
+  Each historical row has:
+    - Surrogate key (Type 2) for point-in-time accuracy
+    - is_current flag (Type 2) for current record filtering
+    - current_value column (Type 1 overwrite on ALL rows) for current comparison
+    - prev_value column (Type 3) for one-step-back lookup
+  Advantage: "What was customer's region when they ordered AND what is it today?"
+             Both answered from one row without extra JOINs`}</CodeBlock>
+          <CodeBlock lang="python">{`# SCD TYPE 1 — Overwrite, no history
+from delta.tables import DeltaTable
+from pyspark.sql import functions as F
+
+def scd1_merge(updates_df, target_table: str, key_col: str):
+    """Simple overwrite — no history preserved"""
+    target = DeltaTable.forName(spark, target_table)
+    (target.alias("t")
+     .merge(updates_df.alias("s"), f"t.{key_col} = s.{key_col}")
+     .whenMatchedUpdateAll()       # overwrite all columns on match
+     .whenNotMatchedInsertAll()    # insert new records
+     .execute())
+
+# SCD TYPE 3 — Previous value column
+def scd3_update(updates_df, target_table: str, key_col: str, tracked_col: str):
+    """Keep current and one previous value only"""
+    target = DeltaTable.forName(spark, target_table)
+    (target.alias("t")
+     .merge(updates_df.alias("s"), f"t.{key_col} = s.{key_col}")
+     .whenMatchedUpdate(
+         condition=f"t.{tracked_col} != s.{tracked_col}",
+         set={
+             f"prev_{tracked_col}": f"t.{tracked_col}",   # shift current to prev
+             f"{tracked_col}": f"s.{tracked_col}",        # overwrite current
+             "updated_at": "current_timestamp()"
+         })
+     .whenNotMatchedInsertAll()
+     .execute())
+
+# SCD TYPE 4 — History table pattern
+def scd4_update(updates_df, main_table: str, history_table: str, key_col: str):
+    """Archive old version to history table, update main table"""
+    # Step 1: copy current records that will change to history
+    changed_keys = (updates_df.alias("s")
+                    .join(spark.table(main_table).alias("t"), key_col)
+                    .filter(" OR ".join([f"t.{c} != s.{c}"
+                                         for c in updates_df.columns if c != key_col]))
+                    .select("t.*")
+                    .withColumn("valid_to", F.current_timestamp()))
+    changed_keys.write.format("delta").mode("append").saveAsTable(history_table)
+
+    # Step 2: update main table with new values (Type 1 overwrite)
+    target = DeltaTable.forName(spark, main_table)
+    (target.alias("t")
+     .merge(updates_df.alias("s"), f"t.{key_col} = s.{key_col}")
+     .whenMatchedUpdateAll()
+     .whenNotMatchedInsertAll()
+     .execute())`}</CodeBlock>
+          <CodeBlock lang="python">{`# SCD TYPE 2 — Full Delta Lake MERGE implementation
+from delta.tables import DeltaTable
+from pyspark.sql import functions as F
+from pyspark.sql import DataFrame
+from datetime import date
+
+def scd2_merge(
+    spark,
+    updates_df: DataFrame,
+    target_table: str,
+    key_col: str,
+    tracked_cols: list[str]
+) -> None:
+    """
+    Full SCD Type 2 implementation with Delta Lake.
+
+    Args:
+        updates_df:    Latest snapshot from source (one row per natural key)
+        target_table:  Delta table name with SCD2 columns
+        key_col:       Natural/business key column name (e.g. 'customer_id')
+        tracked_cols:  Columns that trigger a new version when changed
+    """
+    today_str = str(date.today())
+    FAR_FUTURE = "9999-12-31"
+
+    # ── STEP 1: Identify changed records ─────────────────────────
+    current_target = (spark.table(target_table)
+                      .filter(F.col("is_current") == True))
+
+    # Build condition: any tracked column differs between source and target
+    change_condition = " OR ".join([f"t.{c} != s.{c}" for c in tracked_cols])
+
+    # Records that CHANGED (exist in target + at least one tracked col differs)
+    changed_keys = (current_target.alias("t")
+                    .join(updates_df.alias("s"),
+                          F.col(f"t.{key_col}") == F.col(f"s.{key_col}"))
+                    .filter(change_condition)
+                    .select(F.col(f"t.{key_col}").alias(key_col))
+                    .distinct())
+
+    # ── STEP 2: Expire old rows for changed records ───────────────
+    if changed_keys.count() > 0:
+        target = DeltaTable.forName(spark, target_table)
+        expire_condition = (
+            f"{key_col} IN ({','.join([repr(r[key_col]) for r in changed_keys.collect()])})"
+            f" AND is_current = true"
+        )
+        target.update(
+            condition=expire_condition,
+            set={
+                "is_current": F.lit(False),
+                "valid_to": F.lit(today_str).cast("date")
+            }
+        )
+
+    # ── STEP 3: Insert new versions for changed + new records ─────
+    # Records that are NEW (not in target at all)
+    new_keys = (updates_df.alias("s")
+                .join(current_target.alias("t"),
+                      F.col(f"t.{key_col}") == F.col(f"s.{key_col}"),
+                      "left_anti")
+                .select(F.col(f"s.{key_col}").alias(key_col))
+                .distinct())
+
+    all_insert_keys = (changed_keys.union(new_keys).distinct()
+                       .select(key_col))
+
+    inserts = (updates_df
+               .join(all_insert_keys, key_col, "inner")
+               .withColumn("surrogate_key", F.expr("uuid()"))   # generate surrogate
+               .withColumn("is_current", F.lit(True))
+               .withColumn("valid_from", F.lit(today_str).cast("date"))
+               .withColumn("valid_to", F.lit(FAR_FUTURE).cast("date")))
+
+    if inserts.count() > 0:
+        inserts.write.format("delta").mode("append").saveAsTable(target_table)
+        print(f"SCD2: {changed_keys.count()} expired + {new_keys.count()} new → "
+              f"{inserts.count()} rows inserted")
+
+# ── USAGE ─────────────────────────────────────────────────────────
+# Initial load (first run) — just write with SCD2 columns
+def scd2_initial_load(source_df: DataFrame, target_table: str):
+    (source_df
+     .withColumn("surrogate_key", F.expr("uuid()"))
+     .withColumn("is_current", F.lit(True))
+     .withColumn("valid_from", F.current_date())
+     .withColumn("valid_to", F.lit("9999-12-31").cast("date"))
+     .write.format("delta")
+     .saveAsTable(target_table))
+
+# ── QUERY PATTERNS ────────────────────────────────────────────────
+# Current record
+spark.sql("""
+    SELECT * FROM gold.dim_customer
+    WHERE customer_id = 'CUST-001' AND is_current = TRUE
+""")
+
+# Point-in-time: what was the customer's region on 2024-03-15?
+spark.sql("""
+    SELECT c.customer_id, c.region, c.customer_segment
+    FROM gold.dim_customer c
+    WHERE c.customer_id = 'CUST-001'
+      AND c.valid_from <= DATE '2024-03-15'
+      AND c.valid_to   >  DATE '2024-03-15'
+""")
+
+# Join fact table to correct dimension version using surrogate key
+spark.sql("""
+    SELECT
+        o.order_id,
+        o.order_date,
+        c.region            AS customer_region_at_order_time,
+        c.customer_segment  AS segment_at_order_time
+    FROM gold.fact_orders o
+    JOIN gold.dim_customer c
+        ON o.customer_surrogate_key = c.surrogate_key
+    -- surrogate key on fact row was stamped at load time → always correct version
+    LIMIT 100
+""")`}</CodeBlock>
+          <CodeBlock lang="python">{`# SCD TYPE 6 — Hybrid (Type 1 + 2 + 3)
+# Each historical row gets updated with the CURRENT value (Type 1 overwrite)
+# so you can answer both "what was it then?" and "what is it now?" from one row.
+
+def scd6_merge(
+    spark,
+    updates_df: DataFrame,
+    target_table: str,
+    key_col: str,
+    tracked_col: str   # e.g., 'region'
+) -> None:
+    """
+    SCD Type 6 pattern:
+      - surrogate_key + valid_from/valid_to + is_current  (Type 2: full history)
+      - current_{col} updated on ALL rows including historical  (Type 1: overwrite)
+      - prev_{col} on current row                              (Type 3: one lookback)
+    """
+    today_str = str(date.today())
+
+    # Step 1: Same as SCD2 — expire old row, insert new
+    scd2_merge(spark, updates_df, target_table, key_col, [tracked_col])
+
+    # Step 2: Type 1 overwrite — update current_{col} on ALL rows for this key
+    # including historical rows — so any row can tell you "what is it today?"
+    target = DeltaTable.forName(spark, target_table)
+    for row in updates_df.collect():
+        bk = row[key_col]
+        current_val = row[tracked_col]
+        target.update(
+            condition=f"{key_col} = '{bk}'",  # update ALL versions, not just current
+            set={f"current_{tracked_col}": F.lit(current_val)}
+        )
+
+# SCD6 table structure:
+# surrogate_key    (Type 2 — unique per version)
+# customer_id      (natural key)
+# region           (value AT THIS VERSION's time)
+# current_region   (Type 1 — always the latest region, even on old rows)
+# prev_region      (Type 3 — one step back from is_current row)
+# is_current       (Type 2)
+# valid_from       (Type 2)
+# valid_to         (Type 2)
+
+# QUERY — "was the customer in the same region when they ordered vs now?"
+spark.sql("""
+    SELECT
+        o.order_id,
+        c.region           AS region_when_ordered,   -- Type 2: historical value
+        c.current_region   AS region_today,           -- Type 1: current value
+        c.prev_region      AS previous_region,        -- Type 3: one-back
+        CASE WHEN c.region = c.current_region
+             THEN 'same' ELSE 'moved' END AS customer_moved
+    FROM gold.fact_orders o
+    JOIN gold.dim_customer c
+        ON o.customer_surrogate_key = c.surrogate_key
+    WHERE o.order_date = '2023-06-01'
+""")`}</CodeBlock>
+          <Quiz topicId="model-scd-code" questions={[
+            { question: "In SCD Type 2, when a tracked attribute changes, what two operations must happen atomically?", options: ["Delete the old row and insert the new row", "Expire the old row (set is_current=False, valid_to=today) AND insert a new row (is_current=True, valid_from=today, valid_to=9999-12-31) — both must succeed or neither should", "Update the existing row and create a backup", "Archive the old row to a history table and truncate the main table"], correct: 1 },
+            { question: "How do you query a fact table to get the dimension attribute value AS IT WAS at the time of the event (not the current value)?", options: ["Filter the dimension on is_current=True", "Store the surrogate key on the fact table at load time — join fact to dimension on surrogate_key, which always points to the exact dimension version that was current when the fact was loaded", "Use BETWEEN on the fact table's event date", "Always query the latest dimension version — history is not needed for facts"], correct: 1 },
+            { question: "What unique capability does SCD Type 6 provide that neither Type 2 alone nor Type 3 alone can offer?", options: ["It stores unlimited previous values", "From a single joined row you can see both the dimension value AS IT WAS at the historical event time (Type 2) AND the dimension's current value today (Type 1) — enabling change-over-time analysis without extra JOINs", "It eliminates the need for surrogate keys", "It reduces storage by removing duplicate rows"], correct: 1 },
+          ]} />
+          {completeBtn('model-scd-code')}
         </section>
 
       </main>
