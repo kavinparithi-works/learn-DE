@@ -2399,7 +2399,7 @@ function BinaryAnimation() {
   }, [])
 
   return (
-    <div style={{ margin: '20px 0', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)' }}>
+    <div className="anim-wrap" style={{ margin: '20px 0', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)' }}>
       <canvas ref={canvasRef} width={600} height={120} style={{ display: 'block', width: '100%', height: 120 }} />
     </div>
   )
@@ -2407,7 +2407,7 @@ function BinaryAnimation() {
 
 function CpuAnimation() {
   return (
-    <div style={{ margin: '20px 0', background: '#0d1117', borderRadius: 'var(--radius-lg)', padding: 20, border: '1px solid var(--border)', overflowX: 'auto' }}>
+    <div className="anim-wrap" style={{ margin: '20px 0', background: '#0d1117', borderRadius: 'var(--radius-lg)', padding: 20, border: '1px solid var(--border)', overflowX: 'auto' }}>
       <svg viewBox="0 0 640 260" style={{ width: '100%', maxWidth: 640, display: 'block' }}>
         <defs>
           <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -2494,7 +2494,7 @@ function MemoryHierarchyAnimation() {
   ]
 
   return (
-    <div style={{ margin: '20px 0', background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: '20px 24px', border: '1px solid var(--border)' }}>
+    <div className="anim-wrap" style={{ margin: '20px 0', background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: '20px 24px', border: '1px solid var(--border)' }}>
       <div style={{ fontWeight: 700, marginBottom: 16, fontSize: '.95rem' }}>Memory Hierarchy  -  Relative Latency (log scale visualised)</div>
       {levels.map(l => (
         <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
@@ -2523,7 +2523,7 @@ function MemoryHierarchyAnimation() {
 
 function NetworkAnimation() {
   return (
-    <svg viewBox="0 0 640 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 16 }}>
+    <svg viewBox="0 0 640 160" className="anim-wrap" style={{ display:'block', width: '100%', maxWidth:700, maxHeight: 160, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 16 }}>
       {[
         { x: 60,  label: 'Client',     color: '#4f8ef7' },
         { x: 200, label: 'DNS',        color: '#8b5cf6' },
@@ -2560,7 +2560,7 @@ function FileFormatAnimation() {
     ['4', 'Dave', 'US', '300.00', 'Food'],
   ]
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div className="anim-wrap" style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {formats.map((f, i) => (
           <button key={f} onClick={() => setActive(i)} style={{ padding: '6px 16px', borderRadius: 'var(--radius-full)', border: '1.5px solid var(--border)', background: active === i ? 'var(--blue-500)' : 'white', color: active === i ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '.83rem', cursor: 'pointer' }}>{f}</button>
@@ -2600,7 +2600,7 @@ function FileFormatAnimation() {
 
 function ParquetInternalsAnimation() {
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 16 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 16 }}>
       <div style={{ fontWeight: 700, marginBottom: 16, fontSize: '.9rem' }}>Parquet File Structure</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* File level */}
@@ -2637,7 +2637,7 @@ function ParquetInternalsAnimation() {
 
 function MedallionAnimation() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div className="anim-wrap" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
       {[
         { label: 'Source\nSystem', icon: '🔌', color: '#94a3b8', bg: '#f8fafc' },
         { label: 'Bronze\nRaw', icon: '🥉', color: '#cd7f32', bg: '#fff7ed' },
@@ -2667,7 +2667,7 @@ function StarSchemaAnimation() {
     { label: 'dim_promo', x: 100, y: 100, color: '#ef4444' },
   ]
   return (
-    <svg viewBox="0 0 600 280" style={{ width: '100%', maxHeight: 260, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 16 }}>
+    <svg viewBox="0 0 600 280" className="anim-wrap" style={{ display:'block', width: '100%', maxWidth:700, maxHeight: 260, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 16 }}>
       {/* Lines from fact to dims */}
       {dims.map((d, i) => (
         <line key={i} x1={cx} y1={cy} x2={d.x} y2={d.y} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="4 2"/>

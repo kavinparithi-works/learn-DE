@@ -3787,7 +3787,7 @@ function PythonGilAnimation() {
   const active = tick % 3
 
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython GIL  -  Only 1 thread executes Python bytecode at a time</div>
       <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Even with 3 threads, CPU work is serialized. I/O releases the GIL allowing other threads to run.</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -3832,7 +3832,7 @@ function PythonMemoryAnimation() {
   ]
 
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython Memory Model  -  Reference Counting Garbage Collection</div>
       <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Objects are freed immediately when refcount hits 0. Cyclic references require the cyclic GC.</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
@@ -3885,7 +3885,7 @@ function AsyncAnimation() {
   }
 
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>asyncio Event Loop  -  Single Thread, Concurrent I/O</div>
       <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Event loop switches between tasks when they await I/O  -  no threads, no GIL contention.</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

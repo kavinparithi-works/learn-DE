@@ -33,7 +33,7 @@ const SECTIONS = [
 
 function AzureArchitectureAnimation() {
   return (
-    <svg viewBox="0 0 820 180" style={{ width: '100%', maxWidth: 820, display: 'block', margin: '0 auto 1.5rem', borderRadius: 12, background: '#0f1923' }}>
+    <svg viewBox="0 0 820 180" className="anim-wrap" style={{ width: '100%', maxWidth: 760, display: 'block', margin: '0 0 1.5rem', borderRadius: 12, background: '#0f1923' }}>
       {/* Boxes */}
       <rect x="10" y="60" width="110" height="60" rx="8" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="1.5"/>
       <text x="65" y="86" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="700">Event Hub</text>
@@ -86,7 +86,7 @@ function AzureArchitectureAnimation() {
 
 function AzureNetworkAnimation() {
   return (
-    <svg viewBox="0 0 700 220" style={{ width: '100%', maxWidth: 700, display: 'block', margin: '0 auto 1.5rem', borderRadius: 12, background: '#0f1923' }}>
+    <svg viewBox="0 0 700 220" className="anim-wrap" style={{ width: '100%', maxWidth: 760, display: 'block', margin: '0 0 1.5rem', borderRadius: 12, background: '#0f1923' }}>
       {/* VNet outer */}
       <rect x="10" y="10" width="520" height="200" rx="12" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="6,3"/>
       <text x="20" y="28" fill="#60a5fa" fontSize="11" fontWeight="700">Virtual Network (VNet)  10.0.0.0/16</text>
@@ -134,7 +134,7 @@ function AzureNetworkAnimation() {
 
 function ADFPipelineAnimation() {
   return (
-    <svg viewBox="0 0 780 130" style={{ width: '100%', maxWidth: 780, display: 'block', margin: '0 auto 1.5rem', borderRadius: 12, background: '#0f1923' }}>
+    <svg viewBox="0 0 780 130" className="anim-wrap" style={{ width: '100%', maxWidth: 760, display: 'block', margin: '0 0 1.5rem', borderRadius: 12, background: '#0f1923' }}>
       {/* Activity boxes */}
       {[
         { x: 10,  label: 'Source',       sub: 'SQL / API',      stroke: '#3b82f6', fill: '#1e3a5f', text: '#93c5fd', sub2: '#60a5fa' },

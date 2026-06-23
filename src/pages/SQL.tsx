@@ -95,7 +95,7 @@ function IndexAnimation() {
   const highlighted = mode === 'btree' ? [2] : rows.map((_, i) => i)
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="anim-wrap" style={{ textAlign: 'center' }}>
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1rem' }}>
         {(['full', 'btree'] as const).map(m => (
           <button key={m} onClick={() => setMode(m)}

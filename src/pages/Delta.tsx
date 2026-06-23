@@ -3098,7 +3098,7 @@ function DeltaLogAnimation() {
     { ver: 5, op: 'CHECKPOINT', color: '#64748b', detail: '0000000000000005.checkpoint.parquet' },
   ]
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>Delta Transaction Log (_delta_log/)</div>
       <div style={{ fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 12 }}>Each operation appends a numbered JSON commit. Every 10 commits creates a Parquet checkpoint.</div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -3138,7 +3138,7 @@ function MergeAnimation() {
   ]
   const labels = ['Source & Target', 'Match on ID', 'Apply MATCHED update', 'Apply NOT MATCHED insert']
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>MERGE Operation  -  Step {step + 1}: {labels[step]}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
         <div>
@@ -3182,7 +3182,7 @@ function TimelineAnimation() {
     { v: 4, op: 'MERGE upsert', time: '2024-01-13 15:00', rows: '+25K rows', color: '#f59e0b' },
   ]
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>Time Travel  -  Table Version Timeline</div>
       <div style={{ fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 12 }}>Click any version to time-travel. Current active: v{current}</div>
       <div style={{ display: 'flex', gap: 0, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -3245,7 +3245,7 @@ function UCNamespaceAnimation() {
     )
   }
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>Unity Catalog Namespace (click to expand)</div>
       <div style={{ fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 12 }}>metastore (1 per region) → catalog → schema → table/view/volume</div>
       {tree.map(node => renderNode(node as typeof tree[0] & { children?: typeof tree }))}
@@ -3265,7 +3265,7 @@ function DLTPipelineAnimation() {
     { label: 'GOLD', sublabel: 'revenue_by_day', desc: 'dlt.read("orders")\n.groupBy("order_date").agg(...)', color: '#92400e', bg: '#fef9c3', expectations: null },
   ]
   return (
-    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>DLT Pipeline  -  Bronze → Silver → Gold</div>
       <div style={{ fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 12 }}>DLT manages execution order, retries, and lineage automatically.</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

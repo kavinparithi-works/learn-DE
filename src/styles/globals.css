@@ -294,63 +294,104 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
    TOPIC SECTIONS — CARD-BASED
 ════════════════════════════════════════════════════ */
 .topic-section{
-  background:var(--bg-card);
+  background:#ffffff;
   border-radius:var(--radius-2xl);
-  border:1.5px solid var(--border);
-  padding:0 0 28px;
-  margin-bottom:16px;
-  box-shadow:0 2px 12px rgba(79,142,247,.06),0 1px 4px rgba(0,0,0,.05);
+  border:1.5px solid rgba(148,163,184,.18);
+  padding:0 0 32px;
+  margin-bottom:20px;
+  box-shadow:0 1px 3px rgba(0,0,0,.04),0 4px 16px rgba(79,142,247,.07);
   position:relative;overflow:hidden;
   transition:box-shadow var(--transition-slow),transform var(--transition-slow);
 }
 .topic-section:hover{
-  box-shadow:0 6px 28px rgba(79,142,247,.1),0 2px 8px rgba(0,0,0,.07);
-  transform:translateY(-1px);
+  box-shadow:0 2px 8px rgba(0,0,0,.06),0 8px 32px rgba(79,142,247,.12);
+  transform:translateY(-2px);
+  border-color:rgba(99,102,241,.2);
 }
 
 .topic-header{
-  padding:24px 36px 20px;
-  background:linear-gradient(135deg,#f5f8ff 0%,#f0ecff 100%);
-  border-bottom:1.5px solid var(--border);
+  padding:26px 36px 22px;
+  background:linear-gradient(135deg,#eef4ff 0%,#f3eeff 50%,#fdf0ff 100%);
+  border-bottom:1.5px solid rgba(148,163,217,.22);
   border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
   position:relative;overflow:hidden;
   margin-bottom:0;
+  box-shadow:inset 0 -1px 0 rgba(148,163,217,.18);
 }
 .topic-header::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899,#f59e0b,#4f8ef7);
+  content:'';position:absolute;top:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899,#f59e0b,#22c55e,#4f8ef7);
   background-size:300% 100%;
   animation:shimmer 3s ease-in-out infinite;
+  border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 .topic-header::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--blue-200),var(--purple-200),transparent);
+  content:'';position:absolute;bottom:0;left:36px;right:36px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(99,102,241,.25),rgba(139,92,246,.3),rgba(99,102,241,.25),transparent);
 }
 
 .topic-eyebrow{
   display:inline-flex;align-items:center;gap:6px;
-  padding:4px 14px;border-radius:var(--radius-full);
-  background:linear-gradient(135deg,var(--blue-50),var(--purple-50));
-  border:1.5px solid var(--blue-100);
-  font-size:.72rem;font-weight:800;color:var(--blue-700);
-  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;
+  padding:4px 16px;border-radius:var(--radius-full);
+  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+  border:1.5px solid #c7d2fe;
+  font-family:var(--font-display);
+  font-size:.68rem;font-weight:900;color:#4338ca;
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;
+  box-shadow:0 1px 4px rgba(79,70,229,.12);
 }
 .topic-title{
-  font-size:1.9rem;margin-bottom:12px;letter-spacing:-.03em;
-  background:linear-gradient(135deg,var(--text-1) 0%,var(--blue-700) 50%,var(--purple-700) 100%);
+  font-family:var(--font-display);
+  font-size:1.85rem;font-weight:800;margin-bottom:12px;letter-spacing:-.035em;
+  background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 50%,#7c3aed 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.2;
 }
-.topic-desc{color:var(--text-3);font-size:.96rem;line-height:1.8;max-width:700px;}
+.topic-desc{
+  color:var(--text-3);font-size:.93rem;line-height:1.8;max-width:680px;
+  margin-top:4px;
+}
 
 /* Inner content: all direct children except topic-header get 36px side margins */
 .topic-section > *:not(.topic-header) {
-  margin-left:36px;
-  margin-right:36px;
+  margin-left:36px !important;
+  margin-right:36px !important;
   box-sizing:border-box;
 }
 
 /* Venn container — uses the universal margin rule, just needs vertical spacing */
-.venn-container{margin-top:20px;margin-bottom:20px;}
+.venn-container{
+  margin-top:20px;margin-bottom:20px;
+  max-width:760px;
+}
+
+/* ── Animation / visual containers inside topic-section ────────────────────
+   SVGs and canvases that are DIRECT children must not stretch full width.
+   Center them with auto margins and cap max-width.                          */
+.topic-section > svg {
+  display:block;
+  max-width:700px !important;
+  width:calc(100% - 72px) !important;
+  margin-left:36px !important;
+  margin-right:36px !important;
+  height:auto;
+}
+/* Canvas elements (BinaryAnimation) */
+.topic-section > div > canvas,
+.topic-section canvas {
+  display:block;
+  max-width:100%;
+  height:auto;
+}
+/* Generic animation wrapper class — applied to all animation root divs */
+.anim-wrap {
+  display:block;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  max-width:760px;
+  width:calc(100% - 72px);
+  box-sizing:border-box;
+}
 
 /* ════════════════════════════════════════════════════
    CODE BLOCK
@@ -616,6 +657,10 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 @keyframes starPop{0%{transform:scale(0) rotate(-20deg)}70%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
 @keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ripple{0%{transform:scale(0);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+@keyframes underlineGrow{from{width:0}to{width:100%}}
+@keyframes tokenFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes cardEntrance{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:none}}
 
 .animate-fadein{animation:fadeIn .5s ease backwards;}
 .animate-slidein{animation:slideIn .5s ease backwards;}
@@ -624,6 +669,91 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 .animate-popin{animation:popIn .45s var(--transition-bounce) backwards;}
 .animate-float{animation:float 3s ease-in-out infinite;}
 .animate-wiggle{animation:wiggle .5s ease;}
+
+/* ════════════════════════════════════════════════════
+   HOVER EFFECTS & MICRO-INTERACTIONS
+════════════════════════════════════════════════════ */
+
+/* Cards entrance animation when they appear */
+.topic-section{animation:cardEntrance .45s ease backwards;}
+.topic-section:nth-child(2){animation-delay:.05s;}
+.topic-section:nth-child(3){animation-delay:.1s;}
+.topic-section:nth-child(4){animation-delay:.15s;}
+.topic-section:nth-child(5){animation-delay:.2s;}
+
+/* Code block — glow on hover */
+.code-block{transition:box-shadow .25s ease,transform .2s ease;}
+.code-block:hover{
+  box-shadow:0 12px 40px rgba(0,0,0,.3),0 0 0 1px rgba(139,92,246,.3),0 0 24px rgba(139,92,246,.12);
+  transform:translateY(-2px);
+}
+/* Copy button ripple feedback */
+.copy-btn{position:relative;overflow:hidden;}
+.copy-btn::after{
+  content:'';position:absolute;inset:0;background:rgba(255,255,255,.15);
+  border-radius:inherit;transform:scale(0);opacity:0;
+  transition:transform .3s ease,opacity .3s ease;
+}
+.copy-btn:active::after{transform:scale(1);opacity:1;}
+
+/* Callout — subtle lift on hover */
+.callout{transition:transform .2s ease,box-shadow .2s ease;}
+.callout:hover{transform:translateX(4px);box-shadow:2px 0 12px rgba(79,142,247,.1);}
+
+/* Tag badges — pop on hover */
+.tag,.tag-blue,.tag-purple,.tag-green,.tag-amber,.tag-orange,.tag-cyan,.tag-pink,.tag-teal,.tag-gray{
+  transition:transform .15s ease,box-shadow .15s ease;cursor:default;
+}
+.tag:hover,.tag-blue:hover,.tag-purple:hover,.tag-green:hover,.tag-amber:hover,
+.tag-orange:hover,.tag-cyan:hover,.tag-pink:hover,.tag-teal:hover,.tag-gray:hover{
+  transform:translateY(-2px) scale(1.05);
+  box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+
+/* Sidebar items — smooth active indicator slide */
+.sidebar-item{transition:background .18s ease,color .18s ease,transform .15s ease,padding-left .15s ease;}
+.sidebar-item:hover:not(.active){padding-left:14px;}
+
+/* Topic header shimmer pulse on section entrance */
+.topic-header::before{animation:shimmer 3s ease-in-out infinite;}
+
+/* Complete button — ripple + grow on click */
+.complete-btn{position:relative;overflow:hidden;}
+.complete-btn::after{
+  content:'';position:absolute;inset:-4px;
+  background:radial-gradient(circle,rgba(255,255,255,.35) 0%,transparent 70%);
+  transform:scale(0);opacity:0;transition:transform .4s ease,opacity .4s ease;
+  border-radius:inherit;
+}
+.complete-btn:active::after{transform:scale(1.5);opacity:1;}
+
+/* Interview card — content slides in */
+.interview-a{transition:max-height .3s ease,padding .3s ease;max-height:0;overflow:hidden;}
+.interview-card.open .interview-a{max-height:1200px;}
+
+/* Topbar nav link — animated underline */
+.topbar-link{position:relative;}
+.topbar-link.active::after{
+  content:'';position:absolute;bottom:-4px;left:0;width:100%;height:2px;
+  background:var(--grad-primary);border-radius:1px;
+  animation:underlineGrow .25s ease;
+}
+
+/* Stat card accent stripe pulse */
+.stat-card::before{transition:opacity .3s ease;}
+.stat-card:hover::before{opacity:.8;filter:brightness(1.2);}
+
+/* anim-wrap content — entrance */
+.anim-wrap{animation:cardEntrance .5s ease .1s backwards;}
+
+/* Code token entrance (stagger on lines) */
+.code-block pre code span{display:inline;}
+
+/* Scrollbar in code blocks */
+.code-block pre::-webkit-scrollbar{height:4px;}
+.code-block pre::-webkit-scrollbar-track{background:transparent;}
+.code-block pre::-webkit-scrollbar-thumb{background:rgba(139,92,246,.4);border-radius:2px;}
+.code-block pre::-webkit-scrollbar-thumb:hover{background:rgba(139,92,246,.7);}
 
 /* ════════════════════════════════════════════════════
    STAT CARDS
@@ -785,24 +915,22 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 ════════════════════════════════════════════════════ */
 @media(max-width:1200px){
   .main-content{padding:28px 32px;}
-  .topic-header{padding:24px 28px 20px;}
-  .topic-section > *:not(.topic-header){margin-left:28px;margin-right:28px;}
+  .topic-header{padding:22px 28px 20px;}
+  .topic-section > *:not(.topic-header){margin-left:28px !important;margin-right:28px !important;}
   .topic-section > .code-block,
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:16px!important;margin-right:16px!important;}
-  .complete-btn{margin-left:28px;}
-  .topic-section h2:not([class]),.topic-section > h2{margin-left:28px;margin-right:28px;}
+  .complete-btn{margin-left:28px !important;}
   .topic-section table{margin-left:0;margin-right:0;width:100%;}
 }
 @media(max-width:1024px){
   .main-content{padding:20px 20px;}
   .topic-header{padding:20px 20px 18px;}
-  .topic-section > *:not(.topic-header){margin-left:20px;margin-right:20px;}
+  .topic-section > *:not(.topic-header){margin-left:20px !important;margin-right:20px !important;}
   .topic-section > .code-block,
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:12px!important;margin-right:12px!important;}
-  .complete-btn{margin-left:20px;}
-  .topic-section h2:not([class]),.topic-section > h2{margin-left:20px;margin-right:20px;}
+  .complete-btn{margin-left:20px !important;}
 }
 @media(max-width:768px){
   .sidebar{display:none;}
@@ -815,7 +943,6 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:8px!important;margin-right:8px!important;}
   .complete-btn{margin-left:14px!important;}
-  .topic-section h2:not([class]),.topic-section > h2{margin-left:14px!important;margin-right:14px!important;}
   .topic-header{border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;padding:16px 14px 14px;}
 }
 
@@ -859,23 +986,37 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
 
 /* ════════════════════════════════════════════════════
-   SQL.tsx TOPIC-HEADER & TOPIC-TAG
+   TOPIC-HEADER HEADINGS (h1 + h2 inside headers)
+   These rules must outrank the body h2 rule below
 ════════════════════════════════════════════════════ */
-/* SQL page uses a different topic-header structure - plain div with span.topic-tag */
-.topic-header h2{
-  font-size:1.75rem;font-weight:800;color:var(--text-1);
-  letter-spacing:-.03em;margin:0;
-  background:linear-gradient(135deg,var(--text-1),var(--purple-700));
+.topic-header h1.topic-title,
+.topic-header h1 {
+  font-family:var(--font-display);
+  font-size:1.85rem !important;font-weight:800 !important;
+  letter-spacing:-.035em !important;margin:0 0 8px !important;
+  background:linear-gradient(135deg,var(--text-1) 0%,#2563eb 55%,#7c3aed 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.2;
 }
+.topic-header h2 {
+  font-family:var(--font-display);
+  font-size:1.65rem !important;font-weight:800 !important;
+  letter-spacing:-.03em !important;margin:0 !important;
+  background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 45%,#7c3aed 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.25;
+}
+/* topic-tag: pill badge shown above the heading in SQL.tsx */
 .topic-tag{
-  display:inline-flex;align-items:center;
-  padding:4px 14px;border-radius:var(--radius-full);
-  background:linear-gradient(135deg,var(--blue-50),var(--purple-50));
-  border:1.5px solid var(--blue-100);
-  font-size:.72rem;font-weight:800;color:var(--blue-700);
-  text-transform:uppercase;letter-spacing:.08em;
-  margin-bottom:10px;display:block;width:fit-content;
+  display:block;width:fit-content;
+  padding:4px 16px;border-radius:var(--radius-full);
+  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+  border:1.5px solid #c7d2fe;
+  font-size:.68rem;font-weight:900;
+  color:#4338ca;
+  text-transform:uppercase;letter-spacing:.1em;
+  margin-bottom:12px;
+  box-shadow:0 1px 4px rgba(79,70,229,.12);
 }
 
 /* ════════════════════════════════════════════════════
@@ -883,14 +1024,14 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 ════════════════════════════════════════════════════ */
 .complete-btn{
   display:inline-flex;align-items:center;gap:8px;
-  padding:11px 28px;border-radius:var(--radius-full);
+  padding:12px 32px;border-radius:var(--radius-full);
   background:linear-gradient(135deg,#22c55e,#16a34a);
   color:white;font-size:.88rem;font-weight:700;
   border:none;cursor:pointer;
   transition:all var(--transition);
   box-shadow:0 4px 16px rgba(34,197,94,.3);
   font-family:var(--font-display);letter-spacing:-.01em;
-  margin-top:20px;margin-left:36px;margin-bottom:8px;
+  margin-top:24px;margin-left:36px !important;margin-bottom:0;
 }
 .complete-btn:hover{
   transform:translateY(-2px) scale(1.02);
@@ -1027,11 +1168,17 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   font-size:.96rem;font-weight:700;color:var(--text-2);
   margin-top:20px;margin-bottom:8px;letter-spacing:-.01em;
 }
-.topic-section h2:not([class]),
-.topic-section > h2 {
-  font-size:1.2rem;font-weight:800;color:var(--text-1);
-  margin:28px 36px 10px;letter-spacing:-.025em;
+/* h2 used inline in body content (Foundations style inline h2) — not inside topic-header */
+.topic-section > h2:not(.topic-title),
+.topic-section h2:not([class]):not(.topic-title) {
+  font-family:var(--font-display);
+  font-size:1.2rem !important;font-weight:800 !important;color:var(--text-1) !important;
+  margin-top:28px;margin-bottom:10px;letter-spacing:-.025em;
+  /* left/right margins come from universal > * rule */
 }
+/* Anchor — ensures nothing from body overrides header heading margin set above */
+.topic-header h1 { margin-top:0 !important; }
+.topic-header h2 { margin:0 !important; }
 
 /* Key-value / definition rows */
 .kv-row{

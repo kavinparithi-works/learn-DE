@@ -3604,7 +3604,7 @@ df.writeStream \\
 
 function SparkArchAnimation() {
   return (
-    <svg viewBox="0 0 700 200" style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-xl)', background: '#fff7ed', border: '1px solid #fed7aa', marginBottom: 24 }}>
+    <svg viewBox="0 0 700 200" className="anim-wrap" style={{ display:'block', width: '100%', maxWidth:700, maxHeight: 200, borderRadius: 'var(--radius-xl)', background: '#fff7ed', border: '1px solid #fed7aa', marginBottom: 24 }}>
       {/* Driver box */}
       <rect x="20" y="30" width="130" height="140" rx="10" fill="white" stroke="#f97316" strokeWidth="2"/>
       <text x="85" y="52" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="700">DRIVER</text>
@@ -3659,7 +3659,7 @@ function SparkArchAnimation() {
 
 function DagAnimation() {
   return (
-    <svg viewBox="0 0 680 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: '#f0f9ff', border: '1px solid #bae6fd', marginBottom: 24 }}>
+    <svg viewBox="0 0 680 160" className="anim-wrap" style={{ display:'block', width: '100%', maxWidth:700, maxHeight: 160, borderRadius: 'var(--radius-xl)', background: '#f0f9ff', border: '1px solid #bae6fd', marginBottom: 24 }}>
       {/* Stage 0 */}
       <rect x="10" y="10" width="150" height="140" rx="8" fill="white" stroke="#38bdf8" strokeWidth="1.5"/>
       <text x="85" y="28" textAnchor="middle" fill="#0284c7" fontSize="9" fontWeight="700">STAGE 0 (narrow)</text>
@@ -3727,7 +3727,7 @@ function ShuffleAnimation() {
   const colors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7']
 
   return (
-    <svg viewBox="0 0 600 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: '#fafafa', border: '1px solid #e2e8f0', marginBottom: 24 }}>
+    <svg viewBox="0 0 600 160" className="anim-wrap" style={{ display:'block', width: '100%', maxWidth:700, maxHeight: 160, borderRadius: 'var(--radius-xl)', background: '#fafafa', border: '1px solid #e2e8f0', marginBottom: 24 }}>
       <text x="300" y="18" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="700">Shuffle: data moves across partitions by hash(key)</text>
 
       {/* Source partitions */}
@@ -3770,7 +3770,7 @@ function ShuffleAnimation() {
 
 function SparkUiAnimation() {
   return (
-    <svg viewBox="0 0 680 200" style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-xl)', background: '#1e293b', border: '1px solid #334155', marginBottom: 24 }}>
+    <svg viewBox="0 0 680 200" className="anim-wrap" style={{ display:'block', width: '100%', maxWidth:700, maxHeight: 200, borderRadius: 'var(--radius-xl)', background: '#1e293b', border: '1px solid #334155', marginBottom: 24 }}>
       {/* Tab bar */}
       <rect x="0" y="0" width="680" height="28" rx="0" fill="#0f172a"/>
       {['Jobs', 'Stages', 'Storage', 'Environment', 'Executors', 'SQL'].map((t, i) => (
