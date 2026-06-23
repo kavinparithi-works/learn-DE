@@ -85,10 +85,10 @@ export default function Foundations({ completed, onComplete }: Props) {
               { base: 'Decimal', radix: 10, digits: '0 - 9', example: '10 = 10', note: 'Human-friendly. Every position is a power of 10.' },
               { base: 'Hexadecimal', radix: 16, digits: '0 - 9, A - F', example: '0xA = 10', note: 'Groups of 4 bits. Used in memory addresses, colour codes, hashes.' },
             ].map(ns => (
-              <div key={ns.base} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
+              <div key={ns.base} className="card card-info">
                 <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 4 }}>{ns.base} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '.85rem' }}>base {ns.radix}</span></div>
                 <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: 6 }}>Digits: {ns.digits}</div>
-                <div style={{ fontFamily: 'monospace', fontSize: '.9rem', background: 'var(--surface-3)', borderRadius: 6, padding: '4px 8px', marginBottom: 8 }}>{ns.example}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.9rem', background: 'rgba(99,102,241,.07)', borderRadius: 6, padding: '4px 8px', marginBottom: 8, color: '#4338ca' }}>{ns.example}</div>
                 <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{ns.note}</div>
               </div>
             ))}
@@ -125,7 +125,7 @@ export default function Foundations({ completed, onComplete }: Props) {
               { name: 'Exponent', bits: '8 bits (32-bit)', desc: 'Biased by 127. Controls the magnitude (scale).' },
               { name: 'Mantissa', bits: '23 bits (32-bit)', desc: 'Fractional significand. Encodes the precision.' },
             ].map(f => (
-              <div key={f.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+              <div key={f.name} className="card">
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
                 <div style={{ fontFamily: 'monospace', fontSize: '.82rem', color: 'var(--accent)', marginBottom: 6 }}>{f.bits}</div>
                 <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{f.desc}</div>
@@ -253,9 +253,9 @@ print(struct.pack('>f', 3.14).hex())  # '4048f5c3'`}</CodeBlock>
               { name: 'CU', full: 'Control Unit', desc: 'Fetches instructions from memory, decodes them, and orchestrates the ALU, registers, and memory bus. The conductor of the CPU orchestra.' },
               { name: 'Registers', full: 'On-chip storage', desc: 'Tiny, ultra-fast storage (32 or 64 bits each) directly on the CPU die. There are typically 16 - 32 general-purpose registers. Fastest storage that exists.' },
             ].map(c => (
-              <div key={c.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
+              <div key={c.name} className="card card-info">
                 <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 2 }}>{c.name}</div>
-                <div style={{ fontSize: '.82rem', color: 'var(--accent)', marginBottom: 8 }}>{c.full}</div>
+                <div style={{ fontSize: '.82rem', color: '#4338ca', marginBottom: 8, fontWeight: 600 }}>{c.full}</div>
                 <div style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{c.desc}</div>
               </div>
             ))}
@@ -433,7 +433,7 @@ print(f"Col-major: {time.perf_counter() - t:.3f}s")
               { name: 'SRAM (Static RAM)', points: ['Uses 6 transistors per bit  -  no refresh needed', 'Extremely fast (~1 - 4 ns)', 'Very expensive  -  used for CPU caches (L1/L2/L3)', 'Holds state as long as power is supplied'] },
               { name: 'DRAM (Dynamic RAM)', points: ['Uses 1 transistor + 1 capacitor per bit', 'Must be electrically refreshed thousands of times/second', 'Much cheaper  -  used for main memory (16/32/64 GB)', '~60 ns latency; bandwidth ~50 GB/s (DDR5)'] },
             ].map(t => (
-              <div key={t.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
+              <div key={t.name} className="card">
                 <div style={{ fontWeight: 700, marginBottom: 10 }}>{t.name}</div>
                 <ul style={{ paddingLeft: 18, margin: 0, lineHeight: 2 }}>
                   {t.points.map((p, i) => <li key={i} style={{ fontSize: '.85rem', color: 'var(--text-secondary)' }}>{p}</li>)}
@@ -459,8 +459,8 @@ print(f"Col-major: {time.perf_counter() - t:.3f}s")
               { name: 'Stack', color: 'var(--accent)', points: ['LIFO structure managed automatically by the CPU', 'Stores local variables, function call frames', 'Allocation/deallocation is O(1)  -  just move the stack pointer', 'Fixed size (usually 1 - 8 MB per thread); stack overflow = crash', 'Lives for the duration of the function call'] },
               { name: 'Heap', color: 'var(--warning-color, #f59e0b)', points: ['Unstructured pool of free memory', 'Stores objects, arrays, all dynamically-sized data', 'Allocation (malloc/new) is slower; fragmentation is a concern', 'Can grow to use all available RAM', 'Must be explicitly freed or managed by a garbage collector'] },
             ].map(t => (
-              <div key={t.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: `1px solid ${t.color}` }}>
-                <div style={{ fontWeight: 700, color: t.color, marginBottom: 10 }}>{t.name}</div>
+              <div key={t.name} className={t.name === 'Stack' ? 'card card-info' : 'card card-warning'}>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>{t.name}</div>
                 <ul style={{ paddingLeft: 18, margin: 0, lineHeight: 2 }}>
                   {t.points.map((p, i) => <li key={i} style={{ fontSize: '.85rem', color: 'var(--text-secondary)' }}>{p}</li>)}
                 </ul>
@@ -480,9 +480,9 @@ print(f"Col-major: {time.perf_counter() - t:.3f}s")
               { name: 'Mark-and-Sweep', lang: 'Go, older JVMs', desc: 'GC traverses all live objects from roots (mark phase), then sweeps unreachable objects. Can cause "stop-the-world" pauses.' },
               { name: 'Generational GC', lang: 'JVM (G1/ZGC), Python 3', desc: 'Most objects die young. GC divides heap into generations (young/old). Frequently collects the young generation cheaply; rarely collects old objects. Reduces pause times.' },
             ].map(g => (
-              <div key={g.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+              <div key={g.name} className="card card-success">
                 <div style={{ fontWeight: 700, marginBottom: 3 }}>{g.name}</div>
-                <div style={{ fontSize: '.78rem', fontFamily: 'monospace', color: 'var(--accent)', marginBottom: 8 }}>{g.lang}</div>
+                <div style={{ fontSize: '.78rem', fontFamily: 'monospace', color: '#166534', marginBottom: 8, fontWeight: 600 }}>{g.lang}</div>
                 <div style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{g.desc}</div>
               </div>
             ))}
@@ -657,10 +657,10 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
               { level: 'RAID 6', name: 'Dual Parity', note: 'N−2 capacity', desc: 'Like RAID 5 but two independent parity blocks. Survives two simultaneous drive failures.' },
               { level: 'RAID 10', name: 'Stripe of Mirrors', note: '50% capacity', desc: 'Combines RAID 1+0. High performance and redundancy. Needs ≥4 drives. Favoured for databases.' },
             ].map(r => (
-              <div key={r.level} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
-                <div style={{ fontWeight: 700, fontFamily: 'monospace', marginBottom: 2 }}>{r.level}</div>
-                <div style={{ fontSize: '.82rem', color: 'var(--accent)', marginBottom: 4 }}>{r.name}  -  {r.note}</div>
-                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.desc}</div>
+              <div key={r.level} className="card card-dark">
+                <div style={{ fontWeight: 700, fontFamily: 'monospace', marginBottom: 2, color: '#93c5fd' }}>{r.level}</div>
+                <div style={{ fontSize: '.82rem', color: '#a5b4fc', marginBottom: 4 }}>{r.name}  -  {r.note}</div>
+                <div style={{ fontSize: '.82rem', color: '#94a3b8', lineHeight: 1.5 }}>{r.desc}</div>
               </div>
             ))}
           </div>
@@ -672,9 +672,9 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
               { name: 'ext4', os: 'Linux', desc: 'Most common Linux FS. Journaled, supports files up to 16 TB. Default on Ubuntu/RHEL data engineering VMs.' },
               { name: 'HDFS', os: 'Distributed', desc: 'Hadoop Distributed File System. Splits files into 128 MB blocks replicated 3× across a cluster. Designed for high-throughput sequential reads of very large files.' },
             ].map(fs => (
-              <div key={fs.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+              <div key={fs.name} className="card card-info">
                 <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 2 }}>{fs.name}</div>
-                <div style={{ fontSize: '.78rem', fontFamily: 'monospace', color: 'var(--accent)', marginBottom: 8 }}>{fs.os}</div>
+                <div style={{ fontSize: '.78rem', fontFamily: 'monospace', color: '#4338ca', marginBottom: 8, fontWeight: 600 }}>{fs.os}</div>
                 <div style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{fs.desc}</div>
               </div>
             ))}
@@ -698,9 +698,9 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
               { metric: 'Throughput', full: 'MB/s or GB/s', desc: 'Total data volume transferred per second. Critical for analytics and ETL pipelines moving large files.' },
               { metric: 'Latency', full: 'µs or ms per operation', desc: 'Time from request to completion. Critical for interactive queries and real-time pipelines where user/system waits.' },
             ].map(m => (
-              <div key={m.metric} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+              <div key={m.metric} className="card card-warning">
                 <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 2 }}>{m.metric}</div>
-                <div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginBottom: 8 }}>{m.full}</div>
+                <div style={{ fontSize: '.78rem', color: '#92400e', marginBottom: 8, fontWeight: 600 }}>{m.full}</div>
                 <div style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.desc}</div>
               </div>
             ))}

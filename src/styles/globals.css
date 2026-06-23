@@ -683,6 +683,25 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 @keyframes orbitDot{0%{transform:rotate(0deg) translateX(14px)}100%{transform:rotate(360deg) translateX(14px)}}
 @keyframes typewriter{from{width:0}to{width:100%}}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pageEnter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes navProgressRun{0%{width:0;opacity:1}80%{width:90%}100%{width:100%;opacity:0}}
+
+/* ── Page-enter animation (applied by PageTransition wrapper) ─────────── */
+.page-enter-active > * {
+  animation: pageEnter 320ms cubic-bezier(.22,1,.36,1) backwards;
+}
+.page-enter-active > *:nth-child(1){animation-delay:.04s}
+.page-enter-active > *:nth-child(2){animation-delay:.08s}
+.page-enter-active > *:nth-child(3){animation-delay:.12s}
+
+/* ── Nav progress bar ────────────────────────────────────────────────────── */
+.nav-progress{
+  position:fixed;top:var(--topbar-h);left:0;right:0;height:3px;z-index:9999;
+  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899);
+  animation:navProgressRun 500ms ease forwards;
+  pointer-events:none;
+  border-radius:0 2px 2px 0;
+}
 
 .animate-fadein{animation:fadeIn .5s ease backwards;}
 .animate-slidein{animation:slideIn .5s ease backwards;}
@@ -1153,11 +1172,182 @@ code:not(.code-block code):hover{
   background:var(--grad-primary);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
+/* ── Base card ─────────────────────────────────── */
 .card{
   background:white;border:1.5px solid var(--border);border-radius:var(--radius-xl);
-  padding:20px 24px;box-shadow:var(--shadow-sm);transition:all var(--transition-slow);
+  padding:20px 24px;box-shadow:0 1px 4px rgba(0,0,0,.05),0 4px 16px rgba(79,142,247,.06);
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
 }
-.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--grad-primary);opacity:0;
+  transition:opacity .25s ease;
+}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(79,142,247,.14);}
+.card:hover::before{opacity:1;}
+
+/* ── Info card — blue accent ───────────────────── */
+.card-info{
+  background:linear-gradient(135deg,#f0f7ff,#f5f3ff);
+  border:1.5px solid #c7d2fe;border-radius:var(--radius-xl);
+  padding:18px 22px;position:relative;overflow:hidden;
+  transition:all .22s ease;
+}
+.card-info::before{
+  content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;
+  border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.12),transparent 70%);
+  pointer-events:none;
+}
+.card-info:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(99,102,241,.15);border-color:#a5b4fc;}
+
+/* ── Success card — green accent ───────────────── */
+.card-success{
+  background:linear-gradient(135deg,#f0fdf4,#ecfdf5);
+  border:1.5px solid #bbf7d0;border-radius:var(--radius-xl);
+  padding:18px 22px;position:relative;overflow:hidden;
+  transition:all .22s ease;
+}
+.card-success::before{
+  content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;
+  border-radius:50%;background:radial-gradient(circle,rgba(34,197,94,.1),transparent 70%);
+  pointer-events:none;
+}
+.card-success:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(34,197,94,.14);border-color:#86efac;}
+
+/* ── Warning card — amber accent ───────────────── */
+.card-warning{
+  background:linear-gradient(135deg,#fffbeb,#fff7ed);
+  border:1.5px solid #fde68a;border-radius:var(--radius-xl);
+  padding:18px 22px;position:relative;overflow:hidden;
+  transition:all .22s ease;
+}
+.card-warning:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(245,158,11,.14);border-color:#fcd34d;}
+
+/* ── Dark card — for code-adjacent content ─────── */
+.card-dark{
+  background:linear-gradient(135deg,#0f172a,#131b2e);
+  border:1px solid rgba(255,255,255,.08);border-radius:var(--radius-xl);
+  padding:18px 22px;color:rgba(255,255,255,.88);
+  position:relative;overflow:hidden;
+  transition:all .25s ease;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.card-dark::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899);
+}
+.card-dark:hover{transform:translateY(-3px);box-shadow:0 8px 36px rgba(0,0,0,.3),0 0 0 1px rgba(139,92,246,.2);}
+
+/* ── Stat mini-card (used in topic sections) ────── */
+.mini-stat{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 20px;border-radius:var(--radius-xl);
+  background:white;border:1.5px solid var(--border);
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  text-align:center;
+}
+.mini-stat:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 8px 24px rgba(79,142,247,.14);}
+.mini-stat-value{
+  font-family:var(--font-display);font-size:1.6rem;font-weight:900;
+  background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-.03em;line-height:1;
+}
+.mini-stat-label{font-size:.72rem;color:var(--text-4);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.05em;}
+
+/* ── Pill badge with glow (for level indicators) ── */
+.level-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:var(--radius-full);
+  font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  position:relative;overflow:hidden;
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+}
+.level-badge-blue{background:linear-gradient(135deg,#eff6ff,#ede9fe);color:#3730a3;border:1.5px solid #c7d2fe;box-shadow:0 2px 8px rgba(99,102,241,.15);}
+.level-badge-green{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);color:#166534;border:1.5px solid #bbf7d0;box-shadow:0 2px 8px rgba(34,197,94,.14);}
+.level-badge-amber{background:linear-gradient(135deg,#fffbeb,#fff7ed);color:#92400e;border:1.5px solid #fde68a;box-shadow:0 2px 8px rgba(245,158,11,.14);}
+.level-badge:hover{transform:scale(1.06);box-shadow:0 4px 16px rgba(79,70,229,.22);}
+
+/* ── Feature highlight row ─────────────────────── */
+.feature-row{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 16px;border-radius:var(--radius-lg);
+  transition:background .18s ease,transform .18s ease;
+}
+.feature-row:hover{background:linear-gradient(135deg,var(--blue-50),var(--purple-50));transform:translateX(4px);}
+.feature-row-icon{
+  width:36px;height:36px;border-radius:var(--radius-lg);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;
+  background:linear-gradient(135deg,var(--blue-50),var(--purple-50));
+  border:1.5px solid var(--blue-100);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.feature-row:hover .feature-row-icon{transform:scale(1.15) rotate(-5deg);}
+
+/* ── Decorative accent dots (bg orbs on cards) ─── */
+.card-orb{
+  position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,currentColor 0%,transparent 70%);
+  opacity:.06;animation:floatY 4s ease-in-out infinite;
+}
+
+/* ── Horizontal divider with gradient ─────────── */
+.section-divider{
+  height:1px;margin:24px 0;
+  background:linear-gradient(90deg,transparent,var(--blue-200),var(--purple-200),transparent);
+  border:none;
+}
+
+/* ── Number list items (styled ol) ─────────────── */
+.topic-section > ol{counter-reset:step;}
+.topic-section > ol > li{
+  counter-increment:step;
+  position:relative;padding-left:8px;
+}
+.topic-section > ol > li::marker{
+  content:counter(step);
+  font-family:var(--font-display);font-weight:800;
+  color:var(--blue-600);
+}
+
+/* ── Inline code improved ──────────────────────── */
+code:not(.code-block code):not(pre code){
+  font-family:var(--font-mono);
+  font-size:.84em;
+  background:linear-gradient(135deg,#eef2ff,#f5f3ff);
+  color:#4338ca;
+  border:1px solid #c7d2fe;
+  border-radius:5px;
+  padding:2px 7px;
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+  display:inline-block;
+  vertical-align:baseline;
+}
+code:not(.code-block code):not(pre code):hover{
+  background:linear-gradient(135deg,#e0e7ff,#ede9fe);
+  color:#3730a3;transform:translateY(-1px);
+  box-shadow:0 2px 8px rgba(99,102,241,.15);
+}
+
+/* ── Strong / bold text inside topic ──────────── */
+.topic-section strong{color:var(--text-1);}
+
+/* ── Blockquote style ──────────────────────────── */
+.topic-section blockquote{
+  margin:16px 0;padding:14px 20px 14px 20px;
+  border-left:4px solid;
+  border-image:linear-gradient(180deg,#4f8ef7,#8b5cf6) 1;
+  background:linear-gradient(135deg,#f0f7ff,#f8f5ff);
+  border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+  font-style:italic;color:var(--text-2);
+  position:relative;
+}
+.topic-section blockquote::before{
+  content:'"';position:absolute;top:-4px;left:12px;
+  font-size:2.5rem;color:rgba(99,102,241,.2);font-family:serif;line-height:1;
+}
 
 /* ════════════════════════════════════════════════════
    TOPIC-HEADER HEADINGS (h1 + h2 inside headers)
