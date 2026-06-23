@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
 import { markTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: () => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void }
 
 // ── Animation Components ──────────────────────────────────────────────────────
 

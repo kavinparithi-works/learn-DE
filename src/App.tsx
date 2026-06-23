@@ -17,7 +17,7 @@ import Interview from './pages/Interview'
 import Airflow from './pages/Airflow'
 import './styles/globals.css'
 
-function AppRoutes({ completed, refreshProgress }: { completed: Set<string>; refreshProgress: () => void }) {
+function AppRoutes({ completed, refreshProgress }: { completed: Set<string>; refreshProgress: (id?: string) => void }) {
   const location = useLocation()
   useScrollReveal()
   return (

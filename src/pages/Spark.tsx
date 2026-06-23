@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
 import { markTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: () => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void }
 
 const SECTIONS = [
   { title: 'Level 7 - Apache Spark + PySpark', items: [
@@ -75,7 +75,7 @@ export default function Spark({ completed, onComplete }: Props) {
 
   const totalTopics = SECTIONS.flatMap(s => s.items).length
   const ref = (id: string) => (el: HTMLElement | null) => { if (el) sectionRefs.current[id] = el }
-  const mc = (id: string) => async () => { await markTopicComplete(id); onComplete() }
+  const mc = (id: string) => async () => { await markTopicComplete(id); onComplete(id) }
 
   return (
     <div className="page-with-sidebar">

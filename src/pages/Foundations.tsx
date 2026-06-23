@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
 import { markTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: () => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void }
 
 const SECTIONS = [
   { title: 'Level 1 - Computer Fundamentals', items: [
@@ -231,7 +231,7 @@ print(struct.pack('>f', 3.14).hex())  # '4048f5c3'`}</CodeBlock>
           ]} />
 
           <button
-            onClick={async () => { await markTopicComplete('binary'); onComplete() }}
+            onClick={async () => { await markTopicComplete('binary'); onComplete('binary') }}
             style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
           >
             Mark Complete ✓
@@ -412,7 +412,7 @@ print(f"Col-major: {time.perf_counter() - t:.3f}s")
           ]} />
 
           <button
-            onClick={async () => { await markTopicComplete('cpu'); onComplete() }}
+            onClick={async () => { await markTopicComplete('cpu'); onComplete('cpu') }}
             style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
           >
             Mark Complete ✓
@@ -578,7 +578,7 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
           ]} />
 
           <button
-            onClick={async () => { await markTopicComplete('memory'); onComplete() }}
+            onClick={async () => { await markTopicComplete('memory'); onComplete('memory') }}
             style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
           >
             Mark Complete ✓
@@ -784,7 +784,7 @@ du -sh /data/* # size of each item in /data`}</CodeBlock>
           ]} />
 
           <button
-            onClick={async () => { await markTopicComplete('storage'); onComplete() }}
+            onClick={async () => { await markTopicComplete('storage'); onComplete('storage') }}
             style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
           >
             Mark Complete ✓
@@ -886,7 +886,7 @@ asyncio.run(main())`}</CodeBlock>
             { question: "Which scheduling algorithm does Linux use by default?", options: ["Round Robin", "Priority Scheduling", "Completely Fair Scheduler (CFS)", "First-Come-First-Served"], correct: 2 },
             { question: "When should you use asyncio coroutines instead of threads?", options: ["CPU-bound computations", "When you need true parallelism", "For I/O-bound tasks like API calls and database queries", "For spawning child processes"], correct: 2 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('os'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('os'); onComplete('os') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1006,7 +1006,7 @@ log "Pipeline complete"`} />
             { question: "Which command counts the number of occurrences of each unique line in a sorted file?", options: ["wc -l file", "sort file | uniq -c", "grep -c file", "awk '{count[$0]++}' file"], correct: 1 },
             { question: "What is stored in /proc/meminfo?", options: ["Memory configuration files", "Virtual filesystem showing live kernel memory statistics", "RAM hardware specs", "Swap file configuration"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('linux'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('linux'); onComplete('linux') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1141,7 +1141,7 @@ def paginate(url):
             { question: "What is CIDR notation 10.0.1.0/24?", options: ["An IP address with 24 bits of host portion", "A subnet with 256 addresses where the first 24 bits are the network prefix", "A VLAN tag", "An IPv6 prefix"], correct: 1 },
             { question: "What is the key difference between bandwidth and throughput?", options: ["They are the same thing", "Bandwidth is theoretical maximum capacity; throughput is actual data transferred per second (always ≤ bandwidth)", "Throughput measures latency, bandwidth measures speed", "Bandwidth is for downloads, throughput for uploads"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('networking'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('networking'); onComplete('networking') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1284,7 +1284,7 @@ docker system prune -af       # clean up stopped containers, images, volumes`}</
             { question: "What happens to data written inside a container when it stops?", options: ["It is saved to the image", "It persists in the container layer forever", "It is lost unless stored in a volume or bind mount", "It is synced to Docker Hub"], correct: 2 },
             { question: "What is a multi-stage Docker build used for?", options: ["Running multiple services in one container", "Keeping the final image small by separating build dependencies from runtime", "Building on multiple architectures simultaneously", "Caching build layers"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('docker'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('docker'); onComplete('docker') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1387,7 +1387,7 @@ df = df.withColumn("days_since",  datediff(current_date(), "date"))`}</CodeBlock
             { question: "What is type widening vs narrowing?", options: ["Widening adds columns, narrowing removes them", "Widening converts to a larger type (safe, no data loss); narrowing converts to a smaller type (unsafe, may truncate)", "Widening is for strings, narrowing for numbers", "They refer to schema evolution in Parquet"], correct: 1 },
             { question: "What is the best practice for storing timestamps in a data lakehouse?", options: ["Store in local timezone of the source system", "Store in UTC always; convert to local only at display time", "Store as Unix epoch strings", "Store in the timezone of the data warehouse region"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('data-types'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('data-types'); onComplete('data-types') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1482,7 +1482,7 @@ for i in range(pf.num_row_groups):
             { question: "What is dictionary encoding in Parquet and when does it help most?", options: ["It compresses column names", "It stores unique values once and replaces repeated values with integer indexes  -  most effective for low-cardinality columns like country, status, category", "It encodes the schema in a dictionary", "It deduplicates row groups"], correct: 1 },
             { question: "Why is Avro preferred over Parquet for Kafka streaming?", options: ["Avro is a columnar format", "Avro is row-oriented making it efficient for writing individual events, and supports schema evolution via registry", "Avro has better compression", "Parquet doesn't support streaming"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('file-formats'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('file-formats'); onComplete('file-formats') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1583,7 +1583,7 @@ print(f"Zstd:   {folder_size(path_zstd):.1f} MB")`}</CodeBlock>
             { question: "What does 'splittable' mean for a compressed file and why does it matter?", options: ["The file can be decompressed in parallel blocks, allowing multiple Spark tasks to read different parts simultaneously", "The file can be split across multiple disks", "The file supports partial writes", "It means the file has multiple compression levels"], correct: 0 },
             { question: "When would you choose Zstd over Snappy for Parquet files?", options: ["For real-time streaming where decompression speed is critical", "For Gold/archive layers where storage cost matters and you can afford slightly more CPU", "For CSV files on HDFS", "When Snappy is not available"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('compression'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('compression'); onComplete('compression') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1682,7 +1682,7 @@ producer.produce(
             { question: "Why is Avro preferred over JSON for Kafka events in enterprise systems?", options: ["Avro is human-readable like JSON", "Avro is binary (smaller, faster), enforces a schema via registry, and supports full schema evolution compatibility checks", "Avro supports more data types", "JSON doesn't support nested objects"], correct: 1 },
             { question: "What is the safest schema evolution change you can make to a 'full compatible' Avro schema?", options: ["Rename an existing field", "Remove a required field", "Add a new optional field with a default value", "Change a field's type from int to string"], correct: 2 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('serialization'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('serialization'); onComplete('serialization') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1778,7 +1778,7 @@ results = index.query(vector=query_embedding, top_k=10, include_metadata=True)`}
             { question: "Which database type is best suited for storing ML embeddings and performing semantic similarity search?", options: ["OLTP relational database", "Key-value store like Redis", "Vector database like Pinecone or pgvector", "Column-family database like Cassandra"], correct: 2 },
             { question: "What is the main tradeoff of NoSQL databases compared to relational OLTP databases?", options: ["NoSQL is always faster", "NoSQL sacrifices ACID transactions and complex joins for horizontal scalability and schema flexibility", "NoSQL stores less data", "NoSQL requires more storage"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('databases'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('databases'); onComplete('databases') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -1902,7 +1902,7 @@ ORDER BY 1,2,5 DESC;`}</CodeBlock>
             { question: "In SCD Type 2, how do you identify the current record for a customer?", options: ["The record with the highest surrogate key", "Using is_current = TRUE or WHERE effective_end IS NULL", "The record with the most recent effective_start date", "All records are current in SCD Type 2"], correct: 1 },
             { question: "Why is a star schema preferred over a snowflake schema for Power BI / BI tools?", options: ["Star schemas use less storage", "Star schemas require fewer joins  -  BI tools generate SQL with one level of joins, which is faster and easier to optimise", "Snowflake schemas don't support date dimensions", "Star schemas have better compression"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('data-warehouse'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('data-warehouse'); onComplete('data-warehouse') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -2006,7 +2006,7 @@ spark.sql("""
             { question: "What type of data transformation should NOT happen in Bronze?", options: ["Adding ingestion metadata columns", "Recording the source file name", "Type casting, deduplication, and joins to lookup tables", "Appending new records as they arrive"], correct: 2 },
             { question: "When should you use a materialised Gold table instead of a view?", options: ["Always  -  views are never used in Gold", "When the aggregation is expensive and many BI users query the same data  -  pre-computation saves repeated compute costs", "Only when using Parquet instead of Delta", "When the source data changes every second"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('medallion'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('medallion'); onComplete('medallion') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -2102,7 +2102,7 @@ good.write.format("delta").mode("append").saveAsTable("silver.orders")`}</CodeBl
             { question: "Which data quality dimension checks that data is available when it should be?", options: ["Accuracy", "Uniqueness", "Timeliness", "Validity"], correct: 2 },
             { question: "What is a key advantage of Deequ over Great Expectations for large-scale data engineering?", options: ["Deequ generates better HTML reports", "Deequ is built natively on Spark so DQ checks run distributed across the cluster without converting to Pandas", "Deequ supports more check types", "Deequ integrates with more orchestrators"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('data-quality'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('data-quality'); onComplete('data-quality') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -2192,7 +2192,7 @@ spark.sql("""
             { question: "Under GDPR's Right to Erasure, what must a data engineer implement?", options: ["Delete the user's account from the operational database only", "Delete all PII for a user across all systems (Bronze, Silver, Gold, backups) when requested, with audit trail", "Anonymise the data by removing the name field", "Archive the data to cold storage"], correct: 1 },
             { question: "What is the difference between pseudonymisation and anonymisation?", options: ["They are the same thing", "Pseudonymisation replaces identifiers with tokens while retaining re-linkability via a key; anonymisation is irreversible  -  re-identification is impossible", "Anonymisation uses hashing, pseudonymisation uses encryption", "Pseudonymisation is stronger than anonymisation"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('data-governance'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('data-governance'); onComplete('data-governance') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -2328,7 +2328,7 @@ windowed = (stream_df
             { question: "What is a watermark in Spark Structured Streaming?", options: ["A data quality check", "A threshold that defines how long to wait for late-arriving data before closing a time window", "A checkpoint for fault tolerance", "A trigger interval"], correct: 1 },
             { question: "When is batch processing the better choice over streaming?", options: ["Always  -  streaming is too complex", "When latency requirements are hourly or daily, data volumes are large, and simplicity/reprocessability are valued over low latency", "When the data source is Kafka", "When you need exactly-once semantics"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('batch-vs-streaming'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('batch-vs-streaming'); onComplete('batch-vs-streaming') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>

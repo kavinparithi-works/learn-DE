@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
 import { markTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: () => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void }
 
 const SECTIONS = [
   { title: 'Level 3  -  SQL Foundations', items: [
@@ -219,7 +219,7 @@ ORDER BY started_at DESC;`} />
             { question: "Which clause filters rows AFTER aggregation?", options: ['WHERE', 'HAVING', 'ORDER BY', 'LIMIT'], correct: 1 },
             { question: "What does OFFSET 20 LIMIT 10 return?", options: ['First 10 rows', 'Rows 1-20', 'Rows 21-30', 'Last 10 rows'], correct: 2 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-select'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-select'); onComplete('sql-select') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── DISTINCT ── */}
@@ -251,7 +251,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 
             { question: "Why is ROW_NUMBER() preferred over DISTINCT for deduplication?", options: ['It is faster', 'It lets you choose which duplicate to keep based on ordering', 'It works without GROUP BY', 'DISTINCT does not work on large tables'], correct: 1 },
             { question: "COUNT(DISTINCT col) vs COUNT(col)  -  what is the difference?", options: ['No difference', 'COUNT(DISTINCT col) counts only non-NULL unique values', 'COUNT(col) also counts NULLs', 'DISTINCT applies before WHERE'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-distinct'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-distinct'); onComplete('sql-distinct') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── NULLS ── */}
@@ -295,7 +295,7 @@ SELECT NVL(discount, 0)    FROM orders;          -- Oracle / Spark SQL`} />
             { question: "COALESCE(NULL, NULL, 5, 3) returns:", options: ['NULL', '5', '3', '0'], correct: 1 },
             { question: "Which aggregate function does NOT ignore NULLs by default?", options: ['SUM(col)', 'AVG(col)', 'COUNT(*)', 'MAX(col)'], correct: 2, explanation: 'COUNT(*) counts all rows including those with NULLs. COUNT(col) ignores NULLs.' },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-nulls'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-nulls'); onComplete('sql-nulls') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── CASE ── */}
@@ -349,7 +349,7 @@ ORDER BY
             { question: "SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) is an example of:", options: ['A subquery', 'Conditional aggregation', 'A window function', 'A pivot'], correct: 1 },
             { question: "Which CASE form is more flexible for complex conditions?", options: ['Simple CASE (CASE col WHEN val THEN...)', 'Searched CASE (CASE WHEN condition THEN...)', 'Both are equally flexible', 'Neither; use IF()'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-case'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-case'); onComplete('sql-case') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── STRINGS ── */}
@@ -410,7 +410,7 @@ SELECT CHARINDEX('.', email)   AS dot_pos FROM customers; -- SQL Server`} />
             { question: "Which function removes whitespace from both ends of a string?", options: ['CLEAN()', 'STRIP()', 'TRIM()', 'REMOVE()'], correct: 2 },
             { question: "LIKE 'abc%' will use an index but LIKE '%abc' will not. Why?", options: ['% at start prevents index range scan', 'LIKE never uses indexes', 'Only REGEXP uses indexes', 'Trailing % is not supported'], correct: 0 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-strings'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-strings'); onComplete('sql-strings') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── DATES ── */}
@@ -470,7 +470,7 @@ WHERE cal_date BETWEEN start_date AND end_date
             { question: "Why is YEAR(created_at) = 2024 a performance anti-pattern?", options: ['YEAR() is deprecated', 'It prevents the query optimizer from using an index on created_at', 'It returns incorrect results', 'YEAR() is not standard SQL'], correct: 1 },
             { question: "DATEDIFF('day', '2024-01-01', '2024-01-15') returns:", options: ['14', '15', '-14', '1'], correct: 0 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-dates'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-dates'); onComplete('sql-dates') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── AGGREGATIONS ── */}
@@ -519,7 +519,7 @@ FROM pipeline_runs;`} />
             { question: "AVG(col) where col has NULLs  -  what happens?", options: ['Returns NULL', 'Treats NULL as 0', 'Calculates average ignoring NULLs', 'Raises an error'], correct: 2 },
             { question: "COUNT(*) vs COUNT(col)  -  when do they give different results?", options: ['Never  -  they are identical', 'When col contains NULL values', 'When col has duplicates', 'Only on large tables'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-agg'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-agg'); onComplete('sql-agg') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── GROUP BY ── */}
@@ -578,7 +578,7 @@ GROUP BY ROLLUP (region);`} />
             { question: "Can you use a WHERE clause to filter aggregated results?", options: ['Yes', 'No, use HAVING instead', 'Yes, if you use a subquery', 'Only with GROUP BY'], correct: 1 },
             { question: "What does GROUPING(col) return in a ROLLUP query?", options: ['The group value', '1 if the column is in a subtotal row, 0 otherwise', 'The count of rows in the group', 'NULL'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-groupby'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-groupby'); onComplete('sql-groupby') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── JOINS ── */}
@@ -638,7 +638,7 @@ WHERE  o.status = 'completed';`} />
             { question: "CROSS JOIN between a 100-row and 50-row table produces:", options: ['100 rows', '50 rows', '150 rows', '5000 rows'], correct: 3 },
             { question: "What is a LATERAL JOIN used for?", options: ['Joining to the same table', 'A correlated subquery that references outer query columns in FROM', 'Parallel joins for performance', 'Joining three tables'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-joins'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-joins'); onComplete('sql-joins') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── ANTI-JOINS ── */}
@@ -690,7 +690,7 @@ AND r.status = 'completed';`} />
             { question: "Which anti-join pattern is generally recommended for correctness and performance?", options: ['NOT IN', 'LEFT JOIN WHERE right IS NULL', 'NOT EXISTS', 'EXCEPT'], correct: 2 },
             { question: "A semi-join returns columns from:", options: ['Both tables', 'Only the right table', 'Only the left table', 'A derived table'], correct: 2 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-antijoin'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-antijoin'); onComplete('sql-antijoin') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── SUBQUERIES ── */}
@@ -749,7 +749,7 @@ WHERE revenue_rank <= 10;`} />
             { question: "Why is EXISTS often faster than IN for large subqueries?", options: ['EXISTS uses indexes; IN does not', 'EXISTS short-circuits after finding the first match', 'IN requires sorting', 'EXISTS is evaluated once for the whole query'], correct: 1 },
             { question: "A scalar subquery that returns more than one row will:", options: ['Return the first row', 'Raise a runtime error', 'Return NULL', 'Sum the values'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-subqueries'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-subqueries'); onComplete('sql-subqueries') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── SET OPS ── */}
@@ -794,7 +794,7 @@ ORDER BY order_id;   -- applies to combined result`} />
             { question: "What must be true for two queries to be combined with UNION?", options: ['Same table', 'Same number of columns with compatible data types', 'Same WHERE clause', 'Same ORDER BY'], correct: 1 },
             { question: "EXCEPT returns:", options: ['Rows in both queries', 'Rows in the first query not in the second', 'Rows in the second query not in the first', 'All rows from both queries'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-setops'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-setops'); onComplete('sql-setops') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── CTEs ── */}
@@ -866,7 +866,7 @@ SELECT d FROM date_spine;`} />
             { question: "What are the two parts of a recursive CTE?", options: ['SELECT and FROM', 'Base case (anchor) and recursive case', 'WITH and WHERE', 'UNION and INTERSECT'], correct: 1 },
             { question: "Can a CTE be referenced multiple times in the same query?", options: ['No  -  it executes once only', 'Yes  -  and each reference may re-execute the CTE unless materialized', 'Yes  -  and it is always cached', 'Only if declared PERSISTENT'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-cte'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-cte'); onComplete('sql-cte') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── WINDOW FUNCTIONS ── */}
@@ -934,7 +934,7 @@ SELECT * FROM (
             { question: "What does LAG(col, 1) return for the first row in a partition?", options: ['The last row value', '0', 'NULL', 'An error'], correct: 2 },
             { question: "Window functions are evaluated at which stage?", options: ['Before WHERE', 'After WHERE, during GROUP BY', 'After SELECT, before ORDER BY', 'After HAVING, when computing SELECT expressions'], correct: 3 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-window'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-window'); onComplete('sql-window') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── FRAMES ── */}
@@ -989,7 +989,7 @@ FROM orders;
             { question: "What is the default frame when ORDER BY is specified in OVER()?", options: ['ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING', 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING', 'No default  -  you must specify the frame'], correct: 1 },
             { question: "To compute a 30-day rolling sum, which frame would you use?", options: ['RANGE BETWEEN 30 PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 29 PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 30 PRECEDING AND 1 FOLLOWING', 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-frames'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-frames'); onComplete('sql-frames') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── PIVOT ── */}
@@ -1040,7 +1040,7 @@ UNPIVOT (amount FOR category IN (electronics, clothing, books)) unpvt;`} />
             { question: "Conditional aggregation (CASE + SUM) is preferred over native PIVOT because:", options: ['It is faster', 'It is portable across all SQL engines', 'It supports more column types', 'Native PIVOT has bugs'], correct: 1 },
             { question: "UNPIVOT converts:", options: ['NULL values to 0', 'Wide tables (many columns) to long tables (many rows)', 'Long tables to wide tables', 'Rows to JSON'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-pivot'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-pivot'); onComplete('sql-pivot') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── JSON ── */}
@@ -1092,7 +1092,7 @@ SELECT row_to_json(t) FROM orders t;  -- PostgreSQL`} />
             { question: "get_json_object(col, '$.a.b') extracts:", options: ['Top-level key a', 'Key b nested under key a', 'Array element at position b', 'All keys'], correct: 1 },
             { question: "To expand a JSON array column into multiple rows in Spark SQL, you use:", options: ['PIVOT', 'UNNEST', 'explode(from_json(...))', 'CROSS JOIN JSON_TABLE'], correct: 2 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-json'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-json'); onComplete('sql-json') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── DML ── */}
@@ -1153,7 +1153,7 @@ WHEN NOT MATCHED BY SOURCE THEN
             { question: "INSERT INTO ... ON CONFLICT (id) DO UPDATE is a PostgreSQL pattern for:", options: ['Conditional insert', 'Upsert (insert or update)', 'Bulk insert', 'Insert with validation'], correct: 1 },
             { question: "DELETE with a subquery vs TRUNCATE  -  key difference:", options: ['TRUNCATE is logged; DELETE is not', 'DELETE removes specific rows and is fully logged; TRUNCATE removes all rows and is minimally logged', 'DELETE is faster than TRUNCATE', 'TRUNCATE supports WHERE clauses'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-dml'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-dml'); onComplete('sql-dml') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── DDL ── */}
@@ -1211,7 +1211,7 @@ TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = 'true');`} />
             { question: "CREATE TABLE AS SELECT (CTAS) creates a table:", options: ['With no data', 'With the structure and data from the SELECT query', 'With only the structure (schema) of the SELECT', 'As a view, not a real table'], correct: 1 },
             { question: "ALTER TABLE ADD COLUMN in a live production table may cause:", options: ['An error if the table has data', 'A table lock (downtime) on some databases', 'All existing rows to be deleted', 'The column to be filled with random data'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-ddl'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-ddl'); onComplete('sql-ddl') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── VIEWS ── */}
@@ -1264,7 +1264,7 @@ SELECT ... FROM silver.customers JOIN silver.orders USING (customer_id);`} />
             { question: "When should you prefer a materialized view over a regular view?", options: ['When the underlying data changes every second', 'When the query is expensive and slight staleness is acceptable', 'When the table has fewer than 1000 rows', 'When you need row-level security'], correct: 1 },
             { question: "REFRESH MATERIALIZED VIEW CONCURRENTLY requires:", options: ['A superuser role', 'A unique index on the materialized view', 'No active transactions', 'PostgreSQL 14+'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-views'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-views'); onComplete('sql-views') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── TRANSACTIONS ── */}
@@ -1319,7 +1319,7 @@ COMMIT;
             { question: "READ COMMITTED isolation level prevents which anomaly?", options: ['Phantom reads', 'Non-repeatable reads', 'Dirty reads', 'Lost updates'], correct: 2 },
             { question: "A phantom read occurs when:", options: ['A row changes value between two reads in the same transaction', 'Uncommitted data is read', 'New rows appear in the same query within the same transaction', 'A transaction is rolled back'], correct: 2 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-transactions'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-transactions'); onComplete('sql-transactions') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── NORMALIZATION ── */}
@@ -1357,7 +1357,7 @@ COMMIT;
             { question: "In a data warehouse (OLAP), tables are typically:", options: ['In 3NF', 'In BCNF', 'Intentionally denormalized (star/snowflake schema)', 'Not normalized at all'], correct: 2 },
             { question: "A transitive dependency means:", options: ['A column depends on the primary key via another non-key column', 'Two columns share the same value', 'A foreign key references another table', 'A column can be NULL'], correct: 0 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-normalization'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-normalization'); onComplete('sql-normalization') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── INDEXES ── */}
@@ -1404,7 +1404,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
             { question: "For a composite index on (a, b, c), which query CANNOT use this index?", options: ['WHERE a = 1 AND b = 2', 'WHERE a = 1', 'WHERE b = 2', 'WHERE a = 1 AND b = 2 AND c = 3'], correct: 2, explanation: 'The composite index requires the leading column (a) to be in the WHERE clause.' },
             { question: "Why does WHERE YEAR(created_at) = 2024 prevent index usage?", options: ['YEAR() is not a standard function', 'The function wraps the indexed column, making it non-sargable', 'The index does not support date columns', 'YEAR() always triggers a full table scan by design'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-indexes'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-indexes'); onComplete('sql-indexes') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── EXECUTION PLANS ── */}
@@ -1454,7 +1454,7 @@ ANALYZE TABLE orders COMPUTE STATISTICS;   -- Spark SQL
             { question: "What does a Seq Scan in an execution plan indicate?", options: ['The query is optimal', 'A full table scan  -  every row is read', 'A sequential write operation', 'An index was used in sequence'], correct: 1 },
             { question: "Why does the optimizer sometimes choose a wrong plan?", options: ['SQL is ambiguous', 'Stale table statistics lead to incorrect row count estimates', 'The optimizer ignores indexes', 'The SQL syntax was non-standard'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-execution'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-execution'); onComplete('sql-execution') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── PATTERNS ── */}
@@ -1535,7 +1535,7 @@ SELECT * FROM ranked WHERE rn = 1;`} />
             { question: "The sessionization pattern groups events into sessions by:", options: ['User ID only', 'Detecting time gaps larger than a threshold and assigning a session number', 'Counting events per hour', 'Using a pre-existing session_id column'], correct: 1 },
             { question: "Year-over-year comparison in SQL is typically done using:", options: ['YEAR() function', 'LAG() with offset 12 over monthly data', 'SELF JOIN on year', 'DATEADD(-1, year)'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-patterns'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-patterns'); onComplete('sql-patterns') }}>Mark Complete ✓</button>
         </section>
 
         {/* ── PERFORMANCE ── */}
@@ -1597,7 +1597,7 @@ OR on different columns       →  UNION ALL of two queries, each using an index
             { question: "In a Parquet/Delta table partitioned by date, which query benefits most from partition pruning?", options: ['WHERE YEAR(event_date) = 2024', 'WHERE event_date = \'2024-01-15\'', 'WHERE CAST(event_date AS STRING) = \'2024-01-15\'', 'ORDER BY event_date'], correct: 1 },
             { question: "The BROADCAST join hint in Spark tells the optimizer to:", options: ['Distribute the large table across all executors', 'Send the small table to every executor to avoid a shuffle', 'Use sort-merge join', 'Broadcast the query plan'], correct: 1 },
           ]} />
-          <button className="complete-btn" onClick={() => { markTopicComplete('sql-performance'); onComplete() }}>Mark Complete ✓</button>
+          <button className="complete-btn" onClick={() => { markTopicComplete('sql-performance'); onComplete('sql-performance') }}>Mark Complete ✓</button>
         </section>
 
       </main>

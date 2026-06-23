@@ -28,7 +28,10 @@ export function useAuth() {
     })
   }, [])
 
-  const refreshProgress = async () => {
+  const refreshProgress = async (optimisticId?: string) => {
+    if (optimisticId) {
+      setCompleted(prev => new Set([...prev, optimisticId]))
+    }
     if (auth.currentUser) {
       const prog = await loadProgress(auth.currentUser.uid)
       setCompleted(prog)
