@@ -119,18 +119,76 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   box-shadow:0 1px 0 rgba(0,0,0,.03),0 4px 20px rgba(15,23,42,.05);
 }
 .topbar-logo{
-  display:flex;align-items:center;gap:10px;
-  font-family:var(--font-display);font-size:1.1rem;font-weight:900;
-  color:var(--text-1);text-decoration:none;flex-shrink:0;
-  letter-spacing:-.03em;
+  display:flex;align-items:center;gap:11px;
+  text-decoration:none;flex-shrink:0;
+  position:relative;
 }
-.topbar-logo-icon{
-  width:36px;height:36px;border-radius:var(--radius-md);
-  background:var(--grad-primary);
-  color:white;display:flex;align-items:center;justify-content:center;
-  font-size:1rem;font-weight:900;
-  box-shadow:var(--shadow-blue);
-  animation:glow 3s ease-in-out infinite;
+
+/* ── Logo mark (SVG hex) ─────────────────────────────────────────── */
+.topbar-logo-mark{
+  position:relative;width:42px;height:42px;flex-shrink:0;
+}
+.topbar-logo-svg{
+  width:42px;height:42px;
+  filter:drop-shadow(0 2px 8px rgba(79,142,247,.45));
+  transition:filter .3s ease,transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.logo-hex{
+  animation:logoPulse 3.5s ease-in-out infinite;
+}
+.logo-node{
+  animation:logoNodePop 3.5s ease-in-out infinite;
+}
+.logo-orbit-a{animation:orbitA 3s linear infinite;}
+.logo-orbit-b{animation:orbitA 3s linear infinite .8s;}
+.logo-orbit-c{animation:orbitA 3s linear infinite 1.6s;}
+.logo-line{stroke-dasharray:20;stroke-dashoffset:20;animation:logoDraw .6s ease forwards .1s;}
+.logo-line-2{animation-delay:.25s;}
+.logo-line-3{animation-delay:.4s;}
+
+/* ── Logo text block ─────────────────────────────────────────────── */
+.topbar-logo-text{
+  display:flex;flex-direction:column;line-height:1;gap:2px;
+}
+.topbar-logo-brand{
+  font-family:var(--font-display);font-size:1.15rem;font-weight:900;
+  color:var(--text-1);letter-spacing:-.04em;
+}
+.topbar-logo-accent{
+  font-family:var(--font-display);font-size:1.15rem;font-weight:900;
+  letter-spacing:-.04em;
+  background:linear-gradient(135deg,#4f8ef7,#8b5cf6,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% 100%;
+  animation:logoTextShimmer 3s ease-in-out infinite;
+}
+.topbar-logo-tagline{
+  font-family:var(--font-sans);font-size:.6rem;font-weight:600;
+  color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;
+  -webkit-text-fill-color:var(--text-4);
+}
+
+/* ── Logo keyframes ──────────────────────────────────────────────── */
+@keyframes logoPulse{
+  0%,100%{filter:brightness(1);}
+  50%{filter:brightness(1.12) saturate(1.2);}
+}
+@keyframes logoNodePop{
+  0%,100%{r:4;opacity:1;}
+  50%{r:4.8;opacity:.9;}
+}
+@keyframes orbitA{
+  0%{opacity:.5;transform:scale(1);}
+  50%{opacity:1;transform:scale(1.4);}
+  100%{opacity:.5;transform:scale(1);}
+}
+@keyframes logoDraw{
+  to{stroke-dashoffset:0;}
+}
+@keyframes logoTextShimmer{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
 .topbar-nav{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;}
 .topbar-nav::-webkit-scrollbar{display:none;}
@@ -823,14 +881,16 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 .complete-btn:hover::after{right:14px;opacity:1;}
 
 /* ── 7. TOPBAR ────────────────────────────────────────────────────── */
-/* Logo bounce on hover */
-.topbar-logo{transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
-.topbar-logo:hover{transform:scale(1.05);}
-.topbar-logo-icon{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease;}
-.topbar-logo:hover .topbar-logo-icon{
+/* Logo hover — SVG spins and lifts */
+.topbar-logo-svg{transition:filter .3s ease,transform .3s cubic-bezier(.34,1.56,.64,1);}
+.topbar-logo-brand{transition:letter-spacing .2s ease;}
+.topbar-logo-tagline{transition:color .2s ease,-webkit-text-fill-color .2s ease;}
+.topbar-logo:hover .topbar-logo-svg{
+  filter:drop-shadow(0 4px 16px rgba(139,92,246,.55));
   transform:rotate(-8deg) scale(1.1);
-  box-shadow:0 4px 20px rgba(79,142,247,.5);
 }
+.topbar-logo:hover .topbar-logo-brand{letter-spacing:-.02em;}
+.topbar-logo:hover .topbar-logo-tagline{color:var(--text-3);-webkit-text-fill-color:var(--text-3);}
 /* Nav links — scale underline from center */
 .topbar-link:hover::after{transform:scaleX(1);}
 

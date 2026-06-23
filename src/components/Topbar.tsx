@@ -35,8 +35,33 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
   return (
     <header className="topbar">
       <NavLink to="/" className="topbar-logo" style={{ textDecoration: 'none' }}>
-        <div className="topbar-logo-icon">L</div>
-        LearnWithMe
+        <div className="topbar-logo-mark" aria-hidden="true">
+          <svg className="topbar-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Hexagon base */}
+            <path className="logo-hex" d="M20 3L35.5885 12V28L20 37L4.41154 28V12L20 3Z" fill="url(#lgrd)" />
+            {/* Data flow lines */}
+            <line className="logo-line logo-line-1" x1="12" y1="20" x2="28" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <line className="logo-line logo-line-2" x1="16" y1="14" x2="24" y2="26" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.7"/>
+            <line className="logo-line logo-line-3" x1="24" y1="14" x2="16" y2="26" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.7"/>
+            {/* Center node */}
+            <circle className="logo-node" cx="20" cy="20" r="4" fill="white" />
+            {/* Orbit dots */}
+            <circle className="logo-orbit-dot logo-orbit-a" cx="28" cy="20" r="2.5" fill="white" fillOpacity="0.9"/>
+            <circle className="logo-orbit-dot logo-orbit-b" cx="14" cy="13" r="2" fill="white" fillOpacity="0.8"/>
+            <circle className="logo-orbit-dot logo-orbit-c" cx="14" cy="27" r="2" fill="white" fillOpacity="0.8"/>
+            <defs>
+              <linearGradient id="lgrd" x1="4" y1="3" x2="36" y2="37" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#4f8ef7"/>
+                <stop offset=".5" stopColor="#8b5cf6"/>
+                <stop offset="1" stopColor="#ec4899"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div className="topbar-logo-text">
+          <span className="topbar-logo-brand">learn</span><span className="topbar-logo-accent">DE</span>
+          <span className="topbar-logo-tagline">Data Engineering</span>
+        </div>
       </NavLink>
 
       <nav className="topbar-nav">
