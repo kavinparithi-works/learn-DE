@@ -852,19 +852,12 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 ════════════════════════════════════════════════════ */
 .quiz-container{
   background:linear-gradient(145deg,#0e1320 0%,#111728 55%,#0b1020 100%);
-  border:1px solid rgba(139,92,246,.28);
-  border-radius:var(--radius-2xl);padding:0;margin:16px 20px 28px;
-  box-shadow:
-    0 8px 40px rgba(139,92,246,.18),
-    0 2px 12px rgba(0,0,0,.22);
+  border:1px solid rgba(139,92,246,.22);
+  border-radius:var(--radius-xl);padding:0;margin:16px 20px 28px;
+  box-shadow:0 4px 24px rgba(0,0,0,.18);
   overflow:hidden;position:relative;
 }
-.quiz-container::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899,#f59e0b,#4f8ef7);
-  background-size:200% 100%;
-  animation:shimmer 2.5s ease-in-out infinite;
-}
+.quiz-container::before{display:none;}
 .quiz-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:20px 24px 14px;
