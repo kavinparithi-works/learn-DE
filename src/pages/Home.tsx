@@ -287,7 +287,7 @@ export default function Home({ completed }: Props) {
   return (
     <div style={{ marginTop: 'var(--topbar-h)' }}>
       {/* ── HERO ─────────────────────────────── */}
-      <section style={{
+      <section className="home-hero" style={{
         background: 'linear-gradient(160deg,#0f172a 0%,#1a1040 35%,#0f2040 70%,#0f172a 100%)',
         padding: '100px 48px 80px',
         textAlign: 'center',
@@ -443,7 +443,7 @@ export default function Home({ completed }: Props) {
             </p>
           </div>
 
-          <div style={{ display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',marginBottom:56 }}>
+          <div className="hero-btns" style={{ display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',marginBottom:56 }}>
             <button
               onClick={() => document.getElementById('learning-path')?.scrollIntoView({ behavior:'smooth' })}
               style={{
@@ -501,7 +501,7 @@ export default function Home({ completed }: Props) {
       </section>
 
       {/* ── LEVEL CARDS ─────────────────────── */}
-      <section id="learning-path" style={{ padding:'80px 48px',background:'var(--bg)' }}>
+      <section id="learning-path" className="home-levels" style={{ padding:'80px 48px',background:'var(--bg)' }}>
         <div style={{ textAlign:'center',marginBottom:56 }}>
           <div style={{
             display:'inline-flex',alignItems:'center',gap:6,
@@ -522,7 +522,7 @@ export default function Home({ completed }: Props) {
           </p>
         </div>
 
-        <div style={{
+        <div className="level-cards-grid" style={{
           display:'grid',
           gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',
           gap:20,maxWidth:1160,margin:'0 auto',
@@ -534,7 +534,7 @@ export default function Home({ completed }: Props) {
       </section>
 
       {/* ── FEATURES ────────────────────────── */}
-      <section style={{
+      <section className="home-features" style={{
         background:'linear-gradient(160deg,#0f172a 0%,#1a1040 50%,#0f2040 100%)',
         padding:'80px 48px',
       }}>
@@ -566,7 +566,7 @@ export default function Home({ completed }: Props) {
       </section>
 
       {/* ── FOOTER ──────────────────────────── */}
-      <footer style={{
+      <footer className="home-footer" style={{
         background:'#080e1a',
         borderTop:'1px solid rgba(255,255,255,.06)',
         padding:'52px 48px 40px',
