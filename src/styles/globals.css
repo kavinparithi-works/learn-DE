@@ -151,22 +151,13 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   position:fixed;
 }
 
-/* Rainbow gradient seam at bottom of topbar */
+/* Topbar bottom border — static, no animation */
 .topbar::after{
   content:'';
   position:absolute;
   bottom:0;left:0;right:0;
-  height:2px;
-  background:linear-gradient(
-    90deg,
-    transparent 0%,
-    #4f8ef7 15%,
-    #8b5cf6 40%,
-    #ec4899 65%,
-    #f59e0b 85%,
-    transparent 100%
-  );
-  opacity:.6;
+  height:1px;
+  background:rgba(148,163,184,.18);
   pointer-events:none;
 }
 
@@ -191,11 +182,9 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   filter:drop-shadow(0 2px 10px rgba(79,142,247,.5));
   transition:filter .3s ease,transform .3s cubic-bezier(.34,1.56,.64,1);
 }
-.logo-hex{animation:logoPulse 3.5s ease-in-out infinite;}
-.logo-node{animation:logoNodePop 3.5s ease-in-out infinite;}
-.logo-orbit-a{animation:orbitA 3s linear infinite;}
-.logo-orbit-b{animation:orbitA 3s linear infinite .8s;}
-.logo-orbit-c{animation:orbitA 3s linear infinite 1.6s;}
+.logo-hex{opacity:1;}
+.logo-node{opacity:1;}
+.logo-orbit-a,.logo-orbit-b,.logo-orbit-c{}
 .logo-line{stroke-dasharray:20;stroke-dashoffset:20;animation:logoDraw .6s ease forwards .1s;}
 .logo-line-2{animation-delay:.25s;}
 .logo-line-3{animation-delay:.4s;}
@@ -214,8 +203,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   letter-spacing:-.04em;
   background:linear-gradient(135deg,#4f8ef7,#8b5cf6,#ec4899);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  background-size:200% 100%;
-  animation:logoTextShimmer 3s ease-in-out infinite;
+  background-size:100% 100%;
 }
 .topbar-logo-tagline{
   font-family:var(--font-sans);font-size:.6rem;font-weight:600;
@@ -304,7 +292,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .btn-signin::before{
   content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);
-  transform:skewX(-20deg);animation:btnSheen 3s ease-in-out infinite;
+  transform:skewX(-20deg);left:-60%;transition:left .5s ease;
 }
 @keyframes btnSheen{0%,100%{left:-60%}50%{left:120%}}
 .btn-signin:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,142,247,.5);}
@@ -396,7 +384,6 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   background-size:300% 100% !important;
   border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1);
   box-shadow:0 0 12px rgba(139,92,246,.55);
-  animation:shimmer 2.5s linear infinite !important;
   position:relative;
 }
 .sidebar-progress-text{font-size:.71rem;color:rgba(255,255,255,.32);font-weight:500;}
@@ -539,12 +526,10 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   box-shadow:0 6px 28px rgba(9,11,40,.22);
 }
 
-/* Animated rainbow shimmer bar at top of header */
+/* Static gradient bar at top of header */
 .topic-header::before{
   content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899,#f59e0b,#22c55e,#4f8ef7);
-  background-size:300% 100%;
-  animation:shimmer 4s linear infinite;
+  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899);
   border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 
@@ -559,8 +544,6 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 /* Header content must sit above the pseudo overlays */
 .topic-header > *{position:relative;z-index:1;}
 
-/* Speed up shimmer on section hover */
-.topic-section:hover .topic-header::before{animation-duration:1.5s;}
 
 .topic-eyebrow{
   display:inline-flex;align-items:center;gap:6px;
@@ -933,9 +916,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .quiz-progress-fill{
   height:100%;
   background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899);
-  background-size:200% 100%;
   transition:width .45s ease;
-  animation:shimmer 2s ease-in-out infinite;
 }
 .quiz-body{padding:20px 24px 24px;}
 .quiz-question{margin-bottom:24px;animation:slideIn .3s ease backwards;}
@@ -1154,7 +1135,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .animate-slidein-left{animation:slideInLeft .5s ease backwards;}
 .animate-slidein-right{animation:slideInRight .5s ease backwards;}
 .animate-popin{animation:popIn .45s var(--transition-bounce) backwards;}
-.animate-float{animation:float 3s ease-in-out infinite;}
+.animate-float{}
 .animate-wiggle{animation:wiggle .5s ease;}
 
 /* anim-wrap hover */
@@ -1493,7 +1474,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .card-orb{
   position:absolute;border-radius:50%;pointer-events:none;
   background:radial-gradient(circle,currentColor 0%,transparent 70%);
-  opacity:.06;animation:floatY 4s ease-in-out infinite;
+  opacity:.06;
 }
 
 /* Section divider */

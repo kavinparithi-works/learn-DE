@@ -314,7 +314,7 @@ export default function Home({ completed }: Props) {
             position: 'absolute', top: star.top, left: star.left,
             width: star.size, height: star.size, borderRadius: '50%',
             background: 'white', pointerEvents: 'none',
-            animation: `pulse 3s ease-in-out ${star.delay}s infinite`,
+            opacity: 0.7,
             boxShadow: `0 0 ${star.size * 3}px white`,
           }} />
         ))}
@@ -328,7 +328,7 @@ export default function Home({ completed }: Props) {
               inset: -4,
               borderRadius: '9999px',
               border: '1.5px solid rgba(139,92,246,.5)',
-              animation: 'glowPulse 2s ease-in-out infinite',
+              opacity: 0.5,
               pointerEvents: 'none',
             }} />
             <div style={{
@@ -349,8 +349,6 @@ export default function Home({ completed }: Props) {
             fontWeight:900,letterSpacing:'-.04em',lineHeight:1.1,
             marginBottom:20,
             background:'linear-gradient(135deg,#ffffff 0%,#93c5fd 40%,#c4b5fd 70%,#f9a8d4 100%)',
-            backgroundSize:'200% 200%',
-            animation:'gradientShift 5s ease infinite',
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',
             fontFamily:'var(--font-display)',
           }}>
@@ -375,8 +373,6 @@ export default function Home({ completed }: Props) {
                 fontWeight:800,
                 letterSpacing:'-.01em',
                 background:'linear-gradient(135deg,#93c5fd 0%,#c4b5fd 50%,#f9a8d4 100%)',
-                backgroundSize:'200% 200%',
-                animation:'gradientShift 4s ease infinite',
                 WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
                 transition:'filter .25s ease',
               }}
@@ -451,8 +447,6 @@ export default function Home({ completed }: Props) {
             <Link to="/foundations" style={{
               padding:'14px 32px',borderRadius:'9999px',
               background:'linear-gradient(135deg,#4f8ef7,#8b5cf6,#ec4899)',
-              backgroundSize:'200% 200%',
-              animation:'gradientShift 4s ease infinite',
               color:'white',fontSize:'1rem',fontWeight:700,
               textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,
               boxShadow:'0 4px 28px rgba(139,92,246,.45)',
