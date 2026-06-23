@@ -685,6 +685,19 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes pageEnter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes navProgressRun{0%{width:0;opacity:1}80%{width:90%}100%{width:100%;opacity:0}}
+@keyframes sectionReveal{
+  0%  {opacity:0;transform:translateY(36px) scale(.985);}
+  60% {opacity:1;transform:translateY(-4px) scale(1.002);}
+  100%{opacity:1;transform:translateY(0)   scale(1);}
+}
+
+/* ── Scroll-reveal for topic sections ───────────────────────────────────── */
+.topic-section{
+  will-change:opacity,transform;
+}
+.sr-reveal{
+  animation:sectionReveal 480ms cubic-bezier(.22,1,.36,1) both;
+}
 
 /* ── Page-enter animation (applied by PageTransition wrapper) ─────────── */
 .page-enter-active > * {

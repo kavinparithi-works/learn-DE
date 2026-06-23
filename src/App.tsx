@@ -4,6 +4,7 @@ import Topbar from './components/Topbar'
 import AuthModal from './components/AuthModal'
 import PageTransition from './components/PageTransition'
 import { useAuth } from './hooks/useAuth'
+import { useScrollReveal } from './hooks/useScrollReveal'
 import Home from './pages/Home'
 import Foundations from './pages/Foundations'
 import SQL from './pages/SQL'
@@ -18,6 +19,7 @@ import './styles/globals.css'
 
 function AppRoutes({ completed, refreshProgress }: { completed: Set<string>; refreshProgress: () => void }) {
   const location = useLocation()
+  useScrollReveal()
   return (
     <PageTransition key={location.pathname}>
       <Routes location={location}>
