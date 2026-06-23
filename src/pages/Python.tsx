@@ -75,7 +75,7 @@ export default function Python({ completed, onComplete }: Props) {
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
             <div className="callout-body">
-              <strong>The GIL in one sentence:</strong> CPython's Global Interpreter Lock allows only ONE thread to execute Python bytecode at a time — even on multi-core machines. Threads help for I/O-bound work (network, disk) because the GIL is released during blocking I/O. For CPU-bound work (parsing, hashing, computation) you need <code>multiprocessing</code> or offload to a compiled extension. PySpark runs transformations in the JVM — the GIL is irrelevant to Spark's distributed execution.
+              <strong>The GIL in one sentence:</strong> CPython's Global Interpreter Lock allows only ONE thread to execute Python bytecode at a time  -  even on multi-core machines. Threads help for I/O-bound work (network, disk) because the GIL is released during blocking I/O. For CPU-bound work (parsing, hashing, computation) you need <code>multiprocessing</code> or offload to a compiled extension. PySpark runs transformations in the JVM  -  the GIL is irrelevant to Spark's distributed execution.
             </div>
           </div>
 
@@ -114,7 +114,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
 import hashlib, json
 
 def validate_and_hash_file(filepath: str) -> dict:
-    """Parse JSON lines file and compute SHA-256 — CPU-heavy work."""
+    """Parse JSON lines file and compute SHA-256  -  CPU-heavy work."""
     with open(filepath, "rb") as f:
         raw = f.read()
     records = [json.loads(line) for line in raw.splitlines() if line.strip()]
@@ -166,7 +166,7 @@ def transform_row(row: dict) -> dict:
 
 # Inspect bytecode to understand what Python actually runs:
 dis.dis(transform_row)
-# >>> LOAD_FAST, BUILD_MAP, etc. — these are the instructions the GIL guards
+# >>> LOAD_FAST, BUILD_MAP, etc.  -  these are the instructions the GIL guards
 
 print(f"Python {sys.version}")
 print(f"CPython implementation: {sys.implementation.name}")  # cpython
@@ -178,9 +178,9 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
 # For now, multiprocessing + asyncio remain the production patterns.`}</CodeBlock>
 
           <Quiz topicId="py-execution" questions={[
-            { question: "The Python GIL means that even on a 16-core machine, CPython threads can:", options: ["Execute Python bytecode fully in parallel across all cores", "Execute only one thread's Python bytecode at a time", "Execute I/O and CPU code in parallel simultaneously", "Never be used — only processes are allowed"], correct: 1 },
-            { question: "For a CPU-bound pipeline task (e.g., parsing 10 GB of JSON files), the correct Python parallelism tool is:", options: ["threading.Thread — fastest for all tasks", "asyncio.gather — best for computation", "multiprocessing.Pool — bypasses the GIL with separate processes", "concurrent.futures.ThreadPoolExecutor — releases the GIL for CPU work"], correct: 2 },
-            { question: "Why does PySpark not suffer from Python's GIL during data transformations?", options: ["PySpark uses PyPy which has no GIL", "PySpark automatically disables the GIL at startup", "Spark transformations execute in the JVM (Java/Scala workers) — Python only drives the driver logic", "PySpark uses asyncio internally"], correct: 2 },
+            { question: "The Python GIL means that even on a 16-core machine, CPython threads can:", options: ["Execute Python bytecode fully in parallel across all cores", "Execute only one thread's Python bytecode at a time", "Execute I/O and CPU code in parallel simultaneously", "Never be used  -  only processes are allowed"], correct: 1 },
+            { question: "For a CPU-bound pipeline task (e.g., parsing 10 GB of JSON files), the correct Python parallelism tool is:", options: ["threading.Thread  -  fastest for all tasks", "asyncio.gather  -  best for computation", "multiprocessing.Pool  -  bypasses the GIL with separate processes", "concurrent.futures.ThreadPoolExecutor  -  releases the GIL for CPU work"], correct: 2 },
+            { question: "Why does PySpark not suffer from Python's GIL during data transformations?", options: ["PySpark uses PyPy which has no GIL", "PySpark automatically disables the GIL at startup", "Spark transformations execute in the JVM (Java/Scala workers)  -  Python only drives the driver logic", "PySpark uses asyncio internally"], correct: 2 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-execution'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -190,13 +190,13 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
             <h1 className="topic-title">Type System & Type Hints</h1>
-            <p className="topic-desc">Python is dynamically typed at runtime but supports static type annotations checked by tools like mypy and Pyright. In production data pipelines, type hints are not optional — they prevent entire classes of bugs, make IDE auto-complete reliable, and serve as living documentation for schema contracts.</p>
+            <p className="topic-desc">Python is dynamically typed at runtime but supports static type annotations checked by tools like mypy and Pyright. In production data pipelines, type hints are not optional  -  they prevent entire classes of bugs, make IDE auto-complete reliable, and serve as living documentation for schema contracts.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Type hints are zero-cost at runtime.</strong> Python ignores annotations during execution — they exist purely for static analysis tools (mypy, Pyright, Ruff) and IDEs. Use <code>from __future__ import annotations</code> at the top of files to make all annotations lazy strings (faster import, allows forward references).
+              <strong>Type hints are zero-cost at runtime.</strong> Python ignores annotations during execution  -  they exist purely for static analysis tools (mypy, Pyright, Ruff) and IDEs. Use <code>from __future__ import annotations</code> at the top of files to make all annotations lazy strings (faster import, allows forward references).
             </div>
           </div>
 
@@ -264,7 +264,7 @@ class PipelineConfig:
         self.source_path = Path(self.source_path)   # coerce str → Path
         self.target_path = Path(self.target_path)
 
-@dataclass(frozen=True)          # immutable — safe as dict key or set member
+@dataclass(frozen=True)          # immutable  -  safe as dict key or set member
 class PartitionKey:
     year: int
     month: int
@@ -275,7 +275,7 @@ class PartitionKey:
 
 # ── Protocol: structural subtyping ("duck typing" with type safety) ──────
 class DataWriter(Protocol):
-    """Any object with these methods satisfies DataWriter — no inheritance needed."""
+    """Any object with these methods satisfies DataWriter  -  no inheritance needed."""
     def write(self, records: list[dict[str, Any]], destination: str) -> int: ...
     def flush(self) -> None: ...
 
@@ -302,7 +302,7 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 class PipelineResult(Generic[T]):
-    """Typed result monad — avoids returning (data, error) tuples."""
+    """Typed result monad  -  avoids returning (data, error) tuples."""
     def __init__(self, value: T | None, error: Exception | None = None) -> None:
         self._value = value
         self._error = error
@@ -353,9 +353,9 @@ def write_dataset(
 # plugins = ["pydantic.mypy"]`}</CodeBlock>
 
           <Quiz topicId="py-types" questions={[
-            { question: "In Python, type hints like 'def fn(x: int) -> str' are:", options: ["Enforced at runtime — TypeError raised if violated", "Purely for static analysis tools (mypy/Pyright) and IDEs — ignored at runtime", "Compiled to C checks for performance", "Only valid in Python 3.12+"], correct: 1 },
-            { question: "Which typing construct is best for defining the exact shape of a dictionary (like a JSON schema) with static checking?", options: ["dict[str, Any] — most flexible", "TypedDict — key names and value types are statically checked", "dataclass — required for dict-like objects", "NamedTuple — always use instead of TypedDict"], correct: 1 },
-            { question: "A Protocol in Python's typing system enables:", options: ["Multiple inheritance without MRO issues", "Structural subtyping — any class with matching methods satisfies the Protocol, no explicit inheritance needed", "Runtime interface enforcement like Java interfaces", "Abstract method enforcement identical to ABC"], correct: 1 },
+            { question: "In Python, type hints like 'def fn(x: int) -> str' are:", options: ["Enforced at runtime  -  TypeError raised if violated", "Purely for static analysis tools (mypy/Pyright) and IDEs  -  ignored at runtime", "Compiled to C checks for performance", "Only valid in Python 3.12+"], correct: 1 },
+            { question: "Which typing construct is best for defining the exact shape of a dictionary (like a JSON schema) with static checking?", options: ["dict[str, Any]  -  most flexible", "TypedDict  -  key names and value types are statically checked", "dataclass  -  required for dict-like objects", "NamedTuple  -  always use instead of TypedDict"], correct: 1 },
+            { question: "A Protocol in Python's typing system enables:", options: ["Multiple inheritance without MRO issues", "Structural subtyping  -  any class with matching methods satisfies the Protocol, no explicit inheritance needed", "Runtime interface enforcement like Java interfaces", "Abstract method enforcement identical to ABC"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-types'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -384,7 +384,7 @@ def write_dataset(
                 {[
                   { name: 'list', access: 'O(1)', search: 'O(n)', insert: 'O(1) tail', del: 'O(n)', use: 'Ordered sequences, iteration, append' },
                   { name: 'dict', access: 'O(1)', search: 'O(1)', insert: 'O(1)', del: 'O(1)', use: 'Key lookups, grouping, caches' },
-                  { name: 'set', access: '—', search: 'O(1)', insert: 'O(1)', del: 'O(1)', use: 'Dedup, membership tests, set ops' },
+                  { name: 'set', access: ' - ', search: 'O(1)', insert: 'O(1)', del: 'O(1)', use: 'Dedup, membership tests, set ops' },
                   { name: 'deque', access: 'O(1) ends', search: 'O(n)', insert: 'O(1) ends', del: 'O(1) ends', use: 'Queues, sliding windows, BFS' },
                   { name: 'heapq', access: 'O(1) min', search: 'O(n)', insert: 'O(log n)', del: 'O(log n)', use: 'Priority queues, top-K, merge' },
                 ].map((row, i) => (
@@ -419,7 +419,7 @@ for event in event_stream:
         flush_to_delta(batch, "/mnt/delta/events")
         batch.clear()   # O(1) clear vs re-creating the list
 
-# ── dict: O(1) lookup — use for enrichment joins ────────────────────────
+# ── dict: O(1) lookup  -  use for enrichment joins ────────────────────────
 # Build lookup dict from a "small" dimension table (fits in driver memory)
 import pandas as pd
 
@@ -433,11 +433,11 @@ def enrich(event: dict) -> dict:
     meta = user_lookup.get(event["user_id"], {"country": "unknown", "tier": "free"})
     return {**event, **meta}
 
-# ── set: O(1) membership — dedup and existence checks ────────────────────
+# ── set: O(1) membership  -  dedup and existence checks ────────────────────
 processed_ids: set[str] = set()
 
 for record in incoming_records:
-    if record["id"] in processed_ids:     # O(1) — not O(n) like a list
+    if record["id"] in processed_ids:     # O(1)  -  not O(n) like a list
         continue
     processed_ids.add(record["id"])
     process(record)
@@ -449,7 +449,7 @@ missing  = expected - actual          # in expected but not written
 extra    = actual - expected          # written but not in expected
 print(f"Missing: {len(missing)}, Extra: {len(extra)}")`}</CodeBlock>
 
-          <CodeBlock lang="python">{`# ── deque: O(1) at both ends — sliding windows & work queues ────────────
+          <CodeBlock lang="python">{`# ── deque: O(1) at both ends  -  sliding windows & work queues ────────────
 from collections import deque
 
 # Sliding window: keep last N events per user for anomaly detection
@@ -464,7 +464,7 @@ for event in stream:
         if event["amount"] > avg * 5:
             flag_anomaly(uid, event)
 
-# ── heapq: O(log n) priority — top-K and merge sorted streams ───────────
+# ── heapq: O(log n) priority  -  top-K and merge sorted streams ───────────
 import heapq
 
 # Top-10 highest-revenue customers from a large stream
@@ -507,8 +507,8 @@ yesterday_counts = Counter(yesterday_events)
 combined = today_counts + yesterday_counts`}</CodeBlock>
 
           <Quiz topicId="py-structures" questions={[
-            { question: "You need to check whether a user_id has already been processed (deduplication in a pipeline loop with 50M records). Which structure gives O(1) lookup?", options: ["list — simple and readable", "set — O(1) average-case hash lookup", "sorted list with bisect — O(log n)", "tuple — immutable so faster"], correct: 1 },
-            { question: "You need to maintain the top-100 highest-value orders seen so far in a streaming pipeline without sorting the entire stream. The right structure is:", options: ["A sorted list — always O(1) access", "heapq (min-heap of size 100) — O(log 100) per insert, O(1) peek at min", "Counter.most_common() — designed for top-K", "deque(maxlen=100) — automatically evicts old items"], correct: 1 },
+            { question: "You need to check whether a user_id has already been processed (deduplication in a pipeline loop with 50M records). Which structure gives O(1) lookup?", options: ["list  -  simple and readable", "set  -  O(1) average-case hash lookup", "sorted list with bisect  -  O(log n)", "tuple  -  immutable so faster"], correct: 1 },
+            { question: "You need to maintain the top-100 highest-value orders seen so far in a streaming pipeline without sorting the entire stream. The right structure is:", options: ["A sorted list  -  always O(1) access", "heapq (min-heap of size 100)  -  O(log 100) per insert, O(1) peek at min", "Counter.most_common()  -  designed for top-K", "deque(maxlen=100)  -  automatically evicts old items"], correct: 1 },
             { question: "collections.defaultdict(list) vs a plain dict: what problem does defaultdict solve?", options: ["defaultdict is faster for all operations", "defaultdict auto-initialises missing keys with the factory value, eliminating if-key-not-in-dict boilerplate", "defaultdict allows non-hashable keys", "defaultdict is thread-safe; plain dict is not"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-structures'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -519,7 +519,7 @@ combined = today_counts + yesterday_counts`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
             <h1 className="topic-title">Comprehensions & Generators Intro</h1>
-            <p className="topic-desc">Comprehensions are Python's most idiomatic feature for building collections. They're faster than equivalent for-loops because the iteration is implemented in C inside the interpreter. Generator expressions look identical but produce values lazily — critical when processing files or streams that don't fit in memory.</p>
+            <p className="topic-desc">Comprehensions are Python's most idiomatic feature for building collections. They're faster than equivalent for-loops because the iteration is implemented in C inside the interpreter. Generator expressions look identical but produce values lazily  -  critical when processing files or streams that don't fit in memory.</p>
           </div>
 
           <div className="callout callout-info">
@@ -530,11 +530,11 @@ combined = today_counts + yesterday_counts`}</CodeBlock>
           </div>
 
           <CodeBlock lang="python">{`# ── List comprehensions ─────────────────────────────────────────────────
-# Transform and filter in one expression — cleaner than for+append
+# Transform and filter in one expression  -  cleaner than for+append
 raw_paths = [
     "/mnt/raw/events_2024-01.jsonl",
     "/mnt/raw/events_2024-02.jsonl",
-    "/mnt/raw/.DS_Store",            # junk file — filter out
+    "/mnt/raw/.DS_Store",            # junk file  -  filter out
     "/mnt/raw/events_2024-03.jsonl",
 ]
 
@@ -583,7 +583,7 @@ revenue_by_region: dict[str, float] = {
 }
 
 # ── Set comprehensions ───────────────────────────────────────────────────
-# Unique event types seen in today's load — for schema validation
+# Unique event types seen in today's load  -  for schema validation
 seen_event_types: set[str] = {row["event_type"] for row in rows}
 
 EXPECTED_EVENTS = {"page_view", "click", "purchase", "refund"}
@@ -595,7 +595,7 @@ if unexpected:
 import csv, gzip, json
 from pathlib import Path
 
-# Reading a 20 GB gzipped JSONL file — generator never loads it all into RAM
+# Reading a 20 GB gzipped JSONL file  -  generator never loads it all into RAM
 def iter_jsonl_gz(path: str):
     """Yield one parsed dict per line from a gzipped JSONL file."""
     with gzip.open(path, "rt", encoding="utf-8") as f:
@@ -604,7 +604,7 @@ def iter_jsonl_gz(path: str):
             if line:
                 yield json.loads(line)
 
-# Aggregate with generator — only one record in memory at a time:
+# Aggregate with generator  -  only one record in memory at a time:
 total_revenue = sum(
     row["amount"]
     for row in iter_jsonl_gz("/mnt/raw/transactions_2024.jsonl.gz")
@@ -614,7 +614,7 @@ total_revenue = sum(
 # Count lines in a huge file without reading into memory:
 line_count = sum(1 for _ in open("/mnt/raw/bigfile.csv"))
 
-# Generator pipeline — chain transformations lazily:
+# Generator pipeline  -  chain transformations lazily:
 def parse_csv_rows(path: str):
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
@@ -626,12 +626,12 @@ def clean_row(row: dict) -> dict:
 def validate_row(row: dict) -> bool:
     return bool(row.get("user_id")) and bool(row.get("event_type"))
 
-# Compose pipeline — nothing executes until we consume:
+# Compose pipeline  -  nothing executes until we consume:
 raw   = parse_csv_rows("/mnt/landing/events.csv")
 clean = (clean_row(r) for r in raw)
 valid = (r for r in clean if validate_row(r))
 
-# Consume — only now does data flow through all stages:
+# Consume  -  only now does data flow through all stages:
 BATCH_SIZE = 5_000
 batch = []
 for record in valid:
@@ -655,17 +655,17 @@ t_loop  = timeit.timeit(
 )
 
 print(f"Comprehension: {t_comp:.3f}s  |  For-loop: {t_loop:.3f}s")
-# Comprehension: 0.83s  |  For-loop: 1.21s  (~30–40% faster typical)
+# Comprehension: 0.83s  |  For-loop: 1.21s  (~30 - 40% faster typical)
 
-# Generator expression: no list allocation at all — best for aggregation
+# Generator expression: no list allocation at all  -  best for aggregation
 t_gen = timeit.timeit("sum(x**2 for x in range(100_000))", number=100)
 # Slightly slower than list comp for sum() due to generator overhead,
-# but uses O(1) memory vs O(n) — the right trade-off for large data.`}</CodeBlock>
+# but uses O(1) memory vs O(n)  -  the right trade-off for large data.`}</CodeBlock>
 
           <Quiz topicId="py-comprehensions" questions={[
-            { question: "You need to compute the sum of a column across a 10 GB JSONL file that doesn't fit in RAM. Which approach is correct?", options: ["[row['amount'] for row in iter_file(path)] then sum() — fast because list comp is optimised", "sum(row['amount'] for row in iter_file(path)) — generator expression never materialises the full list", "pd.read_json(path)['amount'].sum() — pandas always handles large files efficiently", "map(lambda r: r['amount'], iter_file(path)) then sum() — map is lazy so identical"], correct: 1 },
+            { question: "You need to compute the sum of a column across a 10 GB JSONL file that doesn't fit in RAM. Which approach is correct?", options: ["[row['amount'] for row in iter_file(path)] then sum()  -  fast because list comp is optimised", "sum(row['amount'] for row in iter_file(path))  -  generator expression never materialises the full list", "pd.read_json(path)['amount'].sum()  -  pandas always handles large files efficiently", "map(lambda r: r['amount'], iter_file(path)) then sum()  -  map is lazy so identical"], correct: 1 },
             { question: "A list comprehension is generally faster than an equivalent for-loop + append because:", options: ["The Python interpreter optimises list comps with multi-threading", "The iteration loop executes in C within CPython, avoiding per-iteration Python bytecode overhead", "List comps are compiled to native machine code at parse time", "CPython pre-allocates the list at a fixed size to avoid reallocation"], correct: 1 },
-            { question: "What is the key difference between [x*2 for x in data] and (x*2 for x in data)?", options: ["Brackets vs parentheses is purely stylistic — behaviour is identical", "The list comprehension builds the full list in memory immediately; the generator expression yields values one at a time lazily", "Generator expressions are always faster than list comprehensions", "List comprehensions support filtering with if; generator expressions do not"], correct: 1 },
+            { question: "What is the key difference between [x*2 for x in data] and (x*2 for x in data)?", options: ["Brackets vs parentheses is purely stylistic  -  behaviour is identical", "The list comprehension builds the full list in memory immediately; the generator expression yields values one at a time lazily", "Generator expressions are always faster than list comprehensions", "List comprehensions support filtering with if; generator expressions do not"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-comprehensions'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -766,7 +766,7 @@ def _(obj: pd.DataFrame) -> str:
 
           <Quiz topicId="py-functions" questions={[
             { question: "What is the difference between *args and **kwargs?", options: ["*args captures keyword args; **kwargs captures positional args", "*args captures extra positional args as a tuple; **kwargs captures extra keyword args as a dict", "*args and **kwargs are identical", "*args is for integers; **kwargs is for strings"], correct: 1 },
-            { question: "What does functools.lru_cache do?", options: ["Runs functions in parallel", "Memoizes function results — returns cached output for repeated identical inputs", "Converts a function to a generator", "Adds retry logic to a function"], correct: 1 },
+            { question: "What does functools.lru_cache do?", options: ["Runs functions in parallel", "Memoizes function results  -  returns cached output for repeated identical inputs", "Converts a function to a generator", "Adds retry logic to a function"], correct: 1 },
             { question: "What does functools.partial do?", options: ["Partially evaluates a function and returns a generator", "Creates a new function with some arguments pre-filled", "Splits a function into multiple steps", "Makes a function thread-safe"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-functions'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -885,7 +885,7 @@ cumulative = list(itertools.accumulate(daily_sales, operator.add))
           <Quiz topicId="py-generators" questions={[
             { question: "Why are generator functions preferred over returning a list for large dataset streaming?", options: ["Generators are always faster", "Generators yield one item at a time using O(1) memory; returning a list requires O(n) memory for the full dataset", "Generators run in parallel automatically", "Generators bypass the GIL"], correct: 1 },
             { question: "What does itertools.islice do?", options: ["Slices a list in place", "Lazily takes the first N items from any iterator without consuming the rest", "Creates a slice object for numpy arrays", "Splits an iterator into N equal parts"], correct: 1 },
-            { question: "What requirement must be met before using itertools.groupby to group records?", options: ["Records must be stored in a dict", "Records must be sorted by the grouping key first — groupby only groups consecutive equal keys", "Records must be unique", "itertools.groupby has no requirements"], correct: 1 },
+            { question: "What requirement must be met before using itertools.groupby to group records?", options: ["Records must be stored in a dict", "Records must be sorted by the grouping key first  -  groupby only groups consecutive equal keys", "Records must be unique", "itertools.groupby has no requirements"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-generators'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1024,8 +1024,8 @@ def process_event(record: dict) -> dict:
     return {**record, "amount_usd": record["amount"] / 100}`}</CodeBlock>
 
           <Quiz topicId="py-decorators" questions={[
-            { question: "Why is @functools.wraps(func) important when writing decorators?", options: ["It speeds up the wrapped function", "It copies the original function's __name__, __doc__, and __module__ to the wrapper — without it, introspection and debugging break", "It makes the decorator re-entrant", "It enables the decorator to accept arguments"], correct: 1 },
-            { question: "When decorators are stacked as @A @B @C def func(), in what order are they applied?", options: ["A first, then B, then C (top to bottom)", "C first, then B, then A (bottom to top — C wraps func, B wraps that, A wraps that)", "All three are applied simultaneously", "Order depends on function signature"], correct: 1 },
+            { question: "Why is @functools.wraps(func) important when writing decorators?", options: ["It speeds up the wrapped function", "It copies the original function's __name__, __doc__, and __module__ to the wrapper  -  without it, introspection and debugging break", "It makes the decorator re-entrant", "It enables the decorator to accept arguments"], correct: 1 },
+            { question: "When decorators are stacked as @A @B @C def func(), in what order are they applied?", options: ["A first, then B, then C (top to bottom)", "C first, then B, then A (bottom to top  -  C wraps func, B wraps that, A wraps that)", "All three are applied simultaneously", "Order depends on function signature"], correct: 1 },
             { question: "What advantage does a class-based decorator have over a function-based decorator?", options: ["Class decorators are faster", "Class decorators can maintain state (instance variables) across multiple calls", "Class decorators don't need functools.wraps", "Class decorators can decorate classes but not functions"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-decorators'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1080,7 +1080,7 @@ class Connectable(Protocol):
     def execute(self, sql: str, params=()) -> list: ...
 
 def run_query(conn: Connectable, sql: str) -> list:
-    """Works with any object that has connect/close/execute — no inheritance needed."""
+    """Works with any object that has connect/close/execute  -  no inheritance needed."""
     return conn.execute(sql)
 
 # Multiple inheritance + MRO (Method Resolution Order)
@@ -1170,9 +1170,9 @@ enrich   = DataPipeline("enrich", [join_dims, add_metrics])
 full_etl = ingest | enrich   # DataPipeline(name='ingest|enrich', stages=6)`}</CodeBlock>
 
           <Quiz topicId="py-oop" questions={[
-            { question: "What is the difference between ABC (Abstract Base Class) and Protocol in Python?", options: ["They are identical", "ABC requires explicit inheritance (nominal typing); Protocol uses structural/duck typing — any class with the right methods satisfies it", "Protocol requires explicit inheritance; ABC uses duck typing", "ABC is faster; Protocol is for type checking only"], correct: 1 },
+            { question: "What is the difference between ABC (Abstract Base Class) and Protocol in Python?", options: ["They are identical", "ABC requires explicit inheritance (nominal typing); Protocol uses structural/duck typing  -  any class with the right methods satisfies it", "Protocol requires explicit inheritance; ABC uses duck typing", "ABC is faster; Protocol is for type checking only"], correct: 1 },
             { question: "What does @dataclass(frozen=True) do?", options: ["Prevents the dataclass from being serialized", "Makes the dataclass immutable and hashable (raises FrozenInstanceError on assignment)", "Freezes all class variables to their defaults", "Prevents subclassing"], correct: 1 },
-            { question: "What is the purpose of __slots__ in a dataclass?", options: ["Enables multiple inheritance", "Replaces __dict__ with a fixed-size slot array, reducing per-instance memory by ~40% — important when creating millions of record objects", "Allows the class to be used as a context manager", "Enables the class to be iterated"], correct: 1 },
+            { question: "What is the purpose of __slots__ in a dataclass?", options: ["Enables multiple inheritance", "Replaces __dict__ with a fixed-size slot array, reducing per-instance memory by ~40%  -  important when creating millions of record objects", "Allows the class to be used as a context manager", "Enables the class to be iterated"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-oop'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1187,7 +1187,7 @@ logger = logging.getLogger(__name__)
 
 # Class-based context manager
 class DatabaseTransaction:
-    """Wraps a DB connection in a transaction — auto-rollback on error."""
+    """Wraps a DB connection in a transaction  -  auto-rollback on error."""
     def __init__(self, dsn: str):
         self.dsn = dsn
         self.conn = None
@@ -1291,9 +1291,9 @@ def pipeline_stage(name: str, conn):
         raise`}</CodeBlock>
 
           <Quiz topicId="py-context" questions={[
-            { question: "What does __exit__ returning False (or None) mean in a context manager?", options: ["The context manager failed", "The exception (if any) is re-raised after __exit__ runs — returning True would suppress it", "The resource was not released", "The context manager will retry"], correct: 1 },
-            { question: "What is the advantage of @contextlib.contextmanager over writing a full class?", options: ["It is always faster", "It lets you write a context manager as a generator function with a single yield — much less boilerplate", "It supports async operations automatically", "It allows multiple yields"], correct: 1 },
-            { question: "When should you use contextlib.ExitStack?", options: ["When you need to suppress all exceptions", "When the number of context managers to open is determined at runtime — ExitStack manages an arbitrary dynamic list of them", "When you need nested transactions", "When context managers don't have __exit__"], correct: 1 },
+            { question: "What does __exit__ returning False (or None) mean in a context manager?", options: ["The context manager failed", "The exception (if any) is re-raised after __exit__ runs  -  returning True would suppress it", "The resource was not released", "The context manager will retry"], correct: 1 },
+            { question: "What is the advantage of @contextlib.contextmanager over writing a full class?", options: ["It is always faster", "It lets you write a context manager as a generator function with a single yield  -  much less boilerplate", "It supports async operations automatically", "It allows multiple yields"], correct: 1 },
+            { question: "When should you use contextlib.ExitStack?", options: ["When you need to suppress all exceptions", "When the number of context managers to open is determined at runtime  -  ExitStack manages an arbitrary dynamic list of them", "When you need nested transactions", "When context managers don't have __exit__"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-context'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1330,7 +1330,7 @@ class UpstreamAPIError(PipelineError):
 class IdempotencyError(PipelineError):
     """Raised when a pipeline run would produce duplicate results."""
 
-# Exception chaining — preserve original cause
+# Exception chaining  -  preserve original cause
 def load_config(path: str) -> dict:
     import json
     try:
@@ -1404,7 +1404,7 @@ def configure_logging(level: str = "INFO", json_output: bool = False) -> None:
         force=True,
     )
 
-# Contextual logging — bind pipeline context once, use everywhere
+# Contextual logging  -  bind pipeline context once, use everywhere
 logger = logging.getLogger(__name__)
 
 class PipelineLogger:
@@ -1435,8 +1435,8 @@ log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</C
 
           <Quiz topicId="py-errors" questions={[
             { question: "What is the purpose of 'raise NewException from original_exception' in Python?", options: ["It suppresses the original exception", "It raises a new exception while explicitly chaining the original as __cause__, preserving the full error context", "It logs both exceptions", "It retries the operation after the original exception"], correct: 1 },
-            { question: "Why define a custom exception hierarchy (e.g. DataQualityError inheriting PipelineError) instead of using generic Exception?", options: ["Custom exceptions are always faster", "A hierarchy allows callers to catch at different granularities — catch DataQualityError for DQ issues, PipelineError for any pipeline failure, Exception as last resort", "Python requires custom exceptions for logging", "Generic exceptions cannot be re-raised"], correct: 1 },
-            { question: "When does the finally block execute in a try/except/finally?", options: ["Only when no exception is raised", "Only when an exception is raised", "Always — whether an exception was raised, caught, or not raised at all", "Only after the except block completes"], correct: 2 },
+            { question: "Why define a custom exception hierarchy (e.g. DataQualityError inheriting PipelineError) instead of using generic Exception?", options: ["Custom exceptions are always faster", "A hierarchy allows callers to catch at different granularities  -  catch DataQualityError for DQ issues, PipelineError for any pipeline failure, Exception as last resort", "Python requires custom exceptions for logging", "Generic exceptions cannot be re-raised"], correct: 1 },
+            { question: "When does the finally block execute in a try/except/finally?", options: ["Only when no exception is raised", "Only when an exception is raised", "Always  -  whether an exception was raised, caught, or not raised at all", "Only after the except block completes"], correct: 2 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-errors'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1445,9 +1445,9 @@ log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</C
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
             <h1 className="topic-title">Async Programming & asyncio</h1>
-            <p className="topic-desc">asyncio enables high-throughput I/O-bound pipelines — concurrent API calls, database queries, and file operations on a single thread. async/await, gather, aiohttp, and asyncpg are the core primitives.</p>
+            <p className="topic-desc">asyncio enables high-throughput I/O-bound pipelines  -  concurrent API calls, database queries, and file operations on a single thread. async/await, gather, aiohttp, and asyncpg are the core primitives.</p>
           </div>
-          <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body"><strong>Concurrency vs Parallelism:</strong> asyncio is single-threaded cooperative concurrency — ideal for I/O-bound work (network, DB). For CPU-bound work, use multiprocessing or concurrent.futures.ProcessPoolExecutor instead.</div></div>
+          <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body"><strong>Concurrency vs Parallelism:</strong> asyncio is single-threaded cooperative concurrency  -  ideal for I/O-bound work (network, DB). For CPU-bound work, use multiprocessing or concurrent.futures.ProcessPoolExecutor instead.</div></div>
           <AsyncAnimation />
           <CodeBlock lang="python">{`import asyncio
 import aiohttp
@@ -1567,7 +1567,7 @@ async def export_to_parquet(table: str, output_path: str):
     pd.concat(frames).to_parquet(output_path, index=False)
     await pool.close()
 
-# asyncio.timeout (Python 3.11+) — cancel slow operations
+# asyncio.timeout (Python 3.11+)  -  cancel slow operations
 async def fetch_with_timeout(url: str) -> dict | None:
     try:
         async with asyncio.timeout(10.0):
@@ -1578,7 +1578,7 @@ async def fetch_with_timeout(url: str) -> dict | None:
         return None`}</CodeBlock>
           <Quiz topicId="py-async" questions={[
             { question: "What does asyncio.gather() do?", options: ["Runs coroutines sequentially one by one", "Runs multiple coroutines concurrently on the event loop and waits for all to finish", "Creates a thread pool for async tasks", "Converts async functions to synchronous ones"], correct: 1 },
-            { question: "Why use asyncio.Semaphore when making concurrent API requests?", options: ["To make requests sequential", "To cap the number of concurrent requests — prevents overwhelming the API server with too many simultaneous connections", "To retry failed requests automatically", "To add authentication headers"], correct: 1 },
+            { question: "Why use asyncio.Semaphore when making concurrent API requests?", options: ["To make requests sequential", "To cap the number of concurrent requests  -  prevents overwhelming the API server with too many simultaneous connections", "To retry failed requests automatically", "To add authentication headers"], correct: 1 },
             { question: "What is the difference between asyncio concurrency and multiprocessing?", options: ["asyncio uses multiple CPU cores; multiprocessing uses one", "asyncio is single-threaded cooperative concurrency for I/O-bound tasks; multiprocessing spawns separate processes for CPU-bound work", "asyncio is faster for all workloads", "multiprocessing is for I/O; asyncio is for CPU tasks"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-async'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1699,11 +1699,11 @@ config = configparser.ConfigParser()
 config.read("airflow.cfg")
 sql_alchemy_conn = config["database"]["sql_alchemy_conn"]
 
-# Atomic file writes — write to temp then rename to avoid partial reads
+# Atomic file writes  -  write to temp then rename to avoid partial reads
 import tempfile
 
 def atomic_write_json(data: dict, path: Path) -> None:
-    """Write JSON atomically — readers never see a partially written file."""
+    """Write JSON atomically  -  readers never see a partially written file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.with_suffix(".tmp")
     try:
@@ -1716,7 +1716,7 @@ def atomic_write_json(data: dict, path: Path) -> None:
           <Quiz topicId="py-io" questions={[
             { question: "Why use yaml.safe_load() instead of yaml.load() for config files?", options: ["safe_load is faster", "yaml.load() can execute arbitrary Python code embedded in YAML; safe_load restricts to safe types only", "safe_load supports more YAML features", "yaml.load() is deprecated"], correct: 1 },
             { question: "What advantage does pathlib.Path have over os.path string manipulation?", options: ["pathlib is faster than os.path", "pathlib provides an object-oriented API with / operator for joining, .stem/.suffix/.parent properties, and cross-platform path handling", "pathlib supports cloud paths natively", "pathlib paths are immutable"], correct: 1 },
-            { question: "Why use load_dotenv() for environment variables in pipelines?", options: ["It encrypts environment variables", "It loads key=value pairs from a .env file into os.environ, enabling local development without setting system env vars — the .env file is gitignored", "It validates environment variable types", "It synchronizes env vars across machines"], correct: 1 },
+            { question: "Why use load_dotenv() for environment variables in pipelines?", options: ["It encrypts environment variables", "It loads key=value pairs from a .env file into os.environ, enabling local development without setting system env vars  -  the .env file is gitignored", "It validates environment variable types", "It synchronizes env vars across machines"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-io'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1729,13 +1729,13 @@ def atomic_write_json(data: dict, path: Path) -> None:
           </div>
           <CodeBlock lang="python">{`import re
 
-# Basic patterns — compile for reuse in loops
+# Basic patterns  -  compile for reuse in loops
 EMAIL_RE    = re.compile(r"[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}")
 PHONE_RE    = re.compile(r"\\+?1?\\s*\\(?(\\d{3})\\)?[\\s.\\-]?(\\d{3})[\\s.\\-]?(\\d{4})")
 ISO_DATE_RE = re.compile(r"(\\d{4})-(\\d{2})-(\\d{2})")
 S3_URI_RE   = re.compile(r"s3://(?P<bucket>[^/]+)/(?P<key>.+)")
 
-# Groups — extract specific parts
+# Groups  -  extract specific parts
 def parse_s3_uri(uri: str) -> tuple[str, str]:
     m = S3_URI_RE.match(uri)
     if not m:
@@ -1748,7 +1748,7 @@ bucket, key = parse_s3_uri("s3://my-data-lake/events/2024/01/data.parquet")
 def extract_emails(text: str) -> list[str]:
     return EMAIL_RE.findall(text)
 
-# Non-greedy matching — important for nested structures
+# Non-greedy matching  -  important for nested structures
 # Greedy:     r"<.*>"   matches entire "<a>text</a>" as one match
 # Non-greedy: r"<.*?>"  matches "<a>" then "</a>" separately
 log_line = "2024-01-15T10:32:01Z [ERROR] user_id=42 msg='Invalid token for user@example.com'"
@@ -1767,14 +1767,14 @@ parsed = parse_log_line(log_line)
 # {'ts': '2024-01-15T10:32:01Z', 'level': 'ERROR', 'user_id': '42', 'msg': 'Invalid token for user@example.com'}`}</CodeBlock>
           <CodeBlock lang="python">{`import re
 
-# Lookahead and lookbehind — assert context without consuming characters
+# Lookahead and lookbehind  -  assert context without consuming characters
 PRICE_RE = re.compile(r"(?<=\\$)[\\d,]+\\.?\\d*")  # lookbehind: find number after $
 prices = PRICE_RE.findall("Total: $1,234.56 and $89.00")
 # ['1,234.56', '89.00']
 
 WORD_BEFORE_ERROR = re.compile(r"\\w+(?=\\s+error)", re.IGNORECASE)  # lookahead
 
-# Substitution — clean messy pipeline data
+# Substitution  -  clean messy pipeline data
 def normalize_phone(phone: str) -> str | None:
     """Normalize any phone format to +1XXXXXXXXXX."""
     digits = re.sub(r"\\D", "", phone)  # remove all non-digits
@@ -1784,7 +1784,7 @@ def normalize_phone(phone: str) -> str | None:
         return f"+{digits}"
     return None
 
-# re.sub with a function — complex replacements
+# re.sub with a function  -  complex replacements
 TEMPLATE_VAR_RE = re.compile(r"\\{\\{(\\w+)\\}\\}")
 
 def render_template(template: str, context: dict) -> str:
@@ -1796,11 +1796,11 @@ def render_template(template: str, context: dict) -> str:
 sql_template = "SELECT * FROM {{table}} WHERE date = '{{run_date}}' AND region = '{{region}}'"
 sql = render_template(sql_template, {"table": "orders", "run_date": "2024-01-15", "region": "us-east"})
 
-# Split with groups — keep delimiters
+# Split with groups  -  keep delimiters
 parts = re.split(r"(\\s*,\\s*)", "a, b,c ,  d")
 # ['a', ', ', 'b', ',', 'c', ' ,', '  d']
 
-# Multiline flag — ^ and $ match start/end of each line
+# Multiline flag  -  ^ and $ match start/end of each line
 LOG_BLOCK_RE = re.compile(r"^ERROR.*$", re.MULTILINE)
 errors = LOG_BLOCK_RE.findall(multiline_log_text)
 
@@ -1812,7 +1812,7 @@ def validate_table_name(name: str) -> str:
     return name`}</CodeBlock>
           <Quiz topicId="py-regex" questions={[
             { question: "What is the difference between re.match() and re.search()?", options: ["They are identical", "re.match() only matches at the beginning of the string; re.search() scans the entire string for a match", "re.search() is faster than re.match()", "re.match() returns all matches; re.search() returns the first only"], correct: 1 },
-            { question: "Why use re.compile() when applying a pattern inside a loop?", options: ["compile() makes the pattern case-insensitive", "Compiled patterns are parsed once and reused — avoids re-parsing the regex string on every iteration", "compile() is required for group extraction", "compile() enables multiline matching"], correct: 1 },
+            { question: "Why use re.compile() when applying a pattern inside a loop?", options: ["compile() makes the pattern case-insensitive", "Compiled patterns are parsed once and reused  -  avoids re-parsing the regex string on every iteration", "compile() is required for group extraction", "compile() enables multiline matching"], correct: 1 },
             { question: "What does the non-greedy quantifier *? do differently from *?", options: ["*? matches zero occurrences; * matches one or more", "*? matches as few characters as possible; * is greedy and matches as many as possible", "*? is case-insensitive; * is case-sensitive", "They are identical"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-regex'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1821,7 +1821,7 @@ def validate_table_name(name: str) -> str:
         <section id="py-testing" ref={el => { if (el) sectionRefs.current['py-testing'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Testing with pytest — fixtures, parametrize, mocking</h1>
+            <h1 className="topic-title">Testing with pytest  -  fixtures, parametrize, mocking</h1>
             <p className="topic-desc">Quality data pipelines need automated tests. pytest fixtures provide reusable test setup, parametrize covers edge cases efficiently, and unittest.mock patches external dependencies so tests run without real DBs or APIs.</p>
           </div>
           <CodeBlock lang="python">{`# tests/test_pipeline.py
@@ -1935,8 +1935,8 @@ async def test_async_pipeline():
 # conftest.py - shared fixtures across test files
 # (place in tests/ directory)`}</CodeBlock>
           <Quiz topicId="py-testing" questions={[
-            { question: "What is a pytest fixture and why use it?", options: ["A hard-coded test value", "A reusable setup/teardown function that pytest injects into test functions — enables DRY test code and proper resource cleanup", "A test assertion helper", "A way to skip tests conditionally"], correct: 1 },
-            { question: "What does @pytest.mark.parametrize do?", options: ["Marks a test as expected to fail", "Runs the same test function with multiple different input/output combinations — reduces duplicate test code", "Skips the test in CI", "Runs tests in parallel"], correct: 1 },
+            { question: "What is a pytest fixture and why use it?", options: ["A hard-coded test value", "A reusable setup/teardown function that pytest injects into test functions  -  enables DRY test code and proper resource cleanup", "A test assertion helper", "A way to skip tests conditionally"], correct: 1 },
+            { question: "What does @pytest.mark.parametrize do?", options: ["Marks a test as expected to fail", "Runs the same test function with multiple different input/output combinations  -  reduces duplicate test code", "Skips the test in CI", "Runs tests in parallel"], correct: 1 },
             { question: "When mocking with unittest.mock.patch, what does the mock replace?", options: ["The test function itself", "The named object in the module under test for the duration of the test, then restores the original", "All functions in the test file", "Only the return value of the patched function"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-testing'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1945,10 +1945,10 @@ async def test_async_pipeline():
         <section id="py-packages" ref={el => { if (el) sectionRefs.current['py-packages'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Package Management — pip, venv, poetry, pyproject.toml</h1>
+            <h1 className="topic-title">Package Management  -  pip, venv, poetry, pyproject.toml</h1>
             <p className="topic-desc">Reproducible Python environments are critical for data pipelines. Understanding virtual environments, pyproject.toml, poetry, and conda prevents the "works on my machine" problem and enables reliable CI/CD deployments.</p>
           </div>
-          <CodeBlock lang="bash">{`# Virtual environments — isolate project dependencies
+          <CodeBlock lang="bash">{`# Virtual environments  -  isolate project dependencies
 python -m venv .venv
 source .venv/bin/activate        # Linux/macOS
 .venv\\Scripts\\activate           # Windows
@@ -1977,7 +1977,7 @@ pip list --outdated              # check for updates
 pip install pip-tools
 pip-compile requirements.in      # generates pinned requirements.txt from abstract deps
 pip-sync requirements.txt        # install exactly what's in requirements.txt`}</CodeBlock>
-          <CodeBlock lang="toml">{`# pyproject.toml — modern Python project config (PEP 518/621)
+          <CodeBlock lang="toml">{`# pyproject.toml  -  modern Python project config (PEP 518/621)
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -2026,11 +2026,11 @@ poetry add --group dev pytest   # add dev dependency
 poetry install                  # install all deps
 poetry run python pipeline.py   # run in venv
 
-# Poetry lock file — deterministic installs
+# Poetry lock file  -  deterministic installs
 poetry lock          # update poetry.lock from pyproject.toml
 poetry install --no-root  # CI: install deps only (skip the package itself)
 
-# conda — better for scientific libraries with C extensions
+# conda  -  better for scientific libraries with C extensions
 conda create -n pipeline python=3.11
 conda activate pipeline
 conda install -c conda-forge pandas pyarrow psycopg2
@@ -2045,8 +2045,8 @@ conda env export > environment.yml
 # COPY . .
 # CMD ["python", "pipeline.py"]`}</CodeBlock>
           <Quiz topicId="py-packages" questions={[
-            { question: "What is the purpose of a virtual environment in Python?", options: ["To run Python faster", "To isolate project dependencies from the system Python and other projects — prevents version conflicts", "To enable async programming", "To compile Python to bytecode"], correct: 1 },
-            { question: "What does 'pip freeze > requirements.txt' do and when should you use it?", options: ["Installs packages from requirements.txt", "Saves a snapshot of all currently installed packages with exact versions — use before committing to pin a reproducible environment", "Updates all packages to latest versions", "Checks for conflicting dependencies"], correct: 1 },
+            { question: "What is the purpose of a virtual environment in Python?", options: ["To run Python faster", "To isolate project dependencies from the system Python and other projects  -  prevents version conflicts", "To enable async programming", "To compile Python to bytecode"], correct: 1 },
+            { question: "What does 'pip freeze > requirements.txt' do and when should you use it?", options: ["Installs packages from requirements.txt", "Saves a snapshot of all currently installed packages with exact versions  -  use before committing to pin a reproducible environment", "Updates all packages to latest versions", "Checks for conflicting dependencies"], correct: 1 },
             { question: "What advantage does poetry have over plain pip + requirements.txt?", options: ["poetry is faster at installing packages", "poetry manages a lock file with transitive dependencies, handles virtual environments automatically, and separates dev/prod dependency groups in pyproject.toml", "poetry supports conda packages", "poetry automatically publishes to PyPI"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-packages'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -2063,18 +2063,18 @@ conda env export > environment.yml
 import numpy as np
 from pathlib import Path
 
-# Read with explicit dtypes — avoid pandas' expensive type inference
+# Read with explicit dtypes  -  avoid pandas' expensive type inference
 df = pd.read_csv("events.csv", dtype={
-    "user_id":    "int32",      # int64 by default — int32 saves 50% memory
+    "user_id":    "int32",      # int64 by default  -  int32 saves 50% memory
     "session_id": "string",     # nullable string (better than object for NA)
-    "event_type": "category",   # 4-byte int per row vs full string — huge saving
+    "event_type": "category",   # 4-byte int per row vs full string  -  huge saving
     "amount":     "float32",    # 8 bytes → 4 bytes for financial data
 }, parse_dates=["ts"], date_format="%Y-%m-%d %H:%M:%S")
 
 # Check memory usage
 print(df.memory_usage(deep=True).sum() / 1024**2, "MB")
 
-# Chunked reading — process files that don't fit in RAM
+# Chunked reading  -  process files that don't fit in RAM
 def process_large_file(path: str, chunksize: int = 100_000) -> pd.DataFrame:
     results = []
     for chunk in pd.read_csv(path, chunksize=chunksize, dtype={"user_id": "int32"}):
@@ -2084,14 +2084,14 @@ def process_large_file(path: str, chunksize: int = 100_000) -> pd.DataFrame:
         results.append(aggregated)
     return pd.concat(results).groupby(level=0).sum()
 
-# Vectorized operations — NEVER use .apply() for arithmetic
+# Vectorized operations  -  NEVER use .apply() for arithmetic
 # BAD:  df["revenue"] = df.apply(lambda r: r["price"] * r["quantity"], axis=1)
 # GOOD: vectorized, runs in C
 df["revenue"]      = df["price"] * df["quantity"]
 df["discount_pct"] = (df["original_price"] - df["price"]) / df["original_price"] * 100
 df["is_high_value"]= df["amount"] > df["amount"].quantile(0.95)
 
-# String vectorization — .str accessor (runs in C, not Python loop)
+# String vectorization  -  .str accessor (runs in C, not Python loop)
 df["email_domain"] = df["email"].str.split("@").str[1].str.lower()
 df["clean_name"]   = df["name"].str.strip().str.title()
 df["has_promo"]    = df["description"].str.contains(r"promo|discount", case=False, regex=True)
@@ -2105,7 +2105,7 @@ df["week"]          = df["ts"].dt.to_period("W")
 df["days_since_reg"]= (df["ts"] - df["registration_date"]).dt.days`}</CodeBlock>
           <CodeBlock lang="python">{`import pandas as pd
 
-# GroupBy — aggregation with named outputs
+# GroupBy  -  aggregation with named outputs
 daily_summary = df.groupby(["region", pd.Grouper(key="ts", freq="D")]).agg(
     total_revenue   = ("amount",   "sum"),
     order_count     = ("order_id", "nunique"),
@@ -2113,18 +2113,18 @@ daily_summary = df.groupby(["region", pd.Grouper(key="ts", freq="D")]).agg(
     p95_amount      = ("amount",   lambda x: x.quantile(0.95)),
 ).reset_index()
 
-# GroupBy transform — broadcast aggregation back to original rows
+# GroupBy transform  -  broadcast aggregation back to original rows
 df["user_total"]   = df.groupby("user_id")["amount"].transform("sum")
 df["pct_of_total"] = df["amount"] / df["user_total"] * 100
 
-# merge (JOIN equivalent) — explicit how= is safer than default inner
+# merge (JOIN equivalent)  -  explicit how= is safer than default inner
 result = (
     pd.merge(orders, customers, on="customer_id", how="left", suffixes=("_ord", "_cust"))
     .merge(products, on="product_id", how="left")
     .merge(dim_date, left_on="order_date", right_on="date_key", how="left")
 )
 
-# pivot_table — create summary matrices
+# pivot_table  -  create summary matrices
 pivot = pd.pivot_table(
     df,
     values="revenue",
@@ -2152,16 +2152,16 @@ conditions = [
 choices = ["enterprise", "standard"]
 df["tier"] = np.select(conditions, choices, default="micro")
 
-# Memory optimization — downcast after arithmetic
+# Memory optimization  -  downcast after arithmetic
 df["amount"]   = pd.to_numeric(df["amount"], downcast="float")
 df["user_id"]  = pd.to_numeric(df["user_id"], downcast="integer")
 
 # Write parquet with compression
 df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=False)`}</CodeBlock>
           <Quiz topicId="py-pandas" questions={[
-            { question: "Why use dtype='category' for a column like event_type in pandas?", options: ["It enables sorting", "It stores unique string values once and uses integer codes internally — reduces memory from O(n strings) to O(unique strings + n ints)", "It speeds up merge operations", "It enables SQL-style queries"], correct: 1 },
-            { question: "What is the key reason to avoid df.apply(lambda row: ..., axis=1) for arithmetic?", options: ["apply() has a bug with lambda functions", "apply() runs a Python function per row in a Python loop — vectorized pandas/numpy ops run in C and are 10-100x faster", "apply() doesn't support arithmetic", "apply() produces incorrect results with float columns"], correct: 1 },
-            { question: "What does pd.read_csv(path, chunksize=100_000) return?", options: ["A DataFrame with the first 100,000 rows", "A TextFileReader iterator that yields DataFrames of 100,000 rows at a time — enables processing files larger than RAM", "A list of 100,000 DataFrames", "An error if the file has more than 100,000 rows"], correct: 1 },
+            { question: "Why use dtype='category' for a column like event_type in pandas?", options: ["It enables sorting", "It stores unique string values once and uses integer codes internally  -  reduces memory from O(n strings) to O(unique strings + n ints)", "It speeds up merge operations", "It enables SQL-style queries"], correct: 1 },
+            { question: "What is the key reason to avoid df.apply(lambda row: ..., axis=1) for arithmetic?", options: ["apply() has a bug with lambda functions", "apply() runs a Python function per row in a Python loop  -  vectorized pandas/numpy ops run in C and are 10-100x faster", "apply() doesn't support arithmetic", "apply() produces incorrect results with float columns"], correct: 1 },
+            { question: "What does pd.read_csv(path, chunksize=100_000) return?", options: ["A DataFrame with the first 100,000 rows", "A TextFileReader iterator that yields DataFrames of 100,000 rows at a time  -  enables processing files larger than RAM", "A list of 100,000 DataFrames", "An error if the file has more than 100,000 rows"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-pandas'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2169,7 +2169,7 @@ df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=Fa
         <section id="py-db" ref={el => { if (el) sectionRefs.current['py-db'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Database Connections — psycopg2, SQLAlchemy, Connection Pooling</h1>
+            <h1 className="topic-title">Database Connections  -  psycopg2, SQLAlchemy, Connection Pooling</h1>
             <p className="topic-desc">Proper database connection management prevents connection leaks, ensures transactional integrity, and maximizes throughput. psycopg2 for direct Postgres, SQLAlchemy for ORM/abstraction, and connection pooling for high-concurrency workloads.</p>
           </div>
           <CodeBlock lang="python">{`import psycopg2
@@ -2181,7 +2181,7 @@ logger = logging.getLogger(__name__)
 
 DSN = "postgresql://pipeline:secret@db-host:5432/warehouse"
 
-# Context manager for connections — always closes, rollbacks on error
+# Context manager for connections  -  always closes, rollbacks on error
 @contextmanager
 def get_connection(dsn: str = DSN):
     conn = psycopg2.connect(dsn)
@@ -2227,7 +2227,7 @@ def bulk_copy_from_csv(filepath: str, table: str) -> None:
                 )
             logger.info(f"COPY loaded {cur.rowcount} rows into {table}")
 
-# DictCursor — rows as dicts instead of tuples
+# DictCursor  -  rows as dicts instead of tuples
 def fetch_dim_table(table: str) -> dict[int, dict]:
     with get_connection() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
@@ -2288,9 +2288,9 @@ def run_upsert(records: list[dict], table: str) -> int:
         result = conn.execute(sql, records)
         return result.rowcount`}</CodeBlock>
           <Quiz topicId="py-db" questions={[
-            { question: "What is the advantage of psycopg2.extras.execute_values over executemany?", options: ["execute_values is the standard API; executemany is deprecated", "execute_values sends all rows in one or few SQL statements; executemany sends one statement per row — execute_values is typically 10-100x faster for bulk loads", "execute_values supports transactions; executemany does not", "execute_values works with any database; executemany is PostgreSQL-only"], correct: 1 },
-            { question: "What does pool_pre_ping=True do in SQLAlchemy?", options: ["Pings the DB to measure latency before each query", "Tests each connection for liveness before checking it out from the pool — prevents 'connection already closed' errors after network drops", "Limits the number of connections to the pool size", "Enables connection compression"], correct: 1 },
-            { question: "Why use parameterized queries (text() with :param) instead of string formatting for SQL?", options: ["Parameterized queries are faster", "String formatting creates SQL injection vulnerabilities — parameterized queries safely escape user input", "Parameterized queries support more SQL features", "String formatting doesn't work with SQLAlchemy"], correct: 1 },
+            { question: "What is the advantage of psycopg2.extras.execute_values over executemany?", options: ["execute_values is the standard API; executemany is deprecated", "execute_values sends all rows in one or few SQL statements; executemany sends one statement per row  -  execute_values is typically 10-100x faster for bulk loads", "execute_values supports transactions; executemany does not", "execute_values works with any database; executemany is PostgreSQL-only"], correct: 1 },
+            { question: "What does pool_pre_ping=True do in SQLAlchemy?", options: ["Pings the DB to measure latency before each query", "Tests each connection for liveness before checking it out from the pool  -  prevents 'connection already closed' errors after network drops", "Limits the number of connections to the pool size", "Enables connection compression"], correct: 1 },
+            { question: "Why use parameterized queries (text() with :param) instead of string formatting for SQL?", options: ["Parameterized queries are faster", "String formatting creates SQL injection vulnerabilities  -  parameterized queries safely escape user input", "Parameterized queries support more SQL features", "String formatting doesn't work with SQLAlchemy"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-db'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2298,7 +2298,7 @@ def run_upsert(records: list[dict], table: str) -> int:
         <section id="py-http" ref={el => { if (el) sectionRefs.current['py-http'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">HTTP Clients — requests, httpx, retry, pagination, rate limiting</h1>
+            <h1 className="topic-title">HTTP Clients  -  requests, httpx, retry, pagination, rate limiting</h1>
             <p className="topic-desc">Data engineers constantly pull data from REST APIs. Handling pagination, rate limits, OAuth, retry with backoff, and session management correctly is critical for reliable API ingestion pipelines.</p>
           </div>
           <CodeBlock lang="python">{`import requests
@@ -2405,7 +2405,7 @@ class OAuthClient:
         self._expires_at = time.time() + token_data.get("expires_in", 3600)
         return self._token
 
-# httpx async client — for high-throughput concurrent API ingestion
+# httpx async client  -  for high-throughput concurrent API ingestion
 async def fetch_all_pages_async(
     base_url: str,
     endpoints: list[str],
@@ -2446,9 +2446,9 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
             break
     return all_records`}</CodeBlock>
           <Quiz topicId="py-http" questions={[
-            { question: "Why use a requests.Session() instead of requests.get() for repeated API calls?", options: ["Session is asynchronous; requests.get is synchronous", "Session reuses TCP connections (keep-alive), shares headers/cookies across requests, and manages cookies — much more efficient for many calls to the same host", "Session automatically handles retries", "requests.get() doesn't support authentication"], correct: 1 },
-            { question: "What is cursor-based pagination and when is it preferred over page-number pagination?", options: ["Cursor pagination uses a database cursor", "Cursor pagination uses an opaque pointer to the next page position — it handles insertions/deletions correctly and is preferred for large, frequently-updated datasets where page numbers can skip or duplicate records", "Cursor pagination is faster for small datasets", "Page-number pagination always returns duplicate records"], correct: 1 },
-            { question: "What HTTP status code indicates rate limiting and how should your client handle it?", options: ["404 — retry immediately", "429 Too Many Requests — read the Retry-After header and sleep for that duration before retrying", "500 — switch to a different endpoint", "401 — refresh the OAuth token"], correct: 1 },
+            { question: "Why use a requests.Session() instead of requests.get() for repeated API calls?", options: ["Session is asynchronous; requests.get is synchronous", "Session reuses TCP connections (keep-alive), shares headers/cookies across requests, and manages cookies  -  much more efficient for many calls to the same host", "Session automatically handles retries", "requests.get() doesn't support authentication"], correct: 1 },
+            { question: "What is cursor-based pagination and when is it preferred over page-number pagination?", options: ["Cursor pagination uses a database cursor", "Cursor pagination uses an opaque pointer to the next page position  -  it handles insertions/deletions correctly and is preferred for large, frequently-updated datasets where page numbers can skip or duplicate records", "Cursor pagination is faster for small datasets", "Page-number pagination always returns duplicate records"], correct: 1 },
+            { question: "What HTTP status code indicates rate limiting and how should your client handle it?", options: ["404  -  retry immediately", "429 Too Many Requests  -  read the Retry-After header and sleep for that duration before retrying", "500  -  switch to a different endpoint", "401  -  refresh the OAuth token"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-http'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2457,7 +2457,7 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
             <h1 className="topic-title">Linux & Shell Scripting for Data Engineers</h1>
-            <p className="topic-desc">Data engineers work in Linux environments daily — managing file systems, scheduling jobs with cron, monitoring processes, piping data between commands, and writing robust shell scripts for pipeline orchestration.</p>
+            <p className="topic-desc">Data engineers work in Linux environments daily  -  managing file systems, scheduling jobs with cron, monitoring processes, piping data between commands, and writing robust shell scripts for pipeline orchestration.</p>
           </div>
           <CodeBlock lang="bash">{`#!/bin/bash
 # Robust pipeline shell script
@@ -2503,7 +2503,7 @@ find "\${DATA_DIR}/incoming" -name "*.csv.gz" -newer "\${DATA_DIR}/last_run" -pr
     | xargs -0 -P 4 -I{} bash -c 'python3 /opt/pipelines/ingest.py --file "$1"' _ {}
 # -P 4: 4 parallel processes; -0: null-delimited (handles spaces in filenames)
 
-# Pipe chaining — transform data without temp files
+# Pipe chaining  -  transform data without temp files
 zcat "\${DATA_DIR}/events.jsonl.gz" \\
     | python3 /opt/pipelines/filter.py --type purchase \\
     | python3 /opt/pipelines/enrich.py \\
@@ -2566,9 +2566,9 @@ tail -f /var/log/pipelines/*.log   # follow all pipeline logs
 grep -E "ERROR|CRITICAL" /var/log/pipelines/pipeline_2024-01-15.log
 wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</CodeBlock>
           <Quiz topicId="py-linux" questions={[
-            { question: "What does 'set -euo pipefail' do at the top of a bash script?", options: ["Sets environment variables", "-e exits on any error, -u treats unset variables as errors, -o pipefail catches errors in pipes — together they prevent silent failures", "Sets file permissions", "Enables debug output"], correct: 1 },
-            { question: "What does 'xargs -P 4' do in a shell pipeline?", options: ["Limits file size to 4MB", "Runs up to 4 parallel processes of the given command — enables parallel file processing", "Sets process priority to 4", "Retries failed commands 4 times"], correct: 1 },
-            { question: "Why use 'trap cleanup EXIT' in a shell script?", options: ["It logs all commands", "It registers a function to run when the script exits — whether normally or due to an error — ensuring cleanup always happens", "It prevents the script from exiting on errors", "It sends an exit signal to child processes"], correct: 1 },
+            { question: "What does 'set -euo pipefail' do at the top of a bash script?", options: ["Sets environment variables", "-e exits on any error, -u treats unset variables as errors, -o pipefail catches errors in pipes  -  together they prevent silent failures", "Sets file permissions", "Enables debug output"], correct: 1 },
+            { question: "What does 'xargs -P 4' do in a shell pipeline?", options: ["Limits file size to 4MB", "Runs up to 4 parallel processes of the given command  -  enables parallel file processing", "Sets process priority to 4", "Retries failed commands 4 times"], correct: 1 },
+            { question: "Why use 'trap cleanup EXIT' in a shell script?", options: ["It logs all commands", "It registers a function to run when the script exits  -  whether normally or due to an error  -  ensuring cleanup always happens", "It prevents the script from exiting on errors", "It sends an exit signal to child processes"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-linux'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2577,7 +2577,7 @@ wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</Cod
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
             <h1 className="topic-title">Git Deep Dive for Data Engineers</h1>
-            <p className="topic-desc">Git is not just version control — it's the backbone of CI/CD, code review, and collaborative development. Data engineers need fluency in branching strategies, rebase vs merge, cherry-pick, bisect, hooks, and GitHub Actions for pipeline automation.</p>
+            <p className="topic-desc">Git is not just version control  -  it's the backbone of CI/CD, code review, and collaborative development. Data engineers need fluency in branching strategies, rebase vs merge, cherry-pick, bisect, hooks, and GitHub Actions for pipeline automation.</p>
           </div>
           <CodeBlock lang="bash">{`# Branching strategy: GitHub Flow for data engineering teams
 # main → always deployable
@@ -2599,7 +2599,7 @@ git fetch origin
 git rebase origin/main            # replay your commits on top of latest main
 # If conflicts: git add <resolved_files> && git rebase --continue
 
-# Interactive rebase — squash/reword commits before PR
+# Interactive rebase  -  squash/reword commits before PR
 git rebase -i HEAD~3
 # In editor: pick/squash/reword/drop commits
 # squash: merge into previous commit
@@ -2610,12 +2610,12 @@ git push origin feature/add-silver-transformations
 gh pr create --title "feat(silver): add deduplication with window functions" \\
              --body "Adds SCD2-style dedup using row_number() partitioned by user_id+date"
 
-# cherry-pick — apply specific commit to another branch (e.g., hotfix to main)
+# cherry-pick  -  apply specific commit to another branch (e.g., hotfix to main)
 git checkout main
 git cherry-pick abc1234           # apply commit abc1234 to main
 git push origin main
 
-# bisect — find which commit introduced a bug
+# bisect  -  find which commit introduced a bug
 git bisect start
 git bisect bad HEAD               # current commit is bad
 git bisect good v1.2.0            # this tag was good
@@ -2699,9 +2699,9 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4`}</CodeBlock>
           <Quiz topicId="py-git" questions={[
-            { question: "What is the difference between git rebase and git merge when integrating feature branches?", options: ["They are identical", "merge creates a merge commit preserving branch history; rebase replays your commits on top of the target branch creating a linear history — rebase is cleaner but rewrites commit hashes", "rebase is safer for shared branches; merge rewrites history", "merge is faster; rebase is more accurate"], correct: 1 },
+            { question: "What is the difference between git rebase and git merge when integrating feature branches?", options: ["They are identical", "merge creates a merge commit preserving branch history; rebase replays your commits on top of the target branch creating a linear history  -  rebase is cleaner but rewrites commit hashes", "rebase is safer for shared branches; merge rewrites history", "merge is faster; rebase is more accurate"], correct: 1 },
             { question: "When should you use git cherry-pick?", options: ["When you want to merge entire branches", "When you need to apply a specific commit (e.g., a hotfix) to another branch without merging all commits from the source branch", "When you want to undo a commit", "When bisecting to find a bug"], correct: 1 },
-            { question: "What does 'git bisect run <test-command>' do?", options: ["Runs tests on the current branch only", "Automates the bisect process — git checks out commits and runs the test command; the exit code (0=good, non-zero=bad) tells git which direction to bisect until the offending commit is found", "Bisects the codebase into modules for parallel testing", "Runs all commits in parallel"], correct: 1 },
+            { question: "What does 'git bisect run <test-command>' do?", options: ["Runs tests on the current branch only", "Automates the bisect process  -  git checks out commits and runs the test command; the exit code (0=good, non-zero=bad) tells git which direction to bisect until the offending commit is found", "Bisects the codebase into modules for parallel testing", "Runs all commits in parallel"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-git'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2711,12 +2711,12 @@ jobs:
           <div className="topic-header">
             <div className="topic-eyebrow">Advanced DE Python</div>
             <h1 className="topic-title">Pydantic Data Validation</h1>
-            <p className="topic-desc">Pydantic v2 is the standard library for data validation in Python data engineering. Built on Rust (via pydantic-core), it validates data at the boundary between untrusted inputs and your pipeline logic — parsing JSON API responses, validating pipeline configs, and enforcing schema contracts at runtime. Pydantic models serve as living documentation for your data contracts.</p>
+            <p className="topic-desc">Pydantic v2 is the standard library for data validation in Python data engineering. Built on Rust (via pydantic-core), it validates data at the boundary between untrusted inputs and your pipeline logic  -  parsing JSON API responses, validating pipeline configs, and enforcing schema contracts at runtime. Pydantic models serve as living documentation for your data contracts.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Pydantic v2 vs v1:</strong> v2 (2023+) rewrites the core in Rust — 5-50x faster than v1. Key API changes: <code>@validator</code> → <code>@field_validator</code>, <code>@root_validator</code> → <code>@model_validator</code>, <code>.dict()</code> → <code>.model_dump()</code>, <code>.json()</code> → <code>.model_dump_json()</code>. Always use v2 for new projects.</div>
+            <div className="callout-body"><strong>Pydantic v2 vs v1:</strong> v2 (2023+) rewrites the core in Rust  -  5-50x faster than v1. Key API changes: <code>@validator</code> → <code>@field_validator</code>, <code>@root_validator</code> → <code>@model_validator</code>, <code>.dict()</code> → <code>.model_dump()</code>, <code>.json()</code> → <code>.model_dump_json()</code>. Always use v2 for new projects.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Pydantic v2: data validation for data engineering ─────────────────────────
@@ -2778,7 +2778,7 @@ class PipelineEvent(BaseModel):
     @classmethod
     def event_ts_not_future(cls, v: datetime) -> datetime:
         if v > datetime.utcnow():
-            raise ValueError(f"event_ts {v} is in the future — likely a clock skew issue")
+            raise ValueError(f"event_ts {v} is in the future  -  likely a clock skew issue")
         return v
 
     @field_validator("region")
@@ -2944,7 +2944,7 @@ for raw_record in raw_batch:
           <Quiz topicId="py-pydantic" questions={[
             { question: "In Pydantic v2, which decorator replaced the v1 @root_validator for cross-field validation that runs after all fields are set?", options: ["@field_validator(mode='all')", "@model_validator(mode='after')", "@cross_validator", "@validator(always=True)"], correct: 1 },
             { question: "What is the primary purpose of BaseSettings in pydantic-settings?", options: ["Validate JSON schemas at runtime", "Load and validate configuration from environment variables and .env files with type checking and defaults", "Store Pydantic models in a settings registry", "Configure Pydantic's validation behavior globally"], correct: 1 },
-            { question: "When using Field(gt=0, lt=1_000_000) on a float field, what does 'gt' enforce?", options: ["The value must be greater than or equal to 0 (inclusive lower bound)", "The value must be strictly greater than 0 (exclusive lower bound — 0.0 would fail validation)", "The value must be a positive integer", "The field is globally typed (gt = global type)"], correct: 1 },
+            { question: "When using Field(gt=0, lt=1_000_000) on a float field, what does 'gt' enforce?", options: ["The value must be greater than or equal to 0 (inclusive lower bound)", "The value must be strictly greater than 0 (exclusive lower bound  -  0.0 would fail validation)", "The value must be a positive integer", "The field is globally typed (gt = global type)"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-pydantic'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2959,13 +2959,13 @@ for raw_record in raw_batch:
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Multi-stage builds:</strong> Use a builder stage to install dependencies (including build tools like gcc), then copy only the necessary artifacts to a slim runtime stage. This reduces final image size by 60-80% — critical for fast image pulls in CI/CD and Kubernetes pod startup times.</div>
+            <div className="callout-body"><strong>Multi-stage builds:</strong> Use a builder stage to install dependencies (including build tools like gcc), then copy only the necessary artifacts to a slim runtime stage. This reduces final image size by 60-80%  -  critical for fast image pulls in CI/CD and Kubernetes pod startup times.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Dockerfile for a PySpark data engineering application ────────────────────
 
 # ─────────────────────────────────────────────
-# STAGE 1: builder — install Python dependencies
+# STAGE 1: builder  -  install Python dependencies
 # ─────────────────────────────────────────────
 FROM python:3.11-slim AS builder
 
@@ -2978,7 +2978,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy only requirements first (layer caching — only re-runs on requirements change)
+# Copy only requirements first (layer caching  -  only re-runs on requirements change)
 COPY requirements.txt .
 
 # Install to a target directory (for clean copy to runtime stage)
@@ -2986,7 +2986,7 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir --target=/app/packages -r requirements.txt
 
 # ─────────────────────────────────────────────
-# STAGE 2: runtime — slim final image
+# STAGE 2: runtime  -  slim final image
 # ─────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
@@ -3158,7 +3158,7 @@ docker compose down -v            # stop + remove containers and volumes
 # Check container resource usage
 docker stats --no-stream
 
-# .dockerignore — keep images small and avoid leaking secrets
+# .dockerignore  -  keep images small and avoid leaking secrets
 cat .dockerignore
 # .git
 # .env
@@ -3173,9 +3173,9 @@ cat .dockerignore
 # dist/`}</CodeBlock>
 
           <Quiz topicId="py-docker" questions={[
-            { question: "Why should you use a multi-stage Docker build for a PySpark application?", options: ["Multi-stage builds allow parallel compilation of Python files", "The builder stage installs build tools and compiles dependencies; the runtime stage copies only the final artifacts — producing a much smaller final image without gcc, g++, and other build tools", "Multi-stage builds are required for Docker Compose", "Multi-stage builds enable hot-reloading in development"], correct: 1 },
-            { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical — CMD is just an alias for ENTRYPOINT", "ENTRYPOINT defines the fixed executable that always runs; CMD provides default arguments that can be overridden at docker run time without replacing the entrypoint", "CMD runs at build time; ENTRYPOINT runs at container start", "ENTRYPOINT is for scripts; CMD is for binary executables only"], correct: 1 },
-            { question: "Why should you run container processes as a non-root user in data pipelines?", options: ["Root containers are slower due to kernel overhead", "If the container is compromised or a pipeline bug escapes the container, a non-root user limits the blast radius — root would have full host privileges", "Docker requires non-root for bind mounts to work", "Non-root users have access to more memory"], correct: 1 },
+            { question: "Why should you use a multi-stage Docker build for a PySpark application?", options: ["Multi-stage builds allow parallel compilation of Python files", "The builder stage installs build tools and compiles dependencies; the runtime stage copies only the final artifacts  -  producing a much smaller final image without gcc, g++, and other build tools", "Multi-stage builds are required for Docker Compose", "Multi-stage builds enable hot-reloading in development"], correct: 1 },
+            { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical  -  CMD is just an alias for ENTRYPOINT", "ENTRYPOINT defines the fixed executable that always runs; CMD provides default arguments that can be overridden at docker run time without replacing the entrypoint", "CMD runs at build time; ENTRYPOINT runs at container start", "ENTRYPOINT is for scripts; CMD is for binary executables only"], correct: 1 },
+            { question: "Why should you run container processes as a non-root user in data pipelines?", options: ["Root containers are slower due to kernel overhead", "If the container is compromised or a pipeline bug escapes the container, a non-root user limits the blast radius  -  root would have full host privileges", "Docker requires non-root for bind mounts to work", "Non-root users have access to more memory"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-docker'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -3190,7 +3190,7 @@ cat .dockerignore
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Resource requests vs limits:</strong> Requests are what K8s uses for scheduling (guaranteed capacity). Limits are the hard cap (exceeding CPU is throttled; exceeding memory triggers OOMKill). Always set both — without requests, K8s cannot bin-pack pods; without limits, a runaway Spark job can starve other workloads on the node.</div>
+            <div className="callout-body"><strong>Resource requests vs limits:</strong> Requests are what K8s uses for scheduling (guaranteed capacity). Limits are the hard cap (exceeding CPU is throttled; exceeding memory triggers OOMKill). Always set both  -  without requests, K8s cannot bin-pack pods; without limits, a runaway Spark job can starve other workloads on the node.</div>
           </div>
 
           <CodeBlock lang="yaml">{`# ── Core Kubernetes concepts for data engineering ────────────────────────────
@@ -3205,7 +3205,7 @@ metadata:
     app: dbt
     team: data-engineering
 spec:
-  restartPolicy: Never    # for batch jobs — don't restart on completion
+  restartPolicy: Never    # for batch jobs  -  don't restart on completion
   containers:
     - name: dbt
       image: my-registry/dbt-pipeline:1.0.0
@@ -3268,7 +3268,7 @@ metadata:
   namespace: data-pipelines
 type: Opaque
 data:
-  password: cGFzc3dvcmQxMjM=   # base64("password123") — use Sealed Secrets in prod
+  password: cGFzc3dvcmQxMjM=   # base64("password123")  -  use Sealed Secrets in prod
   username: ZGF0YV91c2Vy
 
 ---
@@ -3307,7 +3307,7 @@ spec:
             limits: { memory: "16Gi", cpu: "4000m" }`}</CodeBlock>
 
           <CodeBlock lang="python">{`# ── Running Spark on Kubernetes ───────────────────────────────────────────────
-# spark-submit with K8s master — Spark creates driver pod, then executor pods dynamically
+# spark-submit with K8s master  -  Spark creates driver pod, then executor pods dynamically
 
 # spark-submit command (run from CI/CD or Airflow)
 spark_submit_cmd = """
@@ -3398,9 +3398,9 @@ with DAG(
 # kubectl delete jobs --field-selector status.successful=1 -n data-pipelines`}</CodeBlock>
 
           <Quiz topicId="py-k8s" questions={[
-            { question: "What is the difference between resource requests and resource limits in Kubernetes?", options: ["They are identical — requests and limits must always be equal", "Requests are the guaranteed allocation used for pod scheduling; limits are the hard cap — exceeding CPU causes throttling, exceeding memory causes OOMKill", "Limits are set by the cluster admin; requests are set by the developer", "Requests apply to memory only; limits apply to CPU only"], correct: 1 },
+            { question: "What is the difference between resource requests and resource limits in Kubernetes?", options: ["They are identical  -  requests and limits must always be equal", "Requests are the guaranteed allocation used for pod scheduling; limits are the hard cap  -  exceeding CPU causes throttling, exceeding memory causes OOMKill", "Limits are set by the cluster admin; requests are set by the developer", "Requests apply to memory only; limits apply to CPU only"], correct: 1 },
             { question: "When running Spark on Kubernetes, what role do executor pods play?", options: ["They run the Spark UI and store job history", "They are dynamically created by the driver pod to perform distributed computation; they are destroyed when the job finishes", "They are permanent pods that must be pre-provisioned before spark-submit", "They store shuffle data in persistent volumes only"], correct: 1 },
-            { question: "What is the main advantage of using KubernetesPodOperator in Airflow over PythonOperator?", options: ["KubernetesPodOperator is always faster", "Each task runs in an isolated container with its own image, dependencies, and resource limits — preventing dependency conflicts between tasks and enabling fine-grained resource control", "KubernetesPodOperator has built-in retry logic that PythonOperator lacks", "KubernetesPodOperator automatically parallelizes tasks across nodes"], correct: 1 },
+            { question: "What is the main advantage of using KubernetesPodOperator in Airflow over PythonOperator?", options: ["KubernetesPodOperator is always faster", "Each task runs in an isolated container with its own image, dependencies, and resource limits  -  preventing dependency conflicts between tasks and enabling fine-grained resource control", "KubernetesPodOperator has built-in retry logic that PythonOperator lacks", "KubernetesPodOperator automatically parallelizes tasks across nodes"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-k8s'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -3410,7 +3410,7 @@ with DAG(
           <div className="topic-header">
             <div className="topic-eyebrow">Advanced DE Python</div>
             <h1 className="topic-title">Data Quality with Deequ + Great Expectations</h1>
-            <p className="topic-desc">Data quality (DQ) validation is a critical gate in production data pipelines. Amazon Deequ (open source, Spark-native) and Great Expectations (Python-native, multi-engine) are the two leading frameworks. They let you define constraints on your data, run them as part of your pipeline, and fail fast when data violates your contracts — before bad data reaches downstream consumers.</p>
+            <p className="topic-desc">Data quality (DQ) validation is a critical gate in production data pipelines. Amazon Deequ (open source, Spark-native) and Great Expectations (Python-native, multi-engine) are the two leading frameworks. They let you define constraints on your data, run them as part of your pipeline, and fail fast when data violates your contracts  -  before bad data reaches downstream consumers.</p>
           </div>
 
           <div className="callout callout-info">
@@ -3548,7 +3548,7 @@ checkpoint_result = context.run_checkpoint(
 )
 
 if not checkpoint_result.success:
-    raise ValueError("Great Expectations checkpoint failed — see DataDocs for details")
+    raise ValueError("Great Expectations checkpoint failed  -  see DataDocs for details")
 
 # Generate and open DataDocs (HTML report)
 context.open_data_docs()
@@ -3586,9 +3586,9 @@ def validate_data_quality(execution_date: str) -> None:
 # |                      | Spark DQ      | data platforms     | validation|            |`}</CodeBlock>
 
           <Quiz topicId="py-deequ" questions={[
-            { question: "In Amazon Deequ, what is the difference between a Check and an Analyzer?", options: ["They are identical — Analyzers are just named Checks", "A Check defines a pass/fail constraint (e.g., isComplete, isUnique) that produces SUCCESS/ERROR; an Analyzer computes a metric (e.g., Completeness, Mean) without a pass/fail threshold", "Analyzers run on Pandas; Checks run on Spark", "Checks run during writes; Analyzers run during reads"], correct: 1 },
-            { question: "What is Deequ's constraint suggestions feature and when would you use it?", options: ["It suggests SQL indexes for faster queries", "It profiles the data and auto-generates Deequ constraint code based on observed statistics — useful when onboarding a new dataset with no existing DQ rules", "It suggests schema changes to reduce data size", "It suggests partition strategies based on cardinality"], correct: 1 },
-            { question: "What does Great Expectations DataDocs provide that raw validation results do not?", options: ["Faster validation execution", "A human-readable HTML report showing expectation definitions, validation results, and historical trends — useful for stakeholder communication and debugging", "Automatic data remediation", "Streaming validation in real-time"], correct: 1 },
+            { question: "In Amazon Deequ, what is the difference between a Check and an Analyzer?", options: ["They are identical  -  Analyzers are just named Checks", "A Check defines a pass/fail constraint (e.g., isComplete, isUnique) that produces SUCCESS/ERROR; an Analyzer computes a metric (e.g., Completeness, Mean) without a pass/fail threshold", "Analyzers run on Pandas; Checks run on Spark", "Checks run during writes; Analyzers run during reads"], correct: 1 },
+            { question: "What is Deequ's constraint suggestions feature and when would you use it?", options: ["It suggests SQL indexes for faster queries", "It profiles the data and auto-generates Deequ constraint code based on observed statistics  -  useful when onboarding a new dataset with no existing DQ rules", "It suggests schema changes to reduce data size", "It suggests partition strategies based on cardinality"], correct: 1 },
+            { question: "What does Great Expectations DataDocs provide that raw validation results do not?", options: ["Faster validation execution", "A human-readable HTML report showing expectation definitions, validation results, and historical trends  -  useful for stakeholder communication and debugging", "Automatic data remediation", "Streaming validation in real-time"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-deequ'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -3598,7 +3598,7 @@ def validate_data_quality(execution_date: str) -> None:
           <div className="topic-header">
             <div className="topic-eyebrow">Advanced DE Python</div>
             <h1 className="topic-title">Python Memory Profiling</h1>
-            <p className="topic-desc">Memory bugs in data pipelines are insidious — a pipeline that works on 100 MB of data crashes on 10 GB. Python's built-in tracemalloc, the memory_profiler library, and objgraph give you progressively deeper visibility into what is consuming memory. Mastering memory-efficient patterns (streaming, generators, chunked reads, explicit deletion) is what separates production-grade DE code from fragile notebook scripts.</p>
+            <p className="topic-desc">Memory bugs in data pipelines are insidious  -  a pipeline that works on 100 MB of data crashes on 10 GB. Python's built-in tracemalloc, the memory_profiler library, and objgraph give you progressively deeper visibility into what is consuming memory. Mastering memory-efficient patterns (streaming, generators, chunked reads, explicit deletion) is what separates production-grade DE code from fragile notebook scripts.</p>
           </div>
 
           <div className="callout callout-info">
@@ -3644,7 +3644,7 @@ top_stats = snapshot2.compare_to(snapshot1, "lineno")
 print("=== Memory delta ===")
 for stat in top_stats[:5]:
     print(f"{stat}")
-# net_allocated_MiB shows what grew — hints at leaks
+# net_allocated_MiB shows what grew  -  hints at leaks
 
 # ── 3. Filter to just your application code ───────────────────────────────────
 filters = [
@@ -3667,7 +3667,7 @@ def load_and_process_orders(path: str) -> pd.DataFrame:
     # Line 1: read full Parquet file
     df = pd.read_parquet(path)                            # +245 MiB
 
-    # Line 2: filter — may create a copy (pre-CoW)
+    # Line 2: filter  -  may create a copy (pre-CoW)
     df_active = df[df["status"] == "confirmed"]           # +122 MiB (copy)
 
     # Line 3: original df still referenced → both in memory
@@ -3740,7 +3740,7 @@ for file in parquet_files:
 # ❌ ANTI-PATTERN 3: retaining large intermediate DataFrames in long-running code
 def run_pipeline():
     raw = extract()          # 4 GB
-    validated = validate(raw)  # another 4 GB — raw still referenced!
+    validated = validate(raw)  # another 4 GB  -  raw still referenced!
     transformed = transform(validated)
     # raw and validated are still in memory while transform runs → 12 GB peak
 
@@ -3764,9 +3764,9 @@ def iter_records(parquet_files: list[str]):
 total = sum(row.amount for row in iter_records(parquet_files))  # O(1) memory`}</CodeBlock>
 
           <Quiz topicId="py-memory" questions={[
-            { question: "What does tracemalloc.take_snapshot().compare_to(earlier_snapshot, 'lineno') reveal?", options: ["The total memory used by the Python process at that moment", "The net memory allocated between the two snapshots broken down by source line — useful for identifying memory leaks in iterative pipeline code", "The time elapsed between the two snapshots", "The CPU usage per line of code"], correct: 1 },
-            { question: "A Pandas pipeline processing a 10 GB CSV hits OOM. Which approach fixes this with minimal code change?", options: ["Switch to PyPy — it has a more efficient garbage collector", "Use pd.read_csv(path, chunksize=N) to process the file in chunks, processing and writing each chunk before reading the next", "Increase Python recursion limit with sys.setrecursionlimit()", "Use multiprocessing to read the file in parallel — each process uses less memory"], correct: 1 },
-            { question: "In a long-running Python pipeline, why should you explicitly call 'del large_df' followed by 'gc.collect()' after you are done with a large DataFrame?", options: ["del is required before a variable can be reassigned", "CPython's reference counting frees objects immediately on del; gc.collect() handles reference cycles that reference counting alone cannot detect — together they ensure memory is returned to the OS promptly rather than waiting for the next GC cycle", "gc.collect() compresses memory to reduce fragmentation", "This is required for thread safety in multi-threaded pipelines"], correct: 1 },
+            { question: "What does tracemalloc.take_snapshot().compare_to(earlier_snapshot, 'lineno') reveal?", options: ["The total memory used by the Python process at that moment", "The net memory allocated between the two snapshots broken down by source line  -  useful for identifying memory leaks in iterative pipeline code", "The time elapsed between the two snapshots", "The CPU usage per line of code"], correct: 1 },
+            { question: "A Pandas pipeline processing a 10 GB CSV hits OOM. Which approach fixes this with minimal code change?", options: ["Switch to PyPy  -  it has a more efficient garbage collector", "Use pd.read_csv(path, chunksize=N) to process the file in chunks, processing and writing each chunk before reading the next", "Increase Python recursion limit with sys.setrecursionlimit()", "Use multiprocessing to read the file in parallel  -  each process uses less memory"], correct: 1 },
+            { question: "In a long-running Python pipeline, why should you explicitly call 'del large_df' followed by 'gc.collect()' after you are done with a large DataFrame?", options: ["del is required before a variable can be reassigned", "CPython's reference counting frees objects immediately on del; gc.collect() handles reference cycles that reference counting alone cannot detect  -  together they ensure memory is returned to the OS promptly rather than waiting for the next GC cycle", "gc.collect() compresses memory to reduce fragmentation", "This is required for thread safety in multi-threaded pipelines"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-memory'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -3788,7 +3788,7 @@ function PythonGilAnimation() {
 
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython GIL — Only 1 thread executes Python bytecode at a time</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython GIL  -  Only 1 thread executes Python bytecode at a time</div>
       <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Even with 3 threads, CPU work is serialized. I/O releases the GIL allowing other threads to run.</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {threads.map((t, i) => (
@@ -3803,7 +3803,7 @@ function PythonGilAnimation() {
                 display: 'flex', alignItems: 'center', paddingLeft: 10,
               }}>
                 <span style={{ fontSize: '.72rem', fontWeight: 700, color: i === active ? 'white' : '#94a3b8', whiteSpace: 'nowrap' }}>
-                  {i === active ? '▶ GIL acquired — executing' : '⏸ Waiting for GIL'}
+                  {i === active ? '▶ GIL acquired  -  executing' : '⏸ Waiting for GIL'}
                 </span>
               </div>
             </div>
@@ -3833,7 +3833,7 @@ function PythonMemoryAnimation() {
 
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython Memory Model — Reference Counting Garbage Collection</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython Memory Model  -  Reference Counting Garbage Collection</div>
       <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Objects are freed immediately when refcount hits 0. Cyclic references require the cyclic GC.</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
         {objects.map((obj) => (
@@ -3886,8 +3886,8 @@ function AsyncAnimation() {
 
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>asyncio Event Loop — Single Thread, Concurrent I/O</div>
-      <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Event loop switches between tasks when they await I/O — no threads, no GIL contention.</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>asyncio Event Loop  -  Single Thread, Concurrent I/O</div>
+      <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Event loop switches between tasks when they await I/O  -  no threads, no GIL contention.</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {tasks.map((task) => {
           const currentPhase = task.phases[phase]
@@ -3910,7 +3910,7 @@ function AsyncAnimation() {
         })}
       </div>
       <div style={{ marginTop: 12, fontSize: '.75rem', color: 'var(--text-4)' }}>
-        💡 All 4 tasks run on <strong>1 thread</strong> — asyncio.gather() fires them concurrently, event loop resumes each when I/O completes
+        💡 All 4 tasks run on <strong>1 thread</strong>  -  asyncio.gather() fires them concurrently, event loop resumes each when I/O completes
       </div>
     </div>
   )

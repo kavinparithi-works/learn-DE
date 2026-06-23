@@ -62,25 +62,25 @@ export default function Airflow({ completed, onComplete }: Props) {
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">What is Airflow?</h1>
             <p className="topic-desc">
-              Apache Airflow is an open-source workflow orchestration platform that lets you author, schedule, and monitor data pipelines as Directed Acyclic Graphs (DAGs). Airflow orchestrates — it does not execute compute itself. It tells other systems (Spark, dbt, Python, APIs) what to run and when. The scheduler evaluates DAGs every heartbeat, determines which tasks are ready to run based on dependencies, and queues them to an executor. Understanding this architecture is critical: Airflow is a control plane, not a data plane.
+              Apache Airflow is an open-source workflow orchestration platform that lets you author, schedule, and monitor data pipelines as Directed Acyclic Graphs (DAGs). Airflow orchestrates  -  it does not execute compute itself. It tells other systems (Spark, dbt, Python, APIs) what to run and when. The scheduler evaluates DAGs every heartbeat, determines which tasks are ready to run based on dependencies, and queues them to an executor. Understanding this architecture is critical: Airflow is a control plane, not a data plane.
             </p>
           </div>
           <AirflowDagAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Orchestration vs Execution:</strong> Airflow schedules and monitors — it does NOT process data. A PythonOperator runs your function on the worker, but for large data volumes you should submit jobs to Spark/Databricks and wait for completion. Never run heavy pandas operations directly in Airflow tasks.
+              <strong>Orchestration vs Execution:</strong> Airflow schedules and monitors  -  it does NOT process data. A PythonOperator runs your function on the worker, but for large data volumes you should submit jobs to Spark/Databricks and wait for completion. Never run heavy pandas operations directly in Airflow tasks.
             </div>
           </div>
           <CodeBlock lang="python">{`# Airflow 2.x Architecture Components:
 # ┌─────────────────────────────────────────────────────────────┐
-# │  Scheduler    – Parses DAG files, schedules DAG Runs,       │
+# │  Scheduler     -  Parses DAG files, schedules DAG Runs,       │
 # │                 monitors task states, triggers executors.    │
-# │  Webserver    – Flask app serving the Airflow UI.           │
-# │  Worker       – Picks up tasks from the queue (Celery/K8s). │
-# │  Metadata DB  – PostgreSQL/MySQL stores DAG runs, task      │
+# │  Webserver     -  Flask app serving the Airflow UI.           │
+# │  Worker        -  Picks up tasks from the queue (Celery/K8s). │
+# │  Metadata DB   -  PostgreSQL/MySQL stores DAG runs, task      │
 # │                 states, XComs, connections, variables.       │
-# │  Executor     – LocalExecutor (single machine),             │
+# │  Executor      -  LocalExecutor (single machine),             │
 # │                 CeleryExecutor (distributed with Redis),     │
 # │                 KubernetesExecutor (pod-per-task).           │
 # └─────────────────────────────────────────────────────────────┘
@@ -113,7 +113,7 @@ print(airflow.__version__)  # e.g. '2.8.1'
               question: "What is the primary role of the Airflow Scheduler?",
               options: [
                 "Run Python functions directly on large datasets",
-                "Parse DAG files, evaluate task dependencies, and queue tasks for execution — it is the control plane",
+                "Parse DAG files, evaluate task dependencies, and queue tasks for execution  -  it is the control plane",
                 "Serve the Airflow web UI to users",
                 "Store DAG run history in the metadata database",
               ],
@@ -123,7 +123,7 @@ print(airflow.__version__)  # e.g. '2.8.1'
               question: "What changed between Airflow 1.x and 2.x regarding the Scheduler?",
               options: [
                 "The scheduler was removed in favor of triggers",
-                "Airflow 2.x introduced High Availability for the scheduler — multiple scheduler instances can run simultaneously, eliminating the single point of failure",
+                "Airflow 2.x introduced High Availability for the scheduler  -  multiple scheduler instances can run simultaneously, eliminating the single point of failure",
                 "The scheduler now runs tasks directly instead of using executors",
                 "Scheduler was merged into the webserver",
               ],
@@ -133,7 +133,7 @@ print(airflow.__version__)  # e.g. '2.8.1'
               question: "Why should you NOT run heavy pandas data processing directly in Airflow tasks?",
               options: [
                 "Airflow does not support pandas",
-                "Airflow workers are orchestration nodes — they have limited memory and CPU. Heavy computation should be submitted to Spark/Databricks. Running large data transforms on Airflow workers causes OOM errors and blocks other tasks.",
+                "Airflow workers are orchestration nodes  -  they have limited memory and CPU. Heavy computation should be submitted to Spark/Databricks. Running large data transforms on Airflow workers causes OOM errors and blocks other tasks.",
                 "Pandas is deprecated in Python 3",
                 "Airflow tasks cannot import third-party libraries",
               ],
@@ -149,7 +149,7 @@ print(airflow.__version__)  # e.g. '2.8.1'
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">DAG Fundamentals</h1>
             <p className="topic-desc">
-              A DAG (Directed Acyclic Graph) defines the workflow structure: which tasks exist, their dependencies, and their schedule. Key parameters: <code>dag_id</code> (unique name), <code>schedule_interval</code> (cron expression, <code>@daily</code>, <code>timedelta</code>, or None for manual), <code>start_date</code> (when the DAG starts — never use <code>datetime.now()</code>), <code>catchup</code> (False in production to prevent backfill of missed runs), <code>max_active_runs</code> (limit concurrent DAG runs), <code>tags</code> (organize in UI), <code>default_args</code> (shared task defaults like <code>retries</code>, <code>retry_delay</code>, <code>email_on_failure</code>). Use the <code>@dag</code> decorator (TaskFlow) or context manager style.
+              A DAG (Directed Acyclic Graph) defines the workflow structure: which tasks exist, their dependencies, and their schedule. Key parameters: <code>dag_id</code> (unique name), <code>schedule_interval</code> (cron expression, <code>@daily</code>, <code>timedelta</code>, or None for manual), <code>start_date</code> (when the DAG starts  -  never use <code>datetime.now()</code>), <code>catchup</code> (False in production to prevent backfill of missed runs), <code>max_active_runs</code> (limit concurrent DAG runs), <code>tags</code> (organize in UI), <code>default_args</code> (shared task defaults like <code>retries</code>, <code>retry_delay</code>, <code>email_on_failure</code>). Use the <code>@dag</code> decorator (TaskFlow) or context manager style.
             </p>
           </div>
           <CodeBlock lang="python">{`from datetime import datetime, timedelta
@@ -229,7 +229,7 @@ with DAG(
               question: "What does catchup=False do?",
               options: [
                 "Disables automatic retries on task failure",
-                "Prevents Airflow from creating historical DAG runs for all intervals between start_date and now when the DAG is first deployed or unpaused — avoids an accidental mass backfill that can flood your cluster",
+                "Prevents Airflow from creating historical DAG runs for all intervals between start_date and now when the DAG is first deployed or unpaused  -  avoids an accidental mass backfill that can flood your cluster",
                 "Disables the webserver from showing old runs",
                 "Stops the scheduler from running the DAG more than once",
               ],
@@ -239,7 +239,7 @@ with DAG(
               question: "What is the purpose of max_active_runs=1?",
               options: [
                 "Limits each task to 1 retry",
-                "Prevents multiple instances of the same DAG from running concurrently — critical for pipelines that write to the same tables to avoid race conditions and duplicate data",
+                "Prevents multiple instances of the same DAG from running concurrently  -  critical for pipelines that write to the same tables to avoid race conditions and duplicate data",
                 "Runs only 1 task at a time within the DAG",
                 "Limits the DAG to 1 worker",
               ],
@@ -255,7 +255,7 @@ with DAG(
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">Core Operators</h1>
             <p className="topic-desc">
-              Operators are the building blocks of a DAG — each operator becomes one task. <code>PythonOperator</code> runs a Python callable. <code>BashOperator</code> runs a shell command. <code>EmailOperator</code> sends email alerts. <code>DummyOperator</code>/<code>EmptyOperator</code> (2.4+) creates structural nodes for grouping or fanout. <code>BranchPythonOperator</code> enables conditional logic by returning the task_id(s) to execute next — all other branches are skipped.
+              Operators are the building blocks of a DAG  -  each operator becomes one task. <code>PythonOperator</code> runs a Python callable. <code>BashOperator</code> runs a shell command. <code>EmailOperator</code> sends email alerts. <code>DummyOperator</code>/<code>EmptyOperator</code> (2.4+) creates structural nodes for grouping or fanout. <code>BranchPythonOperator</code> enables conditional logic by returning the task_id(s) to execute next  -  all other branches are skipped.
             </p>
           </div>
           <CodeBlock lang="python">{`from airflow.operators.python  import PythonOperator, BranchPythonOperator
@@ -314,19 +314,19 @@ notify = EmailOperator(
 )
 
 # ── trigger_rule options ──────────────────────────────────────────────
-# 'all_success'  (default) — all upstream tasks succeeded
-# 'all_failed'              — all upstream tasks failed
-# 'all_done'               — all upstream tasks done (any state)
-# 'one_success'            — at least one upstream succeeded
-# 'none_failed'            — no upstream task failed (success or skipped)
-# 'none_failed_min_one_success' — used after BranchPythonOperator joins`}
+# 'all_success'  (default)  -  all upstream tasks succeeded
+# 'all_failed'               -  all upstream tasks failed
+# 'all_done'                -  all upstream tasks done (any state)
+# 'one_success'             -  at least one upstream succeeded
+# 'none_failed'             -  no upstream task failed (success or skipped)
+# 'none_failed_min_one_success'  -  used after BranchPythonOperator joins`}
           </CodeBlock>
           <Quiz topicId="airflow-operators" questions={[
             {
               question: "What does BranchPythonOperator return to control flow?",
               options: [
                 "A boolean True/False",
-                "The task_id (or list of task_ids) of the downstream branch(es) to execute — all other downstream tasks are automatically set to 'Skipped' state",
+                "The task_id (or list of task_ids) of the downstream branch(es) to execute  -  all other downstream tasks are automatically set to 'Skipped' state",
                 "An integer exit code",
                 "A DAG object reference",
               ],
@@ -336,7 +336,7 @@ notify = EmailOperator(
               question: "Why use EmptyOperator (DummyOperator) in a DAG?",
               options: [
                 "To sleep for a specified duration",
-                "To create structural fanout/fan-in points — e.g., a single join node after a BranchPythonOperator split, or a start/end marker. It completes immediately with no side effects.",
+                "To create structural fanout/fan-in points  -  e.g., a single join node after a BranchPythonOperator split, or a start/end marker. It completes immediately with no side effects.",
                 "To mark tasks as optional",
                 "To send a null value via XCom",
               ],
@@ -345,10 +345,10 @@ notify = EmailOperator(
             {
               question: "When using BranchPythonOperator with a join node, what trigger_rule should the join task use?",
               options: [
-                "all_success — waits for all branches",
-                "none_failed_min_one_success — allows the join to proceed when some branches are skipped (as they will be after branching) while ensuring at least one branch succeeded",
-                "all_done — proceeds regardless of failures",
-                "one_success — proceeds on first success",
+                "all_success  -  waits for all branches",
+                "none_failed_min_one_success  -  allows the join to proceed when some branches are skipped (as they will be after branching) while ensuring at least one branch succeeded",
+                "all_done  -  proceeds regardless of failures",
+                "one_success  -  proceeds on first success",
               ],
               correct: 1,
             },
@@ -432,7 +432,7 @@ trigger_api = SimpleHttpOperator(
               question: "What is the difference between DatabricksRunNowOperator and DatabricksSubmitRunOperator?",
               options: [
                 "They are identical",
-                "RunNowOperator triggers an existing pre-configured Databricks Job by job_id. SubmitRunOperator creates a one-off run with a new cluster definition — useful for dynamic parameterization but creates a new cluster each time (slower, costlier).",
+                "RunNowOperator triggers an existing pre-configured Databricks Job by job_id. SubmitRunOperator creates a one-off run with a new cluster definition  -  useful for dynamic parameterization but creates a new cluster each time (slower, costlier).",
                 "RunNowOperator runs on the Airflow worker, SubmitRunOperator runs on Databricks",
                 "SubmitRunOperator requires Databricks Runtime 12+",
               ],
@@ -442,7 +442,7 @@ trigger_api = SimpleHttpOperator(
               question: "What does application_args do in SparkSubmitOperator?",
               options: [
                 "Sets Spark executor arguments",
-                "Passes command-line arguments to your PySpark script — accessible via sys.argv or argparse. Use Jinja templates like {{ ds }} to inject the execution date dynamically.",
+                "Passes command-line arguments to your PySpark script  -  accessible via sys.argv or argparse. Use Jinja templates like {{ ds }} to inject the execution date dynamically.",
                 "Configures the Spark application name",
                 "Sets memory and core allocations",
               ],
@@ -452,7 +452,7 @@ trigger_api = SimpleHttpOperator(
               question: "Why use response_check in SimpleHttpOperator?",
               options: [
                 "It is required for all HTTP operators",
-                "It validates the API response and marks the task as failed if the check returns False — critical for async triggers where a 200 OK might indicate 'received' but not 'succeeded'",
+                "It validates the API response and marks the task as failed if the check returns False  -  critical for async triggers where a 200 OK might indicate 'received' but not 'succeeded'",
                 "It logs the response body to the Airflow metadata DB",
                 "It retries the HTTP call if the response is empty",
               ],
@@ -468,7 +468,7 @@ trigger_api = SimpleHttpOperator(
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">Sensors</h1>
             <p className="topic-desc">
-              Sensors are special operators that wait for a condition to be true before proceeding. <code>FileSensor</code> waits for a file/directory to appear. <code>S3KeySensor</code> waits for an S3 key (exact or wildcard). <code>SqlSensor</code> runs a SQL query and waits until it returns a non-zero result. <code>ExternalTaskSensor</code> waits for a task in another DAG to succeed. Key parameters: <code>poke_interval</code> (seconds between checks), <code>timeout</code> (max seconds to wait — raises <code>AirflowSensorTimeout</code> if exceeded), <code>mode</code> ('poke' keeps the worker slot busy; 'reschedule' releases the slot between checks — always use 'reschedule' in production).
+              Sensors are special operators that wait for a condition to be true before proceeding. <code>FileSensor</code> waits for a file/directory to appear. <code>S3KeySensor</code> waits for an S3 key (exact or wildcard). <code>SqlSensor</code> runs a SQL query and waits until it returns a non-zero result. <code>ExternalTaskSensor</code> waits for a task in another DAG to succeed. Key parameters: <code>poke_interval</code> (seconds between checks), <code>timeout</code> (max seconds to wait  -  raises <code>AirflowSensorTimeout</code> if exceeded), <code>mode</code> ('poke' keeps the worker slot busy; 'reschedule' releases the slot between checks  -  always use 'reschedule' in production).
             </p>
           </div>
           <CodeBlock lang="python">{`from airflow.sensors.filesystem           import FileSensor
@@ -559,7 +559,7 @@ wait_for_bronze = ExternalTaskSensor(
               question: "When would you use ExternalTaskSensor over SqlSensor?",
               options: [
                 "When the external pipeline uses a different database",
-                "When you want to wait for a specific task in another Airflow DAG to succeed — ExternalTaskSensor uses the Airflow metadata DB directly and is aware of DAG run states. SqlSensor is for waiting on custom database conditions (e.g., a status table updated by non-Airflow processes).",
+                "When you want to wait for a specific task in another Airflow DAG to succeed  -  ExternalTaskSensor uses the Airflow metadata DB directly and is aware of DAG run states. SqlSensor is for waiting on custom database conditions (e.g., a status table updated by non-Airflow processes).",
                 "ExternalTaskSensor is always preferable",
                 "When the external DAG runs on a different scheduler",
               ],
@@ -575,7 +575,7 @@ wait_for_bronze = ExternalTaskSensor(
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">TaskFlow API</h1>
             <p className="topic-desc">
-              The TaskFlow API (Airflow 2.0+) uses the <code>@task</code> decorator to define tasks as Python functions. XComs are passed automatically between <code>@task</code> functions — return values become XCom outputs, function parameters become XCom inputs. <code>@task.branch</code> replaces <code>BranchPythonOperator</code>. <code>@task_group</code> replaces <code>TaskGroup</code> context manager for grouping tasks visually. Dynamic task mapping with <code>.expand()</code> allows creating N tasks at runtime based on input data.
+              The TaskFlow API (Airflow 2.0+) uses the <code>@task</code> decorator to define tasks as Python functions. XComs are passed automatically between <code>@task</code> functions  -  return values become XCom outputs, function parameters become XCom inputs. <code>@task.branch</code> replaces <code>BranchPythonOperator</code>. <code>@task_group</code> replaces <code>TaskGroup</code> context manager for grouping tasks visually. Dynamic task mapping with <code>.expand()</code> allows creating N tasks at runtime based on input data.
             </p>
           </div>
           <CodeBlock lang="python">{`from airflow.decorators import dag, task, task_group
@@ -664,7 +664,7 @@ dag_instance = orders_pipeline()`}
               question: "How does XCom passing work with @task decorated functions?",
               options: [
                 "You must call ti.xcom_push() and ti.xcom_pull() explicitly",
-                "The return value of a @task function is automatically pushed to XCom. Downstream @task functions that accept the return value as a parameter automatically pull it from XCom — no explicit push/pull code needed.",
+                "The return value of a @task function is automatically pushed to XCom. Downstream @task functions that accept the return value as a parameter automatically pull it from XCom  -  no explicit push/pull code needed.",
                 "XComs must be serialized to JSON manually",
                 "@task functions cannot share data between tasks",
               ],
@@ -674,7 +674,7 @@ dag_instance = orders_pipeline()`}
               question: "What does .expand() do in TaskFlow API?",
               options: [
                 "Expands the DAG to show all nested task groups",
-                "Enables dynamic task mapping — creates N task instances at runtime where N is the length of the input list. Each element is processed by a separate task instance in parallel.",
+                "Enables dynamic task mapping  -  creates N task instances at runtime where N is the length of the input list. Each element is processed by a separate task instance in parallel.",
                 "Increases the task's memory allocation",
                 "Expands XCom data from a list to individual values",
               ],
@@ -684,7 +684,7 @@ dag_instance = orders_pipeline()`}
               question: "What replaces SubDagOperator in Airflow 2.x?",
               options: [
                 "NestedDagOperator",
-                "@task_group — groups tasks visually in the UI and logically in the DAG without the performance and debugging problems of SubDAGs. SubDagOperator was deprecated in 2.0 and removed in 2.7.",
+                "@task_group  -  groups tasks visually in the UI and logically in the DAG without the performance and debugging problems of SubDAGs. SubDagOperator was deprecated in 2.0 and removed in 2.7.",
                 "ExternalTaskSensor",
                 "BranchPythonOperator with EmptyOperators",
               ],
@@ -700,7 +700,7 @@ dag_instance = orders_pipeline()`}
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">XComs</h1>
             <p className="topic-desc">
-              XComs (Cross-Communications) allow tasks to exchange small amounts of data via the Airflow metadata database. A task pushes a value with <code>ti.xcom_push(key, value)</code> and another pulls it with <code>ti.xcom_pull(task_ids, key)</code>. With TaskFlow API, this is automatic. XComs are stored in the metadata DB — this creates a critical constraint: XComs are for metadata only (IDs, counts, status strings, small config dicts). Never push large DataFrames, file contents, or binary data through XComs. For large data, write to S3/ADLS/Delta and pass only the path via XCom.
+              XComs (Cross-Communications) allow tasks to exchange small amounts of data via the Airflow metadata database. A task pushes a value with <code>ti.xcom_push(key, value)</code> and another pulls it with <code>ti.xcom_pull(task_ids, key)</code>. With TaskFlow API, this is automatic. XComs are stored in the metadata DB  -  this creates a critical constraint: XComs are for metadata only (IDs, counts, status strings, small config dicts). Never push large DataFrames, file contents, or binary data through XComs. For large data, write to S3/ADLS/Delta and pass only the path via XCom.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── Manual XCom push/pull (classic operators) ─────────────────────────
@@ -709,7 +709,7 @@ def extract_fn(**context):
     # ... extract data, write to S3 ...
     row_count = 1_000_000
     s3_path   = 's3://my-lake/bronze/orders/2024-06-15/'
-    # Push metadata — NOT the data itself:
+    # Push metadata  -  NOT the data itself:
     ti.xcom_push(key='row_count',   value=row_count)
     ti.xcom_push(key='output_path', value=s3_path)
 
@@ -747,14 +747,14 @@ bash_task = BashOperator(
 # For larger objects, configure a custom XCom backend (S3/GCS):
 # airflow.cfg: [core] xcom_backend = custom_xcom_backend.S3XComBackend
 # This stores the actual data in object storage and keeps only the
-# reference in the metadata DB — but this still isn't for DataFrames.`}
+# reference in the metadata DB  -  but this still isn't for DataFrames.`}
           </CodeBlock>
           <Quiz topicId="airflow-xcoms" questions={[
             {
               question: "What is the fundamental rule about what to store in XComs?",
               options: [
                 "XComs can store any Python-serializable object up to 1 GB",
-                "XComs store only metadata — file paths, row counts, IDs, status strings. The metadata DB has limited capacity and XCom values are loaded into memory. Store actual data in S3/Delta/ADLS and pass only the location via XCom.",
+                "XComs store only metadata  -  file paths, row counts, IDs, status strings. The metadata DB has limited capacity and XCom values are loaded into memory. Store actual data in S3/Delta/ADLS and pass only the location via XCom.",
                 "XComs should store DataFrames up to 100 MB",
                 "XComs are only for string values",
               ],
@@ -773,7 +773,7 @@ bash_task = BashOperator(
             {
               question: "Why is XCom data visible in the Airflow UI?",
               options: [
-                "For debugging only — XCom values are stored in the metadata DB and displayed in Admin > XComs",
+                "For debugging only  -  XCom values are stored in the metadata DB and displayed in Admin > XComs",
                 "Because XComs use shared memory",
                 "XComs are stored in S3 by default",
                 "XComs are shown only in task logs",
@@ -790,7 +790,7 @@ bash_task = BashOperator(
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">Connections &amp; Hooks</h1>
             <p className="topic-desc">
-              Connections store credentials and endpoint URLs for external systems (databases, cloud storage, APIs, Spark clusters). They are managed in the Airflow UI (Admin &gt; Connections) or via environment variables (<code>AIRFLOW_CONN_{"{CONN_ID}"}</code>). Hooks are the Python interface for connections — they handle authentication and provide high-level methods. <code>PostgresHook</code>, <code>S3Hook</code>, <code>HttpHook</code>, <code>SparkHook</code>. When building custom integrations, create a custom Hook that extends <code>BaseHook</code>.
+              Connections store credentials and endpoint URLs for external systems (databases, cloud storage, APIs, Spark clusters). They are managed in the Airflow UI (Admin &gt; Connections) or via environment variables (<code>AIRFLOW_CONN_{"{CONN_ID}"}</code>). Hooks are the Python interface for connections  -  they handle authentication and provide high-level methods. <code>PostgresHook</code>, <code>S3Hook</code>, <code>HttpHook</code>, <code>SparkHook</code>. When building custom integrations, create a custom Hook that extends <code>BaseHook</code>.
             </p>
           </div>
           <CodeBlock lang="python">{`from airflow.hooks.base          import BaseHook
@@ -870,7 +870,7 @@ class DataQualityApiHook(BaseHook):
               question: "What is the difference between a Connection and a Hook in Airflow?",
               options: [
                 "They are the same thing",
-                "A Connection is the credential/endpoint configuration (stored in DB or env vars). A Hook is the Python class that uses a Connection to provide a high-level API — e.g., PostgresHook.get_pandas_df() handles connection pooling, cursor management, and result serialization.",
+                "A Connection is the credential/endpoint configuration (stored in DB or env vars). A Hook is the Python class that uses a Connection to provide a high-level API  -  e.g., PostgresHook.get_pandas_df() handles connection pooling, cursor management, and result serialization.",
                 "Hooks are only for cloud providers",
                 "Connections are only for databases",
               ],
@@ -896,7 +896,7 @@ class DataQualityApiHook(BaseHook):
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">Kubernetes Executor</h1>
             <p className="topic-desc">
-              The KubernetesExecutor spins up a dedicated pod for each task. No persistent workers — the scheduler creates a pod when a task is ready, the pod runs the task and terminates. This provides perfect isolation, independent resource allocation per task, and eliminates noisy-neighbor problems. <code>KubernetesPodOperator</code> runs an arbitrary Docker image in a pod — essential for tasks requiring custom dependencies. Configure resource requests/limits, secrets, volume mounts, and image pull policies.
+              The KubernetesExecutor spins up a dedicated pod for each task. No persistent workers  -  the scheduler creates a pod when a task is ready, the pod runs the task and terminates. This provides perfect isolation, independent resource allocation per task, and eliminates noisy-neighbor problems. <code>KubernetesPodOperator</code> runs an arbitrary Docker image in a pod  -  essential for tasks requiring custom dependencies. Configure resource requests/limits, secrets, volume mounts, and image pull policies.
             </p>
           </div>
           <CodeBlock lang="python">{`from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
@@ -968,7 +968,7 @@ run_spark_job = KubernetesPodOperator(
               question: "What is the key advantage of KubernetesExecutor over CeleryExecutor?",
               options: [
                 "KubernetesExecutor is faster",
-                "KubernetesExecutor creates one pod per task — perfect isolation, no shared workers, independent resource allocation per task, no noisy-neighbor problems. Tasks with different dependency requirements can use different images.",
+                "KubernetesExecutor creates one pod per task  -  perfect isolation, no shared workers, independent resource allocation per task, no noisy-neighbor problems. Tasks with different dependency requirements can use different images.",
                 "KubernetesExecutor uses less memory",
                 "KubernetesExecutor doesn't require a metadata DB",
               ],
@@ -988,7 +988,7 @@ run_spark_job = KubernetesPodOperator(
               question: "How do you pass secrets to a KubernetesPodOperator without hardcoding them?",
               options: [
                 "Set them in the DAG Python file as environment variables",
-                "Reference Kubernetes Secrets via V1EnvVarSource with secret_key_ref — the secret value is injected at pod runtime from the K8s Secret object, never appearing in the DAG code or Airflow metadata.",
+                "Reference Kubernetes Secrets via V1EnvVarSource with secret_key_ref  -  the secret value is injected at pod runtime from the K8s Secret object, never appearing in the DAG code or Airflow metadata.",
                 "Store secrets in XCom",
                 "Pass via command-line arguments",
               ],
@@ -1004,11 +1004,11 @@ run_spark_job = KubernetesPodOperator(
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">CI/CD &amp; Testing</h1>
             <p className="topic-desc">
-              Production Airflow deployments use the DAG factory pattern to generate many similar DAGs programmatically. DAGs are tested with pytest using <code>airflow.models.DagBag</code>. CI pipelines validate DAGs on every PR: import correctly, have no cycles, meet naming conventions. DAG versioning uses <code>version</code> tags or <code>doc_md</code>. Never deploy broken DAGs — a parsing error in one DAG file can impact the scheduler's ability to process other DAGs.
+              Production Airflow deployments use the DAG factory pattern to generate many similar DAGs programmatically. DAGs are tested with pytest using <code>airflow.models.DagBag</code>. CI pipelines validate DAGs on every PR: import correctly, have no cycles, meet naming conventions. DAG versioning uses <code>version</code> tags or <code>doc_md</code>. Never deploy broken DAGs  -  a parsing error in one DAG file can impact the scheduler's ability to process other DAGs.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── DAG Factory Pattern ───────────────────────────────────────────────
-# dag_factory.py — generates one DAG per table config
+# dag_factory.py  -  generates one DAG per table config
 import yaml
 from datetime import datetime
 from airflow import DAG
@@ -1084,7 +1084,7 @@ def test_dag_retries(dagbag):
               question: "What does DagBag do in Airflow testing?",
               options: [
                 "It is a container for storing XCom values",
-                "DagBag loads and parses all DAG files from a directory — it is the same mechanism the scheduler uses. In tests, you instantiate a DagBag pointing to your dags/ folder and assert that import_errors is empty, meaning all DAG files parsed successfully.",
+                "DagBag loads and parses all DAG files from a directory  -  it is the same mechanism the scheduler uses. In tests, you instantiate a DagBag pointing to your dags/ folder and assert that import_errors is empty, meaning all DAG files parsed successfully.",
                 "It validates DAG run history",
                 "It simulates task execution",
               ],
@@ -1094,7 +1094,7 @@ def test_dag_retries(dagbag):
               question: "Why is the DAG factory pattern useful for data platform teams?",
               options: [
                 "It avoids the need for default_args",
-                "It generates many similar DAGs (e.g., one per table or per environment) from a configuration file (YAML/JSON). This eliminates copy-paste DAGs, ensures consistency, and allows adding a new pipeline by only editing config — no new Python files needed.",
+                "It generates many similar DAGs (e.g., one per table or per environment) from a configuration file (YAML/JSON). This eliminates copy-paste DAGs, ensures consistency, and allows adding a new pipeline by only editing config  -  no new Python files needed.",
                 "It automatically sets schedules based on table size",
                 "It replaces the Airflow scheduler",
               ],
@@ -1120,7 +1120,7 @@ def test_dag_retries(dagbag):
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">Monitoring &amp; Alerting</h1>
             <p className="topic-desc">
-              Production Airflow requires comprehensive monitoring. SLA misses trigger <code>sla_miss_callback</code> when a task or DAG run exceeds its declared SLA. Task-level callbacks (<code>on_success_callback</code>, <code>on_failure_callback</code>, <code>on_retry_callback</code>) execute custom Python on state changes — use these for Slack/PagerDuty alerts. Airflow emits StatsD metrics (task duration, success/failure counts, scheduler heartbeat) which can be forwarded to Prometheus/Datadog.
+              Production Airflow requires comprehensive monitoring. SLA misses trigger <code>sla_miss_callback</code> when a task or DAG run exceeds its declared SLA. Task-level callbacks (<code>on_success_callback</code>, <code>on_failure_callback</code>, <code>on_retry_callback</code>) execute custom Python on state changes  -  use these for Slack/PagerDuty alerts. Airflow emits StatsD metrics (task duration, success/failure counts, scheduler heartbeat) which can be forwarded to Prometheus/Datadog.
             </p>
           </div>
           <CodeBlock lang="python">{`import json, urllib.request
@@ -1184,12 +1184,12 @@ with DAG(
 # statsd_prefix = airflow
 #
 # Key metrics emitted:
-# airflow.scheduler.heartbeat            — scheduler alive check
-# airflow.task.duration                  — per task/dag_id/task_id
-# airflow.task_instance.successes        — success counter
-# airflow.task_instance.failures         — failure counter
-# airflow.dag.loading_duration_<dag_id>  — time to parse DAG file
-# airflow.scheduler.tasks.starving       — tasks waiting for workers
+# airflow.scheduler.heartbeat             -  scheduler alive check
+# airflow.task.duration                   -  per task/dag_id/task_id
+# airflow.task_instance.successes         -  success counter
+# airflow.task_instance.failures          -  failure counter
+# airflow.dag.loading_duration_<dag_id>   -  time to parse DAG file
+# airflow.scheduler.tasks.starving        -  tasks waiting for workers
 
 # ── Prometheus with statsd_exporter ──────────────────────────────────
 # Deploy prometheus/statsd-exporter sidecar → scrape statsd metrics
@@ -1201,7 +1201,7 @@ with DAG(
               question: "What is the difference between on_failure_callback and sla_miss_callback?",
               options: [
                 "They are identical",
-                "on_failure_callback fires when a task fails (exception or exit code != 0). sla_miss_callback fires when a task or DAG run exceeds its declared SLA duration — it is a warning about lateness, not failure. A slow-but-successful task triggers SLA miss but not failure callback.",
+                "on_failure_callback fires when a task fails (exception or exit code != 0). sla_miss_callback fires when a task or DAG run exceeds its declared SLA duration  -  it is a warning about lateness, not failure. A slow-but-successful task triggers SLA miss but not failure callback.",
                 "sla_miss_callback only works with EmailOperator",
                 "on_failure_callback requires a Slack webhook",
               ],
@@ -1211,7 +1211,7 @@ with DAG(
               question: "How do you apply an on_failure_callback to all tasks in a DAG without setting it on each task individually?",
               options: [
                 "Set it in airflow.cfg",
-                "Set it in default_args — all tasks in the DAG inherit default_args values including callbacks. This is the standard production pattern for ensuring all tasks send alerts on failure.",
+                "Set it in default_args  -  all tasks in the DAG inherit default_args values including callbacks. This is the standard production pattern for ensuring all tasks send alerts on failure.",
                 "Use a DAG-level decorator",
                 "Callbacks cannot be applied globally",
               ],
@@ -1221,7 +1221,7 @@ with DAG(
               question: "What does the airflow.scheduler.heartbeat metric indicate?",
               options: [
                 "The number of tasks completed per second",
-                "That the Airflow scheduler process is alive and running — if this metric stops incrementing, the scheduler has crashed or stalled. Alert immediately when heartbeat stops updating.",
+                "That the Airflow scheduler process is alive and running  -  if this metric stops incrementing, the scheduler has crashed or stalled. Alert immediately when heartbeat stops updating.",
                 "The number of active DAG runs",
                 "The scheduler's CPU usage",
               ],
@@ -1237,7 +1237,7 @@ with DAG(
             <div className="topic-eyebrow">Level 9 - Apache Airflow</div>
             <h1 className="topic-title">Airflow vs Databricks Workflows vs ADF</h1>
             <p className="topic-desc">
-              Choosing the right orchestration tool depends on your data platform, team, and complexity. Apache Airflow is the most flexible — code-first, any operator, any cloud, rich ecosystem. Databricks Workflows is tightly integrated with Databricks notebooks and jobs — best when your entire platform is Databricks. Azure Data Factory (ADF) is Azure-native with a GUI-first approach — great for simple ELT and Azure service integration. In practice, many production platforms use a hybrid: Airflow for complex cross-system orchestration, Databricks Workflows for Databricks-internal compute graphs, ADF for simple Azure data movements.
+              Choosing the right orchestration tool depends on your data platform, team, and complexity. Apache Airflow is the most flexible  -  code-first, any operator, any cloud, rich ecosystem. Databricks Workflows is tightly integrated with Databricks notebooks and jobs  -  best when your entire platform is Databricks. Azure Data Factory (ADF) is Azure-native with a GUI-first approach  -  great for simple ELT and Azure service integration. In practice, many production platforms use a hybrid: Airflow for complex cross-system orchestration, Databricks Workflows for Databricks-internal compute graphs, ADF for simple Azure data movements.
             </p>
           </div>
           <CodeBlock lang="yaml">{`# ── Comparison Matrix ─────────────────────────────────────────────────
@@ -1251,12 +1251,12 @@ tool: Apache Airflow
   weaknesses:
     - Operational overhead (scheduler, workers, metadata DB, upgrades)
     - Learning curve for Kubernetes/Celery executor setup
-    - No native Spark execution — submits jobs to external clusters
+    - No native Spark execution  -  submits jobs to external clusters
   best_for: Complex multi-system pipelines, code-first teams, multi-cloud
 
 tool: Databricks Workflows
   strengths:
-    - Zero ops — fully managed, runs in your Databricks workspace
+    - Zero ops  -  fully managed, runs in your Databricks workspace
     - Native notebook/Python/JAR/dbt task types
     - File arrival triggers, continuous mode, repair and re-run
     - Delta Live Tables integration (declarative streaming/batch pipelines)
@@ -1269,7 +1269,7 @@ tool: Databricks Workflows
 
 tool: Azure Data Factory (ADF)
   strengths:
-    - GUI-first (drag-and-drop pipelines — accessible to non-engineers)
+    - GUI-first (drag-and-drop pipelines  -  accessible to non-engineers)
     - Native Azure integration (Blob, ADLS, Synapse, SQL DB, CosmosDB)
     - Managed IR (Integration Runtime) for on-premises connectivity
     - Built-in monitoring and alerting in Azure portal
@@ -1298,8 +1298,8 @@ tool: Azure Data Factory (ADF)
             {
               question: "When should you choose Databricks Workflows over Airflow?",
               options: [
-                "Always — it is simpler",
-                "When your entire data platform runs on Databricks and you want zero orchestration infrastructure overhead. Workflows is a fully managed scheduler that natively understands Databricks jobs, notebooks, and DLT pipelines — ideal for teams without DevOps support.",
+                "Always  -  it is simpler",
+                "When your entire data platform runs on Databricks and you want zero orchestration infrastructure overhead. Workflows is a fully managed scheduler that natively understands Databricks jobs, notebooks, and DLT pipelines  -  ideal for teams without DevOps support.",
                 "When you need cross-cloud orchestration",
                 "When you need more than 10 tasks in a pipeline",
               ],
@@ -1319,7 +1319,7 @@ tool: Azure Data Factory (ADF)
               question: "What is the main operational advantage of Azure Data Factory over self-managed Airflow?",
               options: [
                 "ADF has better Python support",
-                "ADF is a fully managed service — no infrastructure to provision, scale, or maintain. No scheduler process to monitor, no metadata DB to manage, no worker upgrades. The tradeoff is less flexibility and Azure-only native connectors.",
+                "ADF is a fully managed service  -  no infrastructure to provision, scale, or maintain. No scheduler process to monitor, no metadata DB to manage, no worker upgrades. The tradeoff is less flexibility and Azure-only native connectors.",
                 "ADF costs less than Airflow",
                 "ADF supports more operators than Airflow",
               ],
@@ -1435,7 +1435,7 @@ function AirflowDagAnimation() {
 
       {/* Title */}
       <text x="350" y="22" textAnchor="middle" fill="#0369a1" fontSize="11" fontWeight="700">
-        Airflow DAG — Task State Progression
+        Airflow DAG  -  Task State Progression
       </text>
 
       {/* Arrows */}
@@ -1451,15 +1451,15 @@ function AirflowDagAnimation() {
       <Arrow x1={350} y1={224} x2={350} y2={238} active={tasks.load >= 1} />
 
       {/* Task nodes */}
-      {/* start — top center */}
+      {/* start  -  top center */}
       <TaskNode x={350} y={50} label="start" state={tasks.start} />
-      {/* extract_orders — middle left */}
+      {/* extract_orders  -  middle left */}
       <TaskNode x={200} y={136} label="extract_orders" state={tasks.extract_orders} />
-      {/* extract_customers — middle right */}
+      {/* extract_customers  -  middle right */}
       <TaskNode x={500} y={136} label="extract_customers" state={tasks.extract_customers} />
-      {/* transform — center */}
+      {/* transform  -  center */}
       <TaskNode x={350} y={206} label="transform" state={tasks.transform} />
-      {/* load — bottom center */}
+      {/* load  -  bottom center */}
       <TaskNode x={350} y={256} label="load" state={tasks.load} />
 
       {/* Legend */}

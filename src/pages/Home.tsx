@@ -15,7 +15,7 @@ const LEVELS = [
     accent: '#4f8ef7',
   },
   {
-    num: '02', title: 'SQL — Fundamentals to Mastery',
+    num: '02', title: 'SQL  -  Fundamentals to Mastery',
     desc: 'SELECT, JOINs with animated Venn diagrams, window functions, CTEs, query optimization.',
     tags: ['JOINs', 'Window Functions', 'CTEs', 'Optimization'],
     hours: '50+ hrs', path: '/sql', id: 'sql',
@@ -61,7 +61,7 @@ const LEVELS = [
   },
   {
     num: '07', title: 'Production Data Engineering',
-    desc: 'System design, data mesh, CI/CD, Terraform, dbt, Data Vault 2.0, SCD types 1–6.',
+    desc: 'System design, data mesh, CI/CD, Terraform, dbt, Data Vault 2.0, SCD types 1 - 6.',
     tags: ['System Design', 'CI/CD', 'Data Vault', 'SCD'],
     hours: '80+ hrs', path: '/production', id: 'production',
     gradient: 'linear-gradient(135deg,#8b5cf6,#ec4899)',
@@ -96,7 +96,7 @@ const STATS = [
 ]
 
 const FEATURES = [
-  ['🎬', 'Auto-Playing Animations', 'Every concept has animated SVG illustrations — CPU pipelines, JOIN Venn diagrams, Spark DAGs, Delta transaction logs.', '#eff6ff', '#bfdbfe'],
+  ['🎬', 'Auto-Playing Animations', 'Every concept has animated SVG illustrations  -  CPU pipelines, JOIN Venn diagrams, Spark DAGs, Delta transaction logs.', '#eff6ff', '#bfdbfe'],
   ['🧠', 'Knowledge Quizzes', 'Quiz after every topic with instant feedback. Firebase tracks your score, XP, and progress across sessions.', '#faf5ff', '#ddd6fe'],
   ['🔥', 'Streak Tracking', 'Daily study streaks tracked in Firebase. XP awarded for completing topics and quizzes. Stay consistent.', '#fffbeb', '#fde68a'],
   ['🔐', 'Google Sign-In', 'Sign in with Google or email. Progress synced across all your devices via Firebase Firestore.', '#f0fdf4', '#bbf7d0'],
@@ -416,7 +416,7 @@ export default function Home({ completed }: Props) {
           ))}
         </div>
         <p style={{ color:'rgba(255,255,255,.25)',fontSize:'.82rem',lineHeight:1.8 }}>
-          © 2026 LearnWithMe — Data Engineering Learning Platform<br/>
+          © 2026 LearnWithMe  -  Data Engineering Learning Platform<br/>
           Built with React + TypeScript + Firebase + GitHub Pages
         </p>
       </footer>

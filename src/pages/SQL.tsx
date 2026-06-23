@@ -7,7 +7,7 @@ import { markTopicComplete } from '../lib/firebase'
 interface Props { completed: Set<string>; onComplete: () => void }
 
 const SECTIONS = [
-  { title: 'Level 3 – SQL Foundations', items: [
+  { title: 'Level 3  -  SQL Foundations', items: [
     { id: 'sql-select',   label: 'SELECT, WHERE, ORDER BY, LIMIT' },
     { id: 'sql-distinct', label: 'DISTINCT and Deduplication' },
     { id: 'sql-nulls',    label: 'NULL Handling' },
@@ -17,7 +17,7 @@ const SECTIONS = [
     { id: 'sql-agg',      label: 'Aggregations' },
     { id: 'sql-groupby',  label: 'GROUP BY, HAVING, ROLLUP, CUBE, GROUPING SETS' },
   ]},
-  { title: 'Level 4 – SQL Intermediate', items: [
+  { title: 'Level 4  -  SQL Intermediate', items: [
     { id: 'sql-joins',      label: 'JOINs (Animated Venn Diagrams)' },
     { id: 'sql-antijoin',   label: 'Anti-joins and Semi-joins' },
     { id: 'sql-subqueries', label: 'Subqueries (scalar, correlated, EXISTS)' },
@@ -26,14 +26,14 @@ const SECTIONS = [
     { id: 'sql-window',     label: 'Window Functions' },
     { id: 'sql-frames',     label: 'Window Frames (ROWS / RANGE BETWEEN)' },
   ]},
-  { title: 'Level 5 – SQL Mastery', items: [
+  { title: 'Level 5  -  SQL Mastery', items: [
     { id: 'sql-pivot',         label: 'PIVOT / UNPIVOT / Conditional Aggregation' },
     { id: 'sql-json',          label: 'JSON Functions in SQL' },
     { id: 'sql-dml',           label: 'DML: INSERT, UPDATE, DELETE, MERGE' },
     { id: 'sql-ddl',           label: 'DDL: CREATE, ALTER, DROP, TRUNCATE' },
     { id: 'sql-views',         label: 'Views and Materialized Views' },
     { id: 'sql-transactions',  label: 'Transactions, ACID, Isolation Levels' },
-    { id: 'sql-normalization', label: 'Normalization (1NF – BCNF)' },
+    { id: 'sql-normalization', label: 'Normalization (1NF  -  BCNF)' },
     { id: 'sql-indexes',       label: 'Indexes Deep Dive' },
     { id: 'sql-execution',     label: 'Execution Plans and EXPLAIN' },
     { id: 'sql-patterns',      label: 'Common SQL Patterns' },
@@ -125,9 +125,9 @@ function NormalizationAnimation() {
   const [step, setStep] = useState(0)
   const steps = [
     { label: 'Denormalized (0NF)', color: '#ef4444', rows: ['1 | Alice | alice@x.com | Laptop, Mouse | Electronics, Electronics'] },
-    { label: '1NF – Atomic Values', color: '#f59e0b', rows: ['1 | Alice | alice@x.com | Laptop | Electronics', '1 | Alice | alice@x.com | Mouse | Electronics'] },
-    { label: '2NF – Remove Partial Dependencies', color: '#3b82f6', rows: ['Orders: 1 | 1 | Laptop', 'Customers: 1 | Alice | alice@x.com'] },
-    { label: '3NF – Remove Transitive Dependencies', color: '#10b981', rows: ['Customers: 1 | Alice | 1', 'Emails: 1 | alice@x.com', 'Orders: 1 | 1 | Laptop'] },
+    { label: '1NF  -  Atomic Values', color: '#f59e0b', rows: ['1 | Alice | alice@x.com | Laptop | Electronics', '1 | Alice | alice@x.com | Mouse | Electronics'] },
+    { label: '2NF  -  Remove Partial Dependencies', color: '#3b82f6', rows: ['Orders: 1 | 1 | Laptop', 'Customers: 1 | Alice | alice@x.com'] },
+    { label: '3NF  -  Remove Transitive Dependencies', color: '#10b981', rows: ['Customers: 1 | Alice | 1', 'Emails: 1 | alice@x.com', 'Orders: 1 | 1 | Laptop'] },
   ]
   const s = steps[step]
   return (
@@ -178,8 +178,8 @@ export default function SQL({ completed, onComplete }: Props) {
             <span className="topic-tag">Level 3</span>
             <h2>SELECT, WHERE, ORDER BY, LIMIT</h2>
           </div>
-          <p>The SELECT statement is the foundation of all SQL queries. <code>SELECT</code> chooses columns, <code>FROM</code> specifies the table, <code>WHERE</code> filters rows before aggregation, <code>ORDER BY</code> sorts results, and <code>LIMIT</code>/<code>OFFSET</code> paginates. Column aliases with <code>AS</code> rename output columns. The <code>*</code> wildcard selects all columns but should be avoided in production — always name columns explicitly for resilience against schema changes.</p>
-          <div className="callout info">Logical processing order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. SELECT is evaluated late, so you cannot use a SELECT alias in WHERE.</div>
+          <p>The SELECT statement is the foundation of all SQL queries. <code>SELECT</code> chooses columns, <code>FROM</code> specifies the table, <code>WHERE</code> filters rows before aggregation, <code>ORDER BY</code> sorts results, and <code>LIMIT</code>/<code>OFFSET</code> paginates. Column aliases with <code>AS</code> rename output columns. The <code>*</code> wildcard selects all columns but should be avoided in production  -  always name columns explicitly for resilience against schema changes.</p>
+          <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body">Logical processing order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. SELECT is evaluated late, so you cannot use a SELECT alias in WHERE.</div></div>
           <CodeBlock language="sql" code={`-- Basic SELECT with filtering and sorting
 SELECT
     order_id,
@@ -210,7 +210,7 @@ WHERE  status IN ('failed', 'timeout')
   AND  pipeline_name LIKE 'ingest_%'
 ORDER BY started_at DESC;`} />
           <Quiz topicId="sql-select" questions={[
-            { question: "In SQL's logical processing order, when is the SELECT clause evaluated?", options: ['First, before FROM', 'After FROM and WHERE, before ORDER BY', 'After ORDER BY', 'At the same time as WHERE'], correct: 1, explanation: 'SELECT is evaluated after FROM, JOIN, WHERE, GROUP BY, and HAVING — which is why you cannot reference a SELECT alias in the WHERE clause.' },
+            { question: "In SQL's logical processing order, when is the SELECT clause evaluated?", options: ['First, before FROM', 'After FROM and WHERE, before ORDER BY', 'After ORDER BY', 'At the same time as WHERE'], correct: 1, explanation: 'SELECT is evaluated after FROM, JOIN, WHERE, GROUP BY, and HAVING  -  which is why you cannot reference a SELECT alias in the WHERE clause.' },
             { question: "Which clause filters rows AFTER aggregation?", options: ['WHERE', 'HAVING', 'ORDER BY', 'LIMIT'], correct: 1 },
             { question: "What does OFFSET 20 LIMIT 10 return?", options: ['First 10 rows', 'Rows 1-20', 'Rows 21-30', 'Last 10 rows'], correct: 2 },
           ]} />
@@ -220,7 +220,7 @@ ORDER BY started_at DESC;`} />
         {/* ── DISTINCT ── */}
         <section id="sql-distinct" ref={ref('sql-distinct')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>DISTINCT and Deduplication</h2></div>
-          <p>DISTINCT eliminates duplicate rows from query results. It operates on the full selected row, not just one column. For large tables, DISTINCT is expensive — it requires a sort or hash operation across all selected columns. In data engineering, deduplication is often better handled with window functions (ROW_NUMBER) or QUALIFY (Spark SQL / Snowflake), which give you control over which duplicate to keep.</p>
+          <p>DISTINCT eliminates duplicate rows from query results. It operates on the full selected row, not just one column. For large tables, DISTINCT is expensive  -  it requires a sort or hash operation across all selected columns. In data engineering, deduplication is often better handled with window functions (ROW_NUMBER) or QUALIFY (Spark SQL / Snowflake), which give you control over which duplicate to keep.</p>
           <CodeBlock language="sql" code={`-- Basic DISTINCT
 SELECT DISTINCT customer_id FROM orders;
 
@@ -244,7 +244,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 
           <Quiz topicId="sql-distinct" questions={[
             { question: "SELECT DISTINCT a, b returns rows where:", options: ['Column a is unique', 'Column b is unique', 'The combination of (a, b) is unique', 'Either a or b is unique'], correct: 2 },
             { question: "Why is ROW_NUMBER() preferred over DISTINCT for deduplication?", options: ['It is faster', 'It lets you choose which duplicate to keep based on ordering', 'It works without GROUP BY', 'DISTINCT does not work on large tables'], correct: 1 },
-            { question: "COUNT(DISTINCT col) vs COUNT(col) — what is the difference?", options: ['No difference', 'COUNT(DISTINCT col) counts only non-NULL unique values', 'COUNT(col) also counts NULLs', 'DISTINCT applies before WHERE'], correct: 1 },
+            { question: "COUNT(DISTINCT col) vs COUNT(col)  -  what is the difference?", options: ['No difference', 'COUNT(DISTINCT col) counts only non-NULL unique values', 'COUNT(col) also counts NULLs', 'DISTINCT applies before WHERE'], correct: 1 },
           ]} />
           <button className="complete-btn" onClick={() => { markTopicComplete('sql-distinct'); onComplete() }}>Mark Complete ✓</button>
         </section>
@@ -252,7 +252,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 
         {/* ── NULLS ── */}
         <section id="sql-nulls" ref={ref('sql-nulls')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>NULL Handling</h2></div>
-          <p>NULL represents the absence of a value — it is not zero, not an empty string, and not false. NULL comparisons always return UNKNOWN, not TRUE or FALSE. This means <code>col = NULL</code> never matches anything; you must use <code>IS NULL</code> or <code>IS NOT NULL</code>. Aggregate functions ignore NULLs except COUNT(*). Understanding NULL propagation is critical for correct results in joins, aggregations, and CASE expressions.</p>
+          <p>NULL represents the absence of a value  -  it is not zero, not an empty string, and not false. NULL comparisons always return UNKNOWN, not TRUE or FALSE. This means <code>col = NULL</code> never matches anything; you must use <code>IS NULL</code> or <code>IS NOT NULL</code>. Aggregate functions ignore NULLs except COUNT(*). Understanding NULL propagation is critical for correct results in joins, aggregations, and CASE expressions.</p>
           <CodeBlock language="sql" code={`-- NULL comparisons
 SELECT * FROM orders WHERE discount IS NULL;       -- correct
 SELECT * FROM orders WHERE discount = NULL;        -- always empty!
@@ -411,7 +411,7 @@ SELECT CHARINDEX('.', email)   AS dot_pos FROM customers; -- SQL Server`} />
         {/* ── DATES ── */}
         <section id="sql-dates" ref={ref('sql-dates')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>Date / Time Functions</h2></div>
-          <p>Date and time handling is a core data engineering skill — event timestamps, partitioning by date, time-series aggregations, and SLA calculations all require mastery of date functions. Key concepts: always store timestamps in UTC, convert to local time at query time; understand the difference between DATE, TIMESTAMP, and TIMESTAMP WITH TIME ZONE; use DATE_TRUNC for period bucketing rather than extracting year/month/day separately.</p>
+          <p>Date and time handling is a core data engineering skill  -  event timestamps, partitioning by date, time-series aggregations, and SLA calculations all require mastery of date functions. Key concepts: always store timestamps in UTC, convert to local time at query time; understand the difference between DATE, TIMESTAMP, and TIMESTAMP WITH TIME ZONE; use DATE_TRUNC for period bucketing rather than extracting year/month/day separately.</p>
           <CodeBlock language="sql" code={`-- Current date and time
 SELECT CURRENT_DATE, CURRENT_TIMESTAMP, NOW();
 
@@ -510,9 +510,9 @@ SELECT
     AVG(duration_ms) FILTER (WHERE status = 'completed') AS avg_success_duration
 FROM pipeline_runs;`} />
           <Quiz topicId="sql-agg" questions={[
-            { question: "PERCENTILE_CONT(0.5) vs PERCENTILE_DISC(0.5) — what is the key difference?", options: ['CONT is faster', 'CONT returns an interpolated value; DISC returns an actual data point', 'DISC works on strings; CONT on numbers', 'They are identical'], correct: 1 },
-            { question: "AVG(col) where col has NULLs — what happens?", options: ['Returns NULL', 'Treats NULL as 0', 'Calculates average ignoring NULLs', 'Raises an error'], correct: 2 },
-            { question: "COUNT(*) vs COUNT(col) — when do they give different results?", options: ['Never — they are identical', 'When col contains NULL values', 'When col has duplicates', 'Only on large tables'], correct: 1 },
+            { question: "PERCENTILE_CONT(0.5) vs PERCENTILE_DISC(0.5)  -  what is the key difference?", options: ['CONT is faster', 'CONT returns an interpolated value; DISC returns an actual data point', 'DISC works on strings; CONT on numbers', 'They are identical'], correct: 1 },
+            { question: "AVG(col) where col has NULLs  -  what happens?", options: ['Returns NULL', 'Treats NULL as 0', 'Calculates average ignoring NULLs', 'Raises an error'], correct: 2 },
+            { question: "COUNT(*) vs COUNT(col)  -  when do they give different results?", options: ['Never  -  they are identical', 'When col contains NULL values', 'When col has duplicates', 'Only on large tables'], correct: 1 },
           ]} />
           <button className="complete-btn" onClick={() => { markTopicComplete('sql-agg'); onComplete() }}>Mark Complete ✓</button>
         </section>
@@ -520,7 +520,7 @@ FROM pipeline_runs;`} />
         {/* ── GROUP BY ── */}
         <section id="sql-groupby" ref={ref('sql-groupby')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>GROUP BY, HAVING, ROLLUP, CUBE, GROUPING SETS</h2></div>
-          <p>GROUP BY collapses rows sharing the same key into a single group for aggregation. HAVING filters groups after aggregation (WHERE filters rows before). Advanced grouping — ROLLUP, CUBE, GROUPING SETS — produce subtotals and grand totals in a single query, replacing multiple UNION ALLs. ROLLUP generates a hierarchy of subtotals; CUBE generates all possible combinations; GROUPING SETS gives you explicit control.</p>
+          <p>GROUP BY collapses rows sharing the same key into a single group for aggregation. HAVING filters groups after aggregation (WHERE filters rows before). Advanced grouping  -  ROLLUP, CUBE, GROUPING SETS  -  produce subtotals and grand totals in a single query, replacing multiple UNION ALLs. ROLLUP generates a hierarchy of subtotals; CUBE generates all possible combinations; GROUPING SETS gives you explicit control.</p>
           <CodeBlock language="sql" code={`-- GROUP BY with HAVING
 SELECT
     customer_id,
@@ -569,7 +569,7 @@ SELECT
 FROM sales
 GROUP BY ROLLUP (region);`} />
           <Quiz topicId="sql-groupby" questions={[
-            { question: "GROUP BY ROLLUP(a, b, c) produces how many grouping levels?", options: ['3', '4', '7', '8'], correct: 1, explanation: 'ROLLUP(a,b,c) produces (a,b,c), (a,b), (a), () — 4 levels.' },
+            { question: "GROUP BY ROLLUP(a, b, c) produces how many grouping levels?", options: ['3', '4', '7', '8'], correct: 1, explanation: 'ROLLUP(a,b,c) produces (a,b,c), (a,b), (a), ()  -  4 levels.' },
             { question: "Can you use a WHERE clause to filter aggregated results?", options: ['Yes', 'No, use HAVING instead', 'Yes, if you use a subquery', 'Only with GROUP BY'], correct: 1 },
             { question: "What does GROUPING(col) return in a ROLLUP query?", options: ['The group value', '1 if the column is in a subtotal row, 0 otherwise', 'The count of rows in the group', 'NULL'], correct: 1 },
           ]} />
@@ -657,7 +657,7 @@ JOIN order_items oi ON o.order_id = oi.order_id;
 
 -- ANTI-JOIN: customers who have never placed an order (3 forms)
 
--- Form 1: NOT EXISTS (recommended — handles NULLs correctly)
+-- Form 1: NOT EXISTS (recommended  -  handles NULLs correctly)
 SELECT c.* FROM customers c
 WHERE NOT EXISTS (
     SELECT 1 FROM orders o WHERE o.customer_id = c.id
@@ -691,7 +691,7 @@ AND r.status = 'completed';`} />
         {/* ── SUBQUERIES ── */}
         <section id="sql-subqueries" ref={ref('sql-subqueries')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Subqueries (scalar, correlated, EXISTS)</h2></div>
-          <p>A subquery is a SELECT nested inside another query. Scalar subqueries return exactly one value. Inline views (derived tables) in FROM return a set of rows. Correlated subqueries reference the outer query and re-execute for each outer row — they can be slow but are sometimes necessary. Understanding when to use a subquery vs a JOIN vs a CTE is key to writing maintainable, performant SQL.</p>
+          <p>A subquery is a SELECT nested inside another query. Scalar subqueries return exactly one value. Inline views (derived tables) in FROM return a set of rows. Correlated subqueries reference the outer query and re-execute for each outer row  -  they can be slow but are sometimes necessary. Understanding when to use a subquery vs a JOIN vs a CTE is key to writing maintainable, performant SQL.</p>
           <CodeBlock language="sql" code={`-- Scalar subquery in SELECT
 SELECT
     order_id,
@@ -713,7 +713,7 @@ FROM (
 ) dept_stats
 WHERE avg_salary > 80000;
 
--- Correlated subquery (executes once per outer row — potentially slow)
+-- Correlated subquery (executes once per outer row  -  potentially slow)
 SELECT c.customer_id, c.name,
     (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) AS order_count,
     (SELECT MAX(order_date) FROM orders o WHERE o.customer_id = c.id) AS last_order
@@ -750,15 +750,15 @@ WHERE revenue_rank <= 10;`} />
         {/* ── SET OPS ── */}
         <section id="sql-setops" ref={ref('sql-setops')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>SET Operations (UNION, INTERSECT, EXCEPT)</h2></div>
-          <p>SET operations combine results of two queries with compatible column lists. UNION removes duplicates (expensive); UNION ALL keeps all rows (fast — no dedup). INTERSECT returns rows in both queries. EXCEPT (MINUS in Oracle) returns rows in the first query that are not in the second. In data engineering, UNION ALL is heavily used for combining daily partitions, EXCEPT is great for finding data discrepancies between systems.</p>
-          <CodeBlock language="sql" code={`-- UNION ALL (keeps duplicates, faster — preferred in data engineering)
+          <p>SET operations combine results of two queries with compatible column lists. UNION removes duplicates (expensive); UNION ALL keeps all rows (fast  -  no dedup). INTERSECT returns rows in both queries. EXCEPT (MINUS in Oracle) returns rows in the first query that are not in the second. In data engineering, UNION ALL is heavily used for combining daily partitions, EXCEPT is great for finding data discrepancies between systems.</p>
+          <CodeBlock language="sql" code={`-- UNION ALL (keeps duplicates, faster  -  preferred in data engineering)
 SELECT customer_id, 'web'    AS channel, amount FROM web_orders
 UNION ALL
 SELECT customer_id, 'mobile' AS channel, amount FROM mobile_orders
 UNION ALL
 SELECT customer_id, 'store'  AS channel, amount FROM store_orders;
 
--- UNION (removes duplicates — sorts/hashes all rows)
+-- UNION (removes duplicates  -  sorts/hashes all rows)
 SELECT email FROM newsletter_subscribers
 UNION
 SELECT email FROM customers;   -- unique emails across both
@@ -785,7 +785,7 @@ UNION ALL
 SELECT order_id, amount FROM orders_2024
 ORDER BY order_id;   -- applies to combined result`} />
           <Quiz topicId="sql-setops" questions={[
-            { question: "UNION vs UNION ALL — which is faster and why?", options: ['UNION, because it deduplicates', 'UNION ALL, because it skips the deduplication step', 'They have identical performance', 'UNION ALL is slower due to extra rows'], correct: 1 },
+            { question: "UNION vs UNION ALL  -  which is faster and why?", options: ['UNION, because it deduplicates', 'UNION ALL, because it skips the deduplication step', 'They have identical performance', 'UNION ALL is slower due to extra rows'], correct: 1 },
             { question: "What must be true for two queries to be combined with UNION?", options: ['Same table', 'Same number of columns with compatible data types', 'Same WHERE clause', 'Same ORDER BY'], correct: 1 },
             { question: "EXCEPT returns:", options: ['Rows in both queries', 'Rows in the first query not in the second', 'Rows in the second query not in the first', 'All rows from both queries'], correct: 1 },
           ]} />
@@ -795,7 +795,7 @@ ORDER BY order_id;   -- applies to combined result`} />
         {/* ── CTEs ── */}
         <section id="sql-cte" ref={ref('sql-cte')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>CTEs and Recursive CTEs</h2></div>
-          <p>A Common Table Expression (CTE) is a named temporary result set defined with WITH. CTEs make complex queries readable by breaking them into named steps. They can be referenced multiple times in the same query. Recursive CTEs use WITH RECURSIVE to traverse hierarchical data (org charts, folder trees, bill of materials). In most databases CTEs are not materialized by default — they are inlined like subqueries, though some support MATERIALIZED hints.</p>
+          <p>A Common Table Expression (CTE) is a named temporary result set defined with WITH. CTEs make complex queries readable by breaking them into named steps. They can be referenced multiple times in the same query. Recursive CTEs use WITH RECURSIVE to traverse hierarchical data (org charts, folder trees, bill of materials). In most databases CTEs are not materialized by default  -  they are inlined like subqueries, though some support MATERIALIZED hints.</p>
           <CodeBlock language="sql" code={`-- Basic CTE: clean up a complex subquery chain
 WITH
 completed_orders AS (
@@ -859,7 +859,7 @@ SELECT d FROM date_spine;`} />
           <Quiz topicId="sql-cte" questions={[
             { question: "What is the key difference between a CTE and a subquery in terms of readability?", options: ['CTEs are always faster', 'CTEs are named and reusable within the query, making complex logic readable', 'Subqueries cannot be used in FROM', 'CTEs are always materialized'], correct: 1 },
             { question: "What are the two parts of a recursive CTE?", options: ['SELECT and FROM', 'Base case (anchor) and recursive case', 'WITH and WHERE', 'UNION and INTERSECT'], correct: 1 },
-            { question: "Can a CTE be referenced multiple times in the same query?", options: ['No — it executes once only', 'Yes — and each reference may re-execute the CTE unless materialized', 'Yes — and it is always cached', 'Only if declared PERSISTENT'], correct: 1 },
+            { question: "Can a CTE be referenced multiple times in the same query?", options: ['No  -  it executes once only', 'Yes  -  and each reference may re-execute the CTE unless materialized', 'Yes  -  and it is always cached', 'Only if declared PERSISTENT'], correct: 1 },
           ]} />
           <button className="complete-btn" onClick={() => { markTopicComplete('sql-cte'); onComplete() }}>Mark Complete ✓</button>
         </section>
@@ -867,7 +867,7 @@ SELECT d FROM date_spine;`} />
         {/* ── WINDOW FUNCTIONS ── */}
         <section id="sql-window" ref={ref('sql-window')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Window Functions</h2></div>
-          <p>Window functions perform calculations across a set of rows related to the current row without collapsing them into one (unlike GROUP BY). The OVER() clause defines the window: PARTITION BY groups rows, ORDER BY determines order within the partition. Window functions are evaluated after WHERE, GROUP BY, and HAVING — so you can window-aggregate over filtered/grouped results.</p>
+          <p>Window functions perform calculations across a set of rows related to the current row without collapsing them into one (unlike GROUP BY). The OVER() clause defines the window: PARTITION BY groups rows, ORDER BY determines order within the partition. Window functions are evaluated after WHERE, GROUP BY, and HAVING  -  so you can window-aggregate over filtered/grouped results.</p>
           <CodeBlock language="sql" code={`-- Ranking functions
 SELECT
     customer_id,
@@ -925,7 +925,7 @@ SELECT * FROM (
     FROM product_revenue
 ) t WHERE rn <= 3;`} />
           <Quiz topicId="sql-window" questions={[
-            { question: "RANK() vs DENSE_RANK() — for values 10, 10, 8 what does DENSE_RANK() return?", options: ['1, 1, 3', '1, 1, 2', '1, 2, 3', '2, 2, 3'], correct: 1 },
+            { question: "RANK() vs DENSE_RANK()  -  for values 10, 10, 8 what does DENSE_RANK() return?", options: ['1, 1, 3', '1, 1, 2', '1, 2, 3', '2, 2, 3'], correct: 1 },
             { question: "What does LAG(col, 1) return for the first row in a partition?", options: ['The last row value', '0', 'NULL', 'An error'], correct: 2 },
             { question: "Window functions are evaluated at which stage?", options: ['Before WHERE', 'After WHERE, during GROUP BY', 'After SELECT, before ORDER BY', 'After HAVING, when computing SELECT expressions'], correct: 3 },
           ]} />
@@ -980,8 +980,8 @@ FROM orders;
 -- ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING  -> reverse running
 -- ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -> full partition`} />
           <Quiz topicId="sql-frames" questions={[
-            { question: "ROWS BETWEEN 6 PRECEDING AND CURRENT ROW always includes exactly 7 rows. RANGE BETWEEN 6 PRECEDING AND CURRENT ROW:", options: ['Always includes exactly 7 rows', 'Includes rows within 6 units of ORDER BY value — could be more than 7', 'Includes all rows in the partition', 'Includes rows from 6 rows back to end of partition'], correct: 1 },
-            { question: "What is the default frame when ORDER BY is specified in OVER()?", options: ['ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING', 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING', 'No default — you must specify the frame'], correct: 1 },
+            { question: "ROWS BETWEEN 6 PRECEDING AND CURRENT ROW always includes exactly 7 rows. RANGE BETWEEN 6 PRECEDING AND CURRENT ROW:", options: ['Always includes exactly 7 rows', 'Includes rows within 6 units of ORDER BY value  -  could be more than 7', 'Includes all rows in the partition', 'Includes rows from 6 rows back to end of partition'], correct: 1 },
+            { question: "What is the default frame when ORDER BY is specified in OVER()?", options: ['ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING', 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING', 'No default  -  you must specify the frame'], correct: 1 },
             { question: "To compute a 30-day rolling sum, which frame would you use?", options: ['RANGE BETWEEN 30 PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 29 PRECEDING AND CURRENT ROW', 'ROWS BETWEEN 30 PRECEDING AND 1 FOLLOWING', 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'], correct: 1 },
           ]} />
           <button className="complete-btn" onClick={() => { markTopicComplete('sql-frames'); onComplete() }}>Mark Complete ✓</button>
@@ -990,7 +990,7 @@ FROM orders;
         {/* ── PIVOT ── */}
         <section id="sql-pivot" ref={ref('sql-pivot')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>PIVOT / UNPIVOT / Conditional Aggregation</h2></div>
-          <p>PIVOT rotates rows into columns — transforming long/narrow tables to wide/flat. UNPIVOT does the reverse. Most databases support conditional aggregation (CASE + SUM) as a portable PIVOT equivalent. Snowflake, SQL Server, and Oracle have native PIVOT syntax. Spark SQL supports PIVOT in SELECT. Knowing both approaches makes you portable across engines.</p>
+          <p>PIVOT rotates rows into columns  -  transforming long/narrow tables to wide/flat. UNPIVOT does the reverse. Most databases support conditional aggregation (CASE + SUM) as a portable PIVOT equivalent. Snowflake, SQL Server, and Oracle have native PIVOT syntax. Spark SQL supports PIVOT in SELECT. Knowing both approaches makes you portable across engines.</p>
           <CodeBlock language="sql" code={`-- Conditional aggregation PIVOT (portable, works everywhere)
 SELECT
     customer_id,
@@ -1041,7 +1041,7 @@ UNPIVOT (amount FOR category IN (electronics, clothing, books)) unpvt;`} />
         {/* ── JSON ── */}
         <section id="sql-json" ref={ref('sql-json')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>JSON Functions in SQL</h2></div>
-          <p>Modern data often arrives as semi-structured JSON. SQL engines can parse, query, and generate JSON natively. Spark SQL and Databricks handle JSON extensively — from_json() and to_json() are daily tools. PostgreSQL has rich JSON operators. BigQuery uses JSON_EXTRACT. Knowing how to shred JSON columns into structured data is essential for Bronze-to-Silver transformations.</p>
+          <p>Modern data often arrives as semi-structured JSON. SQL engines can parse, query, and generate JSON natively. Spark SQL and Databricks handle JSON extensively  -  from_json() and to_json() are daily tools. PostgreSQL has rich JSON operators. BigQuery uses JSON_EXTRACT. Knowing how to shred JSON columns into structured data is essential for Bronze-to-Silver transformations.</p>
           <CodeBlock language="sql" code={`-- Spark SQL: parse JSON string column
 SELECT
     event_id,
@@ -1093,7 +1093,7 @@ SELECT row_to_json(t) FROM orders t;  -- PostgreSQL`} />
         {/* ── DML ── */}
         <section id="sql-dml" ref={ref('sql-dml')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>DML: INSERT, UPDATE, DELETE, MERGE</h2></div>
-          <p>Data Manipulation Language (DML) modifies table data. MERGE (also called UPSERT) is the most powerful — it conditionally inserts, updates, or deletes in a single atomic statement. In Delta Lake, MERGE is central to SCD Type 2 and incremental loads. Understanding DML atomicity and how it interacts with transactions is critical for data integrity.</p>
+          <p>Data Manipulation Language (DML) modifies table data. MERGE (also called UPSERT) is the most powerful  -  it conditionally inserts, updates, or deletes in a single atomic statement. In Delta Lake, MERGE is central to SCD Type 2 and incremental loads. Understanding DML atomicity and how it interacts with transactions is critical for data integrity.</p>
           <CodeBlock language="sql" code={`-- INSERT variants
 INSERT INTO orders (customer_id, amount, status) VALUES (1, 99.99, 'pending');
 
@@ -1124,7 +1124,7 @@ WHERE order_id IN (
     SELECT order_id FROM orders WHERE status = 'completed'
 );
 
--- MERGE (ANSI SQL:2003 — supported in Databricks/Snowflake/SQL Server)
+-- MERGE (ANSI SQL:2003  -  supported in Databricks/Snowflake/SQL Server)
 MERGE INTO customers_target AS t
 USING customers_source AS s
 ON t.customer_id = s.customer_id
@@ -1146,7 +1146,7 @@ WHEN NOT MATCHED BY SOURCE THEN
           <Quiz topicId="sql-dml" questions={[
             { question: "What does MERGE's WHEN NOT MATCHED BY SOURCE clause do?", options: ['Inserts new rows', 'Updates rows not in source', 'Deletes target rows that have no matching source row', 'Does nothing'], correct: 2 },
             { question: "INSERT INTO ... ON CONFLICT (id) DO UPDATE is a PostgreSQL pattern for:", options: ['Conditional insert', 'Upsert (insert or update)', 'Bulk insert', 'Insert with validation'], correct: 1 },
-            { question: "DELETE with a subquery vs TRUNCATE — key difference:", options: ['TRUNCATE is logged; DELETE is not', 'DELETE removes specific rows and is fully logged; TRUNCATE removes all rows and is minimally logged', 'DELETE is faster than TRUNCATE', 'TRUNCATE supports WHERE clauses'], correct: 1 },
+            { question: "DELETE with a subquery vs TRUNCATE  -  key difference:", options: ['TRUNCATE is logged; DELETE is not', 'DELETE removes specific rows and is fully logged; TRUNCATE removes all rows and is minimally logged', 'DELETE is faster than TRUNCATE', 'TRUNCATE supports WHERE clauses'], correct: 1 },
           ]} />
           <button className="complete-btn" onClick={() => { markTopicComplete('sql-dml'); onComplete() }}>Mark Complete ✓</button>
         </section>
@@ -1154,7 +1154,7 @@ WHEN NOT MATCHED BY SOURCE THEN
         {/* ── DDL ── */}
         <section id="sql-ddl" ref={ref('sql-ddl')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>DDL: CREATE, ALTER, DROP, TRUNCATE</h2></div>
-          <p>Data Definition Language (DDL) manages table structures and schema. CREATE TABLE defines columns, types, and constraints. ALTER TABLE modifies existing structures. DROP removes objects permanently. TRUNCATE deletes all rows faster than DELETE (no row-level logging). In cloud warehouses (Databricks, Snowflake, BigQuery), DDL is mostly SQL — understanding CREATE TABLE AS SELECT (CTAS) and CREATE OR REPLACE TABLE is essential for pipeline work.</p>
+          <p>Data Definition Language (DDL) manages table structures and schema. CREATE TABLE defines columns, types, and constraints. ALTER TABLE modifies existing structures. DROP removes objects permanently. TRUNCATE deletes all rows faster than DELETE (no row-level logging). In cloud warehouses (Databricks, Snowflake, BigQuery), DDL is mostly SQL  -  understanding CREATE TABLE AS SELECT (CTAS) and CREATE OR REPLACE TABLE is essential for pipeline work.</p>
           <CodeBlock language="sql" code={`-- CREATE TABLE with constraints
 CREATE TABLE orders (
     order_id      BIGINT       PRIMARY KEY,
@@ -1202,7 +1202,7 @@ PARTITIONED BY (order_date)
 LOCATION 'abfss://silver@datalake.dfs.core.windows.net/orders'
 TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = 'true');`} />
           <Quiz topicId="sql-ddl" questions={[
-            { question: "TRUNCATE vs DELETE FROM — which is faster and why?", options: ['DELETE, because it processes rows individually', 'TRUNCATE, because it deallocates data pages without row-level logging', 'They have identical performance', 'TRUNCATE is slower on large tables'], correct: 1 },
+            { question: "TRUNCATE vs DELETE FROM  -  which is faster and why?", options: ['DELETE, because it processes rows individually', 'TRUNCATE, because it deallocates data pages without row-level logging', 'They have identical performance', 'TRUNCATE is slower on large tables'], correct: 1 },
             { question: "CREATE TABLE AS SELECT (CTAS) creates a table:", options: ['With no data', 'With the structure and data from the SELECT query', 'With only the structure (schema) of the SELECT', 'As a view, not a real table'], correct: 1 },
             { question: "ALTER TABLE ADD COLUMN in a live production table may cause:", options: ['An error if the table has data', 'A table lock (downtime) on some databases', 'All existing rows to be deleted', 'The column to be filled with random data'], correct: 1 },
           ]} />
@@ -1212,7 +1212,7 @@ TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = 'true');`} />
         {/* ── VIEWS ── */}
         <section id="sql-views" ref={ref('sql-views')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Views and Materialized Views</h2></div>
-          <p>A view is a named saved query — it does not store data. Every time the view is queried, the underlying SQL runs. Views provide security (hide columns), abstraction (stable interface over changing schema), and reuse. Materialized views (or materialized tables in Databricks) store query results physically, dramatically speeding up expensive aggregations at the cost of staleness. They must be refreshed periodically.</p>
+          <p>A view is a named saved query  -  it does not store data. Every time the view is queried, the underlying SQL runs. Views provide security (hide columns), abstraction (stable interface over changing schema), and reuse. Materialized views (or materialized tables in Databricks) store query results physically, dramatically speeding up expensive aggregations at the cost of staleness. They must be refreshed periodically.</p>
           <CodeBlock language="sql" code={`-- Regular view (no data stored)
 CREATE OR REPLACE VIEW v_active_customers AS
 SELECT
@@ -1319,7 +1319,7 @@ COMMIT;
 
         {/* ── NORMALIZATION ── */}
         <section id="sql-normalization" ref={ref('sql-normalization')} className="topic-section">
-          <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Normalization (1NF – BCNF)</h2></div>
+          <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Normalization (1NF  -  BCNF)</h2></div>
           <p>Normalization organizes relational data to eliminate redundancy and anomalies. Each normal form adds a rule on top of the previous. In data engineering, OLTP databases are typically 3NF (minimize write anomalies), while OLAP/warehouse schemas are intentionally denormalized (star/snowflake schema) to minimize JOINs at query time. Understanding when to normalize vs denormalize is a design decision, not a rule.</p>
           <NormalizationAnimation />
           <CodeBlock language="sql" code={`-- 1NF: Each column holds atomic (indivisible) values, no repeating groups
@@ -1338,7 +1338,7 @@ COMMIT;
 
 -- BCNF: Every determinant is a candidate key (stronger than 3NF)
 
--- Denormalized star schema (data warehouse — intentional)
+-- Denormalized star schema (data warehouse  -  intentional)
 -- Fact table: orders_fact(order_id, customer_key, product_key, date_key, amount)
 -- Dim tables: dim_customer, dim_product, dim_date
 -- Trade-off: redundant data in dims, but fast single-join queries
@@ -1348,7 +1348,7 @@ COMMIT;
 -- Parquet column pruning: wide flat tables let engines skip irrelevant columns
 -- Aggregated rollup tables: pre-computed summaries for dashboards`} />
           <Quiz topicId="sql-normalization" questions={[
-            { question: "1NF requires that each column contains:", options: ['Only integers', 'Atomic (indivisible) values — no arrays or repeated groups', 'A primary key', 'Non-null values'], correct: 1 },
+            { question: "1NF requires that each column contains:", options: ['Only integers', 'Atomic (indivisible) values  -  no arrays or repeated groups', 'A primary key', 'Non-null values'], correct: 1 },
             { question: "In a data warehouse (OLAP), tables are typically:", options: ['In 3NF', 'In BCNF', 'Intentionally denormalized (star/snowflake schema)', 'Not normalized at all'], correct: 2 },
             { question: "A transitive dependency means:", options: ['A column depends on the primary key via another non-key column', 'Two columns share the same value', 'A foreign key references another table', 'A column can be NULL'], correct: 0 },
           ]} />
@@ -1358,7 +1358,7 @@ COMMIT;
         {/* ── INDEXES ── */}
         <section id="sql-indexes" ref={ref('sql-indexes')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Indexes Deep Dive</h2></div>
-          <p>Indexes accelerate reads at the cost of slower writes and extra storage. The B-tree index is the default for equality and range queries. Hash indexes are only for equality. Composite indexes support queries on multiple columns — column order matters. A covering index includes all columns needed by a query, eliminating table lookups. Partial indexes index only a subset of rows. Understanding when the optimizer will use or skip an index is key to tuning.</p>
+          <p>Indexes accelerate reads at the cost of slower writes and extra storage. The B-tree index is the default for equality and range queries. Hash indexes are only for equality. Composite indexes support queries on multiple columns  -  column order matters. A covering index includes all columns needed by a query, eliminating table lookups. Partial indexes index only a subset of rows. Understanding when the optimizer will use or skip an index is key to tuning.</p>
           <IndexAnimation />
           <CodeBlock language="sql" code={`-- B-tree index (default): equality and range queries
 CREATE INDEX idx_orders_date ON orders (order_date);
@@ -1405,7 +1405,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
         {/* ── EXECUTION PLANS ── */}
         <section id="sql-execution" ref={ref('sql-execution')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Execution Plans and EXPLAIN</h2></div>
-          <p>The query optimizer converts SQL into an execution plan — a tree of physical operations. EXPLAIN shows the estimated plan; EXPLAIN ANALYZE actually executes the query and shows real statistics. Key nodes to understand: Seq Scan (full table scan), Index Scan (B-tree lookup), Bitmap Index Scan (multiple index ranges), Nested Loop (good for small sets), Hash Join (good for large sets with hash-able join), Merge Join (good for pre-sorted data). The optimizer makes decisions based on table statistics — outdated stats lead to bad plans.</p>
+          <p>The query optimizer converts SQL into an execution plan  -  a tree of physical operations. EXPLAIN shows the estimated plan; EXPLAIN ANALYZE actually executes the query and shows real statistics. Key nodes to understand: Seq Scan (full table scan), Index Scan (B-tree lookup), Bitmap Index Scan (multiple index ranges), Nested Loop (good for small sets), Hash Join (good for large sets with hash-able join), Merge Join (good for pre-sorted data). The optimizer makes decisions based on table statistics  -  outdated stats lead to bad plans.</p>
           <CodeBlock language="sql" code={`-- PostgreSQL EXPLAIN ANALYZE
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
 SELECT c.name, SUM(o.amount)
@@ -1445,8 +1445,8 @@ ANALYZE TABLE orders COMPUTE STATISTICS;   -- Spark SQL
 -- 4. Sort in plan → adding ORDER BY index can eliminate it
 -- 5. Hash Aggregate → memory spill if estimate too low (increase work_mem in PG)`} />
           <Quiz topicId="sql-execution" questions={[
-            { question: "EXPLAIN vs EXPLAIN ANALYZE — what is the key difference?", options: ['EXPLAIN ANALYZE shows estimated plans; EXPLAIN shows actual', 'EXPLAIN ANALYZE actually executes the query and shows real row counts and timings', 'EXPLAIN ANALYZE only works on PostgreSQL', 'They are identical'], correct: 1 },
-            { question: "What does a Seq Scan in an execution plan indicate?", options: ['The query is optimal', 'A full table scan — every row is read', 'A sequential write operation', 'An index was used in sequence'], correct: 1 },
+            { question: "EXPLAIN vs EXPLAIN ANALYZE  -  what is the key difference?", options: ['EXPLAIN ANALYZE shows estimated plans; EXPLAIN shows actual', 'EXPLAIN ANALYZE actually executes the query and shows real row counts and timings', 'EXPLAIN ANALYZE only works on PostgreSQL', 'They are identical'], correct: 1 },
+            { question: "What does a Seq Scan in an execution plan indicate?", options: ['The query is optimal', 'A full table scan  -  every row is read', 'A sequential write operation', 'An index was used in sequence'], correct: 1 },
             { question: "Why does the optimizer sometimes choose a wrong plan?", options: ['SQL is ambiguous', 'Stale table statistics lead to incorrect row count estimates', 'The optimizer ignores indexes', 'The SQL syntax was non-standard'], correct: 1 },
           ]} />
           <button className="complete-btn" onClick={() => { markTopicComplete('sql-execution'); onComplete() }}>Mark Complete ✓</button>
@@ -1552,7 +1552,7 @@ WHERE amount + 10 > 100                 -- expression → FIX: WHERE amount > 90
 -- FIX for YEAR():
 WHERE order_date >= '2024-01-01' AND order_date < '2025-01-01'
 
--- 2. Avoid SELECT * — list only needed columns (column pruning)
+-- 2. Avoid SELECT *  -  list only needed columns (column pruning)
 -- On Parquet/Delta, engines skip unneeded column chunks = huge I/O savings
 
 -- 3. Filter early with partition pruning
@@ -1568,7 +1568,7 @@ FROM orders o JOIN customers c ON o.customer_id = c.id;
 -- 5. Use EXISTS over IN for large subqueries
 -- EXISTS stops at first match; IN evaluates the entire subquery
 
--- 6. Avoid DISTINCT when possible — use GROUP BY or window functions
+-- 6. Avoid DISTINCT when possible  -  use GROUP BY or window functions
 -- DISTINCT forces a full sort/hash. If data is already unique, it wastes work.
 
 -- 7. Predicate pushdown: filter before joining

@@ -152,7 +152,7 @@ print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
               question: "What is the difference between --deploy-mode client and --deploy-mode cluster in spark-submit?",
               options: [
                 "Client mode is faster; cluster mode uses more memory",
-                "In client mode the Driver runs on the submitting machine; in cluster mode the Driver runs on a cluster node — cluster mode is preferred for production so the driver isn't lost if the submitting shell dies",
+                "In client mode the Driver runs on the submitting machine; in cluster mode the Driver runs on a cluster node  -  cluster mode is preferred for production so the driver isn't lost if the submitting shell dies",
                 "Client mode supports YARN; cluster mode supports Kubernetes only",
                 "There is no functional difference"
               ],
@@ -173,7 +173,7 @@ print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">DAG, Stages, and Tasks</h1>
             <p className="topic-desc">
-              Every Spark job is represented as a Directed Acyclic Graph (DAG) of stages. <strong>Narrow transformations</strong> (map, filter, withColumn) pipeline within a stage — each partition is processed independently with no data movement. <strong>Wide transformations</strong> (groupBy, join, repartition) require a <strong>shuffle</strong> — data is written to disk, transferred across the network, and re-read — creating a new stage boundary. Each stage is divided into <strong>tasks</strong>, one per partition, and tasks are serialized and sent to executor slots.
+              Every Spark job is represented as a Directed Acyclic Graph (DAG) of stages. <strong>Narrow transformations</strong> (map, filter, withColumn) pipeline within a stage  -  each partition is processed independently with no data movement. <strong>Wide transformations</strong> (groupBy, join, repartition) require a <strong>shuffle</strong>  -  data is written to disk, transferred across the network, and re-read  -  creating a new stage boundary. Each stage is divided into <strong>tasks</strong>, one per partition, and tasks are serialized and sent to executor slots.
             </p>
           </div>
           <DagAnimation />
@@ -246,7 +246,7 @@ df.rdd.map(lambda row: bc.value.get(row.key))
               question: "Why is capturing a large Python dict inside a transformation closure a problem?",
               options: [
                 "Python dicts are not serializable",
-                "The dict is serialized and sent to every individual task, not shared — use a broadcast variable instead",
+                "The dict is serialized and sent to every individual task, not shared  -  use a broadcast variable instead",
                 "It disables lazy evaluation",
                 "It causes a shuffle"
               ],
@@ -262,19 +262,19 @@ df.rdd.map(lambda row: bc.value.get(row.key))
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Lazy Evaluation and the Execution Model</h1>
             <p className="topic-desc">
-              Spark does <em>nothing</em> when you call a transformation. It records the operation in the logical plan. Only when you call an <strong>action</strong> (count, collect, show, write, save) does Spark hand the full logical plan to Catalyst for optimization, generate a physical plan, and execute. This lazy model enables optimizations impossible in eager systems: Catalyst can push filters down to the data source, prune columns before reading, reorder joins, and fold constants — all because it sees the <em>complete</em> query before touching any data.
+              Spark does <em>nothing</em> when you call a transformation. It records the operation in the logical plan. Only when you call an <strong>action</strong> (count, collect, show, write, save) does Spark hand the full logical plan to Catalyst for optimization, generate a physical plan, and execute. This lazy model enables optimizations impossible in eager systems: Catalyst can push filters down to the data source, prune columns before reading, reorder joins, and fold constants  -  all because it sees the <em>complete</em> query before touching any data.
             </p>
           </div>
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Lineage for fault tolerance:</strong> Because transformations are recorded as a DAG of operations (lineage), if an executor dies mid-job, Spark can recompute only the lost partitions by replaying the lineage — no need for full data replication like Hadoop MapReduce's HDFS replication strategy.
+              <strong>Lineage for fault tolerance:</strong> Because transformations are recorded as a DAG of operations (lineage), if an executor dies mid-job, Spark can recompute only the lost partitions by replaying the lineage  -  no need for full data replication like Hadoop MapReduce's HDFS replication strategy.
             </div>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 import time
 
-# ── Transformations are LAZY — zero computation happens here ─────────
+# ── Transformations are LAZY  -  zero computation happens here ─────────
 df = spark.read.parquet("/data/silver/transactions")   # no I/O yet
 df2 = df.filter(F.col("amount") > 1000)               # no compute
 df3 = df2.withColumn("tax", F.col("amount") * 0.2)    # no compute
@@ -289,16 +289,16 @@ total_merchants = df4.count()          # ACTION → Catalyst optimises → execu
 print(f"Merchants: {total_merchants}, took {time.time()-t0:.1f}s")
 
 df4.show(20)                           # ACTION → re-executes the full DAG!
-# ↑ This is a COMMON MISTAKE — df4 is recomputed from scratch
+# ↑ This is a COMMON MISTAKE  -  df4 is recomputed from scratch
 
 # Fix: cache before multiple actions
 df4.cache()
-df4.count()   # first action — computes AND caches
+df4.count()   # first action  -  computes AND caches
 df4.show(20)  # served from cache, fast
 
 # ── Common actions ───────────────────────────────────────────────────
 df.count()                    # triggers full scan
-df.collect()                  # returns List[Row] to driver — CAREFUL on large DFs
+df.collect()                  # returns List[Row] to driver  -  CAREFUL on large DFs
 df.take(100)                  # first 100 rows to driver (no sort guarantee)
 df.first()                    # equivalent to take(1)[0]
 df.show(20, truncate=False)   # prints to stdout
@@ -322,9 +322,9 @@ df4.explain(True)
             {
               question: "You call df.filter(...).groupBy(...).agg(...).show() then immediately df.filter(...).groupBy(...).agg(...).count(). How many times is the full DAG executed?",
               options: [
-                "Once — Spark caches automatically",
-                "Twice — each action re-executes the entire DAG from scratch unless you cache",
-                "Zero — show() is not an action",
+                "Once  -  Spark caches automatically",
+                "Twice  -  each action re-executes the entire DAG from scratch unless you cache",
+                "Zero  -  show() is not an action",
                 "Depends on spark.sql.adaptive.enabled"
               ],
               correct: 1
@@ -359,13 +359,13 @@ df4.explain(True)
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">RDDs vs DataFrames vs Datasets</h1>
             <p className="topic-desc">
-              Spark has three abstraction layers. <strong>RDDs</strong> (Resilient Distributed Datasets) are the low-level API — typed, unstructured partitions of JVM objects with no schema. <strong>DataFrames</strong> are distributed tables with a named schema, optimised by Catalyst and Tungsten — the right choice for 95% of work. <strong>Datasets</strong> are typed DataFrames available only in Scala/Java (Python has no Dataset API — PySpark DataFrames behave like untyped Datasets[Row]). In practice: always use DataFrames; drop to RDD only when you need low-level partition-level control unavailable in the DataFrame API.
+              Spark has three abstraction layers. <strong>RDDs</strong> (Resilient Distributed Datasets) are the low-level API  -  typed, unstructured partitions of JVM objects with no schema. <strong>DataFrames</strong> are distributed tables with a named schema, optimised by Catalyst and Tungsten  -  the right choice for 95% of work. <strong>Datasets</strong> are typed DataFrames available only in Scala/Java (Python has no Dataset API  -  PySpark DataFrames behave like untyped Datasets[Row]). In practice: always use DataFrames; drop to RDD only when you need low-level partition-level control unavailable in the DataFrame API.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
 
-# ── RDD API — avoid unless necessary ────────────────────────────────
+# ── RDD API  -  avoid unless necessary ────────────────────────────────
 rdd = sc.textFile("/data/raw/access_logs/*.log")         # RDD[str]
 parsed = rdd.map(lambda line: line.split("\t")) \
             .filter(lambda fields: len(fields) >= 5) \
@@ -379,7 +379,7 @@ result_rdd.take(10)
 # 3. No columnar storage → no Tungsten optimisations
 # 4. Verbose API
 
-# ── DataFrame API — preferred ────────────────────────────────────────
+# ── DataFrame API  -  preferred ────────────────────────────────────────
 # Explicit schema (always prefer over inferSchema=True in production)
 schema = StructType([
     StructField("user_id",    LongType(),   nullable=False),
@@ -390,7 +390,7 @@ schema = StructType([
 
 df = spark.read.schema(schema).json("/data/raw/events/")
 
-# Same logic as RDD above — but Catalyst optimises it
+# Same logic as RDD above  -  but Catalyst optimises it
 result_df = df \
     .filter(F.col("amount").isNotNull()) \
     .groupBy("user_id") \
@@ -422,7 +422,7 @@ result_df.rdd.foreachPartition(process_partition)
               question: "Why do DataFrames outperform RDDs for most workloads?",
               options: [
                 "DataFrames are always cached in memory",
-                "DataFrames have a schema, enabling Catalyst query optimisation and Tungsten's columnar, off-heap execution — RDDs bypass both",
+                "DataFrames have a schema, enabling Catalyst query optimisation and Tungsten's columnar, off-heap execution  -  RDDs bypass both",
                 "DataFrames use more executor cores",
                 "DataFrames avoid network shuffles"
               ],
@@ -432,7 +432,7 @@ result_df.rdd.foreachPartition(process_partition)
               question: "When is foreachPartition on an RDD a legitimate use case?",
               options: [
                 "When you want to filter data",
-                "When you need to open a connection (DB, API) once per partition rather than once per row — amortises connection overhead",
+                "When you need to open a connection (DB, API) once per partition rather than once per row  -  amortises connection overhead",
                 "When the DataFrame API is unavailable",
                 "When you need to broadcast a variable"
               ],
@@ -442,7 +442,7 @@ result_df.rdd.foreachPartition(process_partition)
               question: "Is the Dataset API available in PySpark?",
               options: [
                 "Yes, via pyspark.sql.Dataset",
-                "No — Datasets are a Scala/Java API only. PySpark DataFrames are effectively untyped Dataset[Row]",
+                "No  -  Datasets are a Scala/Java API only. PySpark DataFrames are effectively untyped Dataset[Row]",
                 "Yes, but only in Spark 3.x",
                 "Yes, via spark.createDataset()"
               ],
@@ -458,7 +458,7 @@ result_df.rdd.foreachPartition(process_partition)
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Reading Data</h1>
             <p className="topic-desc">
-              Spark can read from virtually any source. Understanding format-specific options — especially <code>inferSchema</code> vs explicit schema, <code>header</code>, <code>multiLine</code>, and predicate pushdown support — is critical for building reliable ingestion pipelines. Always define schemas explicitly in production; <code>inferSchema=True</code> triggers a full scan just to determine types.
+              Spark can read from virtually any source. Understanding format-specific options  -  especially <code>inferSchema</code> vs explicit schema, <code>header</code>, <code>multiLine</code>, and predicate pushdown support  -  is critical for building reliable ingestion pipelines. Always define schemas explicitly in production; <code>inferSchema=True</code> triggers a full scan just to determine types.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql.types import *
@@ -538,7 +538,7 @@ df_kafka = spark.read \
     .option("endingOffsets",           "latest") \
     .load()
 
-# Kafka value is binary — deserialise:
+# Kafka value is binary  -  deserialise:
 df_events = df_kafka.select(
     F.col("key").cast("string").alias("key"),
     F.from_json(F.col("value").cast("string"), schema_json).alias("data"),
@@ -550,7 +550,7 @@ df_events = df_kafka.select(
               question: "Why should you always define an explicit schema rather than using inferSchema=True in production?",
               options: [
                 "inferSchema doesn't work with Parquet",
-                "inferSchema triggers a full scan of all data just to determine column types — wasting time and money on every job run",
+                "inferSchema triggers a full scan of all data just to determine column types  -  wasting time and money on every job run",
                 "inferSchema causes type errors",
                 "Explicit schema uses less memory"
               ],
@@ -567,10 +567,10 @@ df_events = df_kafka.select(
               correct: 1
             },
             {
-              question: "For a JDBC read with numPartitions=10, partitionColumn='order_id', lowerBound=1, upperBound=10M — how does Spark parallelise the read?",
+              question: "For a JDBC read with numPartitions=10, partitionColumn='order_id', lowerBound=1, upperBound=10M  -  how does Spark parallelise the read?",
               options: [
                 "It reads the full table then splits into 10 partitions in memory",
-                "Spark issues 10 parallel SQL queries each covering a range of order_id values — one per Spark partition",
+                "Spark issues 10 parallel SQL queries each covering a range of order_id values  -  one per Spark partition",
                 "It reads one row at a time from 10 connections",
                 "Parallelism is determined by the database, not Spark"
               ],
@@ -586,7 +586,7 @@ df_events = df_kafka.select(
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Writing Data</h1>
             <p className="topic-desc">
-              Writing is an action — it triggers the full DAG. Key decisions: format (Parquet/Delta for analytics, CSV/JSON for interchange), <strong>save mode</strong> (append/overwrite/ignore/errorIfExists), and <strong>physical layout</strong> (partitionBy for read pruning, bucketBy+sortBy for join optimisation). The number of output files equals the number of active partitions at write time — control this with coalesce or repartition before writing.
+              Writing is an action  -  it triggers the full DAG. Key decisions: format (Parquet/Delta for analytics, CSV/JSON for interchange), <strong>save mode</strong> (append/overwrite/ignore/errorIfExists), and <strong>physical layout</strong> (partitionBy for read pruning, bucketBy+sortBy for join optimisation). The number of output files equals the number of active partitions at write time  -  control this with coalesce or repartition before writing.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -602,7 +602,7 @@ df.write \
   .mode("overwrite") \
   .save("/data/silver/orders/")
 
-# ── partitionBy — hive-style directory partitioning ──────────────────
+# ── partitionBy  -  hive-style directory partitioning ──────────────────
 # Creates: /data/silver/events/event_date=2024-01-01/part-00000.parquet
 # → Spark skips entire directories on read when filter matches partition col
 df.write \
@@ -612,7 +612,7 @@ df.write \
   .option("replaceWhere", "event_date >= '2024-01-01'") \  # partial overwrite
   .save("/data/delta/events/")
 
-# ── bucketBy — pre-shuffle for joins ─────────────────────────────────
+# ── bucketBy  -  pre-shuffle for joins ─────────────────────────────────
 # Both tables bucketed on the same key with the same bucket count
 # → Spark can skip the shuffle entirely during joins (co-located)
 # Requires Hive metastore (saveAsTable, not save)
@@ -667,7 +667,7 @@ df.select(
               question: "What does partitionBy('event_date') do to the physical storage?",
               options: [
                 "Sorts data by event_date within each file",
-                "Creates a directory per event_date value — Spark can skip entire directories when filtering by that column (partition pruning)",
+                "Creates a directory per event_date value  -  Spark can skip entire directories when filtering by that column (partition pruning)",
                 "Splits each file into date-based chunks",
                 "Creates a Z-order index on event_date"
               ],
@@ -677,7 +677,7 @@ df.select(
               question: "When does bucketBy improve query performance?",
               options: [
                 "When writing compressed files",
-                "When two tables are bucketed on the same key with the same bucket count — Spark can skip the shuffle entirely during joins",
+                "When two tables are bucketed on the same key with the same bucket count  -  Spark can skip the shuffle entirely during joins",
                 "When writing to ADLS",
                 "When using append mode"
               ],
@@ -687,9 +687,9 @@ df.select(
               question: "You have a 1TB DataFrame and want to write it as 100 Parquet files. You call coalesce(100). What is the risk?",
               options: [
                 "coalesce fails for files > 100GB",
-                "coalesce doesn't shuffle, so partitions may be very uneven — some files much larger than others. Use repartition(100) for even distribution",
+                "coalesce doesn't shuffle, so partitions may be very uneven  -  some files much larger than others. Use repartition(100) for even distribution",
                 "It creates 200 files instead",
-                "There is no risk — coalesce is always safe"
+                "There is no risk  -  coalesce is always safe"
               ],
               correct: 1
             },
@@ -703,7 +703,7 @@ df.select(
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Core Transformations</h1>
             <p className="topic-desc">
-              The DataFrame API provides a rich transformation vocabulary. Mastering these — and knowing which require shuffles — separates efficient pipelines from slow ones. All of the following are lazy transformations; nothing executes until an action is called.
+              The DataFrame API provides a rich transformation vocabulary. Mastering these  -  and knowing which require shuffles  -  separates efficient pipelines from slow ones. All of the following are lazy transformations; nothing executes until an action is called.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -748,13 +748,13 @@ df.sortWithinPartitions("user_id")   # sort within partition, no shuffle
 
 # ── Deduplication ─────────────────────────────────────────────────────
 df.distinct()                            # all columns
-df.dropDuplicates(["txn_id"])            # subset — keeps first occurrence
+df.dropDuplicates(["txn_id"])            # subset  -  keeps first occurrence
 df.dropDuplicates(["user_id", "event_date"])
 
 # ── Set operations ────────────────────────────────────────────────────
 df1.union(df2)             # stacks by position (column names ignored)
 df1.unionByName(df2)       # stacks by column name (handles column reorder)
-df1.unionByName(df2, allowMissingColumns=True)   # Spark 3.1+ — fills missing with null
+df1.unionByName(df2, allowMissingColumns=True)   # Spark 3.1+  -  fills missing with null
 df1.intersect(df2)         # rows in both (needs same schema)
 df1.except_(df2)           # rows in df1 not in df2
 
@@ -788,7 +788,7 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               question: "You need only rows in df_new that don't exist in df_existing (by order_id). Which operation?",
               options: [
                 "df_new.except_(df_existing)",
-                "df_new.join(df_existing, 'order_id', 'left_anti') — returns only rows from the left that have NO match on the right",
+                "df_new.join(df_existing, 'order_id', 'left_anti')  -  returns only rows from the left that have NO match on the right",
                 "df_new.intersect(df_existing)",
                 "df_new.filter(~df_new.order_id.isin(df_existing.order_id))"
               ],
@@ -798,7 +798,7 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               question: "What does sortWithinPartitions() do that orderBy() does not?",
               options: [
                 "sortWithinPartitions sorts globally across all data",
-                "sortWithinPartitions sorts data within each partition without a shuffle — useful for file-level locality before writing",
+                "sortWithinPartitions sorts data within each partition without a shuffle  -  useful for file-level locality before writing",
                 "sortWithinPartitions uses less memory",
                 "They are equivalent"
               ],
@@ -814,7 +814,7 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Built-in Functions Deep Dive</h1>
             <p className="topic-desc">
-              <code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM — no Python serialisation. Always prefer these over Python UDFs. Categories: string, date/time, array, map, struct, JSON, aggregate, and conditional.
+              <code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM  -  no Python serialisation. Always prefer these over Python UDFs. Categories: string, date/time, array, map, struct, JSON, aggregate, and conditional.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -902,7 +902,7 @@ df.groupBy("user_id").agg(
               question: "What is the difference between explode() and explode_outer()?",
               options: [
                 "explode_outer is faster",
-                "explode drops rows where the array is null or empty; explode_outer keeps them as a single null row — critical to avoid losing data",
+                "explode drops rows where the array is null or empty; explode_outer keeps them as a single null row  -  critical to avoid losing data",
                 "explode_outer works on maps; explode works on arrays",
                 "They are identical"
               ],
@@ -912,17 +912,17 @@ df.groupBy("user_id").agg(
               question: "You have a JSON column 'payload' and need to extract $.user.id. Which function?",
               options: [
                 "F.json_extract('payload', 'user.id')",
-                "F.get_json_object('payload', '$.user.id') — extracts a single value using JSONPath",
-                "F.from_json('payload', schema).user.id — you must parse the full schema first",
+                "F.get_json_object('payload', '$.user.id')  -  extracts a single value using JSONPath",
+                "F.from_json('payload', schema).user.id  -  you must parse the full schema first",
                 "F.col('payload.user.id')"
               ],
               correct: 1
             },
             {
-              question: "coalesce() vs when().otherwise() — when should you prefer coalesce()?",
+              question: "coalesce() vs when().otherwise()  -  when should you prefer coalesce()?",
               options: [
                 "Always prefer when/otherwise",
-                "Use coalesce() when you want the first non-null value from a list of columns — it's more concise. Use when/otherwise for conditional logic based on values, not nullability",
+                "Use coalesce() when you want the first non-null value from a list of columns  -  it's more concise. Use when/otherwise for conditional logic based on values, not nullability",
                 "coalesce() only works with numeric columns",
                 "They are interchangeable"
               ],
@@ -938,7 +938,7 @@ df.groupBy("user_id").agg(
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">PySpark Window Functions</h1>
             <p className="topic-desc">
-              Window functions compute a result for each row based on a <em>window</em> of related rows — without collapsing rows like groupBy does. They are indispensable for sessionisation, running totals, lag/lead comparisons, rankings, and SCD Type 2 logic. Every window function requires a <code>Window</code> spec defining partition, order, and optional frame bounds.
+              Window functions compute a result for each row based on a <em>window</em> of related rows  -  without collapsing rows like groupBy does. They are indispensable for sessionisation, running totals, lag/lead comparisons, rankings, and SCD Type 2 logic. Every window function requires a <code>Window</code> spec defining partition, order, and optional frame bounds.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -1019,7 +1019,7 @@ df_scd = df_history \
               question: "What is the difference between rowsBetween() and rangeBetween() in window specs?",
               options: [
                 "They are the same thing",
-                "rowsBetween counts physical rows relative to current; rangeBetween operates on the numeric value of the orderBy column — enabling time-range windows like 'last 7 days'",
+                "rowsBetween counts physical rows relative to current; rangeBetween operates on the numeric value of the orderBy column  -  enabling time-range windows like 'last 7 days'",
                 "rangeBetween is deprecated in Spark 3.x",
                 "rowsBetween requires a partition key; rangeBetween does not"
               ],
@@ -1045,7 +1045,7 @@ df_scd = df_history \
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Join Strategies</h1>
             <p className="topic-desc">
-              Spark has four physical join implementations. The right one is chosen automatically (or forced with hints). Understanding when each is used — and when to force one — is critical for avoiding shuffles and handling skew.
+              Spark has four physical join implementations. The right one is chosen automatically (or forced with hints). Understanding when each is used  -  and when to force one  -  is critical for avoiding shuffles and handling skew.
             </p>
           </div>
           <div className="callout callout-info">
@@ -1078,7 +1078,7 @@ spark.sql("""
 # ── 2. Sort-Merge Join (SMJ) ───────────────────────────────────────────
 # Best for: two large tables
 # Mechanism: both sides shuffled by join key, then sorted, then merged
-# Creates 2 shuffle stages — expensive but correct for any data size
+# Creates 2 shuffle stages  -  expensive but correct for any data size
 
 # Spark chooses SMJ when BHJ isn't applicable.
 # Force with hint:
@@ -1090,7 +1090,7 @@ result = df1.hint("merge").join(df2, "id")
 # Force: df1.hint("shuffle_hash").join(df2, "id")
 
 # ── 4. Cartesian (Cross) Join ─────────────────────────────────────────
-# Use with extreme care — row count = left × right
+# Use with extreme care  -  row count = left × right
 df1.crossJoin(df2)
 df1.hint("cartesian").join(df2)
 
@@ -1120,9 +1120,9 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
             {
               question: "A Sort-Merge Join creates how many shuffle stages?",
               options: [
-                "Zero — SMJ avoids shuffles",
-                "One — only the smaller table is shuffled",
-                "Two — both sides are shuffled by the join key, then sorted",
+                "Zero  -  SMJ avoids shuffles",
+                "One  -  only the smaller table is shuffled",
+                "Two  -  both sides are shuffled by the join key, then sorted",
                 "Depends on spark.sql.shuffle.partitions"
               ],
               correct: 2
@@ -1131,7 +1131,7 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
               question: "Your job joins a 500GB fact table with a 8MB lookup table and is running slowly. What is the most impactful optimisation?",
               options: [
                 "Increase spark.sql.shuffle.partitions",
-                "Force a Broadcast Hash Join on the 8MB table — eliminates the shuffle on both sides entirely",
+                "Force a Broadcast Hash Join on the 8MB table  -  eliminates the shuffle on both sides entirely",
                 "Repartition the fact table",
                 "Enable AQE"
               ],
@@ -1190,7 +1190,7 @@ num_partitions = int((100 * 1024) / 128)  # = 800
 
 spark.conf.set("spark.sql.shuffle.partitions", num_partitions)
 
-# With AQE (Spark 3.x) — just set auto:
+# With AQE (Spark 3.x)  -  just set auto:
 spark.conf.set("spark.sql.adaptive.enabled",                    "true")
 spark.conf.set("spark.sql.shuffle.partitions",                  "auto")
 spark.conf.set("spark.sql.adaptive.coalescePartitions.initialPartitionNum", "500")
@@ -1211,7 +1211,7 @@ df_jan = spark.read.format("delta").load("/data/delta/events/") \
               .filter("event_year = 2024 AND event_month = 1")
 # → only reads files under event_year=2024/event_month=1/
 
-# ── Dynamic Partition Pruning (DPP) — Spark 3.x ──────────────────────
+# ── Dynamic Partition Pruning (DPP)  -  Spark 3.x ──────────────────────
 # When joining a fact table partitioned by date_id with a dim table filtered by date:
 # DPP pushes the dimension filter to prune fact table partitions at runtime
 spark.conf.set("spark.sql.optimizer.dynamicPartitionPruning.enabled", "true")
@@ -1239,7 +1239,7 @@ df.withColumn("pid", spark_partition_id()) \
               question: "You have 100GB of data and spark.sql.shuffle.partitions=200. After a groupBy shuffle, how large is each partition approximately?",
               options: [
                 "100MB per partition (optimal)",
-                "512MB per partition — 200 is often far too few for 100GB; aim for 128-200MB per partition requiring ~500-800 partitions",
+                "512MB per partition  -  200 is often far too few for 100GB; aim for 128-200MB per partition requiring ~500-800 partitions",
                 "200MB per partition",
                 "It depends on the join type"
               ],
@@ -1249,7 +1249,7 @@ df.withColumn("pid", spark_partition_id()) \
               question: "What is Dynamic Partition Pruning (DPP)?",
               options: [
                 "Automatically removing empty partitions after a write",
-                "Spark evaluates a dimension filter at runtime and uses the result to prune fact table partitions before a join — reducing data scanned",
+                "Spark evaluates a dimension filter at runtime and uses the result to prune fact table partitions before a join  -  reducing data scanned",
                 "Coalescing shuffle partitions with AQE",
                 "Removing duplicate partitions from Delta tables"
               ],
@@ -1259,7 +1259,7 @@ df.withColumn("pid", spark_partition_id()) \
               question: "Why is user_id a bad physical partition column for a Delta table?",
               options: [
                 "user_id is not sortable",
-                "High cardinality (millions of users) creates millions of tiny directories — metadata overhead explodes and reads become slow",
+                "High cardinality (millions of users) creates millions of tiny directories  -  metadata overhead explodes and reads become slow",
                 "Delta doesn't support string partition columns",
                 "It causes shuffle skew"
               ],
@@ -1299,7 +1299,7 @@ df.groupBy("merchant_id") \
 
 # Method C: Spark UI
 # Go to: Jobs → click a stage → Task Metrics
-# Sort by "Duration" — if one task takes 10x longer → skew
+# Sort by "Duration"  -  if one task takes 10x longer → skew
 # Also check "Input Size" column for uneven partition sizes
 
 # ── Step 2a: Fix with salting (manual) ───────────────────────────────
@@ -1333,14 +1333,14 @@ spark.conf.set("spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes", "2
 
 # AQE detects skewed partitions AFTER the first shuffle and splits them,
 # then duplicates matching partitions from the other side.
-# No code changes needed — just enable AQE.
+# No code changes needed  -  just enable AQE.
 
 # ── Step 2c: Skew hint (Spark 3.x) ───────────────────────────────────
 result = large_df.hint("skew", "merchant_id") \
                  .join(dim_df, "merchant_id", "inner")
 
 # ── Step 3: Null key skew ─────────────────────────────────────────────
-# Nulls all hash to the same partition — a common hidden skew source
+# Nulls all hash to the same partition  -  a common hidden skew source
 # Fix: filter nulls before the join, handle separately
 non_null = df.filter(F.col("user_id").isNotNull())
 null_rows = df.filter(F.col("user_id").isNull()) \
@@ -1354,7 +1354,7 @@ result = non_null.join(dim_user, "user_id", "left") \
               question: "How do you identify data skew in the Spark UI?",
               options: [
                 "Check the DAG visualization for red stages",
-                "Navigate to a Stage's Task Metrics — look for one task with dramatically longer Duration and larger Input Size than the median",
+                "Navigate to a Stage's Task Metrics  -  look for one task with dramatically longer Duration and larger Input Size than the median",
                 "Look at the executor memory graph",
                 "Check the driver logs for 'skew' warnings"
               ],
@@ -1364,7 +1364,7 @@ result = non_null.join(dim_user, "user_id", "left") \
               question: "What does the salting technique do to fix skew on a join?",
               options: [
                 "Removes null keys before the join",
-                "Adds a random integer (0..N) to the skewed key on the large side, and explodes the small side N times — distributing the hot key across N partitions",
+                "Adds a random integer (0..N) to the skewed key on the large side, and explodes the small side N times  -  distributing the hot key across N partitions",
                 "Broadcasts the skewed table",
                 "Repartitions both tables by the join key"
               ],
@@ -1374,7 +1374,7 @@ result = non_null.join(dim_user, "user_id", "left") \
               question: "How does AQE's skew join handling differ from manual salting?",
               options: [
                 "AQE uses random salting internally",
-                "AQE detects and splits skewed partitions at runtime after observing actual shuffle statistics — no code changes needed, but it only works on Sort-Merge joins",
+                "AQE detects and splits skewed partitions at runtime after observing actual shuffle statistics  -  no code changes needed, but it only works on Sort-Merge joins",
                 "AQE broadcasts the skewed partitions",
                 "AQE is less effective than manual salting"
               ],
@@ -1390,7 +1390,7 @@ result = non_null.join(dim_user, "user_id", "left") \
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Memory Management</h1>
             <p className="topic-desc">
-              Spark's <strong>Unified Memory Model</strong> (since Spark 1.6) divides executor memory into pools that dynamically borrow from each other. Understanding this model is essential for diagnosing OOM errors, GC pressure, and spill-to-disk — the top three causes of slow Spark jobs.
+              Spark's <strong>Unified Memory Model</strong> (since Spark 1.6) divides executor memory into pools that dynamically borrow from each other. Understanding this model is essential for diagnosing OOM errors, GC pressure, and spill-to-disk  -  the top three causes of slow Spark jobs.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── Executor memory breakdown ─────────────────────────────────────────
@@ -1449,15 +1449,15 @@ spark_conf = {
 # ── Off-heap memory (advanced) ───────────────────────────────────────
 spark.conf.set("spark.memory.offHeap.enabled",  "true")
 spark.conf.set("spark.memory.offHeap.size",      "4g")
-# Off-heap bypasses JVM GC — useful for caching large DataFrames
+# Off-heap bypasses JVM GC  -  useful for caching large DataFrames
 # Reduces GC pressure significantly for cache-heavy workloads`}
           </CodeBlock>
           <Quiz topicId="spark-memory" questions={[
             {
-              question: "An executor with 8g memory shows 'Container killed by YARN for exceeding memory limits' — what config should you increase?",
+              question: "An executor with 8g memory shows 'Container killed by YARN for exceeding memory limits'  -  what config should you increase?",
               options: [
                 "spark.executor.memory",
-                "spark.executor.memoryOverhead — this controls off-JVM memory (Python workers, Netty, native libraries) which is where YARN limit breaches typically occur",
+                "spark.executor.memoryOverhead  -  this controls off-JVM memory (Python workers, Netty, native libraries) which is where YARN limit breaches typically occur",
                 "spark.memory.fraction",
                 "spark.driver.memory"
               ],
@@ -1467,7 +1467,7 @@ spark.conf.set("spark.memory.offHeap.size",      "4g")
               question: "In the Unified Memory Model, what happens when Execution Memory needs more space but Storage Memory is full?",
               options: [
                 "The job fails with OOM",
-                "Execution can evict cached data from Storage Memory (Storage is not fully protected) — cached DataFrames may be partially evicted",
+                "Execution can evict cached data from Storage Memory (Storage is not fully protected)  -  cached DataFrames may be partially evicted",
                 "Execution spills to disk immediately",
                 "Storage Memory cannot be borrowed"
               ],
@@ -1514,7 +1514,7 @@ df.persist(StorageLevel.MEMORY_AND_DISK_2)  # replicate on 2 nodes + disk fallba
 df.persist(StorageLevel.OFF_HEAP)           # off-heap, avoids GC pressure
 
 # ── Cache is lazy too ─────────────────────────────────────────────────
-df.cache()    # registers intent to cache — nothing is stored yet
+df.cache()    # registers intent to cache  -  nothing is stored yet
 df.count()    # FIRST action materialises and caches the DataFrame
 df.show()     # served from cache
 
@@ -1552,7 +1552,7 @@ silver_df = spark.table("silver.events") \
 total_rows = silver_df.count()
 print(f"Processing {total_rows:,} events")
 
-# Multiple Gold aggregations — all hit cache:
+# Multiple Gold aggregations  -  all hit cache:
 gold_daily     = silver_df.groupBy("event_date", "merchant_id").agg(...)
 gold_weekly    = silver_df.groupBy(F.date_trunc("week", "event_date")).agg(...)
 gold_geography = silver_df.groupBy("country", "region").agg(...)
@@ -1568,7 +1568,7 @@ silver_df.unpersist()   # free memory`}
               question: "What is the difference between cache() and checkpoint()?",
               options: [
                 "checkpoint() is faster than cache()",
-                "cache() stores in memory/disk and keeps lineage; checkpoint() writes to reliable storage and TRUNCATES lineage — use checkpoint to break long lineage chains in iterative algorithms",
+                "cache() stores in memory/disk and keeps lineage; checkpoint() writes to reliable storage and TRUNCATES lineage  -  use checkpoint to break long lineage chains in iterative algorithms",
                 "They are identical",
                 "cache() works on RDDs; checkpoint() works on DataFrames"
               ],
@@ -1577,10 +1577,10 @@ silver_df.unpersist()   # free memory`}
             {
               question: "You call df.cache() then df.filter(...).count(). Is df cached after this?",
               options: [
-                "Yes — cache() stores data immediately",
-                "No — cache() is lazy. The first action that uses df (count here) materialises and caches it. But df.filter() creates a new DataFrame — df itself was never triggered as an action",
+                "Yes  -  cache() stores data immediately",
+                "No  -  cache() is lazy. The first action that uses df (count here) materialises and caches it. But df.filter() creates a new DataFrame  -  df itself was never triggered as an action",
                 "Yes, but only the filtered result",
-                "No — filter() clears the cache"
+                "No  -  filter() clears the cache"
               ],
               correct: 1
             },
@@ -1588,7 +1588,7 @@ silver_df.unpersist()   # free memory`}
               question: "When is MEMORY_AND_DISK preferred over MEMORY_ONLY?",
               options: [
                 "When you want faster cache access",
-                "When the cached DataFrame might not fully fit in memory — MEMORY_AND_DISK spills to disk rather than evicting and recomputing, which is safer for large DataFrames",
+                "When the cached DataFrame might not fully fit in memory  -  MEMORY_AND_DISK spills to disk rather than evicting and recomputing, which is safer for large DataFrames",
                 "MEMORY_ONLY is always preferred",
                 "When using PySpark (Python serialisation)"
               ],
@@ -1604,7 +1604,7 @@ silver_df.unpersist()   # free memory`}
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Broadcast Variables and Accumulators</h1>
             <p className="topic-desc">
-              <strong>Broadcast variables</strong> efficiently distribute a read-only value to every executor once — instead of serialising it into every task closure. <strong>Accumulators</strong> are write-only counters/sums that executors update and the driver reads — the only safe way to collect per-task metrics without breaking lazy evaluation.
+              <strong>Broadcast variables</strong> efficiently distribute a read-only value to every executor once  -  instead of serialising it into every task closure. <strong>Accumulators</strong> are write-only counters/sums that executors update and the driver reads  -  the only safe way to collect per-task metrics without breaking lazy evaluation.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -1612,9 +1612,9 @@ from pyspark import AccumulatorParam
 
 # ── Broadcast variables ───────────────────────────────────────────────
 # Problem: using a large dict inside a map() sends it to EVERY task
-lookup = load_country_codes()   # e.g., {"US": "United States", ...} — 5MB dict
+lookup = load_country_codes()   # e.g., {"US": "United States", ...}  -  5MB dict
 
-# BAD: dict captured in closure — serialised + sent with every task
+# BAD: dict captured in closure  -  serialised + sent with every task
 df.rdd.map(lambda row: (row.id, lookup[row.country]))  # 5MB * 800 tasks = 4GB network
 
 # GOOD: broadcast once per executor (~20 executors = 100MB total)
@@ -1663,7 +1663,7 @@ def validate_and_parse(row):
 # In transformations, Spark may re-execute tasks (speculative execution, retries)
 # → accumulator may be incremented multiple times for the same task
 result_rdd = df.rdd.map(validate_and_parse).filter(lambda x: x is not None)
-result_rdd.count()  # action — triggers execution
+result_rdd.count()  # action  -  triggers execution
 
 print(f"Bad records: {bad_records.value}")
 print(f"Malformed:   {malformed_rows.value}")
@@ -1692,7 +1692,7 @@ print(unique_errors.value)   # set of all error codes seen`}
               question: "Why might an accumulator show a higher count than expected?",
               options: [
                 "Accumulators are thread-unsafe",
-                "Spark may re-execute tasks due to speculation or retries — each re-execution increments the accumulator again. Counts are only reliable after a successful action with no re-runs.",
+                "Spark may re-execute tasks due to speculation or retries  -  each re-execution increments the accumulator again. Counts are only reliable after a successful action with no re-runs.",
                 "The driver doesn't receive updates from all executors",
                 "Accumulators only work in batch mode"
               ],
@@ -1701,10 +1701,10 @@ print(unique_errors.value)   # set of all error codes seen`}
             {
               question: "What is the practical size limit for a broadcast variable used in sc.broadcast()?",
               options: [
-                "10MB — same as autoBroadcastJoinThreshold",
-                "Around 2GB in practice — the driver must serialise the entire value, and executors must deserialise it. For larger lookups, use a Delta table with partition pruning.",
-                "Unlimited — Spark streams it to executors",
-                "100MB — determined by spark.executor.memory"
+                "10MB  -  same as autoBroadcastJoinThreshold",
+                "Around 2GB in practice  -  the driver must serialise the entire value, and executors must deserialise it. For larger lookups, use a Delta table with partition pruning.",
+                "Unlimited  -  Spark streams it to executors",
+                "100MB  -  determined by spark.executor.memory"
               ],
               correct: 1
             },
@@ -1718,13 +1718,13 @@ print(unique_errors.value)   # set of all error codes seen`}
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">UDFs and Pandas UDFs</h1>
             <p className="topic-desc">
-              Python UDFs are the single biggest performance trap in PySpark. Every row crosses the JVM-Python boundary — serialised, sent via socket, deserialized, processed, re-serialised. <strong>Always exhaust built-in functions first.</strong> When you genuinely need custom logic, use Pandas UDFs (vectorised) which process entire column batches via Apache Arrow — 10-100x faster than row UDFs.
+              Python UDFs are the single biggest performance trap in PySpark. Every row crosses the JVM-Python boundary  -  serialised, sent via socket, deserialized, processed, re-serialised. <strong>Always exhaust built-in functions first.</strong> When you genuinely need custom logic, use Pandas UDFs (vectorised) which process entire column batches via Apache Arrow  -  10-100x faster than row UDFs.
             </p>
           </div>
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
             <div className="callout-body">
-              <strong>Python UDF checklist before writing one:</strong> Can you use when/otherwise? F.regexp_replace? F.expr()? spark.sql()? F.aggregate() on arrays? If yes to any — use built-ins. Only write a UDF if the logic genuinely requires Python libraries (scikit-learn, spaCy, etc.).
+              <strong>Python UDF checklist before writing one:</strong> Can you use when/otherwise? F.regexp_replace? F.expr()? spark.sql()? F.aggregate() on arrays? If yes to any  -  use built-ins. Only write a UDF if the logic genuinely requires Python libraries (scikit-learn, spaCy, etc.).
             </div>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -1750,8 +1750,8 @@ df.withColumn("tier",
      .when(F.col("amount") > 1000,    "high")
      .otherwise("low"))
 
-# ── Pandas UDF — Scalar (vectorised, Arrow transport) ────────────────
-# Receives a pd.Series, returns a pd.Series — entire batch at once
+# ── Pandas UDF  -  Scalar (vectorised, Arrow transport) ────────────────
+# Receives a pd.Series, returns a pd.Series  -  entire batch at once
 @pandas_udf(StringType())
 def clean_text(s: pd.Series) -> pd.Series:
     """Good for: regex, NLP preprocessing, ML inference on batches."""
@@ -1762,8 +1762,8 @@ def clean_text(s: pd.Series) -> pd.Series:
 
 df.withColumn("clean_desc", clean_text(F.col("description")))
 
-# ── Pandas UDF — Scalar Iterator (session connection reuse) ──────────
-# Receives an Iterator[pd.Series] — open connection once per partition
+# ── Pandas UDF  -  Scalar Iterator (session connection reuse) ──────────
+# Receives an Iterator[pd.Series]  -  open connection once per partition
 from typing import Iterator
 @pandas_udf(StringType())
 def score_with_model(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
@@ -1775,7 +1775,7 @@ def score_with_model(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 
 df.withColumn("score", score_with_model(F.col("feature")))
 
-# ── Pandas UDF — Grouped Map (COGROUPED, returns full DataFrame) ─────
+# ── Pandas UDF  -  Grouped Map (COGROUPED, returns full DataFrame) ─────
 # Use for: custom aggregations, group-level ML, sessionisation
 from pyspark.sql.functions import pandas_udf
 from pyspark.sql.types import StructType, StructField, LongType, DoubleType
@@ -1814,7 +1814,7 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               question: "What makes Python row UDFs slow in PySpark?",
               options: [
                 "They run on the driver instead of executors",
-                "Each row is serialised in the JVM, sent over a socket to a Python worker process, processed, then the result is serialised back — the JVM-Python boundary crossing is orders of magnitude slower than JVM-native built-ins",
+                "Each row is serialised in the JVM, sent over a socket to a Python worker process, processed, then the result is serialised back  -  the JVM-Python boundary crossing is orders of magnitude slower than JVM-native built-ins",
                 "Python UDFs can't be parallelised",
                 "They disable predicate pushdown"
               ],
@@ -1824,7 +1824,7 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               question: "When should you use a Scalar Iterator Pandas UDF over a regular Scalar Pandas UDF?",
               options: [
                 "When the output is larger than the input",
-                "When the UDF needs to load a heavy resource (ML model, DB connection) once per partition — the iterator pattern loads it once and processes all batches in that partition",
+                "When the UDF needs to load a heavy resource (ML model, DB connection) once per partition  -  the iterator pattern loads it once and processes all batches in that partition",
                 "When the input has nulls",
                 "When processing arrays"
               ],
@@ -1834,7 +1834,7 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               question: "What does spark.udf.register() enable?",
               options: [
                 "It makes the UDF faster by registering it with Catalyst",
-                "It makes the UDF callable by name in spark.sql() queries and SQL strings — without needing to use the Python column API",
+                "It makes the UDF callable by name in spark.sql() queries and SQL strings  -  without needing to use the Python column API",
                 "It caches the UDF output",
                 "It converts a Python UDF to a Pandas UDF automatically"
               ],
@@ -1850,12 +1850,12 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Spark SQL</h1>
             <p className="topic-desc">
-              Spark SQL lets you write ANSI SQL that runs on the same engine as the DataFrame API — both compile to the same logical plan. You can freely mix SQL and DataFrame API in the same job, referencing the same data. Views are the bridge between the two worlds.
+              Spark SQL lets you write ANSI SQL that runs on the same engine as the DataFrame API  -  both compile to the same logical plan. You can freely mix SQL and DataFrame API in the same job, referencing the same data. Views are the bridge between the two worlds.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
-# ── spark.sql() — run ANSI SQL directly ──────────────────────────────
+# ── spark.sql()  -  run ANSI SQL directly ──────────────────────────────
 result = spark.sql("""
     SELECT
         merchant_id,
@@ -1871,7 +1871,7 @@ result = spark.sql("""
     ORDER BY month, revenue DESC
 """)
 
-# ── createOrReplaceTempView — session-scoped, not shared ─────────────
+# ── createOrReplaceTempView  -  session-scoped, not shared ─────────────
 # DataFrames → SQL-queryable view (lives in SparkSession only)
 df.createOrReplaceTempView("transactions_filtered")
 spark.sql("SELECT COUNT(*) FROM transactions_filtered").show()
@@ -1879,7 +1879,7 @@ spark.sql("SELECT COUNT(*) FROM transactions_filtered").show()
 # Clean up to free metadata:
 spark.catalog.dropTempView("transactions_filtered")
 
-# ── createGlobalTempView — shared across SparkSessions ───────────────
+# ── createGlobalTempView  -  shared across SparkSessions ───────────────
 df.createGlobalTempView("shared_events")
 # Access with global_temp prefix:
 spark.sql("SELECT * FROM global_temp.shared_events LIMIT 10")
@@ -1959,8 +1959,8 @@ spark.sql("""
             {
               question: "Do spark.sql() queries and DataFrame API operations use the same underlying execution engine?",
               options: [
-                "No — spark.sql() uses a different SQL parser and engine",
-                "Yes — both compile to the same logical plan and go through Catalyst optimisation and Tungsten execution. You can freely mix them in the same job.",
+                "No  -  spark.sql() uses a different SQL parser and engine",
+                "Yes  -  both compile to the same logical plan and go through Catalyst optimisation and Tungsten execution. You can freely mix them in the same job.",
                 "Only in Spark 3.x",
                 "Only when using Unity Catalog"
               ],
@@ -1972,7 +1972,7 @@ spark.sql("""
                 "spark.conf.set('spark.sql.autoBroadcastJoinThreshold', ...)",
                 "Use the /*+ BROADCAST(table_alias) */ hint syntax inside the SELECT statement",
                 "Call F.broadcast() before spark.sql()",
-                "SQL hints are not supported — use the DataFrame API"
+                "SQL hints are not supported  -  use the DataFrame API"
               ],
               correct: 1
             },
@@ -1986,7 +1986,7 @@ spark.sql("""
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Structured Streaming</h1>
             <p className="topic-desc">
-              Structured Streaming treats a stream as an unbounded table that grows over time. Each micro-batch (or continuous trigger) appends new rows. You write the same DataFrame API you know from batch — Spark handles checkpointing, offsets, watermarks, and exactly-once semantics automatically.
+              Structured Streaming treats a stream as an unbounded table that grows over time. Each micro-batch (or continuous trigger) appends new rows. You write the same DataFrame API you know from batch  -  Spark handles checkpointing, offsets, watermarks, and exactly-once semantics automatically.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -2011,7 +2011,7 @@ eh_conf = {
 }
 raw_stream = spark.readStream.format("eventhubs").options(**eh_conf).load()
 
-# File (Auto Loader — Delta/Databricks, preferred for file ingestion):
+# File (Auto Loader  -  Delta/Databricks, preferred for file ingestion):
 raw_stream = spark.readStream \
     .format("cloudFiles") \
     .option("cloudFiles.format",       "json") \
@@ -2078,7 +2078,7 @@ parsed.select(
 # availableNow=True            → process all available, then stop (Spark 3.3+)
 # continuous="1 second"        → low-latency continuous processing (experimental)
 
-# ── foreachBatch — run arbitrary code per micro-batch ────────────────
+# ── foreachBatch  -  run arbitrary code per micro-batch ────────────────
 def upsert_to_delta(micro_batch_df, batch_id):
     from delta.tables import DeltaTable
     target = DeltaTable.forName(spark, "silver.users")
@@ -2101,7 +2101,7 @@ for q in spark.streams.active:
               question: "What is a watermark in Structured Streaming and what does it control?",
               options: [
                 "The maximum number of rows per micro-batch",
-                "The threshold for how late data is allowed to arrive — Spark keeps state for a window open until (max_seen_event_time - watermark_delay), then finalises it and discards state",
+                "The threshold for how late data is allowed to arrive  -  Spark keeps state for a window open until (max_seen_event_time - watermark_delay), then finalises it and discards state",
                 "The checkpoint interval",
                 "The size of the Kafka consumer group"
               ],
@@ -2111,7 +2111,7 @@ for q in spark.streams.active:
               question: "When should you use foreachBatch instead of a native sink?",
               options: [
                 "For better performance",
-                "When you need to run arbitrary code per micro-batch — like a MERGE/upsert into Delta, writing to multiple sinks, or applying idempotent custom logic that native sinks don't support",
+                "When you need to run arbitrary code per micro-batch  -  like a MERGE/upsert into Delta, writing to multiple sinks, or applying idempotent custom logic that native sinks don't support",
                 "When processing Kafka streams",
                 "When using append output mode"
               ],
@@ -2121,7 +2121,7 @@ for q in spark.streams.active:
               question: "What is the difference between trigger(once=True) and trigger(availableNow=True)?",
               options: [
                 "They are identical",
-                "once=True processes one micro-batch (may miss data); availableNow=True (Spark 3.3+) processes ALL available data as of start time across multiple micro-batches — preferred for scheduled incremental loads",
+                "once=True processes one micro-batch (may miss data); availableNow=True (Spark 3.3+) processes ALL available data as of start time across multiple micro-batches  -  preferred for scheduled incremental loads",
                 "availableNow is faster",
                 "once=True is for Kafka; availableNow is for Delta"
               ],
@@ -2192,7 +2192,7 @@ def update_sessions(key, pdf_iter, state: GroupState):
     user_id = key[0]
 
     if state.hasTimedOut:
-        # Session expired — emit final session
+        # Session expired  -  emit final session
         s = state.get
         yield pd.DataFrame([{
             "user_id": user_id, "session_id": s["session_id"],
@@ -2241,7 +2241,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               question: "Why must streaming deduplication always be paired with a watermark?",
               options: [
                 "Without a watermark, deduplication doesn't work",
-                "Without a watermark, Spark must keep ALL seen keys in state forever — the state store grows unboundedly and eventually OOMs. The watermark bounds state to only the recent window.",
+                "Without a watermark, Spark must keep ALL seen keys in state forever  -  the state store grows unboundedly and eventually OOMs. The watermark bounds state to only the recent window.",
                 "Watermarks improve deduplication accuracy",
                 "Watermarks enable parallel state updates"
               ],
@@ -2251,7 +2251,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               question: "What is the advantage of the RocksDB state store over the default in-memory state store?",
               options: [
                 "Faster reads",
-                "RocksDB is disk-backed and can handle state much larger than executor memory — critical for long-running streams with high-cardinality keys",
+                "RocksDB is disk-backed and can handle state much larger than executor memory  -  critical for long-running streams with high-cardinality keys",
                 "It automatically cleans up expired state",
                 "It supports custom state schemas"
               ],
@@ -2261,7 +2261,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               question: "What triggers a GroupState timeout in applyInPandasWithState?",
               options: [
                 "The watermark passing the group's event time",
-                "When no new data arrives for the group within the TTL set by state.setTimeoutDuration() — Spark calls the function with state.hasTimedOut=True so you can emit a final result and remove state",
+                "When no new data arrives for the group within the TTL set by state.setTimeoutDuration()  -  Spark calls the function with state.hasTimedOut=True so you can emit a final result and remove state",
                 "When the state store exceeds memory",
                 "When the streaming query is stopped"
               ],
@@ -2277,7 +2277,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Catalyst Optimizer</h1>
             <p className="topic-desc">
-              Catalyst is Spark SQL's query optimizer. It transforms your logical query plan through four phases before execution. Understanding what Catalyst does automatically helps you write plans that Catalyst can optimise further — and diagnose plans where it can't.
+              Catalyst is Spark SQL's query optimizer. It transforms your logical query plan through four phases before execution. Understanding what Catalyst does automatically helps you write plans that Catalyst can optimise further  -  and diagnose plans where it can't.
             </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
@@ -2348,13 +2348,13 @@ spark.sql("ANALYZE TABLE silver.transactions COMPUTE STATISTICS FOR ALL COLUMNS"
 # ── Force Catalyst rules for debugging ───────────────────────────────
 spark.conf.set("spark.sql.optimizer.excludedRules",
                "org.apache.spark.sql.catalyst.optimizer.PushDownPredicates")
-# ^ Disables predicate pushdown — only for debugging!`}
+# ^ Disables predicate pushdown  -  only for debugging!`}
           </CodeBlock>
           <Quiz topicId="spark-catalyst" questions={[
             {
               question: "What does 'predicate pushdown' mean in Catalyst?",
               options: [
-                "Pushing filter conditions to execute earlier in the query plan — ideally at the data source level so fewer rows are read from disk",
+                "Pushing filter conditions to execute earlier in the query plan  -  ideally at the data source level so fewer rows are read from disk",
                 "Converting WHERE clauses to HAVING clauses",
                 "Reordering predicates for readability",
                 "Caching filter results"
@@ -2365,7 +2365,7 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               question: "In explain() output, what does '*(2)' before an operator indicate?",
               options: [
                 "The operator runs on Stage 2",
-                "Whole-stage code generation is active — this operator and adjacent *(2) operators are fused into a single generated JVM method for maximum performance",
+                "Whole-stage code generation is active  -  this operator and adjacent *(2) operators are fused into a single generated JVM method for maximum performance",
                 "The operator uses 2 CPU cores",
                 "The operator has been replicated twice for fault tolerance"
               ],
@@ -2375,7 +2375,7 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               question: "How do you give Catalyst the statistics it needs for cost-based join planning?",
               options: [
                 "Catalyst collects statistics automatically from Parquet metadata",
-                "Run ANALYZE TABLE ... COMPUTE STATISTICS FOR ALL COLUMNS — this populates column-level statistics (cardinality, min/max, nulls) that the cost-based optimizer uses to choose join strategies",
+                "Run ANALYZE TABLE ... COMPUTE STATISTICS FOR ALL COLUMNS  -  this populates column-level statistics (cardinality, min/max, nulls) that the cost-based optimizer uses to choose join strategies",
                 "Enable spark.sql.cbo.enabled=true (no data scan needed)",
                 "Use DataFrame.cache() before joins"
               ],
@@ -2391,7 +2391,7 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">AQE (Adaptive Query Execution)</h1>
             <p className="topic-desc">
-              AQE (Spark 3.0+) re-optimises the physical plan at runtime using <em>actual</em> shuffle statistics — not estimates. It solves three of the hardest Spark tuning problems automatically: too many shuffle partitions, suboptimal join strategies, and data skew. Enabled by default in Spark 3.2+.
+              AQE (Spark 3.0+) re-optimises the physical plan at runtime using <em>actual</em> shuffle statistics  -  not estimates. It solves three of the hardest Spark tuning problems automatically: too many shuffle partitions, suboptimal join strategies, and data skew. Enabled by default in Spark 3.2+.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── Enable AQE ───────────────────────────────────────────────────────
@@ -2454,7 +2454,7 @@ with spark.conf as c:
     c.set("spark.sql.adaptive.enabled", "true")
 
 # ── AQE limitations ───────────────────────────────────────────────────
-# - Only applies AFTER a shuffle — first stage always uses static plan
+# - Only applies AFTER a shuffle  -  first stage always uses static plan
 # - Doesn't help with single-stage (no-shuffle) jobs
 # - Skew join only works on Sort-Merge joins, not Shuffle Hash joins`}
           </CodeBlock>
@@ -2463,7 +2463,7 @@ with spark.conf as c:
               question: "How does AQE coalesce shuffle partitions differently from setting spark.sql.shuffle.partitions to a fixed value?",
               options: [
                 "AQE uses random partition assignment",
-                "AQE reads actual partition sizes after the shuffle completes and merges consecutive small partitions — it adapts to the real data volume rather than a pre-set estimate",
+                "AQE reads actual partition sizes after the shuffle completes and merges consecutive small partitions  -  it adapts to the real data volume rather than a pre-set estimate",
                 "AQE coalesces are lossless; fixed partitions can lose data",
                 "They are equivalent with spark.sql.shuffle.partitions=auto"
               ],
@@ -2473,7 +2473,7 @@ with spark.conf as c:
               question: "AQE converts a Sort-Merge Join to a Broadcast Hash Join at runtime. What condition triggers this?",
               options: [
                 "When both tables are under 10MB",
-                "When the actual shuffle output of one side is smaller than spark.sql.adaptive.autoBroadcastJoinThreshold — measured after the map stage, not estimated at planning time",
+                "When the actual shuffle output of one side is smaller than spark.sql.adaptive.autoBroadcastJoinThreshold  -  measured after the map stage, not estimated at planning time",
                 "When the query has been running for more than 5 minutes",
                 "When AQE detects skew on the join key"
               ],
@@ -2483,7 +2483,7 @@ with spark.conf as c:
               question: "AQE skew join splitting only works on which join type?",
               options: [
                 "Broadcast Hash Joins",
-                "Sort-Merge Joins — AQE splits the skewed partition and duplicates the corresponding other-side partitions. Broadcast joins don't need skew handling since the broadcast side is replicated to all executors already.",
+                "Sort-Merge Joins  -  AQE splits the skewed partition and duplicates the corresponding other-side partitions. Broadcast joins don't need skew handling since the broadcast side is replicated to all executors already.",
                 "Shuffle Hash Joins",
                 "All join types"
               ],
@@ -2540,10 +2540,10 @@ spark.conf.set("spark.sql.codegen.factoryMode",        "CODEGEN_ONLY")  # debug:
 # Verify in explain():
 df.explain()
 # *(N) prefix = this operator IS covered by whole-stage codegen
-# Operators WITHOUT * = interpreted (fallback mode — check why)
+# Operators WITHOUT * = interpreted (fallback mode  -  check why)
 
 # ── When codegen is disabled (fallback cases) ─────────────────────────
-# 1. Python UDFs — can't generate JVM code for Python functions
+# 1. Python UDFs  -  can't generate JVM code for Python functions
 #    → This is another reason to avoid Python UDFs (breaks codegen chain)
 # 2. Too many fields (> spark.sql.codegen.maxFields)
 # 3. Complex expressions that trigger codegen bugs (rare)
@@ -2574,7 +2574,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               question: "Why do Python UDFs break whole-stage code generation?",
               options: [
                 "Python UDFs use too much memory",
-                "Whole-stage codegen generates a single JVM method fusing adjacent operators. A Python UDF introduces a JVM→Python boundary — Catalyst can't generate JVM code for Python logic, so the codegen chain is broken at that point.",
+                "Whole-stage codegen generates a single JVM method fusing adjacent operators. A Python UDF introduces a JVM→Python boundary  -  Catalyst can't generate JVM code for Python logic, so the codegen chain is broken at that point.",
                 "Python UDFs are executed on the driver",
                 "Codegen doesn't support string types, which UDFs often return"
               ],
@@ -2584,7 +2584,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               question: "What is UnsafeRow and why is it more efficient than regular Java objects?",
               options: [
                 "UnsafeRow bypasses Spark's type system for faster processing",
-                "UnsafeRow is a compact binary representation stored off-heap — it avoids JVM object overhead (16-byte headers, pointer indirection), reduces memory footprint 5-10x, and bypasses GC entirely since it's off-heap",
+                "UnsafeRow is a compact binary representation stored off-heap  -  it avoids JVM object overhead (16-byte headers, pointer indirection), reduces memory footprint 5-10x, and bypasses GC entirely since it's off-heap",
                 "UnsafeRow is a mutable DataFrame for in-place updates",
                 "UnsafeRow skips null checks for faster computation"
               ],
@@ -2594,7 +2594,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               question: "What is the Volcano iterator model and what problem did whole-stage codegen solve?",
               options: [
                 "An older shuffle algorithm replaced in Spark 2.0",
-                "The Volcano model has each operator calling next() on its child per row — causing virtual method dispatch overhead and preventing JIT optimization across operators. Codegen fuses adjacent operators into one tight generated loop that JIT can optimize holistically.",
+                "The Volcano model has each operator calling next() on its child per row  -  causing virtual method dispatch overhead and preventing JIT optimization across operators. Codegen fuses adjacent operators into one tight generated loop that JIT can optimize holistically.",
                 "A memory model that caused OOM errors",
                 "A join strategy superseded by Sort-Merge Join"
               ],
@@ -2610,7 +2610,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
             <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Performance Configuration Reference</h1>
             <p className="topic-desc">
-              A practical reference for the configurations that matter most in production Spark jobs. These are the knobs you'll actually tune — not an exhaustive list of every property.
+              A practical reference for the configurations that matter most in production Spark jobs. These are the knobs you'll actually tune  -  not an exhaustive list of every property.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── Production baseline configuration ────────────────────────────────
@@ -2678,7 +2678,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               question: "Why is more than 5 executor cores per executor not recommended?",
               options: [
                 "Spark can't schedule more than 5 cores per executor",
-                "With >5 cores, HDFS/ADLS concurrent access from one JVM causes throughput degradation — each core opens its own stream and the storage system is overwhelmed",
+                "With >5 cores, HDFS/ADLS concurrent access from one JVM causes throughput degradation  -  each core opens its own stream and the storage system is overwhelmed",
                 "More cores increase GC pause time linearly",
                 "Dynamic allocation only supports up to 5 cores"
               ],
@@ -2688,7 +2688,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               question: "What does spark.speculation do?",
               options: [
                 "Estimates partition sizes before executing",
-                "When a task is significantly slower than the median for its stage (multiplier × median), Spark launches a duplicate speculative task on another executor — whichever finishes first wins",
+                "When a task is significantly slower than the median for its stage (multiplier × median), Spark launches a duplicate speculative task on another executor  -  whichever finishes first wins",
                 "Pre-fetches data for upcoming stages",
                 "Predicts which stages will cause OOM"
               ],
@@ -2698,7 +2698,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               question: "What is the difference between dynamic allocation and static executor allocation?",
               options: [
                 "Dynamic allocation is always better",
-                "Static: fixed number of executors for the job's lifetime. Dynamic: Spark requests/releases executors based on workload — cost-efficient for bursty jobs but adds latency for executor provisioning",
+                "Static: fixed number of executors for the job's lifetime. Dynamic: Spark requests/releases executors based on workload  -  cost-efficient for bursty jobs but adds latency for executor provisioning",
                 "Dynamic allocation requires YARN; static works with K8s",
                 "They are identical with spark.executor.instances set"
               ],
@@ -2735,7 +2735,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
 #   Input Size/Records   → data read from storage
 #   Shuffle Read         → data received from previous stage
 #   Shuffle Write        → data sent to next stage
-#   Shuffle Spill (Disk) → data spilled to local disk (BAD — needs more memory or fewer records/partition)
+#   Shuffle Spill (Disk) → data spilled to local disk (BAD  -  needs more memory or fewer records/partition)
 #   Duration             → total wall time for the stage
 # - Sort by Duration descending to find the slowest stage
 #
@@ -2753,7 +2753,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
 # - Shows the physical plan with timing overlaid
 # - Each plan node shows: rows processed, time, bytes
 # - Look for: FileScan (how many files/bytes read)
-#             Exchange (= shuffle — shows shuffle bytes)
+#             Exchange (= shuffle  -  shows shuffle bytes)
 #             BroadcastHashJoin vs SortMergeJoin
 #             Photon nodes (on Databricks)
 #
@@ -2799,19 +2799,19 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
             {
               question: "In the Spark UI Stages tab, you see 'Shuffle Spill (Disk) = 45 GB'. What does this tell you and how do you fix it?",
               options: [
-                "45GB was written to Delta — this is normal",
+                "45GB was written to Delta  -  this is normal",
                 "Shuffle data that couldn't fit in execution memory was spilled to local disk. Fix: increase spark.executor.memory, increase spark.sql.shuffle.partitions to reduce data per partition, or broadcast the smaller side to eliminate the shuffle",
-                "The output files are 45GB — reduce with coalesce",
-                "45GB of cached data was evicted — increase storage memory fraction"
+                "The output files are 45GB  -  reduce with coalesce",
+                "45GB of cached data was evicted  -  increase storage memory fraction"
               ],
               correct: 1
             },
             {
               question: "In the Tasks view of a stage, you see one task took 45 minutes while 199 other tasks took 30 seconds each. What is the root cause and fix?",
               options: [
-                "The executor hosting that task is overloaded — fix with dynamic allocation",
+                "The executor hosting that task is overloaded  -  fix with dynamic allocation",
                 "Data skew: one shuffle partition has disproportionately more data. Fix: enable AQE skew join handling, use salting, or filter null keys before the join",
-                "GC pressure — increase executor memory",
+                "GC pressure  -  increase executor memory",
                 "The task is reading from a cold ADLS partition"
               ],
               correct: 1
@@ -2820,7 +2820,7 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
               question: "You see 'Skipped' stages in the Spark UI Jobs DAG. What does this mean?",
               options: [
                 "Those stages failed and were skipped",
-                "The DataFrame for those stages was cached — Spark served the data from cache and didn't need to recompute those stages. This is the expected behaviour when caching correctly.",
+                "The DataFrame for those stages was cached  -  Spark served the data from cache and didn't need to recompute those stages. This is the expected behaviour when caching correctly.",
                 "AQE eliminated those stages",
                 "Those stages had no data to process"
               ],
@@ -2888,7 +2888,7 @@ target.alias("t").merge(
 
 # MERGE in Structured Streaming (foreachBatch):
 def merge_micro_batch(micro_df, batch_id):
-    """Idempotent upsert — safe to re-run on failure."""
+    """Idempotent upsert  -  safe to re-run on failure."""
     target = DeltaTable.forName(spark, "silver.orders")
     target.alias("t").merge(
         micro_df.dropDuplicates(["order_id"]).alias("s"),
@@ -2924,7 +2924,7 @@ dt.history().select("version", "timestamp", "operation", "operationMetrics").sho
 dt.restoreToVersion(5)
 dt.restoreToTimestamp("2024-06-01")
 
-# OPTIMIZE + Z-ORDER (in PySpark — Databricks/Delta OSS 2.0+):
+# OPTIMIZE + Z-ORDER (in PySpark  -  Databricks/Delta OSS 2.0+):
 spark.sql("OPTIMIZE silver.orders ZORDER BY (customer_id, order_date)")
 spark.sql("VACUUM silver.orders RETAIN 168 HOURS")  # delete files > 7 days old
 
@@ -2943,7 +2943,7 @@ changes = spark.read.format("delta") \
               question: "What does the 'replaceWhere' option in a Delta write do?",
               options: [
                 "Overwrites only rows matching the condition (like an in-place update)",
-                "Atomically replaces only the partitions matching the predicate with new data — other partitions are untouched. This is a safe partial overwrite that avoids rewriting the entire table.",
+                "Atomically replaces only the partitions matching the predicate with new data  -  other partitions are untouched. This is a safe partial overwrite that avoids rewriting the entire table.",
                 "Filters out rows matching the condition before writing",
                 "Creates a new partition for rows matching the condition"
               ],
@@ -2963,7 +2963,7 @@ changes = spark.read.format("delta") \
               question: "What information does Delta Lake's Change Data Feed expose?",
               options: [
                 "The transaction log in JSON format",
-                "Each row change with a _change_type column: insert, update_preimage (before), update_postimage (after), or delete — enables downstream incremental processing without full table scans",
+                "Each row change with a _change_type column: insert, update_preimage (before), update_postimage (after), or delete  -  enables downstream incremental processing without full table scans",
                 "Schema changes only",
                 "VACUUM and OPTIMIZE operation history"
               ],
@@ -2979,13 +2979,13 @@ changes = spark.read.format("delta") \
             <div className="topic-eyebrow">Kafka + Streaming Internals</div>
             <h1 className="topic-title">Kafka Architecture (Brokers, Partitions, ISR)</h1>
             <p className="topic-desc">
-              Apache Kafka is a distributed commit log — an append-only, ordered, immutable sequence of records. A Kafka <strong>cluster</strong> is formed by multiple <strong>brokers</strong> (servers). <strong>Topics</strong> are logical channels divided into <strong>partitions</strong>. Each partition is an ordered, immutable log replicated across brokers. The <strong>leader</strong> partition handles all reads and writes; <strong>ISR (In-Sync Replicas)</strong> are the set of replicas caught up with the leader. If the leader fails, a new leader is elected from the ISR. Historically Kafka used ZooKeeper for cluster metadata — from Kafka 3.3+ the <strong>KRaft</strong> mode replaces ZooKeeper with a built-in Raft consensus protocol. <strong>Consumer groups</strong> allow horizontal scaling: each partition is consumed by exactly one consumer per group. <strong>Offsets</strong> track the consumer's position in each partition. Retention can be time-based (<code>retention.ms</code>), size-based (<code>retention.bytes</code>), or log compaction (keeps only the latest value per key — ideal for changelog topics).
+              Apache Kafka is a distributed commit log  -  an append-only, ordered, immutable sequence of records. A Kafka <strong>cluster</strong> is formed by multiple <strong>brokers</strong> (servers). <strong>Topics</strong> are logical channels divided into <strong>partitions</strong>. Each partition is an ordered, immutable log replicated across brokers. The <strong>leader</strong> partition handles all reads and writes; <strong>ISR (In-Sync Replicas)</strong> are the set of replicas caught up with the leader. If the leader fails, a new leader is elected from the ISR. Historically Kafka used ZooKeeper for cluster metadata  -  from Kafka 3.3+ the <strong>KRaft</strong> mode replaces ZooKeeper with a built-in Raft consensus protocol. <strong>Consumer groups</strong> allow horizontal scaling: each partition is consumed by exactly one consumer per group. <strong>Offsets</strong> track the consumer's position in each partition. Retention can be time-based (<code>retention.ms</code>), size-based (<code>retention.bytes</code>), or log compaction (keeps only the latest value per key  -  ideal for changelog topics).
             </p>
           </div>
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Partition count is permanent:</strong> You can increase partitions after creation but never decrease them without recreating the topic. Plan partition count carefully — more partitions = more parallelism but also more overhead. A common rule: partitions ≈ max desired consumer instances.
+              <strong>Partition count is permanent:</strong> You can increase partitions after creation but never decrease them without recreating the topic. Plan partition count carefully  -  more partitions = more parallelism but also more overhead. A common rule: partitions ≈ max desired consumer instances.
             </div>
           </div>
           <CodeBlock lang="python">{`# ── Key Kafka configuration parameters ────────────────────────────────
@@ -3022,7 +3022,7 @@ changes = spark.read.format("delta") \
 #   --alter --add-config cleanup.policy=compact
 
 # ── KRaft mode (Kafka 3.3+, ZooKeeper replacement) ────────────────────
-# Built-in Raft consensus — no ZooKeeper cluster needed.
+# Built-in Raft consensus  -  no ZooKeeper cluster needed.
 # Benefits: simpler ops, faster startup, 10x more partitions per cluster.
 # Migration: kafka-storage.sh format --cluster-id <UUID> --config server.properties`}
           </CodeBlock>
@@ -3041,7 +3041,7 @@ changes = spark.read.format("delta") \
               question: "In a consumer group with 3 consumers and a topic with 12 partitions, what happens when one consumer crashes?",
               options: [
                 "The 12 partitions pause until the consumer restarts",
-                "A group rebalance is triggered — the crashed consumer's partitions are redistributed among the remaining 2 consumers. Processing resumes from the last committed offset.",
+                "A group rebalance is triggered  -  the crashed consumer's partitions are redistributed among the remaining 2 consumers. Processing resumes from the last committed offset.",
                 "Kafka replays all messages from the beginning",
                 "The other consumers skip the crashed consumer's partitions"
               ],
@@ -3067,7 +3067,7 @@ changes = spark.read.format("delta") \
             <div className="topic-eyebrow">Kafka + Streaming Internals</div>
             <h1 className="topic-title">Kafka Python Producer / Consumer API</h1>
             <p className="topic-desc">
-              The <strong>confluent-kafka</strong> Python library is the production-grade client for Kafka (based on librdkafka). The <strong>Producer</strong> sends messages asynchronously — configure <code>bootstrap.servers</code>, <code>acks='all'</code> for durability, and <code>enable.idempotence=True</code> for safe retries. A <strong>delivery report callback</strong> confirms each message was committed. The <strong>Consumer</strong> joins a consumer group via <code>group.id</code>, sets <code>auto.offset.reset='earliest'</code> to start from the beginning, and uses <code>enable.auto.commit=False</code> with manual commits — offsets are committed only after successful processing, preventing data loss on crashes.
+              The <strong>confluent-kafka</strong> Python library is the production-grade client for Kafka (based on librdkafka). The <strong>Producer</strong> sends messages asynchronously  -  configure <code>bootstrap.servers</code>, <code>acks='all'</code> for durability, and <code>enable.idempotence=True</code> for safe retries. A <strong>delivery report callback</strong> confirms each message was committed. The <strong>Consumer</strong> joins a consumer group via <code>group.id</code>, sets <code>auto.offset.reset='earliest'</code> to start from the beginning, and uses <code>enable.auto.commit=False</code> with manual commits  -  offsets are committed only after successful processing, preventing data loss on crashes.
             </p>
           </div>
           <CodeBlock lang="python">{`from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
@@ -3135,7 +3135,7 @@ try:
         order = json.loads(msg.value().decode('utf-8'))
         print(f"Processing order: {order['order_id']}")
 
-        # Commit AFTER successful processing — prevents data loss on crash
+        # Commit AFTER successful processing  -  prevents data loss on crash
         consumer.commit(message=msg, asynchronous=False)
 
 except KeyboardInterrupt:
@@ -3158,7 +3158,7 @@ finally:
               question: "What does enable.idempotence=True do on the Kafka Producer?",
               options: [
                 "Prevents sending duplicate keys to the same topic",
-                "Assigns each producer a unique Producer ID and sequence number per partition. If the broker receives a duplicate (e.g., after a retry on network timeout), it deduplicates it using the sequence number — ensuring exactly-once delivery at the producer level.",
+                "Assigns each producer a unique Producer ID and sequence number per partition. If the broker receives a duplicate (e.g., after a retry on network timeout), it deduplicates it using the sequence number  -  ensuring exactly-once delivery at the producer level.",
                 "Compresses messages to reduce duplication",
                 "Ensures messages are delivered in alphabetical order"
               ],
@@ -3168,7 +3168,7 @@ finally:
               question: "What is the purpose of the delivery report callback in the Producer?",
               options: [
                 "It filters messages before they are sent to the broker",
-                "It is called asynchronously for each message after the broker acknowledges or rejects it — allowing you to log failures, trigger retries, or update metrics. Without it you have no visibility into whether produces succeeded.",
+                "It is called asynchronously for each message after the broker acknowledges or rejects it  -  allowing you to log failures, trigger retries, or update metrics. Without it you have no visibility into whether produces succeeded.",
                 "It compresses the message payload",
                 "It controls which partition the message is sent to"
               ],
@@ -3184,13 +3184,13 @@ finally:
             <div className="topic-eyebrow">Kafka + Streaming Internals</div>
             <h1 className="topic-title">Kafka Exactly-Once Semantics</h1>
             <p className="topic-desc">
-              Exactly-once processing requires three things: <strong>idempotent source reads</strong> (re-reading from offset doesn't create duplicates), <strong>idempotent transformations</strong> (running the same computation twice produces the same result), and <strong>atomic sink writes</strong> (writes either fully succeed or fully fail). In Kafka, <strong>idempotent producers</strong> use a Producer ID + per-partition sequence number to deduplicate retried sends. <strong>Transactions</strong> extend this: <code>begin_transaction</code> → produce messages → <code>commit_transaction</code> (or <code>abort_transaction</code>) atomically across multiple partitions. In Spark Structured Streaming, exactly-once is achieved by combining checkpoint-based offset tracking with a Delta Lake ACID sink — Spark generates unique batch IDs and Delta's transaction log rejects duplicate writes.
+              Exactly-once processing requires three things: <strong>idempotent source reads</strong> (re-reading from offset doesn't create duplicates), <strong>idempotent transformations</strong> (running the same computation twice produces the same result), and <strong>atomic sink writes</strong> (writes either fully succeed or fully fail). In Kafka, <strong>idempotent producers</strong> use a Producer ID + per-partition sequence number to deduplicate retried sends. <strong>Transactions</strong> extend this: <code>begin_transaction</code> → produce messages → <code>commit_transaction</code> (or <code>abort_transaction</code>) atomically across multiple partitions. In Spark Structured Streaming, exactly-once is achieved by combining checkpoint-based offset tracking with a Delta Lake ACID sink  -  Spark generates unique batch IDs and Delta's transaction log rejects duplicate writes.
             </p>
           </div>
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>The three delivery guarantees:</strong> At-most-once (messages may be lost, never duplicated), At-least-once (no messages lost, duplicates possible on retry — most common default), Exactly-once (no loss, no duplicates — requires idempotent producer + transactional writes + ACID sink). EOS has a performance cost; use it only when required.
+              <strong>The three delivery guarantees:</strong> At-most-once (messages may be lost, never duplicated), At-least-once (no messages lost, duplicates possible on retry  -  most common default), Exactly-once (no loss, no duplicates  -  requires idempotent producer + transactional writes + ACID sink). EOS has a performance cost; use it only when required.
             </div>
           </div>
           <CodeBlock lang="python">{`# ── Transactional Producer (Kafka EOS) ────────────────────────────────
@@ -3223,7 +3223,7 @@ def send_with_transaction(orders: list):
 
 # ── Spark Structured Streaming + Delta Lake EOS ────────────────────────
 # 1. Checkpointing: Spark records consumed Kafka offsets. On restart,
-#    Spark resumes from the last committed offset — no message is skipped.
+#    Spark resumes from the last committed offset  -  no message is skipped.
 # 2. Delta ACID sink: Each micro-batch has a unique batchId. Delta's
 #    transaction log deduplicates any batch written more than once.
 
@@ -3279,7 +3279,7 @@ stream_df.writeStream \\
               question: "How does Spark Structured Streaming achieve exactly-once with a Delta Lake sink?",
               options: [
                 "By using enable.idempotence on the Kafka consumer",
-                "Spark's checkpoint records the last committed Kafka offset so restarts resume exactly where they stopped. Each micro-batch has a unique batchId, and Delta Lake's transaction log deduplicates any batch written more than once — making foreachBatch + Delta inherently idempotent.",
+                "Spark's checkpoint records the last committed Kafka offset so restarts resume exactly where they stopped. Each micro-batch has a unique batchId, and Delta Lake's transaction log deduplicates any batch written more than once  -  making foreachBatch + Delta inherently idempotent.",
                 "By setting spark.sql.streaming.exactlyOnce=true",
                 "Delta Lake automatically deduplicates all incoming data by primary key"
               ],
@@ -3289,7 +3289,7 @@ stream_df.writeStream \\
               question: "What is the role of transactional.id in a Kafka transactional producer?",
               options: [
                 "It is a human-readable label for the topic",
-                "It is a unique identifier that persists across producer restarts. The broker uses it to recover or abort any in-flight transaction from a previous instance — ensuring no partial transaction is ever visible to consumers, even after a crash.",
+                "It is a unique identifier that persists across producer restarts. The broker uses it to recover or abort any in-flight transaction from a previous instance  -  ensuring no partial transaction is ever visible to consumers, even after a crash.",
                 "It sets the transaction timeout duration",
                 "It routes all messages to the same partition"
               ],
@@ -3305,7 +3305,7 @@ stream_df.writeStream \\
             <div className="topic-eyebrow">Kafka + Streaming Internals</div>
             <h1 className="topic-title">Kafka Connect + Debezium CDC</h1>
             <p className="topic-desc">
-              <strong>Kafka Connect</strong> is a scalable framework for streaming data between Kafka and external systems without writing custom producers/consumers. <strong>Source connectors</strong> pull data into Kafka (databases, object storage, APIs). <strong>Sink connectors</strong> push Kafka data to destinations (data lakes, databases, Elasticsearch). Connectors are deployed as JSON configuration — no custom code for standard integrations. <strong>Debezium</strong> is the leading CDC (Change Data Capture) source connector — it tails database transaction logs (MySQL binlog, PostgreSQL WAL, SQL Server CDC) and streams every INSERT/UPDATE/DELETE as a Kafka event. Topics follow the naming convention <code>server.database.table</code>. The <strong>dead letter queue (DLQ)</strong> captures records that fail to process, enabling debugging without blocking the main pipeline.
+              <strong>Kafka Connect</strong> is a scalable framework for streaming data between Kafka and external systems without writing custom producers/consumers. <strong>Source connectors</strong> pull data into Kafka (databases, object storage, APIs). <strong>Sink connectors</strong> push Kafka data to destinations (data lakes, databases, Elasticsearch). Connectors are deployed as JSON configuration  -  no custom code for standard integrations. <strong>Debezium</strong> is the leading CDC (Change Data Capture) source connector  -  it tails database transaction logs (MySQL binlog, PostgreSQL WAL, SQL Server CDC) and streams every INSERT/UPDATE/DELETE as a Kafka event. Topics follow the naming convention <code>server.database.table</code>. The <strong>dead letter queue (DLQ)</strong> captures records that fail to process, enabling debugging without blocking the main pipeline.
             </p>
           </div>
           <CodeBlock lang="json">{`// ── Debezium PostgreSQL CDC Connector config ──────────────────────────
@@ -3358,7 +3358,7 @@ stream_df.writeStream \\
               question: "How does Debezium CDC capture database changes?",
               options: [
                 "It runs SELECT queries on the source table every few seconds (polling)",
-                "It tails the database's transaction log (MySQL binlog, PostgreSQL WAL, SQL Server CDC) — capturing every change in commit order with low latency and no impact on source database performance.",
+                "It tails the database's transaction log (MySQL binlog, PostgreSQL WAL, SQL Server CDC)  -  capturing every change in commit order with low latency and no impact on source database performance.",
                 "It uses database triggers to write changes to a staging table",
                 "It compares table snapshots taken at regular intervals"
               ],
@@ -3368,7 +3368,7 @@ stream_df.writeStream \\
               question: "What is the dead letter queue (DLQ) in Kafka Connect?",
               options: [
                 "A topic where Kafka stores old messages past their retention period",
-                "A separate topic where Kafka Connect routes messages that fail to process (e.g., deserialization errors, schema mismatches). errors.tolerance=all prevents a bad message from halting the connector — it goes to the DLQ instead, keeping the pipeline running.",
+                "A separate topic where Kafka Connect routes messages that fail to process (e.g., deserialization errors, schema mismatches). errors.tolerance=all prevents a bad message from halting the connector  -  it goes to the DLQ instead, keeping the pipeline running.",
                 "A queue for messages that were intentionally deleted",
                 "The DLQ stores connector configuration backups"
               ],
@@ -3394,7 +3394,7 @@ stream_df.writeStream \\
             <div className="topic-eyebrow">Kafka + Streaming Internals</div>
             <h1 className="topic-title">Schema Registry + Avro</h1>
             <p className="topic-desc">
-              The <strong>Confluent Schema Registry</strong> is a central repository for Avro, Protobuf, and JSON Schema definitions. Producers register a schema before publishing; the Registry returns a schema ID that is embedded in each message (4 bytes). Consumers look up the schema by ID to deserialize — this decouples schema management from application code. Schemas are versioned by <strong>subject</strong> (typically <code>topic-value</code> or <code>topic-key</code>). <strong>Compatibility modes</strong> enforce evolution rules: <strong>BACKWARD</strong> (new schema can read data written with old schema — add optional fields), <strong>FORWARD</strong> (old schema can read data written with new schema — remove fields), <strong>FULL</strong> (both directions — safest). This prevents producers from breaking consumers with incompatible schema changes.
+              The <strong>Confluent Schema Registry</strong> is a central repository for Avro, Protobuf, and JSON Schema definitions. Producers register a schema before publishing; the Registry returns a schema ID that is embedded in each message (4 bytes). Consumers look up the schema by ID to deserialize  -  this decouples schema management from application code. Schemas are versioned by <strong>subject</strong> (typically <code>topic-value</code> or <code>topic-key</code>). <strong>Compatibility modes</strong> enforce evolution rules: <strong>BACKWARD</strong> (new schema can read data written with old schema  -  add optional fields), <strong>FORWARD</strong> (old schema can read data written with new schema  -  remove fields), <strong>FULL</strong> (both directions  -  safest). This prevents producers from breaking consumers with incompatible schema changes.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── Avro Producer with Schema Registry ───────────────────────────────
@@ -3472,7 +3472,7 @@ while True:
               question: "What does BACKWARD compatibility mean in Schema Registry?",
               options: [
                 "Old schema versions can still be registered",
-                "A new schema version can read data written by the old schema version. You can safely add optional fields with defaults — existing consumers that haven't upgraded can still deserialize messages produced with the new schema.",
+                "A new schema version can read data written by the old schema version. You can safely add optional fields with defaults  -  existing consumers that haven't upgraded can still deserialize messages produced with the new schema.",
                 "The schema is compatible with older Kafka broker versions",
                 "Consumers can read from older partition offsets"
               ],
@@ -3481,7 +3481,7 @@ while True:
             {
               question: "Why does Schema Registry store schemas centrally instead of embedding the full schema in each message?",
               options: [
-                "To reduce message size — each message contains only a 4-byte schema ID. Consumers look up the schema by ID from the Registry. This also enforces schema governance: incompatible schema changes are rejected at registration time before any bad data is produced.",
+                "To reduce message size  -  each message contains only a 4-byte schema ID. Consumers look up the schema by ID from the Registry. This also enforces schema governance: incompatible schema changes are rejected at registration time before any bad data is produced.",
                 "Because Avro schemas are too large to fit in a message header",
                 "For backward compatibility with older Kafka versions",
                 "So that schemas can be automatically applied to the data lake"
@@ -3492,7 +3492,7 @@ while True:
               question: "What happens when a producer tries to register a schema that violates the configured compatibility mode?",
               options: [
                 "The schema is registered but flagged with a warning",
-                "The Schema Registry returns a 409 Conflict error, rejecting the registration. The producer cannot publish messages with the incompatible schema — proactively preventing broken consumers before any bad data is produced.",
+                "The Schema Registry returns a 409 Conflict error, rejecting the registration. The producer cannot publish messages with the incompatible schema  -  proactively preventing broken consumers before any bad data is produced.",
                 "The incompatible messages are sent to the dead letter queue",
                 "The compatibility mode is automatically updated to NONE"
               ],
@@ -3508,7 +3508,7 @@ while True:
             <div className="topic-eyebrow">Kafka + Streaming Internals</div>
             <h1 className="topic-title">Kafka vs Azure Event Hub</h1>
             <p className="topic-desc">
-              Azure Event Hub is a fully managed, Kafka-compatible streaming service. It exposes the Kafka protocol — most Kafka clients work against Event Hub with only a <code>bootstrap.servers</code> change. Key differences: Event Hub has a maximum retention of 90 days (long-term retention requires Blob Capture); partitions are fixed at namespace creation and cannot be increased; Kafka protocol is available on Event Hub Premium. Event Hub integrates natively with the Azure ecosystem (Auto Loader, ADF, Stream Analytics). Self-managed Kafka offers more flexibility: unlimited retention, dynamic partition increases, the full Kafka Connect ecosystem, Kafka Streams, and multi-cloud deployments. Choose Event Hub for Azure-native low-ops platforms. Choose Kafka when you need the full ecosystem, multi-cloud, or complex routing.
+              Azure Event Hub is a fully managed, Kafka-compatible streaming service. It exposes the Kafka protocol  -  most Kafka clients work against Event Hub with only a <code>bootstrap.servers</code> change. Key differences: Event Hub has a maximum retention of 90 days (long-term retention requires Blob Capture); partitions are fixed at namespace creation and cannot be increased; Kafka protocol is available on Event Hub Premium. Event Hub integrates natively with the Azure ecosystem (Auto Loader, ADF, Stream Analytics). Self-managed Kafka offers more flexibility: unlimited retention, dynamic partition increases, the full Kafka Connect ecosystem, Kafka Streams, and multi-cloud deployments. Choose Event Hub for Azure-native low-ops platforms. Choose Kafka when you need the full ecosystem, multi-cloud, or complex routing.
             </p>
           </div>
           <CodeBlock lang="python">{`# ── Connecting an existing Kafka client to Azure Event Hub ────────────
@@ -3549,7 +3549,7 @@ df.writeStream \\
 # ── Feature comparison ────────────────────────────────────────────────
 # Feature                  Kafka (self-managed)       Azure Event Hub
 # ─────────────────────────────────────────────────────────────────────
-# Retention                Unlimited (disk-bound)     7–90 days (Capture → Blob)
+# Retention                Unlimited (disk-bound)     7 - 90 days (Capture → Blob)
 # Partition change         Increase at any time       Fixed at namespace creation
 # Protocol                 Kafka native               Kafka + AMQP (Premium tier)
 # Kafka Connect            Full OSS ecosystem         Not natively included
@@ -3565,7 +3565,7 @@ df.writeStream \\
               question: "What is the main operational advantage of Azure Event Hub over self-managed Kafka?",
               options: [
                 "Event Hub supports more partitions per topic",
-                "Event Hub is fully managed — no brokers, ZooKeeper, or KRaft cluster to provision, monitor, or patch. The tradeoff is less flexibility: fixed partitions at creation, 90-day max retention, and no native Kafka Connect ecosystem.",
+                "Event Hub is fully managed  -  no brokers, ZooKeeper, or KRaft cluster to provision, monitor, or patch. The tradeoff is less flexibility: fixed partitions at creation, 90-day max retention, and no native Kafka Connect ecosystem.",
                 "Event Hub is cheaper than Kafka in all scenarios",
                 "Event Hub supports unlimited consumer groups"
               ],
@@ -3575,7 +3575,7 @@ df.writeStream \\
               question: "How does an existing Kafka application connect to Azure Event Hub?",
               options: [
                 "You must rewrite the application using the Azure SDK",
-                "Change only bootstrap.servers to the Event Hub namespace endpoint and add SASL_SSL authentication. Event Hub implements the Kafka protocol — existing confluent-kafka producers and consumers work without code changes.",
+                "Change only bootstrap.servers to the Event Hub namespace endpoint and add SASL_SSL authentication. Event Hub implements the Kafka protocol  -  existing confluent-kafka producers and consumers work without code changes.",
                 "Install the Azure Event Hub Kafka adapter library",
                 "Event Hub does not support the Kafka protocol"
               ],
@@ -3790,9 +3790,9 @@ function SparkUiAnimation() {
       <line x1="0" y1="50" x2="680" y2="50" stroke="#334155" strokeWidth="1"/>
       {/* Stage rows */}
       {[
-        { id: 2, desc: 'SortMergeJoin → write', tasks: '200/200', input: '—', shRead: '45.2 GB', shWrite: '—', dur: '8.2 min', color: '#22c55e' },
-        { id: 1, desc: 'groupBy(merchant) agg', tasks: '200/200', input: '—', shRead: '102 GB', shWrite: '45.2 GB', dur: '12.4 min', color: '#f59e0b' },
-        { id: 0, desc: 'scan Parquet + filter', tasks: '832/832', input: '102 GB', shRead: '—', shWrite: '102 GB', dur: '4.1 min', color: '#22c55e' },
+        { id: 2, desc: 'SortMergeJoin → write', tasks: '200/200', input: ' - ', shRead: '45.2 GB', shWrite: ' - ', dur: '8.2 min', color: '#22c55e' },
+        { id: 1, desc: 'groupBy(merchant) agg', tasks: '200/200', input: ' - ', shRead: '102 GB', shWrite: '45.2 GB', dur: '12.4 min', color: '#f59e0b' },
+        { id: 0, desc: 'scan Parquet + filter', tasks: '832/832', input: '102 GB', shRead: ' - ', shWrite: '102 GB', dur: '4.1 min', color: '#22c55e' },
       ].map((s, i) => (
         <g key={i}>
           <rect x="0" y={55 + i * 44} width="680" height="40" fill={i % 2 === 0 ? '#1e293b' : '#0f172a'}/>
@@ -3802,8 +3802,8 @@ function SparkUiAnimation() {
           <text x="80" y={86 + i * 44} fill="#64748b" fontSize="7">Click to see task timeline</text>
           <text x="280" y={78 + i * 44} fill="#e2e8f0" fontSize="8">{s.tasks}</text>
           <text x="340" y={78 + i * 44} fill="#e2e8f0" fontSize="8">{s.input}</text>
-          <text x="410" y={78 + i * 44} fill={s.shRead !== '—' ? '#f59e0b' : '#64748b'} fontSize="8">{s.shRead}</text>
-          <text x="510" y={78 + i * 44} fill={s.shWrite !== '—' ? '#f97316' : '#64748b'} fontSize="8">{s.shWrite}</text>
+          <text x="410" y={78 + i * 44} fill={s.shRead !== ' - ' ? '#f59e0b' : '#64748b'} fontSize="8">{s.shRead}</text>
+          <text x="510" y={78 + i * 44} fill={s.shWrite !== ' - ' ? '#f97316' : '#64748b'} fontSize="8">{s.shWrite}</text>
           <text x="610" y={78 + i * 44} fill="#e2e8f0" fontSize="8">{s.dur}</text>
         </g>
       ))}

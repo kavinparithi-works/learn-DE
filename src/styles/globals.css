@@ -22,6 +22,12 @@
   --border:#e2e8f0;--border-strong:#cbd5e1;
   --bg:#f0f4ff;--bg-card:#ffffff;
 
+  /* Legacy compat vars (used in Foundations/SQL content) */
+  --surface-1:#f8fafc;--surface-2:#f1f5f9;--surface-3:#e8edf8;
+  --text-muted:#94a3b8;--text-secondary:#64748b;
+  --accent:#6366f1;--accent-light:#eef2ff;
+  --warning-bg:#fffbeb;--warning-border:#fde68a;--warning-color:#d97706;
+
   --topbar-h:64px;
   --sidebar-w:288px;
 
@@ -279,9 +285,8 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
 ════════════════════════════════════════════════════ */
 .main-content{
   flex:1;min-width:0;
-  padding:32px 44px;
-  max-width:940px;
-  background:linear-gradient(160deg,#f4f7ff 0%,#faf9ff 50%,#f7f4ff 100%);
+  padding:28px 36px;
+  background:linear-gradient(160deg,#f0f4ff 0%,#faf9ff 50%,#f7f0ff 100%);
   min-height:calc(100vh - var(--topbar-h));
 }
 
@@ -292,27 +297,34 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   background:var(--bg-card);
   border-radius:var(--radius-2xl);
   border:1.5px solid var(--border);
-  padding:0 0 32px;
-  margin-bottom:20px;
-  box-shadow:var(--shadow-sm);
+  padding:0 0 28px;
+  margin-bottom:16px;
+  box-shadow:0 2px 12px rgba(79,142,247,.06),0 1px 4px rgba(0,0,0,.05);
   position:relative;overflow:hidden;
-  transition:box-shadow var(--transition-slow);
+  transition:box-shadow var(--transition-slow),transform var(--transition-slow);
 }
-.topic-section:hover{box-shadow:var(--shadow-md);}
+.topic-section:hover{
+  box-shadow:0 6px 28px rgba(79,142,247,.1),0 2px 8px rgba(0,0,0,.07);
+  transform:translateY(-1px);
+}
 
 .topic-header{
-  padding:28px 36px 22px;
-  background:linear-gradient(135deg,#f8faff 0%,#f3eeff 100%);
+  padding:24px 36px 20px;
+  background:linear-gradient(135deg,#f5f8ff 0%,#f0ecff 100%);
   border-bottom:1.5px solid var(--border);
   border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
   position:relative;overflow:hidden;
-  margin-bottom:24px;
+  margin-bottom:0;
+}
+.topic-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899,#f59e0b,#4f8ef7);
+  background-size:300% 100%;
+  animation:shimmer 3s ease-in-out infinite;
 }
 .topic-header::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  background:var(--grad-primary);
-  background-size:200% 200%;
-  animation:gradientShift 4s ease infinite;
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue-200),var(--purple-200),transparent);
 }
 
 .topic-eyebrow{
@@ -857,3 +869,200 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   padding:20px 24px;box-shadow:var(--shadow-sm);transition:all var(--transition-slow);
 }
 .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+
+/* ════════════════════════════════════════════════════
+   SQL.tsx TOPIC-HEADER & TOPIC-TAG
+════════════════════════════════════════════════════ */
+/* SQL page uses a different topic-header structure - plain div with span.topic-tag */
+.topic-header h2{
+  font-size:1.75rem;font-weight:800;color:var(--text-1);
+  letter-spacing:-.03em;margin:0;
+  background:linear-gradient(135deg,var(--text-1),var(--purple-700));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.topic-tag{
+  display:inline-flex;align-items:center;
+  padding:4px 14px;border-radius:var(--radius-full);
+  background:linear-gradient(135deg,var(--blue-50),var(--purple-50));
+  border:1.5px solid var(--blue-100);
+  font-size:.72rem;font-weight:800;color:var(--blue-700);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:10px;display:block;width:fit-content;
+}
+
+/* ════════════════════════════════════════════════════
+   COMPLETE BUTTON — BEAUTIFUL
+════════════════════════════════════════════════════ */
+.complete-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 28px;border-radius:var(--radius-full);
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:white;font-size:.88rem;font-weight:700;
+  border:none;cursor:pointer;
+  transition:all var(--transition);
+  box-shadow:0 4px 16px rgba(34,197,94,.3);
+  font-family:var(--font-display);letter-spacing:-.01em;
+  margin:20px 36px 8px;
+}
+.complete-btn:hover{
+  transform:translateY(-2px) scale(1.02);
+  box-shadow:0 8px 28px rgba(34,197,94,.4);
+  background:linear-gradient(135deg,#16a34a,#059669);
+}
+.complete-btn:active{transform:scale(.98);}
+
+/* ════════════════════════════════════════════════════
+   CONTENT INSIDE TOPIC-SECTION (padding fix)
+════════════════════════════════════════════════════ */
+/* All direct block children of topic-section get inset padding */
+.topic-section > p,
+.topic-section > ul,
+.topic-section > ol,
+.topic-section > blockquote,
+.topic-section > h3,
+.topic-section > h4,
+.topic-section > hr {
+  padding-left:36px;
+  padding-right:36px;
+  margin-bottom:14px;
+}
+.topic-section > p { margin-top:0; font-size:.95rem; line-height:1.85; }
+.topic-section > p:first-of-type { margin-top:20px; }
+.topic-section > ul,
+.topic-section > ol {
+  padding-left:64px;
+  line-height:1.95;
+  color:var(--text-2);
+  font-size:.95rem;
+}
+.topic-section > ul li,
+.topic-section > ol li { margin-bottom:4px; }
+.topic-section > ul li::marker { color:var(--blue-500);font-size:1.1em; }
+.topic-section > ol li::marker { color:var(--purple-600);font-weight:800; }
+
+/* Inline divs/grids inside topic-section */
+.topic-section > div:not(.topic-header):not(.callout):not(.code-block):not(.quiz-container):not(.venn-container) {
+  padding-left:36px;
+  padding-right:36px;
+}
+.topic-section > div:not(.topic-header) { margin-top:4px; }
+
+/* ════════════════════════════════════════════════════
+   MINI-CARDS (used in Foundations and other pages)
+════════════════════════════════════════════════════ */
+/* Override broken var() references with real values */
+[style*="var(--surface-2)"] {
+  background:var(--surface-2) !important;
+}
+[style*="var(--surface-3)"] {
+  background:var(--surface-3) !important;
+}
+
+/* Generic info-grid cards used in Foundations */
+.topic-section > div > div[style*="border"] {
+  transition:all var(--transition) !important;
+}
+.topic-section > div > div[style*="border"]:hover {
+  box-shadow:var(--shadow-md) !important;
+  transform:translateY(-2px) !important;
+  border-color:var(--blue-200) !important;
+}
+
+/* ════════════════════════════════════════════════════
+   SCROLLBAR (content area)
+════════════════════════════════════════════════════ */
+.main-content{
+  scrollbar-width:thin;
+  scrollbar-color:var(--gray-300) transparent;
+}
+.main-content::-webkit-scrollbar{width:5px;}
+.main-content::-webkit-scrollbar-track{background:transparent;}
+.main-content::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:3px;}
+
+/* ════════════════════════════════════════════════════
+   SECTION SPACING RHYTHM
+════════════════════════════════════════════════════ */
+.topic-section + .topic-section{margin-top:20px;}
+
+/* h2/h3/h4 inside section body (not inside topic-header) */
+.topic-section h3{
+  font-size:1.1rem;font-weight:800;color:var(--text-1);
+  letter-spacing:-.02em;margin:28px 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.topic-section h3::before{
+  content:'';display:inline-block;width:4px;height:18px;
+  border-radius:2px;
+  background:var(--grad-primary);flex-shrink:0;
+}
+.topic-section h4{
+  font-size:.96rem;font-weight:700;color:var(--text-2);
+  margin:20px 0 8px;letter-spacing:-.01em;
+}
+.topic-section h2:not([class]){
+  font-size:1.25rem;font-weight:800;color:var(--text-1);
+  margin:28px 0 10px;letter-spacing:-.025em;
+  padding-left:36px;padding-right:36px;
+}
+
+/* Key-value / definition rows */
+.kv-row{
+  display:flex;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--border);align-items:flex-start;
+}
+.kv-row:last-child{border-bottom:none;}
+.kv-key{
+  min-width:140px;font-weight:700;font-size:.85rem;
+  color:var(--blue-700);font-family:var(--font-mono);
+  flex-shrink:0;
+}
+.kv-val{font-size:.88rem;color:var(--text-2);line-height:1.7;}
+
+/* ════════════════════════════════════════════════════
+   TABLE IMPROVEMENTS (inside topic-section)
+════════════════════════════════════════════════════ */
+.topic-section table{
+  margin:4px 36px 20px;
+  width:calc(100% - 72px);
+  border-radius:var(--radius-xl);
+  overflow:hidden;
+  border:1.5px solid var(--border);
+  box-shadow:var(--shadow-sm);
+}
+.topic-section table th{
+  background:linear-gradient(135deg,#1a1f3a,#252d54);
+  color:rgba(255,255,255,.92);
+  padding:12px 18px;
+  font-family:var(--font-display);font-size:.78rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.07em;
+}
+.topic-section table td{
+  padding:11px 18px;
+  border-bottom:1px solid var(--border);
+  color:var(--text-2);
+  vertical-align:top;
+  font-size:.88rem;line-height:1.65;
+}
+.topic-section table tr:last-child td{border-bottom:none;}
+.topic-section table tr:nth-child(even) td{background:#f8faff;}
+.topic-section table tr:hover td{
+  background:linear-gradient(135deg,var(--blue-50),var(--purple-50));
+}
+
+/* ════════════════════════════════════════════════════
+   LAYOUT WIDTH — FILL AVAILABLE SPACE
+════════════════════════════════════════════════════ */
+@media(min-width:1400px){
+  .main-content{padding:32px 48px;}
+  .topic-section>p,.topic-section>ul,.topic-section>ol,.topic-section>h3,
+  .topic-section>h4,.topic-section>hr,.topic-section>h2:not([class]){
+    padding-left:44px;padding-right:44px;
+  }
+  .topic-section>div:not(.topic-header):not(.callout):not(.code-block):not(.quiz-container):not(.venn-container){
+    padding-left:44px;padding-right:44px;
+  }
+  .code-block{margin-left:44px;margin-right:44px;}
+  .callout{margin-left:44px;margin-right:44px;}
+  .complete-btn{margin-left:44px;}
+  .topic-section table{margin-left:44px;margin-right:44px;width:calc(100% - 88px);}
+}

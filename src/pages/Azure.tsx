@@ -2526,10 +2526,10 @@ func azure functionapp publish func-data-platform-realtime --python`}</CodeBlock
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
-              <strong>Four window types:</strong> <strong>Tumbling</strong> — fixed, non-overlapping intervals (e.g., 1-min buckets).
-              <strong> Hopping</strong> — overlapping windows (e.g., 5-min window every 1 min).
-              <strong> Sliding</strong> — emits when an event enters/leaves the window, always covering the last N seconds.
-              <strong> Session</strong> — groups bursts of activity separated by idle gaps.
+              <strong>Four window types:</strong> <strong>Tumbling</strong>  -  fixed, non-overlapping intervals (e.g., 1-min buckets).
+              <strong> Hopping</strong>  -  overlapping windows (e.g., 5-min window every 1 min).
+              <strong> Sliding</strong>  -  emits when an event enters/leaves the window, always covering the last N seconds.
+              <strong> Session</strong>  -  groups bursts of activity separated by idle gaps.
             </div>
           </div>
           <CodeBlock lang="sql">{`-- Azure Stream Analytics Query Language (SAQL)
@@ -2637,7 +2637,7 @@ az stream-analytics job start \
               options: [
                 "Sliding window",
                 "Session window",
-                "Tumbling window — it fires on every fixed interval regardless of event arrival",
+                "Tumbling window  -  it fires on every fixed interval regardless of event arrival",
                 "Hopping window"
               ],
               correct: 2
@@ -2657,7 +2657,7 @@ az stream-analytics job start \
               options: [
                 "A billing increment equal to 1 GB of processed data",
                 "A unit of memory only, CPU scales automatically",
-                "A bundle of CPU, memory, and I/O resources — 1 SU handles roughly 1 MB/s throughput",
+                "A bundle of CPU, memory, and I/O resources  -  1 SU handles roughly 1 MB/s throughput",
                 "One partition of the Event Hub input"
               ],
               correct: 2
@@ -2676,7 +2676,7 @@ az stream-analytics job start \
           <div className="callout callout-danger">
             <span className="callout-icon">&#128680;</span>
             <div className="callout-body">
-              <strong>Never hardcode secrets.</strong> Connection strings, storage keys, SP client secrets must live in Key Vault. Use RBAC (Key Vault Secrets User / Officer roles) rather than legacy Access Policies — RBAC is auditable, inheritable, and consistent with the rest of Azure IAM.
+              <strong>Never hardcode secrets.</strong> Connection strings, storage keys, SP client secrets must live in Key Vault. Use RBAC (Key Vault Secrets User / Officer roles) rather than legacy Access Policies  -  RBAC is auditable, inheritable, and consistent with the rest of Azure IAM.
             </div>
           </div>
           <CodeBlock lang="python">{`# azure-keyvault-secrets SDK
@@ -2709,7 +2709,7 @@ client.begin_delete_secret("db-password").wait()
 client.begin_recover_deleted_secret("db-password").wait()
 # Permanently purge (requires purge protection disabled):
 client.purge_deleted_secret("db-password")`}</CodeBlock>
-          <CodeBlock lang="python">{`# azure-keyvault-keys SDK — envelope encryption pattern
+          <CodeBlock lang="python">{`# azure-keyvault-keys SDK  -  envelope encryption pattern
 from azure.keyvault.keys import KeyClient
 from azure.keyvault.keys.crypto import CryptographyClient, EncryptionAlgorithm
 
@@ -2793,7 +2793,7 @@ spark.conf.set(
               options: [
                 "Prevents secrets from being read by non-owners",
                 "Enables HSM-backed key storage",
-                "Prevents permanently deleting soft-deleted secrets/keys/certificates during the retention period — even by admins",
+                "Prevents permanently deleting soft-deleted secrets/keys/certificates during the retention period  -  even by admins",
                 "Encrypts the Key Vault metadata at rest"
               ],
               correct: 2
@@ -2822,7 +2822,7 @@ spark.conf.set(
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
-              <strong>Managed Identity vs Service Principal:</strong> A service principal is a manual app registration with a client secret or certificate you must rotate. A managed identity is Azure-managed — no credentials to store or rotate. Always prefer managed identity when the service supports it (ADF, Functions, Databricks cluster, etc.).
+              <strong>Managed Identity vs Service Principal:</strong> A service principal is a manual app registration with a client secret or certificate you must rotate. A managed identity is Azure-managed  -  no credentials to store or rotate. Always prefer managed identity when the service supports it (ADF, Functions, Databricks cluster, etc.).
             </div>
           </div>
           <CodeBlock lang="bash">{`# Service Principal creation and role assignment
@@ -2926,7 +2926,7 @@ print(result.stdout.strip())`}</CodeBlock>
               question: "What is the key operational advantage of Managed Identity over a Service Principal with client secret?",
               options: [
                 "Managed Identity has higher permissions by default",
-                "Managed Identity credentials are Azure-managed — no secret rotation, no credential storage, no secret expiry risk",
+                "Managed Identity credentials are Azure-managed  -  no secret rotation, no credential storage, no secret expiry risk",
                 "Managed Identity works across all clouds, not just Azure",
                 "Managed Identity is faster because it skips OAuth token exchange"
               ],
@@ -2967,7 +2967,7 @@ print(result.stdout.strip())`}</CodeBlock>
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
-              <strong>Private Endpoint vs Service Endpoint:</strong> A Service Endpoint routes traffic to Azure PaaS over the Azure backbone but the service still has a public IP. A Private Endpoint injects the service directly into your VNet with a private IP — traffic never touches the public internet and you can disable public access entirely.
+              <strong>Private Endpoint vs Service Endpoint:</strong> A Service Endpoint routes traffic to Azure PaaS over the Azure backbone but the service still has a public IP. A Private Endpoint injects the service directly into your VNet with a private IP  -  traffic never touches the public internet and you can disable public access entirely.
             </div>
           </div>
           <CodeBlock lang="bash">{`# Build a secure data platform VNet
@@ -3072,7 +3072,7 @@ az network vnet peering create \
                 "For load balancing across multiple private endpoints",
                 "To resolve the service's public hostname (e.g., mystorageaccount.dfs.core.windows.net) to the private IP address instead of the public one",
                 "To enable name resolution across VNet peers",
-                "Private DNS zones are optional — Private Endpoints work without them"
+                "Private DNS zones are optional  -  Private Endpoints work without them"
               ],
               correct: 1
             },
@@ -3209,7 +3209,7 @@ az monitor action-group create \
               options: [
                 "Filters rows matching a condition",
                 "Sorts the result table by a column",
-                "Aggregates rows using functions like count(), sum(), avg(), percentile() — similar to SQL GROUP BY",
+                "Aggregates rows using functions like count(), sum(), avg(), percentile()  -  similar to SQL GROUP BY",
                 "Projects (selects) specific columns"
               ],
               correct: 2
@@ -3220,7 +3220,7 @@ az monitor action-group create \
                 "Metrics are for applications, Logs are for infrastructure",
                 "Metrics are numerical time-series (fast, cheap, 93-day retention by default) ideal for alerting. Logs are structured/unstructured text stored in Log Analytics, queryable with KQL, supporting complex analysis.",
                 "Metrics require Application Insights, Logs require Log Analytics",
-                "There is no difference — they are two names for the same service"
+                "There is no difference  -  they are two names for the same service"
               ],
               correct: 1
             },
@@ -3243,7 +3243,7 @@ az monitor action-group create \
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Cosmos DB Deep Dive</h1>
-            <p className="topic-desc">Azure Cosmos DB is a globally distributed, multi-model NoSQL database with guaranteed single-digit millisecond latency at any scale. The partition key is the single most important design decision — it determines data distribution, query efficiency, and throughput consumption.</p>
+            <p className="topic-desc">Azure Cosmos DB is a globally distributed, multi-model NoSQL database with guaranteed single-digit millisecond latency at any scale. The partition key is the single most important design decision  -  it determines data distribution, query efficiency, and throughput consumption.</p>
           </div>
           <div className="callout callout-danger">
             <span className="callout-icon">&#9888;</span>
@@ -3275,7 +3275,7 @@ container.upsert_item({
     "status": "shipped"
 })
 
-# Point read (O(1), uses partition key — cheapest possible read)
+# Point read (O(1), uses partition key  -  cheapest possible read)
 item = container.read_item(
     item="order-12345",
     partition_key="customer-456"        # 1 RU
@@ -3315,11 +3315,11 @@ async def process_change_feed():
                 # Forward to downstream processing
 
 # Consistency levels (tradeoff: consistency vs latency/availability)
-# Strong            — always reads latest committed write; highest latency
-# Bounded Staleness — reads lag behind writes by at most K versions or T seconds
-# Session           — consistent within a session; DEFAULT; great for user-facing apps
-# Consistent Prefix — no out-of-order reads; eventual with ordering guarantees
-# Eventual          — lowest latency; reads may be stale
+# Strong             -  always reads latest committed write; highest latency
+# Bounded Staleness  -  reads lag behind writes by at most K versions or T seconds
+# Session            -  consistent within a session; DEFAULT; great for user-facing apps
+# Consistent Prefix  -  no out-of-order reads; eventual with ordering guarantees
+# Eventual           -  lowest latency; reads may be stale
 
 # Custom indexing policy (exclude paths to save RU)
 indexing_policy = {
@@ -3361,7 +3361,7 @@ az cosmosdb sql container query-throughput \
               question: "Why should you avoid using a timestamp as the Cosmos DB partition key?",
               options: [
                 "Timestamps are not supported as partition keys",
-                "Timestamps create monotonically increasing values — all new writes go to the same (newest) partition, creating a hot partition with throughput throttling",
+                "Timestamps create monotonically increasing values  -  all new writes go to the same (newest) partition, creating a hot partition with throughput throttling",
                 "Timestamps consume more RUs than string partition keys",
                 "Cosmos DB sorts documents by partition key, making timestamp-based queries slow"
               ],
@@ -3372,7 +3372,7 @@ az cosmosdb sql container query-throughput \
               options: [
                 "Bounded Staleness",
                 "Consistent Prefix",
-                "Session consistency — the default and most commonly used level for user-facing applications",
+                "Session consistency  -  the default and most commonly used level for user-facing applications",
                 "Strong consistency"
               ],
               correct: 2
@@ -3401,7 +3401,7 @@ az cosmosdb sql container query-throughput \
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
-              <strong>DTU vs vCore:</strong> DTU (Database Transaction Unit) bundles CPU+memory+IO into one number — simple but opaque. vCore gives you explicit control over CPU cores and RAM and is required for Hyperscale tier, Managed Instance, and reserved capacity pricing. New workloads should use vCore.
+              <strong>DTU vs vCore:</strong> DTU (Database Transaction Unit) bundles CPU+memory+IO into one number  -  simple but opaque. vCore gives you explicit control over CPU cores and RAM and is required for Hyperscale tier, Managed Instance, and reserved capacity pricing. New workloads should use vCore.
             </div>
           </div>
           <CodeBlock lang="bash">{`# Create Azure SQL Server and Database
@@ -3512,7 +3512,7 @@ rows = cursor.fetchall()`}</CodeBlock>
               question: "What is the primary advantage of Azure SQL vCore model over DTU model?",
               options: [
                 "vCore is cheaper than DTU at all scales",
-                "vCore gives explicit CPU/memory control, supports reserved capacity pricing, enables Hyperscale tier, and supports Managed Instance — DTU bundles resources opaquely",
+                "vCore gives explicit CPU/memory control, supports reserved capacity pricing, enables Hyperscale tier, and supports Managed Instance  -  DTU bundles resources opaquely",
                 "vCore supports geo-replication while DTU does not",
                 "vCore has lower latency due to dedicated hardware"
               ],
@@ -3522,7 +3522,7 @@ rows = cursor.fetchall()`}</CodeBlock>
               question: "What does Azure SQL Always Encrypted provide that Transparent Data Encryption (TDE) does not?",
               options: [
                 "Always Encrypted protects data at rest and in transit; TDE only protects at rest",
-                "Always Encrypted uses client-side encryption so the database engine never sees plaintext — protects against rogue DBAs and cloud provider access. TDE encrypts storage files but the engine processes plaintext data.",
+                "Always Encrypted uses client-side encryption so the database engine never sees plaintext  -  protects against rogue DBAs and cloud provider access. TDE encrypts storage files but the engine processes plaintext data.",
                 "Always Encrypted is faster than TDE for read-heavy workloads",
                 "Always Encrypted requires no key management while TDE needs manual key rotation"
               ],
@@ -3703,7 +3703,7 @@ jobs:
               question: "What is the purpose of 'permissions: id-token: write' in a GitHub Actions workflow?",
               options: [
                 "It grants the workflow write access to the GitHub repository",
-                "It enables the workflow to request an OIDC token from GitHub for workload identity federation with Azure — eliminating the need to store Azure credentials as secrets",
+                "It enables the workflow to request an OIDC token from GitHub for workload identity federation with Azure  -  eliminating the need to store Azure credentials as secrets",
                 "It allows the workflow to create GitHub releases",
                 "It grants admin access to GitHub Actions settings"
               ],
@@ -3713,7 +3713,7 @@ jobs:
               question: "In Azure DevOps / GitHub Actions for ADF, what is the adf_publish branch?",
               options: [
                 "The branch where developers write ADF pipeline code",
-                "The branch containing compiled ARM templates exported by ADF's Publish button — used by CI/CD to deploy the factory to other environments",
+                "The branch containing compiled ARM templates exported by ADF's Publish button  -  used by CI/CD to deploy the factory to other environments",
                 "The production branch that ADF reads directly",
                 "A read-only mirror of the main branch for ADF"
               ],
@@ -3723,7 +3723,7 @@ jobs:
               question: "What is a GitHub Actions 'environment' and why is it used for production deployments?",
               options: [
                 "An environment is a set of environment variables for a job",
-                "An environment is a named deployment target with protection rules including required reviewers (manual approval gates), wait timers, and scoped secrets — preventing automated deploys to production without human sign-off",
+                "An environment is a named deployment target with protection rules including required reviewers (manual approval gates), wait timers, and scoped secrets  -  preventing automated deploys to production without human sign-off",
                 "An environment is a Docker container configuration for runners",
                 "An environment maps to an Azure subscription"
               ],
@@ -3738,15 +3738,15 @@ jobs:
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Terraform for Azure</h1>
-            <p className="topic-desc">Terraform is the de-facto IaC tool for Azure data platforms. It declaratively manages all Azure resources — VNets, storage accounts, ADF, Databricks workspaces — with a state file tracking what exists, enabling plan/apply/destroy workflows.</p>
+            <p className="topic-desc">Terraform is the de-facto IaC tool for Azure data platforms. It declaratively manages all Azure resources  -  VNets, storage accounts, ADF, Databricks workspaces  -  with a state file tracking what exists, enabling plan/apply/destroy workflows.</p>
           </div>
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
-              <strong>State management:</strong> Store Terraform state in Azure Blob Storage (not local). Use state locking via Azure Blob lease to prevent concurrent runs. Never edit state manually — use <code>terraform state mv</code> or <code>terraform import</code>.
+              <strong>State management:</strong> Store Terraform state in Azure Blob Storage (not local). Use state locking via Azure Blob lease to prevent concurrent runs. Never edit state manually  -  use <code>terraform state mv</code> or <code>terraform import</code>.
             </div>
           </div>
-          <CodeBlock lang="hcl">{`# main.tf — Azure data platform infrastructure
+          <CodeBlock lang="hcl">{`# main.tf  -  Azure data platform infrastructure
 
 terraform {
   required_providers {
@@ -3977,7 +3977,7 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
               question: "What does 'terraform plan' do and why is it important before 'terraform apply'?",
               options: [
                 "terraform plan applies changes in dry-run mode and rolls back automatically",
-                "terraform plan generates a diff of what will be created, updated, or destroyed without making changes — critical for reviewing infrastructure changes before committing, especially destructive operations",
+                "terraform plan generates a diff of what will be created, updated, or destroyed without making changes  -  critical for reviewing infrastructure changes before committing, especially destructive operations",
                 "terraform plan validates syntax only, not actual resource changes",
                 "terraform plan is only needed the first time; subsequent applies are safe without it"
               ],
@@ -4007,7 +4007,7 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
-              <strong>Top cost drivers for data platforms:</strong> (1) Databricks all-purpose clusters left running — use job clusters, set auto-termination. (2) Synapse dedicated SQL pool always on — pause when not needed or switch to serverless. (3) Data egress across regions/internet. (4) Over-provisioned storage tiers — archive data cold after 30 days.
+              <strong>Top cost drivers for data platforms:</strong> (1) Databricks all-purpose clusters left running  -  use job clusters, set auto-termination. (2) Synapse dedicated SQL pool always on  -  pause when not needed or switch to serverless. (3) Data egress across regions/internet. (4) Over-provisioned storage tiers  -  archive data cold after 30 days.
             </div>
           </div>
           <CodeBlock lang="bash">{`# Azure Cost Management CLI
@@ -4049,7 +4049,7 @@ az vm auto-shutdown \
   --name dev-vm \
   --time 1900 \
   --email "dev@company.com"`}</CodeBlock>
-          <CodeBlock lang="python">{`# Azure Cost Management SDK — query and analyse costs
+          <CodeBlock lang="python">{`# Azure Cost Management SDK  -  query and analyse costs
 from azure.mgmt.costmanagement import CostManagementClient
 from azure.mgmt.costmanagement.models import (
     QueryDefinition, QueryTimePeriod, QueryDataset,
@@ -4157,9 +4157,9 @@ az advisor recommendation list \
               question: "What is the difference between a Budget alert at 'Actual' vs 'Forecasted' threshold?",
               options: [
                 "Actual alerts use real-time data; Forecasted alerts use yesterday's data",
-                "Actual alerts fire when you have already spent the threshold amount. Forecasted alerts fire when Azure predicts you WILL exceed the threshold by end of period — enabling proactive action before overspend occurs.",
+                "Actual alerts fire when you have already spent the threshold amount. Forecasted alerts fire when Azure predicts you WILL exceed the threshold by end of period  -  enabling proactive action before overspend occurs.",
                 "Forecasted alerts are only available for subscriptions, not resource groups",
-                "There is no difference — both fire at the same time"
+                "There is no difference  -  both fire at the same time"
               ],
               correct: 1
             },
@@ -4168,7 +4168,7 @@ az advisor recommendation list \
               options: [
                 "For bursty, unpredictable workloads that run a few hours per week",
                 "For any workload regardless of usage pattern",
-                "For stable, predictable workloads running 24/7 or most of the day — reservations offer 30-70% savings over pay-as-you-go for 1-year or 3-year commitments",
+                "For stable, predictable workloads running 24/7 or most of the day  -  reservations offer 30-70% savings over pay-as-you-go for 1-year or 3-year commitments",
                 "Reserved Instances are only cost-effective for VMs, not PaaS services"
               ],
               correct: 2

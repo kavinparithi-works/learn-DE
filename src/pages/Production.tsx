@@ -141,14 +141,14 @@ export default function Production({ completed, onComplete }: Props) {
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Data Architecture Patterns</h1>
-            <p className="topic-desc">Lambda, Kappa, Data Mesh, Lakehouse, and Data Fabric — knowing when to choose each architecture is one of the most important senior DE skills. Each solves a different problem at a different cost.</p>
+            <p className="topic-desc">Lambda, Kappa, Data Mesh, Lakehouse, and Data Fabric  -  knowing when to choose each architecture is one of the most important senior DE skills. Each solves a different problem at a different cost.</p>
           </div>
           <ArchitectureAnimation />
           <CodeBlock lang="text">{`ARCHITECTURE COMPARISON
 
 Lambda Architecture
-  Batch layer:  Spark jobs on HDFS/ADLS — full historical reprocessing
-  Speed layer:  Kafka Streams / Flink — low-latency recent data
+  Batch layer:  Spark jobs on HDFS/ADLS  -  full historical reprocessing
+  Speed layer:  Kafka Streams / Flink  -  low-latency recent data
   Serving layer: Merged view (Redis + HBase / Cassandra)
   Pro: Handles late data naturally; historical accuracy guaranteed
   Con: Two codebases (batch + stream) that must produce identical results
@@ -178,14 +178,14 @@ Lakehouse (Databricks, 2020) ← Current best practice
 
 Data Fabric
   Metadata-driven; AI/ML discovers and connects data across heterogeneous sources
-  Not a storage pattern — it's a management layer on top of existing systems
+  Not a storage pattern  -  it's a management layer on top of existing systems
   Pro: Works with existing investments; AI-assisted discovery
   Con: Still maturing; vendor-heavy; complex to implement
   When to use: Enterprise with many legacy systems needing unified discovery`}</CodeBlock>
           <Quiz topicId="prod-architecture" questions={[
-            { question: "What is the main advantage of Kappa over Lambda architecture?", options: ["Better performance for batch jobs", "Single unified codebase — no duplicate batch/streaming logic to maintain", "Lower storage costs", "Better handling of late-arriving data"], correct: 1 },
+            { question: "What is the main advantage of Kappa over Lambda architecture?", options: ["Better performance for batch jobs", "Single unified codebase  -  no duplicate batch/streaming logic to maintain", "Lower storage costs", "Better handling of late-arriving data"], correct: 1 },
             { question: "In a Data Mesh, who owns the data products?", options: ["The central data platform team", "Domain teams who have business context for that data", "The data governance committee", "The infrastructure team"], correct: 1 },
-            { question: "What makes the Lakehouse architecture different from a traditional data warehouse?", options: ["It uses SQL instead of Python", "Open file format (Delta/Parquet) on cheap object storage — supports BI, ML, and streaming from one copy of data", "It requires no schema definition", "It only works with real-time data"], correct: 1 },
+            { question: "What makes the Lakehouse architecture different from a traditional data warehouse?", options: ["It uses SQL instead of Python", "Open file format (Delta/Parquet) on cheap object storage  -  supports BI, ML, and streaming from one copy of data", "It requires no schema definition", "It only works with real-time data"], correct: 1 },
           ]} />
           {completeBtn('prod-architecture')}
         </section>
@@ -195,7 +195,7 @@ Data Fabric
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">System Design for Data Platforms</h1>
-            <p className="topic-desc">Capacity planning, scalability, fault tolerance, CAP theorem applied to data systems, eventual consistency, backpressure handling, and rate limiting — the building blocks of resilient data platforms.</p>
+            <p className="topic-desc">Capacity planning, scalability, fault tolerance, CAP theorem applied to data systems, eventual consistency, backpressure handling, and rate limiting  -  the building blocks of resilient data platforms.</p>
           </div>
           <CodeBlock lang="text">{`CAP THEOREM FOR DATA SYSTEMS
 ═══════════════════════════════════════════════════════════════
@@ -203,19 +203,19 @@ Pick 2 of 3: Consistency · Availability · Partition Tolerance
 
 Network partitions ALWAYS happen in distributed systems → you choose C or A.
 
-CP (Consistency + Partition Tolerance) — data is always correct, may be unavailable
+CP (Consistency + Partition Tolerance)  -  data is always correct, may be unavailable
   Examples: HBase, Zookeeper, etcd
   Data use case: Financial ledgers, inventory counts, user balances
   Trade-off: Writes blocked during partition; replica lag unacceptable
 
-AP (Availability + Partition Tolerance) — always responds, may return stale data
+AP (Availability + Partition Tolerance)  -  always responds, may return stale data
   Examples: Cassandra (tunable), DynamoDB, Kafka consumer offsets
   Data use case: User activity feeds, event streams, recommendation counts
   Trade-off: Eventual consistency; reads may return old values
 
 PACELC Extension: Even without partition, choose between Latency and Consistency
-  Delta Lake with OPTIMIZE: PA/EL — available + low latency
-  Delta Lake with strong isolation: PC/EC — consistent + higher latency
+  Delta Lake with OPTIMIZE: PA/EL  -  available + low latency
+  Delta Lake with strong isolation: PC/EC  -  consistent + higher latency
 
 EVENTUAL CONSISTENCY PATTERNS
 ═══════════════════════════════════════════════════════════════
@@ -231,7 +231,7 @@ Causal consistency: causally related operations seen in order
 # Without backpressure: Kafka lag grows → OOM on executors
 
 spark.conf.set("spark.streaming.kafka.maxRatePerPartition", "1000")  # Spark Streaming
-# For Structured Streaming — use maxOffsetsPerTrigger:
+# For Structured Streaming  -  use maxOffsetsPerTrigger:
 query = (
     df.readStream
     .format("kafka")
@@ -271,7 +271,7 @@ def fetch_page(url: str, session) -> dict:
     resp.raise_for_status()
     return resp.json()
 
-# CAPACITY PLANNING — cluster sizing formula
+# CAPACITY PLANNING  -  cluster sizing formula
 # Required cores = (daily_records / seconds_in_day) * processing_time_per_record * safety_factor
 # Example: 10M records/day, 0.1ms/record, 2x safety
 cores_needed = (10_000_000 / 86_400) * 0.0001 * 2   # ≈ 23 cores
@@ -281,8 +281,8 @@ cores_needed = (10_000_000 / 86_400) * 0.0001 * 2   # ≈ 23 cores
 spark.sparkContext.setCheckpointDir("/checkpoints")  # RDD checkpointing
 # Delta Lake: use foreachBatch with idempotent MERGE for exactly-once semantics`}</CodeBlock>
           <Quiz topicId="prod-system-design" questions={[
-            { question: "In CAP theorem, why can't you have all three — Consistency, Availability, and Partition Tolerance?", options: ["It's a hardware limitation", "Network partitions always occur in distributed systems, so you must choose between consistency and availability when a partition happens", "You need a license for all three", "CAP only applies to databases, not data pipelines"], correct: 1 },
-            { question: "What does setting maxOffsetsPerTrigger in Spark Structured Streaming accomplish?", options: ["It sets the maximum number of partitions", "It implements backpressure — caps how many Kafka messages are processed per micro-batch, preventing executor OOM", "It limits the number of concurrent queries", "It controls the checkpoint frequency"], correct: 1 },
+            { question: "In CAP theorem, why can't you have all three  -  Consistency, Availability, and Partition Tolerance?", options: ["It's a hardware limitation", "Network partitions always occur in distributed systems, so you must choose between consistency and availability when a partition happens", "You need a license for all three", "CAP only applies to databases, not data pipelines"], correct: 1 },
+            { question: "What does setting maxOffsetsPerTrigger in Spark Structured Streaming accomplish?", options: ["It sets the maximum number of partitions", "It implements backpressure  -  caps how many Kafka messages are processed per micro-batch, preventing executor OOM", "It limits the number of concurrent queries", "It controls the checkpoint frequency"], correct: 1 },
             { question: "What is the key formula for cluster capacity planning?", options: ["Cores = RAM / 4", "Required cores = (records/second) × (processing_time_per_record) × safety_factor", "Cores = number of partitions", "Cores = daily_records / 1,000,000"], correct: 1 },
           ]} />
           {completeBtn('prod-system-design')}
@@ -293,7 +293,7 @@ spark.sparkContext.setCheckpointDir("/checkpoints")  # RDD checkpointing
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Pipeline Design Patterns</h1>
-            <p className="topic-desc">Medallion architecture, idempotency, exactly-once semantics, fan-out/fan-in, and event-driven triggers — patterns that separate amateur pipelines from production-grade ones.</p>
+            <p className="topic-desc">Medallion architecture, idempotency, exactly-once semantics, fan-out/fan-in, and event-driven triggers  -  patterns that separate amateur pipelines from production-grade ones.</p>
           </div>
           <CodeBlock lang="text">{`MEDALLION ARCHITECTURE (Bronze → Silver → Gold)
 ═══════════════════════════════════════════════════════════════
@@ -316,7 +316,7 @@ Gold (Aggregated): Business-ready aggregates and dimensional models
 IDEMPOTENCY PATTERNS
 ═══════════════════════════════════════════════════════════════
 A pipeline is idempotent if running it N times = running it once (same result).
-Critical for safe retries — ADF retries failed activities automatically.
+Critical for safe retries  -  ADF retries failed activities automatically.
 
 Pattern 1: Overwrite by partition
   spark.write.mode("overwrite").option("partitionOverwriteMode","dynamic").save(path)
@@ -340,7 +340,7 @@ Fan-in: multiple upstream sources → one downstream aggregate
   ADF: Wait activity after parallel branches
   Use case: sales + returns + adjustments → net revenue fact table
   Risk: slowest upstream blocks all; add timeout + partial-load logic`}</CodeBlock>
-          <CodeBlock lang="python">{`# IDEMPOTENT BRONZE LOAD — safe to re-run for same batch
+          <CodeBlock lang="python">{`# IDEMPOTENT BRONZE LOAD  -  safe to re-run for same batch
 from delta.tables import DeltaTable
 from pyspark.sql import functions as F
 
@@ -356,7 +356,7 @@ def load_bronze_idempotent(source_path: str, batch_id: str, target_table: str):
 
     df.write.format("delta").mode("append").saveAsTable(target_table)
 
-# SILVER DEDUP + QUALITY — MERGE pattern
+# SILVER DEDUP + QUALITY  -  MERGE pattern
 def silver_upsert(bronze_df, target_table: str, key_cols: list[str]):
     # Quality check
     valid = bronze_df.filter(F.col("order_id").isNotNull() & (F.col("amount") > 0))
@@ -394,39 +394,39 @@ def silver_upsert(bronze_df, target_table: str, key_cols: list[str]):
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Slowly Changing Dimensions</h1>
-            <p className="topic-desc">SCD Types 1–6, implementation patterns in Delta Lake, and how to choose the right type based on business requirements for historical tracking.</p>
+            <p className="topic-desc">SCD Types 1 - 6, implementation patterns in Delta Lake, and how to choose the right type based on business requirements for historical tracking.</p>
           </div>
-          <CodeBlock lang="text">{`SLOWLY CHANGING DIMENSIONS (SCD) — DECISION GUIDE
+          <CodeBlock lang="text">{`SLOWLY CHANGING DIMENSIONS (SCD)  -  DECISION GUIDE
 ═══════════════════════════════════════════════════════════════
-SCD Type 0 — Retain Original
+SCD Type 0  -  Retain Original
   Never update; keep the original value forever.
   Use: date of birth, original signup source
 
-SCD Type 1 — Overwrite (no history)
+SCD Type 1  -  Overwrite (no history)
   Update in place; old value is lost.
   Use: fixing typos, correcting obvious errors, current-state-only reporting
   Implementation: MERGE INTO ... WHEN MATCHED THEN UPDATE SET ...
 
-SCD Type 2 — Add New Row (full history) ← most common
+SCD Type 2  -  Add New Row (full history) ← most common
   Add new row with new values; mark old row as expired.
   Columns needed: is_current BOOLEAN, effective_from DATE, effective_to DATE
   Surrogate key links fact table to correct dimension version at event time.
   Use: customer address, product category, employee department
 
-SCD Type 3 — Add New Column (limited history)
+SCD Type 3  -  Add New Column (limited history)
   Keep current AND previous value in separate columns.
   Use: when you only ever need one previous value (current_region, prev_region)
   Limitation: only 1 level of history; schema change for each tracked attribute
 
-SCD Type 4 — History Table
+SCD Type 4  -  History Table
   Current values in main table; all changes in separate history table.
   Use: high-change-frequency dims where you rarely query history
 
-SCD Type 6 — Hybrid (1+2+3)
+SCD Type 6  -  Hybrid (1+2+3)
   Combines: overwrite current cols (Type 1) + new row per change (Type 2)
            + add current value column to historical rows (Type 3)
   Allows: "what was customer's current address when they ordered?" +
-          "what is their address today?" — answered from same row
+          "what is their address today?"  -  answered from same row
   Use: customer dim in large enterprise DW`}</CodeBlock>
           <CodeBlock lang="python">{`# SCD TYPE 2 IMPLEMENTATION WITH DELTA LAKE
 from delta.tables import DeltaTable
@@ -498,9 +498,9 @@ spark.sql("""
   -- AND o.order_date BETWEEN c.effective_from AND c.effective_to
 """)`}</CodeBlock>
           <Quiz topicId="prod-scd" questions={[
-            { question: "Which SCD type should you use when you need to track the full history of customer address changes over time?", options: ["SCD Type 1 — overwrite in place", "SCD Type 2 — add a new row per change with effective dates", "SCD Type 3 — add a previous_address column", "SCD Type 0 — never update"], correct: 1 },
+            { question: "Which SCD type should you use when you need to track the full history of customer address changes over time?", options: ["SCD Type 1  -  overwrite in place", "SCD Type 2  -  add a new row per change with effective dates", "SCD Type 3  -  add a previous_address column", "SCD Type 0  -  never update"], correct: 1 },
             { question: "What columns are typically added to a dimension table to support SCD Type 2?", options: ["version_number only", "is_current, effective_from, effective_to, and a surrogate key", "created_at and updated_at", "delta_version and snapshot_date"], correct: 1 },
-            { question: "What is the trade-off of SCD Type 1 vs Type 2?", options: ["Type 1 is slower but more accurate", "Type 1 is simple but loses history; Type 2 preserves full history but doubles rows and requires surrogate key joins", "Type 1 requires more storage than Type 2", "They are equivalent — just different naming conventions"], correct: 1 },
+            { question: "What is the trade-off of SCD Type 1 vs Type 2?", options: ["Type 1 is slower but more accurate", "Type 1 is simple but loses history; Type 2 preserves full history but doubles rows and requires surrogate key joins", "Type 1 requires more storage than Type 2", "They are equivalent  -  just different naming conventions"], correct: 1 },
           ]} />
           {completeBtn('prod-scd')}
         </section>
@@ -513,7 +513,7 @@ spark.sql("""
             <p className="topic-desc">Automating deployment of ADF pipelines, Databricks notebooks, and dbt models with Azure DevOps. Blue/green deployments, feature flags, and safe rollback strategies.</p>
           </div>
           <CiCdAnimation />
-          <CodeBlock lang="yaml">{`# azure-pipelines.yml — CI/CD for Databricks + ADF
+          <CodeBlock lang="yaml">{`# azure-pipelines.yml  -  CI/CD for Databricks + ADF
 trigger:
   branches:
     include: [main, release/*]
@@ -625,7 +625,7 @@ row_count_diff = spark.sql("""
 """).collect()[0]
 
 if abs(row_count_diff.green - row_count_diff.blue) / row_count_diff.blue > 0.01:
-    raise ValueError("Row count divergence > 1% — aborting cutover")
+    raise ValueError("Row count divergence > 1%  -  aborting cutover")
 
 # Step 3: Atomic cutover using Delta table clone + rename
 spark.sql("ALTER TABLE gold.fact_orders RENAME TO gold.fact_orders_blue_backup")
@@ -647,7 +647,7 @@ def process_orders(df):
     return dedup_v1(df)        # stable production logic`}</CodeBlock>
           <Quiz topicId="prod-cicd" questions={[
             { question: "What is the purpose of a manual approval gate in a CI/CD pipeline?", options: ["To slow down deployments deliberately", "To require a human to explicitly approve before deploying to production, preventing accidental releases", "To run additional automated tests", "To notify stakeholders via email"], correct: 1 },
-            { question: "What is blue/green deployment in the context of data pipelines?", options: ["Using two different cloud providers", "Maintaining two versions of a table simultaneously — validating the new (green) before atomically switching production traffic to it", "Coloring code by environment", "Running batch and streaming in parallel"], correct: 1 },
+            { question: "What is blue/green deployment in the context of data pipelines?", options: ["Using two different cloud providers", "Maintaining two versions of a table simultaneously  -  validating the new (green) before atomically switching production traffic to it", "Coloring code by environment", "Running batch and streaming in parallel"], correct: 1 },
             { question: "Why should CI/CD pipelines for data include integration tests against staging, not just unit tests?", options: ["Unit tests are not useful for data pipelines", "Integration tests catch issues like schema mismatches, connectivity failures, and data quality problems that only appear with real infrastructure", "Staging tests are faster than unit tests", "Unit tests cannot test Python code"], correct: 1 },
           ]} />
           {completeBtn('prod-cicd')}
@@ -658,7 +658,7 @@ def process_orders(df):
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Testing Strategy</h1>
-            <p className="topic-desc">Unit tests with PySpark, data quality validation with Great Expectations, contract testing, and the testing pyramid for data pipelines — how to ship with confidence.</p>
+            <p className="topic-desc">Unit tests with PySpark, data quality validation with Great Expectations, contract testing, and the testing pyramid for data pipelines  -  how to ship with confidence.</p>
           </div>
           <CodeBlock lang="text">{`TESTING PYRAMID FOR DATA PIPELINES
 ═══════════════════════════════════════════════════════════════
@@ -705,7 +705,7 @@ def test_clean_orders_drops_null_order_id(spark):
     raw = spark.createDataFrame([
         {"order_id": "A1", "amount": 100.0},
         {"order_id": None, "amount": 50.0},   # should be dropped
-        {"order_id": "A3", "amount": 0.0},    # zero amount — keep but flag
+        {"order_id": "A3", "amount": 0.0},    # zero amount  -  keep but flag
     ])
     result = clean_orders(raw)
     assert result.filter(F.col("order_id").isNull()).count() == 0
@@ -749,7 +749,7 @@ if not results.success:
     raise ValueError(f"Data quality check failed: {[r.expectation_config.type for r in failed]}")`}</CodeBlock>
           <Quiz topicId="prod-testing" questions={[
             { question: "Why should unit tests for Spark transformations use small DataFrames created in code rather than reading from files?", options: ["File reads are not supported in test environments", "In-memory DataFrames make tests fast, deterministic, and independent of external data sources", "Spark cannot read files in local mode", "Files are too large for unit tests"], correct: 1 },
-            { question: "What is the purpose of data quality tests that run in production (not just CI)?", options: ["To replace unit tests", "To continuously validate that production data meets business rules — catching upstream changes, schema drift, and data corruption that CI cannot simulate", "To test the CI pipeline itself", "To measure pipeline performance"], correct: 1 },
+            { question: "What is the purpose of data quality tests that run in production (not just CI)?", options: ["To replace unit tests", "To continuously validate that production data meets business rules  -  catching upstream changes, schema drift, and data corruption that CI cannot simulate", "To test the CI pipeline itself", "To measure pipeline performance"], correct: 1 },
             { question: "What does a contract test verify?", options: ["That the pipeline completes within SLA", "That a producer's schema changes haven't broken downstream consumers who depend on specific columns/types", "That unit tests pass", "That data is encrypted"], correct: 1 },
           ]} />
           {completeBtn('prod-testing')}
@@ -760,7 +760,7 @@ if not results.success:
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">dbt (data build tool)</h1>
-            <p className="topic-desc">dbt transforms raw data in your warehouse using SQL. It handles dependency resolution, testing, documentation, and lineage — the backbone of the modern data stack's transformation layer.</p>
+            <p className="topic-desc">dbt transforms raw data in your warehouse using SQL. It handles dependency resolution, testing, documentation, and lineage  -  the backbone of the modern data stack's transformation layer.</p>
           </div>
           <CodeBlock lang="yaml">{`# dbt project structure
 my_project/
@@ -846,7 +846,7 @@ final AS (
 )
 SELECT * FROM final
 
--- schema.yml — column documentation + built-in tests
+-- schema.yml  -  column documentation + built-in tests
 version: 2
 models:
   - name: stg_orders
@@ -868,9 +868,9 @@ models:
           - accepted_values:
               values: ['pending', 'shipped', 'delivered', 'cancelled']`}</CodeBlock>
           <Quiz topicId="prod-dbt" questions={[
-            { question: "What does the is_incremental() macro do in a dbt model?", options: ["It creates an index on the table", "It filters the query to only process new/changed records when the table already exists — enabling efficient incremental loads without full refreshes", "It enables parallel execution", "It partitions the output table"], correct: 1 },
+            { question: "What does the is_incremental() macro do in a dbt model?", options: ["It creates an index on the table", "It filters the query to only process new/changed records when the table already exists  -  enabling efficient incremental loads without full refreshes", "It enables parallel execution", "It partitions the output table"], correct: 1 },
             { question: "What is the difference between dbt ref() and source()?", options: ["They are identical", "ref() points to another dbt model (creates DAG dependency); source() points to raw upstream tables outside dbt's control", "source() is for streaming data, ref() is for batch", "ref() is deprecated in favor of source()"], correct: 1 },
-            { question: "Why use materialized: view for staging models instead of table?", options: ["Views are faster than tables", "Staging models are simple transformations — views avoid duplicating storage and always reflect the latest source data without running a job", "Tables don't support staging data", "Views have better test coverage"], correct: 1 },
+            { question: "Why use materialized: view for staging models instead of table?", options: ["Views are faster than tables", "Staging models are simple transformations  -  views avoid duplicating storage and always reflect the latest source data without running a job", "Tables don't support staging data", "Views have better test coverage"], correct: 1 },
           ]} />
           {completeBtn('prod-dbt')}
         </section>
@@ -880,9 +880,9 @@ models:
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Infrastructure as Code (Terraform)</h1>
-            <p className="topic-desc">Provisioning Azure data platform resources with Terraform — ADLS Gen2, Databricks workspaces, ADF, Key Vault, and networking. State management, modules, and workspace patterns.</p>
+            <p className="topic-desc">Provisioning Azure data platform resources with Terraform  -  ADLS Gen2, Databricks workspaces, ADF, Key Vault, and networking. State management, modules, and workspace patterns.</p>
           </div>
-          <CodeBlock lang="hcl">{`# terraform/main.tf — Azure Data Platform
+          <CodeBlock lang="hcl">{`# terraform/main.tf  -  Azure Data Platform
 terraform {
   required_providers {
     azurerm = { source = "hashicorp/azurerm", version = "~> 3.90" }
@@ -892,7 +892,7 @@ terraform {
     resource_group_name  = "rg-terraform-state"
     storage_account_name = "sttfstatedataplatform"
     container_name       = "tfstate"
-    key                  = "prod.terraform.tfstate"   # remote state — team safe
+    key                  = "prod.terraform.tfstate"   # remote state  -  team safe
   }
 }
 
@@ -974,17 +974,17 @@ locals {
 terraform workspace new staging
 terraform workspace new production
 
-# Plan — see what will change before applying
+# Plan  -  see what will change before applying
 terraform plan -var-file=environments/staging.tfvars -out=staging.plan
 
-# Apply — provision infrastructure
+# Apply  -  provision infrastructure
 terraform apply staging.plan
 
-# Destroy (careful — use workspace isolation!)
+# Destroy (careful  -  use workspace isolation!)
 terraform workspace select staging
 terraform destroy -var-file=environments/staging.tfvars
 
-# Module pattern — reuse across environments
+# Module pattern  -  reuse across environments
 # modules/databricks-job/main.tf defines a parameterized Databricks job
 # Call it from root:
 module "silver_orders_job" {
@@ -996,8 +996,8 @@ module "silver_orders_job" {
   environment    = var.environment
 }`}</CodeBlock>
           <Quiz topicId="prod-terraform" questions={[
-            { question: "Why store Terraform state in Azure Blob Storage (remote backend) instead of locally?", options: ["Local state files are too large", "Remote state enables team collaboration — multiple engineers can run Terraform safely with state locking to prevent concurrent conflicts", "Local state doesn't support variables", "Azure requires remote state for compliance"], correct: 1 },
-            { question: "What does terraform plan do and why is it important before applying?", options: ["It runs unit tests", "It shows exactly what resources will be created, modified, or destroyed — lets you verify changes before touching production infrastructure", "It validates HCL syntax only", "It deploys to staging automatically"], correct: 1 },
+            { question: "Why store Terraform state in Azure Blob Storage (remote backend) instead of locally?", options: ["Local state files are too large", "Remote state enables team collaboration  -  multiple engineers can run Terraform safely with state locking to prevent concurrent conflicts", "Local state doesn't support variables", "Azure requires remote state for compliance"], correct: 1 },
+            { question: "What does terraform plan do and why is it important before applying?", options: ["It runs unit tests", "It shows exactly what resources will be created, modified, or destroyed  -  lets you verify changes before touching production infrastructure", "It validates HCL syntax only", "It deploys to staging automatically"], correct: 1 },
             { question: "What is the purpose of Terraform workspaces?", options: ["They store secret variables", "They allow isolated state per environment (dev/staging/prod) from a single configuration, preventing accidental cross-environment changes", "They replace modules", "They enable parallel resource creation"], correct: 1 },
           ]} />
           {completeBtn('prod-terraform')}
@@ -1013,12 +1013,12 @@ module "silver_orders_job" {
           <CodeBlock lang="text">{`SECURITY LAYERS FOR AZURE DATA PLATFORMS
 ═══════════════════════════════════════════════════════════════
 Network Security
-  Private endpoints: ADLS, Databricks, ADF — no public internet exposure
+  Private endpoints: ADLS, Databricks, ADF  -  no public internet exposure
   VNet injection: Databricks clusters in your VNet
   NSG rules: deny all inbound; allow only required outbound
   Private DNS zones: resolve storage/databricks privately
 
-Identity & Access (use Managed Identities — never store secrets!)
+Identity & Access (use Managed Identities  -  never store secrets!)
   System-assigned MI: ADF instance → ADLS RBAC (Storage Blob Data Contributor)
   User-assigned MI: shared across multiple services; easier rotation
   Service Principal: for CI/CD pipelines; rotate secrets every 90 days
@@ -1031,7 +1031,7 @@ Data Access Control (Unity Catalog)
   Column masks: PII columns return masked values for non-privileged users
 
 Encryption
-  At rest: Azure Storage Service Encryption (AES-256) — on by default
+  At rest: Azure Storage Service Encryption (AES-256)  -  on by default
   Customer-managed keys (CMK): bring your own key to Key Vault
   In transit: TLS 1.2 minimum enforced on all endpoints
   Column-level: encrypt before storing (application-level) for highest sensitivity
@@ -1042,10 +1042,10 @@ PII Handling Strategy
   Pseudonymize: hash or tokenize PII at Bronze layer; keep mapping in secure table
   Mask: dynamic data masking in Unity Catalog for analytics consumers
   Audit: log all access to PII tables (Diagnostic Settings → Log Analytics)`}</CodeBlock>
-          <CodeBlock lang="python">{`# MANAGED IDENTITY — ADF reading from ADLS (no credentials)
+          <CodeBlock lang="python">{`# MANAGED IDENTITY  -  ADF reading from ADLS (no credentials)
 # In ADF linked service: Authentication = Managed Identity
 # In ADLS IAM: assign "Storage Blob Data Contributor" to ADF's MI
-# No passwords stored anywhere — MI token is auto-rotated by Azure
+# No passwords stored anywhere  -  MI token is auto-rotated by Azure
 
 # KEY VAULT INTEGRATION in Databricks
 # 1. Create Key Vault-backed secret scope in Databricks:
@@ -1053,11 +1053,11 @@ PII Handling Strategy
 #    --resource-id /subscriptions/.../resourceGroups/.../providers/Microsoft.KeyVault/vaults/kv-data-prod
 #    --dns-name https://kv-data-prod.vault.azure.net/
 
-# 2. Use in notebooks — secret never appears in logs or outputs
+# 2. Use in notebooks  -  secret never appears in logs or outputs
 db_password = dbutils.secrets.get(scope="kv-scope", key="sql-db-password")
 jdbc_url = f"jdbc:sqlserver://server.database.windows.net;password={db_password}"
 
-# UNITY CATALOG — ROW LEVEL SECURITY
+# UNITY CATALOG  -  ROW LEVEL SECURITY
 # Row filter: each user only sees their own region's data
 spark.sql("""
   CREATE OR REPLACE ROW FILTER region_filter ON gold.fact_sales
@@ -1069,7 +1069,7 @@ spark.sql("""
   SET ROW FILTER region_filter ON ()
 """)
 
-# COLUMN MASKING — PII fields masked for non-privileged users
+# COLUMN MASKING  -  PII fields masked for non-privileged users
 spark.sql("""
   CREATE OR REPLACE FUNCTION mask_email(email STRING)
   RETURNS STRING
@@ -1088,7 +1088,7 @@ spark.sql("""
 import hashlib
 
 def pseudonymize(df, pii_cols: list[str], salt: str):
-    """Replace PII with deterministic hash — reversible only with mapping table"""
+    """Replace PII with deterministic hash  -  reversible only with mapping table"""
     for col in pii_cols:
         df = df.withColumn(col,
             F.sha2(F.concat(F.col(col), F.lit(salt)), 256))
@@ -1096,9 +1096,9 @@ def pseudonymize(df, pii_cols: list[str], salt: str):
 
 bronze_df = pseudonymize(raw_df, ["email", "phone", "ssn"], salt=dbutils.secrets.get("kv-scope", "pii-salt"))`}</CodeBlock>
           <Quiz topicId="prod-security" questions={[
-            { question: "Why should you use Managed Identities instead of service principal client secrets for ADF to ADLS access?", options: ["Managed identities are faster", "Managed identities have no credentials to steal, rotate, or accidentally commit to Git — Azure handles the token lifecycle automatically", "Service principals don't work with ADLS", "Managed identities have more permissions"], correct: 1 },
-            { question: "What is the difference between column masking and column encryption?", options: ["They are the same thing", "Masking hides data at query time based on user role (data still stored in plain text); encryption stores data in encrypted form — requires key to read", "Masking is for strings, encryption is for numbers", "Column encryption is not supported in Databricks"], correct: 1 },
-            { question: "What is PII pseudonymization and when is it used?", options: ["Deleting PII columns entirely", "Replacing PII with a deterministic hash — data remains useful for analysis (same customer = same hash) but cannot be reversed without the mapping table", "Encrypting the entire Delta table", "Adding a watermark to data exports"], correct: 1 },
+            { question: "Why should you use Managed Identities instead of service principal client secrets for ADF to ADLS access?", options: ["Managed identities are faster", "Managed identities have no credentials to steal, rotate, or accidentally commit to Git  -  Azure handles the token lifecycle automatically", "Service principals don't work with ADLS", "Managed identities have more permissions"], correct: 1 },
+            { question: "What is the difference between column masking and column encryption?", options: ["They are the same thing", "Masking hides data at query time based on user role (data still stored in plain text); encryption stores data in encrypted form  -  requires key to read", "Masking is for strings, encryption is for numbers", "Column encryption is not supported in Databricks"], correct: 1 },
+            { question: "What is PII pseudonymization and when is it used?", options: ["Deleting PII columns entirely", "Replacing PII with a deterministic hash  -  data remains useful for analysis (same customer = same hash) but cannot be reversed without the mapping table", "Encrypting the entire Delta table", "Adding a watermark to data exports"], correct: 1 },
           ]} />
           {completeBtn('prod-security')}
         </section>
@@ -1108,10 +1108,10 @@ bronze_df = pseudonymize(raw_df, ["email", "phone", "ssn"], salt=dbutils.secrets
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Observability</h1>
-            <p className="topic-desc">The three pillars of observability — metrics, logs, and traces — applied to data pipelines. OpenTelemetry, Azure Monitor, Log Analytics, and distributed tracing across ADF and Databricks.</p>
+            <p className="topic-desc">The three pillars of observability  -  metrics, logs, and traces  -  applied to data pipelines. OpenTelemetry, Azure Monitor, Log Analytics, and distributed tracing across ADF and Databricks.</p>
           </div>
           <ObservabilityAnimation />
-          <CodeBlock lang="python">{`# STRUCTURED LOGGING — machine-readable, queryable in Log Analytics
+          <CodeBlock lang="python">{`# STRUCTURED LOGGING  -  machine-readable, queryable in Log Analytics
 import logging
 import json
 from datetime import datetime
@@ -1146,7 +1146,7 @@ log.log("INFO", "batch_complete",
     duration_seconds=42.3,
     bad_records=quarantine_count)
 
-# METRICS — write to Delta table for dashboarding
+# METRICS  -  write to Delta table for dashboarding
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType, TimestampType
 
 metrics_schema = StructType([
@@ -1167,7 +1167,7 @@ def emit_metric(pipeline: str, run_id: str, name: str, value: float):
 emit_metric("silver_orders", run_id, "row_count", row_count)
 emit_metric("silver_orders", run_id, "bad_record_rate", quarantine_count / row_count)
 
-# AZURE MONITOR — send custom metrics via REST API
+# AZURE MONITOR  -  send custom metrics via REST API
 import requests
 
 def send_azure_metric(metric_name: str, value: float, resource_id: str, token: str):
@@ -1180,7 +1180,7 @@ def send_azure_metric(metric_name: str, value: float, resource_id: str, token: s
     requests.post(url, json=payload, headers={"Authorization": f"Bearer {token}"})`}</CodeBlock>
           <CodeBlock lang="sql">{`-- OBSERVABILITY DASHBOARD QUERIES (Log Analytics / Databricks SQL)
 
--- Pipeline health trend — last 7 days
+-- Pipeline health trend  -  last 7 days
 SELECT
     date(recorded_at)           AS run_date,
     pipeline_name,
@@ -1210,9 +1210,9 @@ LEFT JOIN (
 WHERE r.last_run IS NULL
    OR r.last_run < current_timestamp() - MAKE_INTERVAL(hours => p.expected_frequency_hours + 1);`}</CodeBlock>
           <Quiz topicId="prod-observability" questions={[
-            { question: "What are the three pillars of observability and how do they differ?", options: ["CPU, Memory, Disk — hardware metrics", "Metrics (aggregated numbers over time), Logs (discrete events with context), Traces (request flow across services) — together they answer 'what, why, where'", "Input, Process, Output — pipeline stages", "Bronze, Silver, Gold — data quality layers"], correct: 1 },
-            { question: "Why use structured (JSON) logging instead of plain text messages?", options: ["JSON is smaller than plain text", "Structured logs are machine-parseable — Log Analytics, Splunk, and dashboards can query specific fields without regex parsing", "Plain text logging is deprecated", "JSON logs are automatically encrypted"], correct: 1 },
-            { question: "What is the value of writing pipeline metrics to a Delta table?", options: ["Delta tables compress metrics better", "It enables SQL-based trend analysis, anomaly detection, and SLA monitoring over historical runs — the same tools used for business data", "Metrics must be in Delta format for Azure Monitor", "Delta tables automatically alert on thresholds"], correct: 1 },
+            { question: "What are the three pillars of observability and how do they differ?", options: ["CPU, Memory, Disk  -  hardware metrics", "Metrics (aggregated numbers over time), Logs (discrete events with context), Traces (request flow across services)  -  together they answer 'what, why, where'", "Input, Process, Output  -  pipeline stages", "Bronze, Silver, Gold  -  data quality layers"], correct: 1 },
+            { question: "Why use structured (JSON) logging instead of plain text messages?", options: ["JSON is smaller than plain text", "Structured logs are machine-parseable  -  Log Analytics, Splunk, and dashboards can query specific fields without regex parsing", "Plain text logging is deprecated", "JSON logs are automatically encrypted"], correct: 1 },
+            { question: "What is the value of writing pipeline metrics to a Delta table?", options: ["Delta tables compress metrics better", "It enables SQL-based trend analysis, anomaly detection, and SLA monitoring over historical runs  -  the same tools used for business data", "Metrics must be in Delta format for Azure Monitor", "Delta tables automatically alert on thresholds"], correct: 1 },
           ]} />
           {completeBtn('prod-observability')}
         </section>
@@ -1224,13 +1224,13 @@ WHERE r.last_run IS NULL
             <h1 className="topic-title">Pipeline Monitoring</h1>
             <p className="topic-desc">SLA management, alerting strategies, Kafka consumer lag monitoring, ADF activity monitoring, data freshness checks, and on-call runbook patterns for data engineers.</p>
           </div>
-          <CodeBlock lang="python">{`# SLA MONITORING — alert if pipeline is late
+          <CodeBlock lang="python">{`# SLA MONITORING  -  alert if pipeline is late
 from datetime import datetime, timedelta
 import pytz
 
 def check_pipeline_sla(pipeline_name: str, expected_completion_utc: str, tolerance_minutes: int = 15):
     """
-    expected_completion_utc: "06:00" — pipeline should finish by 6am UTC daily
+    expected_completion_utc: "06:00"  -  pipeline should finish by 6am UTC daily
     tolerance_minutes: grace period before alerting
     """
     now = datetime.utcnow()
@@ -1293,7 +1293,7 @@ def check_data_freshness(table: str, ts_col: str, max_age_hours: int):
             severity="warning",
             details={"latest_record": str(result.latest_record)}
         )`}</CodeBlock>
-          <CodeBlock lang="text">{`ON-CALL RUNBOOK — Pipeline Failure Response
+          <CodeBlock lang="text">{`ON-CALL RUNBOOK  -  Pipeline Failure Response
 ═══════════════════════════════════════════════════════════════
 1. TRIAGE (first 5 min)
    - Check ADF Monitor: which activity failed? What is the error message?
@@ -1328,8 +1328,8 @@ def check_data_freshness(table: str, ts_col: str, max_age_hours: int):
    - Root cause + contributing factors + timeline
    - Action items: add monitoring, improve error handling, alert earlier`}</CodeBlock>
           <Quiz topicId="prod-monitoring" questions={[
-            { question: "What is SLA tolerance in pipeline monitoring and why does it matter?", options: ["The maximum data size the pipeline can handle", "A grace period after the expected completion time before firing an alert — prevents false alarms from minor delays while still catching real breaches", "The percentage of records that can be invalid", "The minimum uptime percentage"], correct: 1 },
-            { question: "What does Kafka consumer lag measure?", options: ["Network latency between brokers", "The number of unprocessed messages between what the producer has written and what the consumer has committed — high lag means the consumer is falling behind", "The size of Kafka partitions", "The time to serialize messages"], correct: 1 },
+            { question: "What is SLA tolerance in pipeline monitoring and why does it matter?", options: ["The maximum data size the pipeline can handle", "A grace period after the expected completion time before firing an alert  -  prevents false alarms from minor delays while still catching real breaches", "The percentage of records that can be invalid", "The minimum uptime percentage"], correct: 1 },
+            { question: "What does Kafka consumer lag measure?", options: ["Network latency between brokers", "The number of unprocessed messages between what the producer has written and what the consumer has committed  -  high lag means the consumer is falling behind", "The size of Kafka partitions", "The time to serialize messages"], correct: 1 },
             { question: "How do you safely recover a Delta table after a bad pipeline run?", options: ["Delete all data and reload from source", "Use RESTORE TABLE gold.fact TO VERSION AS OF <n> to roll back to the last-known-good version using Delta's transaction log", "Drop and recreate the table", "Manually delete bad partitions"], correct: 1 },
           ]} />
           {completeBtn('prod-monitoring')}
@@ -1352,7 +1352,7 @@ RTO (Recovery Time Objective)
 RPO (Recovery Point Objective)
   Maximum acceptable data loss (measured in time)
   Example: "We can afford to lose at most 1 hour of data"
-  Drives: backup frequency — if RPO=1h, take snapshots at least hourly
+  Drives: backup frequency  -  if RPO=1h, take snapshots at least hourly
 
 Tier examples for data platforms:
   Critical (financial reporting): RTO 2h, RPO 15min
@@ -1361,11 +1361,11 @@ Tier examples for data platforms:
 
 AZURE STORAGE REDUNDANCY OPTIONS
 ═══════════════════════════════════════════════════════════════
-LRS  (Locally Redundant):     3 copies, 1 datacenter — cheapest, no regional DR
-ZRS  (Zone Redundant):        3 copies, 3 zones — survives datacenter failure
-GRS  (Geo Redundant):         LRS + async copy to paired region — regional DR
-GZRS (Geo+Zone Redundant):    ZRS + async copy to paired region — highest durability
-RA-GZRS:                      GZRS + READ access to secondary — active-passive DR
+LRS  (Locally Redundant):     3 copies, 1 datacenter  -  cheapest, no regional DR
+ZRS  (Zone Redundant):        3 copies, 3 zones  -  survives datacenter failure
+GRS  (Geo Redundant):         LRS + async copy to paired region  -  regional DR
+GZRS (Geo+Zone Redundant):    ZRS + async copy to paired region  -  highest durability
+RA-GZRS:                      GZRS + READ access to secondary  -  active-passive DR
 
 Recommendation for production data platforms:
   Gold/Silver: GZRS (critical data, regional failover)
@@ -1385,7 +1385,7 @@ Strategy 2: azcopy scheduled sync (cheaper, metadata-level)
 Strategy 3: Geo-replication (automatic, Azure-managed)
   Enable GZRS on storage account; Azure continuously replicates
   Failover: update ADLS endpoint in Key Vault → all services pick up new URL`}</CodeBlock>
-          <CodeBlock lang="python">{`# DEEP CLONE BACKUP — scheduled daily via Databricks Job
+          <CodeBlock lang="python">{`# DEEP CLONE BACKUP  -  scheduled daily via Databricks Job
 from pyspark.sql import SparkSession
 from delta.tables import DeltaTable
 import logging
@@ -1414,9 +1414,9 @@ def backup_table(source_table: str, backup_path: str):
 for table, path in PROD_TABLES:
     backup_table(table, path)
 
-# RESTORE PROCEDURE — run during DR event
+# RESTORE PROCEDURE  -  run during DR event
 def restore_from_backup(backup_path: str, restore_table: str):
-    """Restore from backup — run when primary region is unavailable"""
+    """Restore from backup  -  run when primary region is unavailable"""
     spark.sql(f"""
         CREATE OR REPLACE TABLE {restore_table}
         DEEP CLONE delta.\`{backup_path}\`
@@ -1427,11 +1427,11 @@ def restore_from_backup(backup_path: str, restore_table: str):
 # ADF PIPELINE EXPORT for DR (ARM template backup)
 # az datafactory export --resource-group rg-data-prod --factory-name adf-data-prod \
 #   --output-folder ./adf-backup/$(date +%Y%m%d)
-# Store in Git repo — can redeploy entire ADF from ARM template in < 30 min`}</CodeBlock>
+# Store in Git repo  -  can redeploy entire ADF from ARM template in < 30 min`}</CodeBlock>
           <Quiz topicId="prod-disaster-recovery" questions={[
             { question: "What is the difference between RTO and RPO?", options: ["They are the same metric with different names", "RTO is the maximum acceptable downtime (how fast you recover); RPO is the maximum acceptable data loss (how much data can be lost)", "RTO applies to batch pipelines; RPO applies to streaming", "RTO is measured in rows; RPO is measured in hours"], correct: 1 },
-            { question: "Why use DEEP CLONE instead of azcopy for Delta table backups?", options: ["azcopy doesn't work with Azure", "DEEP CLONE copies both data files AND the Delta transaction log — the restored table is fully functional with history; azcopy copies raw files but may miss transaction log consistency", "DEEP CLONE is faster", "azcopy doesn't support scheduled runs"], correct: 1 },
-            { question: "For a production gold layer with RTO=4h and RPO=15min, which storage redundancy should you use?", options: ["LRS — cheapest and sufficient", "GZRS — zone-redundant with geo-replication, supports regional failover within the RTO window", "ZRS — zone redundant is sufficient", "LRS with manual backups every 15 minutes"], correct: 1 },
+            { question: "Why use DEEP CLONE instead of azcopy for Delta table backups?", options: ["azcopy doesn't work with Azure", "DEEP CLONE copies both data files AND the Delta transaction log  -  the restored table is fully functional with history; azcopy copies raw files but may miss transaction log consistency", "DEEP CLONE is faster", "azcopy doesn't support scheduled runs"], correct: 1 },
+            { question: "For a production gold layer with RTO=4h and RPO=15min, which storage redundancy should you use?", options: ["LRS  -  cheapest and sufficient", "GZRS  -  zone-redundant with geo-replication, supports regional failover within the RTO window", "ZRS  -  zone redundant is sufficient", "LRS with manual backups every 15 minutes"], correct: 1 },
           ]} />
           {completeBtn('prod-disaster-recovery')}
         </section>
@@ -1449,7 +1449,7 @@ Databricks Compute (typically 60-70% of total cost)
   ✓ Auto-termination: set 30min idle timeout on all interactive clusters
   ✓ Spot/preemptible workers: 70-90% cheaper for non-critical batch jobs
   ✓ Right-sizing: profile job memory/CPU; don't over-provision
-  ✓ Serverless SQL: for ad-hoc queries — pay per query, no idle cluster cost
+  ✓ Serverless SQL: for ad-hoc queries  -  pay per query, no idle cluster cost
   ✓ Photon engine: faster = less runtime = fewer DBUs (break-even ~2x cost per DBU)
   ✓ Job clusters vs all-purpose: jobs use cheaper job cluster DBU rates
   ✗ Avoid: large all-purpose clusters left running overnight
@@ -1470,7 +1470,7 @@ Cost Visibility
   ✓ Azure Cost Management: set budget alerts at 80% and 100%
   ✓ Databricks Cost Management: per-cluster cost attribution
   ✓ Chargeback: query ops.pipeline_metrics to allocate DBU cost to teams`}</CodeBlock>
-          <CodeBlock lang="python">{`# DELTA MAINTENANCE — run weekly to control storage costs
+          <CodeBlock lang="python">{`# DELTA MAINTENANCE  -  run weekly to control storage costs
 def optimize_and_vacuum(tables: list[str], vacuum_retain_hours: int = 168):
     """
     OPTIMIZE: compacts small files into target file size (1GB default)
@@ -1481,7 +1481,7 @@ def optimize_and_vacuum(tables: list[str], vacuum_retain_hours: int = 168):
         print(f"Optimizing {table}...")
         # OPTIMIZE with Z-ORDER on most common filter columns
         spark.sql(f"OPTIMIZE {table} ZORDER BY (order_date, customer_id)")
-        # VACUUM — removes orphaned and old version files
+        # VACUUM  -  removes orphaned and old version files
         spark.sql(f"VACUUM {table} RETAIN {vacuum_retain_hours} HOURS")
         print(f"  Done. Table size: {get_table_size_gb(table):.1f} GB")
 
@@ -1489,7 +1489,7 @@ def get_table_size_gb(table: str) -> float:
     details = spark.sql(f"DESCRIBE DETAIL {table}").collect()[0]
     return details.sizeInBytes / (1024**3)
 
-# STORAGE LIFECYCLE — tier old Bronze to Cool storage
+# STORAGE LIFECYCLE  -  tier old Bronze to Cool storage
 # ARM template / Terraform
 lifecycle_policy = {
     "rules": [{
@@ -1536,9 +1536,9 @@ spark.sql("""
   ORDER BY 4 DESC
 """)`}</CodeBlock>
           <Quiz topicId="prod-cost" questions={[
-            { question: "What is the primary purpose of running OPTIMIZE on a Delta table?", options: ["To improve data security", "To compact many small files into fewer large files — reducing storage overhead and improving query scan performance (less file listing overhead)", "To validate data quality", "To encrypt the table"], correct: 1 },
+            { question: "What is the primary purpose of running OPTIMIZE on a Delta table?", options: ["To improve data security", "To compact many small files into fewer large files  -  reducing storage overhead and improving query scan performance (less file listing overhead)", "To validate data quality", "To encrypt the table"], correct: 1 },
             { question: "Why should batch Databricks jobs use job clusters instead of all-purpose clusters?", options: ["Job clusters support more workers", "Job clusters are billed at a lower DBU rate, auto-terminate when the job finishes, and don't accumulate idle time costs", "All-purpose clusters don't support batch jobs", "Job clusters have faster startup times"], correct: 1 },
-            { question: "What is the value of tagging Azure resources with team, pipeline_name, and cost_center?", options: ["Tags improve resource performance", "Tags enable cost attribution — you can query Azure Cost Management to see exactly which team or pipeline is driving costs, enabling chargeback and optimization", "Tags are required for Databricks to work", "Tags reduce storage costs automatically"], correct: 1 },
+            { question: "What is the value of tagging Azure resources with team, pipeline_name, and cost_center?", options: ["Tags improve resource performance", "Tags enable cost attribution  -  you can query Azure Cost Management to see exactly which team or pipeline is driving costs, enabling chargeback and optimization", "Tags are required for Databricks to work", "Tags reduce storage costs automatically"], correct: 1 },
           ]} />
           {completeBtn('prod-cost')}
         </section>
@@ -1565,22 +1565,22 @@ PARTITION STRATEGY
   Rule of thumb: target 100-200MB per partition
   Formula: partitions = max(numCores * 2, shuffleBytes / 200MB)
 
-PREDICATE PUSHDOWN — filter as early as possible
+PREDICATE PUSHDOWN  -  filter as early as possible
   Delta: stats in transaction log → skip entire files before reading
   Parquet: row group statistics → skip row groups
   Must filter on partition columns AND Z-ORDER columns for max benefit
 
-FILE SIZE — aim for ~1GB Parquet files in Delta
+FILE SIZE  -  aim for ~1GB Parquet files in Delta
   Too small (<128MB): file listing overhead dominates read time
   Too large (>2GB): spill to disk during reads; slow GC
   Fix: OPTIMIZE compacts; auto-optimize in Databricks cluster config
 
-BROADCAST JOIN — avoid shuffle for small tables
+BROADCAST JOIN  -  avoid shuffle for small tables
   If one side < spark.sql.autoBroadcastJoinThreshold (default 10MB)
     → Spark auto-broadcasts; no shuffle
   Force with hint: df.join(broadcast(dim_df), ...)
   Rule: always broadcast dims < 100MB; never broadcast tables > 500MB`}</CodeBlock>
-          <CodeBlock lang="python">{`# READING THE SPARK UI — what to look for
+          <CodeBlock lang="python">{`# READING THE SPARK UI  -  what to look for
 # Access at: https://<cluster-id>.azuredatabricks.net/spark-ui (or :4040 locally)
 
 # Red flags in Spark UI:
@@ -1593,16 +1593,16 @@ BROADCAST JOIN — avoid shuffle for small tables
 # 4. Input/Output ratio: small input producing massive shuffle output
 #    Fix: push filters earlier; use columnar pruning
 
-# ADAPTIVE QUERY EXECUTION (AQE) — enable in all production jobs
+# ADAPTIVE QUERY EXECUTION (AQE)  -  enable in all production jobs
 spark.conf.set("spark.sql.adaptive.enabled", "true")
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
 spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")
 
 # PARTITION TUNING
 spark.conf.set("spark.sql.shuffle.partitions", "400")  # tune per job size
-# Or let AQE set it dynamically — preferred
+# Or let AQE set it dynamically  -  preferred
 
-# BROADCAST JOIN — explicit hint for joins just over auto-threshold
+# BROADCAST JOIN  -  explicit hint for joins just over auto-threshold
 from pyspark.sql.functions import broadcast
 
 result = large_fact.join(
@@ -1610,7 +1610,7 @@ result = large_fact.join(
     "customer_id"
 )
 
-# SALTING — fix skewed joins (one key has 80% of data)
+# SALTING  -  fix skewed joins (one key has 80% of data)
 import pyspark.sql.functions as F
 
 N_SALT = 20
@@ -1624,7 +1624,7 @@ exploded_dim = (small_dim
 
 result = salted_fact.join(exploded_dim, "salted_key").drop("salt", "salted_key")
 
-# DELTA Z-ORDER — co-locate data for common query patterns
+# DELTA Z-ORDER  -  co-locate data for common query patterns
 # Run after OPTIMIZE; statistics guide file skipping
 spark.sql("""
     OPTIMIZE gold.fact_orders
@@ -1632,16 +1632,16 @@ spark.sql("""
     -- Now queries filtering by order_date AND/OR customer_id skip most files
 """)
 
-# BLOOM FILTER — probabilistic index for high-cardinality string columns
+# BLOOM FILTER  -  probabilistic index for high-cardinality string columns
 spark.sql("""
     CREATE BLOOMFILTER INDEX ON TABLE gold.fact_orders
     FOR COLUMNS(transaction_id OPTIONS (fpr=0.01, numItems=10000000))
     -- fpr: false positive rate (1%); trade-off: index size vs effectiveness
 """)`}</CodeBlock>
           <Quiz topicId="prod-performance" questions={[
-            { question: "What causes data skew in Spark and how do you fix it?", options: ["Too many executors processing the same data", "One or a few keys (e.g., 'NULL' or a large customer) containing a disproportionate share of records — causes one task to run 10x longer; fix with salting (add random prefix to keys) or AQE skew join hint", "Using the wrong file format", "Having too many small files"], correct: 1 },
-            { question: "When should you use a broadcast join?", options: ["Always — broadcast joins are always faster", "When one side of the join is small (< ~100-200MB) — broadcasting it to all executors eliminates the shuffle, which is the most expensive operation", "Only for outer joins", "When both tables are large"], correct: 1 },
-            { question: "What does Z-ORDER do and what are its limitations?", options: ["It sorts the Delta table by row count", "It co-locates related rows in the same files so Delta can skip more files when filtering — only effective on columns you frequently filter on, and must be re-run after new data arrives (not automatic)", "It creates a B-tree index on specified columns", "It compresses Delta files more aggressively"], correct: 1 },
+            { question: "What causes data skew in Spark and how do you fix it?", options: ["Too many executors processing the same data", "One or a few keys (e.g., 'NULL' or a large customer) containing a disproportionate share of records  -  causes one task to run 10x longer; fix with salting (add random prefix to keys) or AQE skew join hint", "Using the wrong file format", "Having too many small files"], correct: 1 },
+            { question: "When should you use a broadcast join?", options: ["Always  -  broadcast joins are always faster", "When one side of the join is small (< ~100-200MB)  -  broadcasting it to all executors eliminates the shuffle, which is the most expensive operation", "Only for outer joins", "When both tables are large"], correct: 1 },
+            { question: "What does Z-ORDER do and what are its limitations?", options: ["It sorts the Delta table by row count", "It co-locates related rows in the same files so Delta can skip more files when filtering  -  only effective on columns you frequently filter on, and must be re-run after new data arrives (not automatic)", "It creates a B-tree index on specified columns", "It compresses Delta files more aggressively"], correct: 1 },
           ]} />
           {completeBtn('prod-performance')}
         </section>
@@ -1651,10 +1651,10 @@ spark.sql("""
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Data Contracts</h1>
-            <p className="topic-desc">Formal agreements between data producers and consumers — defining schema, SLAs, quality expectations, and versioning. The tool that prevents silent data breakage at scale.</p>
+            <p className="topic-desc">Formal agreements between data producers and consumers  -  defining schema, SLAs, quality expectations, and versioning. The tool that prevents silent data breakage at scale.</p>
           </div>
           <DataContractAnimation />
-          <CodeBlock lang="yaml">{`# data-contract.yaml — orders_events topic contract
+          <CodeBlock lang="yaml">{`# data-contract.yaml  -  orders_events topic contract
 # Follows the Data Contract Specification (datacontract.com)
 dataContractSpecification: 0.9.3
 id: urn:datacontract:orders:events:v2
@@ -1712,7 +1712,7 @@ quality:
   - type: sql
     query: "SELECT COUNT(*) FROM orders_events WHERE total_amount < 0"
     mustBe: 0`}</CodeBlock>
-          <CodeBlock lang="python">{`# CONTRACT VALIDATION — run in producer CI/CD
+          <CodeBlock lang="python">{`# CONTRACT VALIDATION  -  run in producer CI/CD
 import yaml
 import json
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -1727,7 +1727,7 @@ def validate_schema_compatibility(contract_path: str, schema_registry_url: str):
     subject = f"{contract['servers']['production']['topic']}-value"
     current_schema = sr_client.get_latest_version(subject)
 
-    # Check compatibility — FULL_TRANSITIVE means backward + forward compatible
+    # Check compatibility  -  FULL_TRANSITIVE means backward + forward compatible
     compatibility = sr_client.test_compatibility(
         subject_name=subject,
         schema=AvroSchema(json.dumps(contract_to_avro(contract)))
@@ -1763,9 +1763,9 @@ def read_with_contract_validation(topic: str, contract_path: str, spark):
 
     return df`}</CodeBlock>
           <Quiz topicId="prod-data-contracts" questions={[
-            { question: "What problem do data contracts solve in large data platforms?", options: ["They improve query performance", "They formalize the agreement between producers and consumers — preventing silent schema changes, SLA violations, and quality regressions from propagating to downstream analytics", "They replace unit tests", "They are a storage format"], correct: 1 },
+            { question: "What problem do data contracts solve in large data platforms?", options: ["They improve query performance", "They formalize the agreement between producers and consumers  -  preventing silent schema changes, SLA violations, and quality regressions from propagating to downstream analytics", "They replace unit tests", "They are a storage format"], correct: 1 },
             { question: "What does FULL_TRANSITIVE schema compatibility mean in Confluent Schema Registry?", options: ["All schemas must be identical", "New schema versions must be both backward-compatible (old consumers can read new data) AND forward-compatible (new consumers can read old data)", "Only the latest version is kept", "Schemas are automatically generated"], correct: 1 },
-            { question: "At what stage of the pipeline should contract validation ideally run?", options: ["Only in production after data has been processed", "In the producer's CI/CD pipeline BEFORE deployment — catching contract violations before they reach production consumers", "Only when a consumer reports a problem", "During the nightly data quality batch"], correct: 1 },
+            { question: "At what stage of the pipeline should contract validation ideally run?", options: ["Only in production after data has been processed", "In the producer's CI/CD pipeline BEFORE deployment  -  catching contract violations before they reach production consumers", "Only when a consumer reports a problem", "During the nightly data quality batch"], correct: 1 },
           ]} />
           {completeBtn('prod-data-contracts')}
         </section>
@@ -1781,7 +1781,7 @@ def read_with_contract_validation(topic: str, contract_path: str, spark):
 ═══════════════════════════════════════════════════════════════
 Data Platform Team (central, enabling)
   Provides: infrastructure, Unity Catalog, CI/CD tooling, standards
-  Does NOT own: business data products — that's domain teams' job
+  Does NOT own: business data products  -  that's domain teams' job
   SLA to domains: <4h P1 incident response; 99.5% platform uptime
 
 Domain Data Teams (distributed, owning)
@@ -1823,7 +1823,7 @@ DATA LINEAGE
   ADF: pipeline-level lineage to Azure Purview
   dbt: full DAG lineage built-in (dbt docs serve)
   Value: impact analysis before breaking changes; root cause for bad data`}</CodeBlock>
-          <CodeBlock lang="python">{`# DATA CATALOG — Unity Catalog tagging for discoverability
+          <CodeBlock lang="python">{`# DATA CATALOG  -  Unity Catalog tagging for discoverability
 spark.sql("""
   ALTER TABLE gold.fact_orders
   SET TAGS (
@@ -1842,7 +1842,7 @@ spark.sql("""
   ALTER COLUMN email SET TAGS ('pii_type' = 'email', 'gdpr_subject' = 'true')
 """)
 
-# DATA LINEAGE — track custom lineage for non-SQL pipelines
+# DATA LINEAGE  -  track custom lineage for non-SQL pipelines
 from pyapacheatlas.auth import ServicePrincipalAuthentication
 from pyapacheatlas.core import PurviewClient
 
@@ -1861,7 +1861,7 @@ def register_pipeline_lineage(adf_run_id: str, source_table: str, target_table: 
         }
     }])
 
-# IMPACT ANALYSIS — find all downstream tables before changing a schema
+# IMPACT ANALYSIS  -  find all downstream tables before changing a schema
 downstream_query = spark.sql("""
   SELECT DISTINCT target_table, pipeline_name, team, owner_email
   FROM ops.lineage_graph
@@ -1870,9 +1870,9 @@ downstream_query = spark.sql("""
 """)
 # Output: notify owners of all 14 downstream tables before schema change`}</CodeBlock>
           <Quiz topicId="prod-patterns" questions={[
-            { question: "What is the core principle of the Data Product thinking model?", options: ["Every table should be owned by the central data team", "Each dataset has a clear owner, published SLA, schema contract, and is treated with the same accountability as a software product — discoverable, tested, versioned", "Data products are only for Gold layer tables", "All data products must be in Parquet format"], correct: 1 },
-            { question: "What problem does Master Data Management (MDM) solve?", options: ["It compresses data for cheaper storage", "It resolves conflicting definitions of the same entity across source systems — creating a golden record so 'customer' means the same thing across CRM, ERP, and analytics", "It manages Terraform state", "It replaces dbt for SQL transformations"], correct: 1 },
-            { question: "Why is data lineage critical before making schema changes?", options: ["Lineage is required by GDPR", "Lineage shows all downstream tables and pipelines that depend on a column — enabling impact analysis so you can notify all affected teams before breaking their pipelines", "It improves query performance", "Lineage is only needed for compliance tables"], correct: 1 },
+            { question: "What is the core principle of the Data Product thinking model?", options: ["Every table should be owned by the central data team", "Each dataset has a clear owner, published SLA, schema contract, and is treated with the same accountability as a software product  -  discoverable, tested, versioned", "Data products are only for Gold layer tables", "All data products must be in Parquet format"], correct: 1 },
+            { question: "What problem does Master Data Management (MDM) solve?", options: ["It compresses data for cheaper storage", "It resolves conflicting definitions of the same entity across source systems  -  creating a golden record so 'customer' means the same thing across CRM, ERP, and analytics", "It manages Terraform state", "It replaces dbt for SQL transformations"], correct: 1 },
+            { question: "Why is data lineage critical before making schema changes?", options: ["Lineage is required by GDPR", "Lineage shows all downstream tables and pipelines that depend on a column  -  enabling impact analysis so you can notify all affected teams before breaking their pipelines", "It improves query performance", "Lineage is only needed for compliance tables"], correct: 1 },
           ]} />
           {completeBtn('prod-patterns')}
         </section>
@@ -1886,7 +1886,7 @@ downstream_query = spark.sql("""
           </div>
           <CodeBlock lang="text">{`CAPSTONE: E-COMMERCE DATA PLATFORM
 ═══════════════════════════════════════════════════════════════
-Company: ShopFast — 50M orders/month, 8M customers, 200 analysts
+Company: ShopFast  -  50M orders/month, 8M customers, 200 analysts
 Requirements:
   - Daily financial reporting by 7am UTC (RTO 2h, RPO 15min)
   - Near-real-time fraud detection feed (< 5min latency)
@@ -1923,9 +1923,9 @@ SLAs
   Fraud signal lag: < 5 minutes
   Bad record tolerance: < 0.1% before pipeline halt
   Dashboard p95 query time: < 3 seconds`}</CodeBlock>
-          <CodeBlock lang="python">{`# CAPSTONE IMPLEMENTATION — key components
+          <CodeBlock lang="python">{`# CAPSTONE IMPLEMENTATION  -  key components
 
-# 1. BRONZE INGEST — idempotent, event-driven
+# 1. BRONZE INGEST  -  idempotent, event-driven
 def ingest_orders_bronze(event: dict):
     batch_id = event["batch_id"]
     source_path = event["source_path"]
@@ -1940,7 +1940,7 @@ def ingest_orders_bronze(event: dict):
     spark.sql(f"DELETE FROM bronze.orders_events WHERE _batch_id = '{batch_id}'")
     df.write.format("delta").mode("append").saveAsTable("bronze.orders_events")
 
-# 2. SILVER PROCESSING — quality + SCD2
+# 2. SILVER PROCESSING  -  quality + SCD2
 def process_silver_orders():
     new_orders = spark.sql("""
         SELECT * FROM bronze.orders_events
@@ -1955,12 +1955,12 @@ def process_silver_orders():
     )
     bad_rate = (new_orders.count() - valid.count()) / max(new_orders.count(), 1)
     if bad_rate > 0.001:
-        raise ValueError(f"Bad record rate {bad_rate:.2%} exceeds 0.1% threshold — halting")
+        raise ValueError(f"Bad record rate {bad_rate:.2%} exceeds 0.1% threshold  -  halting")
 
     # Upsert to silver
     silver_upsert(valid, "silver.orders", key_cols=["order_id"])
 
-# 3. GOLD — daily revenue fact table
+# 3. GOLD  -  daily revenue fact table
 def build_gold_revenue():
     spark.sql("""
         CREATE OR REPLACE TABLE gold.fct_revenue_daily AS
@@ -1980,7 +1980,7 @@ def build_gold_revenue():
         GROUP BY 1, 2, 3, 4
     """)
 
-# 4. FRAUD STREAMING — < 5min latency
+# 4. FRAUD STREAMING  -  < 5min latency
 fraud_stream = (
     spark.readStream
     .format("kafka")
@@ -2008,9 +2008,9 @@ def erase_customer(customer_id: str):
             WHERE customer_id = '{customer_id}'
         """)`}</CodeBlock>
           <Quiz topicId="prod-interview-project" questions={[
-            { question: "In the capstone, why was Data Mesh rejected despite the company having 50M orders/month?", options: ["Data Mesh doesn't scale to that volume", "The engineering team size (15 DEs) is too small — Data Mesh requires domain teams mature enough to own data products independently; the overhead exceeds the benefit at this org size", "Data Mesh doesn't support GDPR", "Data Mesh requires a different cloud provider"], correct: 1 },
-            { question: "Why does the fraud pipeline use maxOffsetsPerTrigger=10,000 and a 1-minute trigger instead of continuous processing?", options: ["Continuous processing is not supported", "Micro-batch with bounded offsets implements backpressure — prevents executor OOM on traffic spikes while still meeting the 5-minute SLA; continuous processing provides no benefit here", "1-minute trigger is cheaper", "Kafka requires micro-batch mode"], correct: 1 },
-            { question: "What happens when the GDPR erasure function runs on a customer who made 3 years of purchases?", options: ["Their orders are deleted from all tables", "Their PII columns (email, phone, name) are replaced with a tombstone hash across bronze/silver/gold — order history is preserved for financial compliance but the customer is no longer identifiable", "Only the customer dimension table is updated", "The pipeline stops and waits for manual review"], correct: 1 },
+            { question: "In the capstone, why was Data Mesh rejected despite the company having 50M orders/month?", options: ["Data Mesh doesn't scale to that volume", "The engineering team size (15 DEs) is too small  -  Data Mesh requires domain teams mature enough to own data products independently; the overhead exceeds the benefit at this org size", "Data Mesh doesn't support GDPR", "Data Mesh requires a different cloud provider"], correct: 1 },
+            { question: "Why does the fraud pipeline use maxOffsetsPerTrigger=10,000 and a 1-minute trigger instead of continuous processing?", options: ["Continuous processing is not supported", "Micro-batch with bounded offsets implements backpressure  -  prevents executor OOM on traffic spikes while still meeting the 5-minute SLA; continuous processing provides no benefit here", "1-minute trigger is cheaper", "Kafka requires micro-batch mode"], correct: 1 },
+            { question: "What happens when the GDPR erasure function runs on a customer who made 3 years of purchases?", options: ["Their orders are deleted from all tables", "Their PII columns (email, phone, name) are replaced with a tombstone hash across bronze/silver/gold  -  order history is preserved for financial compliance but the customer is no longer identifiable", "Only the customer dimension table is updated", "The pipeline stops and waits for manual review"], correct: 1 },
           ]} />
           {completeBtn('prod-interview-project')}
         </section>
@@ -2020,9 +2020,9 @@ def erase_customer(customer_id: str):
           <div className="topic-header">
             <div className="topic-eyebrow">Data Modeling Mastery</div>
             <h1 className="topic-title">Star Schema Deep Dive</h1>
-            <p className="topic-desc">The star schema is the foundation of dimensional modeling in data warehousing. Its center is the grain — the single most important design decision, defining exactly what one row in your fact table represents. Everything else flows from the grain.</p>
+            <p className="topic-desc">The star schema is the foundation of dimensional modeling in data warehousing. Its center is the grain  -  the single most important design decision, defining exactly what one row in your fact table represents. Everything else flows from the grain.</p>
           </div>
-          <CodeBlock lang="text">{`THE GRAIN — MOST IMPORTANT DECISION IN DATA MODELING
+          <CodeBlock lang="text">{`THE GRAIN  -  MOST IMPORTANT DECISION IN DATA MODELING
 ═══════════════════════════════════════════════════════════════
 The grain = "what does one row in the fact table represent?"
   Too fine:  one row per order line item  → high cardinality, flexible analytics
@@ -2036,24 +2036,24 @@ FACT TABLE TYPES
 Transaction Fact (most common)
   One row per business event (order placed, item scanned, payment made)
   Grain is at the event level; append-only; highest granularity
-  Example: fact_sales — one row per product sold per transaction
+  Example: fact_sales  -  one row per product sold per transaction
 
 Periodic Snapshot
   One row per period (day/month) per entity, regardless of activity
   Used for: account balances, inventory levels, headcount
-  Example: fact_inventory_daily — one row per SKU per day
+  Example: fact_inventory_daily  -  one row per SKU per day
 
 Accumulating Snapshot
   One row per business process lifecycle (tracks stages over time)
   Row is UPDATED as the process progresses (multiple date stamps)
-  Example: fact_order_lifecycle — one row per order, columns for order_date,
+  Example: fact_order_lifecycle  -  one row per order, columns for order_date,
            ship_date, deliver_date, return_date (filled as they occur)
 
 MEASURE TYPES
 ═══════════════════════════════════════════════════════════════
 Additive:      Can SUM across all dimensions  → revenue, quantity, cost
 Semi-additive: Can SUM across some dims only  → account_balance (sum by account,
-               NOT by date — would double-count)
+               NOT by date  -  would double-count)
 Non-additive:  Cannot SUM at all             → ratios, percentages, margins
                (store margin% + store margin% ≠ total margin%)
                Strategy: store numerator + denominator; compute ratio at query time
@@ -2076,10 +2076,10 @@ Conformed Dimensions
 Role-Playing Dimensions
   Same physical dimension table used multiple times in a query with different roles
   Example: dim_date used as OrderDate, ShipDate, DeliveryDate in fact_orders
-  Implementation: create views — vw_order_date, vw_ship_date → point to dim_date
+  Implementation: create views  -  vw_order_date, vw_ship_date → point to dim_date
 
 Degenerate Dimensions
-  A dimension with no attributes beyond its key — stored on the fact table
+  A dimension with no attributes beyond its key  -  stored on the fact table
   Example: order_id, invoice_number, transaction_number on fact_sales
   No separate dimension table needed; acts as a grouping/drill-through key
 
@@ -2087,7 +2087,7 @@ Junk Dimensions
   Low-cardinality flags and indicators grouped into one dimension table
   Example: is_gift_wrap (Y/N), is_express (Y/N), payment_type (credit/debit/cash)
   Avoids cluttering fact table with many boolean columns; reduces cardinality`}</CodeBlock>
-          <CodeBlock lang="sql">{`-- RETAIL STAR SCHEMA — Full DDL
+          <CodeBlock lang="sql">{`-- RETAIL STAR SCHEMA  -  Full DDL
 -- Grain: one row per product sold per transaction (line item level)
 
 -- ── Dimension Tables ─────────────────────────────────────────────
@@ -2189,9 +2189,9 @@ WHERE od.year = 2024
 GROUP BY 1, 2, 3, 4
 ORDER BY total_net_revenue DESC;`}</CodeBlock>
           <Quiz topicId="model-star" questions={[
-            { question: "What is the 'grain' of a fact table and why is it the most important design decision?", options: ["The number of rows in the table", "The exact definition of what one row represents — it determines which dimensions are valid, which measures are additive, and whether queries will double-count data", "The primary key column type", "The partition column chosen for performance"], correct: 1 },
-            { question: "What is a role-playing dimension?", options: ["A dimension used only in staging tables", "The same physical dimension table used multiple times in one fact table under different aliases — e.g., dim_date used as order_date, ship_date, and deliver_date all in fact_orders", "A dimension that changes slowly over time", "A dimension with boolean flags grouped together"], correct: 1 },
-            { question: "Why are account balances considered semi-additive measures (not fully additive)?", options: ["They are stored as text, not numbers", "You can SUM balances across accounts (valid) but not across time periods — adding Jan balance + Feb balance double-counts the same money", "They require a separate fact table", "Semi-additive measures cannot be aggregated at all"], correct: 1 },
+            { question: "What is the 'grain' of a fact table and why is it the most important design decision?", options: ["The number of rows in the table", "The exact definition of what one row represents  -  it determines which dimensions are valid, which measures are additive, and whether queries will double-count data", "The primary key column type", "The partition column chosen for performance"], correct: 1 },
+            { question: "What is a role-playing dimension?", options: ["A dimension used only in staging tables", "The same physical dimension table used multiple times in one fact table under different aliases  -  e.g., dim_date used as order_date, ship_date, and deliver_date all in fact_orders", "A dimension that changes slowly over time", "A dimension with boolean flags grouped together"], correct: 1 },
+            { question: "Why are account balances considered semi-additive measures (not fully additive)?", options: ["They are stored as text, not numbers", "You can SUM balances across accounts (valid) but not across time periods  -  adding Jan balance + Feb balance double-counts the same money", "They require a separate fact table", "Semi-additive measures cannot be aggregated at all"], correct: 1 },
           ]} />
           {completeBtn('model-star')}
         </section>
@@ -2201,9 +2201,9 @@ ORDER BY total_net_revenue DESC;`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Data Modeling Mastery</div>
             <h1 className="topic-title">Snowflake Schema vs Star Schema</h1>
-            <p className="topic-desc">The snowflake schema normalizes dimension tables into sub-dimensions. Understanding when to use star, snowflake, or galaxy (fact constellation) schemas — and the foundational Kimball vs Inmon debate — is essential for senior data modeling interviews.</p>
+            <p className="topic-desc">The snowflake schema normalizes dimension tables into sub-dimensions. Understanding when to use star, snowflake, or galaxy (fact constellation) schemas  -  and the foundational Kimball vs Inmon debate  -  is essential for senior data modeling interviews.</p>
           </div>
-          <CodeBlock lang="text">{`SNOWFLAKE SCHEMA — NORMALIZED DIMENSIONS
+          <CodeBlock lang="text">{`SNOWFLAKE SCHEMA  -  NORMALIZED DIMENSIONS
 ═══════════════════════════════════════════════════════════════
 Snowflake: dimension tables are further normalized into sub-dimension tables.
   dim_product → dim_category → dim_department
@@ -2214,7 +2214,7 @@ Example: instead of dim_product with category_name + department_name columns,
            dim_category (category_key, category_name, dept_key)
            dim_department (dept_key, dept_name)
 
-STAR vs SNOWFLAKE — COMPARISON TABLE
+STAR vs SNOWFLAKE  -  COMPARISON TABLE
 ═══════════════════════════════════════════════════════════════
 Dimension         Star Schema              Snowflake Schema
 ──────────────    ──────────────────────   ──────────────────────────────
@@ -2234,19 +2234,19 @@ Example:
   fact_returns uses → dim_date, dim_customer, dim_product (no dim_store)
   fact_budget  uses → dim_date, dim_product, dim_department
 
-This is the real-world state of mature data warehouses — not one clean star,
+This is the real-world state of mature data warehouses  -  not one clean star,
 but a constellation of fact tables sharing conformed dimensions.
 
 KIMBALL vs INMON DEBATE
 ═══════════════════════════════════════════════════════════════
-Kimball (Ralph Kimball) — Dimensional Modeling
+Kimball (Ralph Kimball)  -  Dimensional Modeling
   Bottom-up: build data marts first; integrated via conformed dimensions
   Schema: star schemas in each data mart
   Philosophy: design for analytics users (business-friendly, fast queries)
   Process: identify business process → declare grain → choose dimensions → facts
   Adopted by: most BI-driven teams, dbt shops, Databricks Gold layer
 
-Inmon (Bill Inmon) — Corporate Information Factory
+Inmon (Bill Inmon)  -  Corporate Information Factory
   Top-down: build enterprise 3NF DW first; then dependent data marts
   Schema: 3rd Normal Form (3NF) in the central DW; star schemas in marts
   Philosophy: single source of truth first; marts are derived
@@ -2254,11 +2254,11 @@ Inmon (Bill Inmon) — Corporate Information Factory
 
 Modern Consensus (2024)
   Cloud DW teams almost universally use Kimball-style star schemas in the Gold layer.
-  Why: columnar storage (Parquet/Delta) makes denormalization cheap — storage costs
+  Why: columnar storage (Parquet/Delta) makes denormalization cheap  -  storage costs
   are negligible; query speed with denormalized dims is dramatically better.
   The "3NF wastes storage" argument that drove Kimball is even less relevant on ADLS.
   Inmon's top-down governance model is still influential for enterprise DW programs.`}</CodeBlock>
-          <CodeBlock lang="sql">{`-- STAR vs SNOWFLAKE SCHEMA — side by side DDL
+          <CodeBlock lang="sql">{`-- STAR vs SNOWFLAKE SCHEMA  -  side by side DDL
 
 -- ── STAR: dim_product (fully denormalized) ───────────────────────
 CREATE TABLE star.dim_product (
@@ -2296,13 +2296,13 @@ CREATE TABLE snowflake.dim_product (
     product_id        VARCHAR(50)   NOT NULL,
     product_name      VARCHAR(255)  NOT NULL,
     category_key      INT           NOT NULL REFERENCES snowflake.dim_category(category_key),
-    -- No category_name or dept_name here — they live in sub-dimensions
+    -- No category_name or dept_name here  -  they live in sub-dimensions
     PRIMARY KEY (product_key)
 );
 -- Three JOINs (fact → dim_product → dim_category → dim_department)
 -- to get the same result as one JOIN in the star schema
 
--- ── GALAXY SCHEMA — shared conformed dimensions ───────────────────
+-- ── GALAXY SCHEMA  -  shared conformed dimensions ───────────────────
 -- fact_sales and fact_returns both use the same dim_date, dim_product
 SELECT
     d.year,
@@ -2346,8 +2346,8 @@ JOIN {{ ref('dim_product') }}  dp ON s.product_id  = dp.product_id
 WHERE s.order_date >= (SELECT MAX(order_date) FROM {{ this }}) - INTERVAL 3 DAYS
 {% endif %}`}</CodeBlock>
           <Quiz topicId="model-snowflake" questions={[
-            { question: "What is the main trade-off of snowflake schema vs star schema?", options: ["Snowflake is always better — it is newer", "Star schema has faster queries with fewer JOINs and is simpler for BI tools; snowflake schema reduces storage redundancy but requires more JOINs and is harder to maintain", "Snowflake schema only works with the Snowflake cloud database", "Star schema only works for small datasets"], correct: 1 },
-            { question: "What is a galaxy (fact constellation) schema?", options: ["A schema with more than 100 dimension tables", "Multiple fact tables that share conformed dimension tables — the natural evolution of a mature data warehouse with multiple business processes", "A proprietary Snowflake Inc. data model", "A schema pattern only used in streaming pipelines"], correct: 1 },
+            { question: "What is the main trade-off of snowflake schema vs star schema?", options: ["Snowflake is always better  -  it is newer", "Star schema has faster queries with fewer JOINs and is simpler for BI tools; snowflake schema reduces storage redundancy but requires more JOINs and is harder to maintain", "Snowflake schema only works with the Snowflake cloud database", "Star schema only works for small datasets"], correct: 1 },
+            { question: "What is a galaxy (fact constellation) schema?", options: ["A schema with more than 100 dimension tables", "Multiple fact tables that share conformed dimension tables  -  the natural evolution of a mature data warehouse with multiple business processes", "A proprietary Snowflake Inc. data model", "A schema pattern only used in streaming pipelines"], correct: 1 },
             { question: "What is the core difference between Kimball and Inmon's approach to data warehousing?", options: ["Kimball uses SQL; Inmon uses NoSQL", "Kimball builds data marts first (bottom-up, star schemas, designed for analytics); Inmon builds an enterprise 3NF DW first (top-down, single source of truth), then derives marts", "Kimball is for batch; Inmon is for streaming", "They are the same methodology with different branding"], correct: 1 },
           ]} />
           {completeBtn('model-snowflake')}
@@ -2358,51 +2358,51 @@ WHERE s.order_date >= (SELECT MAX(order_date) FROM {{ this }}) - INTERVAL 3 DAYS
           <div className="topic-header">
             <div className="topic-eyebrow">Data Modeling Mastery</div>
             <h1 className="topic-title">Data Vault 2.0</h1>
-            <p className="topic-desc">Data Vault 2.0 is a modeling methodology built for enterprise data warehouse agility and auditability. Unlike star schemas, it handles multiple source systems naturally and provides a full, immutable audit trail — every row ever loaded is preserved forever.</p>
+            <p className="topic-desc">Data Vault 2.0 is a modeling methodology built for enterprise data warehouse agility and auditability. Unlike star schemas, it handles multiple source systems naturally and provides a full, immutable audit trail  -  every row ever loaded is preserved forever.</p>
           </div>
-          <CodeBlock lang="text">{`DATA VAULT 2.0 — THREE ENTITY TYPES
+          <CodeBlock lang="text">{`DATA VAULT 2.0  -  THREE ENTITY TYPES
 ═══════════════════════════════════════════════════════════════
-Hubs — Business Keys
+Hubs  -  Business Keys
   One Hub per business concept: HUB_CUSTOMER, HUB_ORDER, HUB_PRODUCT
   Contains ONLY the business key (natural key from source system)
-  No descriptive attributes — just the key + metadata columns
+  No descriptive attributes  -  just the key + metadata columns
   Columns: hash_key (PK), business_key, load_date, record_source
   Rule: never update or delete; append-only
 
-Links — Relationships Between Hubs
+Links  -  Relationships Between Hubs
   One Link per relationship: LINK_ORDER_CUSTOMER, LINK_ORDER_PRODUCT
   Models the many-to-many relationships between business concepts
   Columns: hash_key (PK), hub_A_hash_key (FK), hub_B_hash_key (FK),
            load_date, record_source
-  Rule: relationships are facts — once a link exists, it's preserved
+  Rule: relationships are facts  -  once a link exists, it's preserved
 
-Satellites — Descriptive Attributes
+Satellites  -  Descriptive Attributes
   One Satellite per source system + attribute group, per Hub or Link
   Contains all context/descriptive data with full history
   Example: SAT_CUSTOMER_CRM (from CRM), SAT_CUSTOMER_ERP (from ERP)
   Columns: parent_hash_key (FK), load_date (PK composite), record_source,
-           hash_diff (hash of all payload columns — change detection),
+           hash_diff (hash of all payload columns  -  change detection),
            + all descriptive attributes
   Rule: append-only; new row when hash_diff changes
 
-ALWAYS APPEND-ONLY — THE CORE PRINCIPLE
+ALWAYS APPEND-ONLY  -  THE CORE PRINCIPLE
 ═══════════════════════════════════════════════════════════════
 Never UPDATE or DELETE in a raw Data Vault.
 Every change produces a new row with a new load_date.
 The latest row per parent_hash_key in a Satellite = current state.
-Full history is always preserved — perfect audit trail.
+Full history is always preserved  -  perfect audit trail.
 
-HASH KEYS — MD5 / SHA-256 of business key
+HASH KEYS  -  MD5 / SHA-256 of business key
   Purpose: consistent surrogate key across source systems; enables parallel loading
   Pattern: UPPER(MD5(TRIM(COALESCE(business_key, '^^'))))
   SHA-256 preferred for collision resistance in large volumes
 
 WHY DATA VAULT?
 ═══════════════════════════════════════════════════════════════
-  Multiple source systems: each system gets its own Satellite — no schema conflicts
+  Multiple source systems: each system gets its own Satellite  -  no schema conflicts
   Full audit trail: every version of every record preserved; regulators love this
   No historization gaps: unlike SCD2 which requires careful MERGE logic
-  Agile: add new source system by adding a new Satellite — no restructuring Hubs/Links
+  Agile: add new source system by adding a new Satellite  -  no restructuring Hubs/Links
   Parallel loading: Hubs, Links, Satellites can all load independently
 
 LIMITATIONS
@@ -2413,7 +2413,7 @@ LIMITATIONS
   Requires Business Vault: computed fields, soft rules applied on top of raw vault
   Requires Information Mart: star schema layer for BI tools (Kimball-style on top of DV)
   Overhead: more tables to load and maintain vs direct star schema approach`}</CodeBlock>
-          <CodeBlock lang="sql">{`-- DATA VAULT 2.0 — Full DDL for HUB_CUSTOMER, LINK_ORDER_CUSTOMER, SAT_CUSTOMER_CRM
+          <CodeBlock lang="sql">{`-- DATA VAULT 2.0  -  Full DDL for HUB_CUSTOMER, LINK_ORDER_CUSTOMER, SAT_CUSTOMER_CRM
 
 -- ── Hub: HUB_CUSTOMER ────────────────────────────────────────────
 CREATE TABLE raw_vault.HUB_CUSTOMER (
@@ -2447,7 +2447,7 @@ CREATE TABLE raw_vault.LINK_ORDER_CUSTOMER (
 CREATE TABLE raw_vault.SAT_CUSTOMER_CRM (
     customer_hash_key  CHAR(32)      NOT NULL REFERENCES raw_vault.HUB_CUSTOMER(customer_hash_key),
     load_date          TIMESTAMP     NOT NULL,
-    -- composite PK — one row per customer per load_date
+    -- composite PK  -  one row per customer per load_date
     PRIMARY KEY (customer_hash_key, load_date),
     record_source      VARCHAR(100)  NOT NULL,
     hash_diff          CHAR(32)      NOT NULL,   -- MD5 of all payload columns; new row only when changed
@@ -2461,7 +2461,7 @@ CREATE TABLE raw_vault.SAT_CUSTOMER_CRM (
     crm_status         VARCHAR(50)
 );
 
--- ── Satellite: SAT_CUSTOMER_ERP (ERP source — different attributes) ──
+-- ── Satellite: SAT_CUSTOMER_ERP (ERP source  -  different attributes) ──
 CREATE TABLE raw_vault.SAT_CUSTOMER_ERP (
     customer_hash_key  CHAR(32)      NOT NULL REFERENCES raw_vault.HUB_CUSTOMER(customer_hash_key),
     load_date          TIMESTAMP     NOT NULL,
@@ -2494,7 +2494,7 @@ from pyspark.sql.types import StringType
 
 # ── Hash Key UDF ─────────────────────────────────────────────────
 def make_hash_key(*keys):
-    """MD5 of concatenated business keys — consistent surrogate"""
+    """MD5 of concatenated business keys  -  consistent surrogate"""
     combined = "||".join([str(k).strip().upper() if k else "^^" for k in keys])
     return hashlib.md5(combined.encode()).hexdigest().upper()
 
@@ -2503,7 +2503,7 @@ hash_key_udf = F.udf(make_hash_key, StringType())
 # ── Load Hub ─────────────────────────────────────────────────────
 def load_hub(source_df, hub_table: str, business_key_col: str, record_source: str):
     """
-    Insert only NEW business keys — never update a hub.
+    Insert only NEW business keys  -  never update a hub.
     Hub is the first entity loaded; satellites depend on it.
     """
     hub_df = (source_df
@@ -2548,7 +2548,7 @@ def load_link(source_df, link_table: str, hub_keys: list[str], record_source: st
 def load_satellite(source_df, sat_table: str, parent_hash_key_col: str,
                    payload_cols: list[str], record_source: str):
     """
-    Load only CHANGED rows — detect changes via hash_diff.
+    Load only CHANGED rows  -  detect changes via hash_diff.
     New row inserted only when payload columns change.
     Previous row's load_end_date is set to new load_date (optional pattern).
     """
@@ -2579,9 +2579,9 @@ def load_satellite(source_df, sat_table: str, parent_hash_key_col: str,
         changed.write.format("delta").mode("append").saveAsTable(sat_table)
     print(f"Satellite {sat_table}: {changed.count()} changed rows inserted")`}</CodeBlock>
           <Quiz topicId="model-datavault" questions={[
-            { question: "In Data Vault 2.0, what does a Hub represent and what does it contain?", options: ["A fact table with measures and foreign keys", "The business key for one business concept — no descriptive attributes, just the natural key, load_date, and record_source. It is the anchor that Links and Satellites attach to", "A normalized dimension table with all attributes", "A temporary staging table for raw data"], correct: 1 },
-            { question: "Why does Data Vault use hash keys instead of sequential surrogate integers?", options: ["Hash keys are smaller than integers", "Hash keys are deterministic — the same business key always produces the same hash regardless of which system or pipeline generates it, enabling parallel loads across multiple source systems without coordination", "Hash keys are required by GDPR", "Sequential integers don't work in distributed systems"], correct: 1 },
-            { question: "What is the main limitation of querying a raw Data Vault for BI reporting?", options: ["Data Vault doesn't support SQL queries", "Answering a simple question like 'what is a customer's current address' requires multiple JOINs across Hub + Satellite + filtering for the latest row — BI tools need a simpler Information Mart (star schema) layer built on top", "Data Vault tables are too large to query", "Raw Vault tables are write-only"], correct: 1 },
+            { question: "In Data Vault 2.0, what does a Hub represent and what does it contain?", options: ["A fact table with measures and foreign keys", "The business key for one business concept  -  no descriptive attributes, just the natural key, load_date, and record_source. It is the anchor that Links and Satellites attach to", "A normalized dimension table with all attributes", "A temporary staging table for raw data"], correct: 1 },
+            { question: "Why does Data Vault use hash keys instead of sequential surrogate integers?", options: ["Hash keys are smaller than integers", "Hash keys are deterministic  -  the same business key always produces the same hash regardless of which system or pipeline generates it, enabling parallel loads across multiple source systems without coordination", "Hash keys are required by GDPR", "Sequential integers don't work in distributed systems"], correct: 1 },
+            { question: "What is the main limitation of querying a raw Data Vault for BI reporting?", options: ["Data Vault doesn't support SQL queries", "Answering a simple question like 'what is a customer's current address' requires multiple JOINs across Hub + Satellite + filtering for the latest row  -  BI tools need a simpler Information Mart (star schema) layer built on top", "Data Vault tables are too large to query", "Raw Vault tables are write-only"], correct: 1 },
           ]} />
           {completeBtn('model-datavault')}
         </section>
@@ -2591,7 +2591,7 @@ def load_satellite(source_df, sat_table: str, parent_hash_key_col: str,
           <div className="topic-header">
             <div className="topic-eyebrow">Data Modeling Mastery</div>
             <h1 className="topic-title">SCD Implementation Code (All Types)</h1>
-            <p className="topic-desc">Full implementation of all SCD types using Delta Lake and PySpark. SCD Type 2 is the most common in production — mastering the MERGE pattern for slowly changing history is a core senior data engineering skill.</p>
+            <p className="topic-desc">Full implementation of all SCD types using Delta Lake and PySpark. SCD Type 2 is the most common in production  -  mastering the MERGE pattern for slowly changing history is a core senior data engineering skill.</p>
           </div>
           <CodeBlock lang="text">{`SCD TYPE DECISION TABLE
 ═══════════════════════════════════════════════════════════════
@@ -2604,28 +2604,28 @@ Type  History?  Storage  Complexity  Best For
 4     Full      Medium   Medium      High-churn dimensions; rarely query history
 6     Full      High     Very High   Enterprise dims needing current + historical in one row
 
-SCD TYPE 1 — Overwrite (no history)
+SCD TYPE 1  -  Overwrite (no history)
   MERGE INTO target WHEN MATCHED AND source differs THEN UPDATE SET all columns
-  Simple. Fast. History is lost — previous value is gone forever.
+  Simple. Fast. History is lost  -  previous value is gone forever.
 
-SCD TYPE 2 — Add New Row (full history)
+SCD TYPE 2  -  Add New Row (full history)
   On change: expire old row (is_current=False, valid_to=now)
              insert new row (is_current=True, valid_from=now, valid_to=9999-12-31)
   Surrogate key on fact table points to correct dimension version at event time.
   Query current:      WHERE is_current = True
   Query point-in-time: WHERE valid_from <= '2024-03-15' AND valid_to > '2024-03-15'
 
-SCD TYPE 3 — Previous Value Column
+SCD TYPE 3  -  Previous Value Column
   Add column: prev_email, prev_region alongside current_email, current_region
   On change: UPDATE SET prev_col = current_col, current_col = new_value
   Limitation: only 1 level of history per tracked column
 
-SCD TYPE 4 — History Table
+SCD TYPE 4  -  History Table
   Main table: current record only (fast lookups)
   History table: all previous versions with valid_from / valid_to
   On change: copy current row to history table, then UPDATE main table
 
-SCD TYPE 6 — Hybrid (Type 1 + 2 + 3 combined)
+SCD TYPE 6  -  Hybrid (Type 1 + 2 + 3 combined)
   Each historical row has:
     - Surrogate key (Type 2) for point-in-time accuracy
     - is_current flag (Type 2) for current record filtering
@@ -2633,12 +2633,12 @@ SCD TYPE 6 — Hybrid (Type 1 + 2 + 3 combined)
     - prev_value column (Type 3) for one-step-back lookup
   Advantage: "What was customer's region when they ordered AND what is it today?"
              Both answered from one row without extra JOINs`}</CodeBlock>
-          <CodeBlock lang="python">{`# SCD TYPE 1 — Overwrite, no history
+          <CodeBlock lang="python">{`# SCD TYPE 1  -  Overwrite, no history
 from delta.tables import DeltaTable
 from pyspark.sql import functions as F
 
 def scd1_merge(updates_df, target_table: str, key_col: str):
-    """Simple overwrite — no history preserved"""
+    """Simple overwrite  -  no history preserved"""
     target = DeltaTable.forName(spark, target_table)
     (target.alias("t")
      .merge(updates_df.alias("s"), f"t.{key_col} = s.{key_col}")
@@ -2646,7 +2646,7 @@ def scd1_merge(updates_df, target_table: str, key_col: str):
      .whenNotMatchedInsertAll()    # insert new records
      .execute())
 
-# SCD TYPE 3 — Previous value column
+# SCD TYPE 3  -  Previous value column
 def scd3_update(updates_df, target_table: str, key_col: str, tracked_col: str):
     """Keep current and one previous value only"""
     target = DeltaTable.forName(spark, target_table)
@@ -2662,7 +2662,7 @@ def scd3_update(updates_df, target_table: str, key_col: str, tracked_col: str):
      .whenNotMatchedInsertAll()
      .execute())
 
-# SCD TYPE 4 — History table pattern
+# SCD TYPE 4  -  History table pattern
 def scd4_update(updates_df, main_table: str, history_table: str, key_col: str):
     """Archive old version to history table, update main table"""
     # Step 1: copy current records that will change to history
@@ -2681,7 +2681,7 @@ def scd4_update(updates_df, main_table: str, history_table: str, key_col: str):
      .whenMatchedUpdateAll()
      .whenNotMatchedInsertAll()
      .execute())`}</CodeBlock>
-          <CodeBlock lang="python">{`# SCD TYPE 2 — Full Delta Lake MERGE implementation
+          <CodeBlock lang="python">{`# SCD TYPE 2  -  Full Delta Lake MERGE implementation
 from delta.tables import DeltaTable
 from pyspark.sql import functions as F
 from pyspark.sql import DataFrame
@@ -2761,7 +2761,7 @@ def scd2_merge(
               f"{inserts.count()} rows inserted")
 
 # ── USAGE ─────────────────────────────────────────────────────────
-# Initial load (first run) — just write with SCD2 columns
+# Initial load (first run)  -  just write with SCD2 columns
 def scd2_initial_load(source_df: DataFrame, target_table: str):
     (source_df
      .withColumn("surrogate_key", F.expr("uuid()"))
@@ -2800,7 +2800,7 @@ spark.sql("""
     -- surrogate key on fact row was stamped at load time → always correct version
     LIMIT 100
 """)`}</CodeBlock>
-          <CodeBlock lang="python">{`# SCD TYPE 6 — Hybrid (Type 1 + 2 + 3)
+          <CodeBlock lang="python">{`# SCD TYPE 6  -  Hybrid (Type 1 + 2 + 3)
 # Each historical row gets updated with the CURRENT value (Type 1 overwrite)
 # so you can answer both "what was it then?" and "what is it now?" from one row.
 
@@ -2819,11 +2819,11 @@ def scd6_merge(
     """
     today_str = str(date.today())
 
-    # Step 1: Same as SCD2 — expire old row, insert new
+    # Step 1: Same as SCD2  -  expire old row, insert new
     scd2_merge(spark, updates_df, target_table, key_col, [tracked_col])
 
-    # Step 2: Type 1 overwrite — update current_{col} on ALL rows for this key
-    # including historical rows — so any row can tell you "what is it today?"
+    # Step 2: Type 1 overwrite  -  update current_{col} on ALL rows for this key
+    # including historical rows  -  so any row can tell you "what is it today?"
     target = DeltaTable.forName(spark, target_table)
     for row in updates_df.collect():
         bk = row[key_col]
@@ -2834,16 +2834,16 @@ def scd6_merge(
         )
 
 # SCD6 table structure:
-# surrogate_key    (Type 2 — unique per version)
+# surrogate_key    (Type 2  -  unique per version)
 # customer_id      (natural key)
 # region           (value AT THIS VERSION's time)
-# current_region   (Type 1 — always the latest region, even on old rows)
-# prev_region      (Type 3 — one step back from is_current row)
+# current_region   (Type 1  -  always the latest region, even on old rows)
+# prev_region      (Type 3  -  one step back from is_current row)
 # is_current       (Type 2)
 # valid_from       (Type 2)
 # valid_to         (Type 2)
 
-# QUERY — "was the customer in the same region when they ordered vs now?"
+# QUERY  -  "was the customer in the same region when they ordered vs now?"
 spark.sql("""
     SELECT
         o.order_id,
@@ -2858,9 +2858,9 @@ spark.sql("""
     WHERE o.order_date = '2023-06-01'
 """)`}</CodeBlock>
           <Quiz topicId="model-scd-code" questions={[
-            { question: "In SCD Type 2, when a tracked attribute changes, what two operations must happen atomically?", options: ["Delete the old row and insert the new row", "Expire the old row (set is_current=False, valid_to=today) AND insert a new row (is_current=True, valid_from=today, valid_to=9999-12-31) — both must succeed or neither should", "Update the existing row and create a backup", "Archive the old row to a history table and truncate the main table"], correct: 1 },
-            { question: "How do you query a fact table to get the dimension attribute value AS IT WAS at the time of the event (not the current value)?", options: ["Filter the dimension on is_current=True", "Store the surrogate key on the fact table at load time — join fact to dimension on surrogate_key, which always points to the exact dimension version that was current when the fact was loaded", "Use BETWEEN on the fact table's event date", "Always query the latest dimension version — history is not needed for facts"], correct: 1 },
-            { question: "What unique capability does SCD Type 6 provide that neither Type 2 alone nor Type 3 alone can offer?", options: ["It stores unlimited previous values", "From a single joined row you can see both the dimension value AS IT WAS at the historical event time (Type 2) AND the dimension's current value today (Type 1) — enabling change-over-time analysis without extra JOINs", "It eliminates the need for surrogate keys", "It reduces storage by removing duplicate rows"], correct: 1 },
+            { question: "In SCD Type 2, when a tracked attribute changes, what two operations must happen atomically?", options: ["Delete the old row and insert the new row", "Expire the old row (set is_current=False, valid_to=today) AND insert a new row (is_current=True, valid_from=today, valid_to=9999-12-31)  -  both must succeed or neither should", "Update the existing row and create a backup", "Archive the old row to a history table and truncate the main table"], correct: 1 },
+            { question: "How do you query a fact table to get the dimension attribute value AS IT WAS at the time of the event (not the current value)?", options: ["Filter the dimension on is_current=True", "Store the surrogate key on the fact table at load time  -  join fact to dimension on surrogate_key, which always points to the exact dimension version that was current when the fact was loaded", "Use BETWEEN on the fact table's event date", "Always query the latest dimension version  -  history is not needed for facts"], correct: 1 },
+            { question: "What unique capability does SCD Type 6 provide that neither Type 2 alone nor Type 3 alone can offer?", options: ["It stores unlimited previous values", "From a single joined row you can see both the dimension value AS IT WAS at the historical event time (Type 2) AND the dimension's current value today (Type 1)  -  enabling change-over-time analysis without extra JOINs", "It eliminates the need for surrogate keys", "It reduces storage by removing duplicate rows"], correct: 1 },
           ]} />
           {completeBtn('model-scd-code')}
         </section>

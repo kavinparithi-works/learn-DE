@@ -71,7 +71,7 @@ export default function Delta({ completed, onComplete }: Props) {
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Delta vs Parquet vs Hive:</strong> Raw Parquet has no transaction log — concurrent writes corrupt data. Hive Metastore tracks table metadata but not file-level changes. Delta tracks every operation in <code>_delta_log/</code>, enabling rollback, time travel, and optimistic concurrency.</div>
+            <div className="callout-body"><strong>Delta vs Parquet vs Hive:</strong> Raw Parquet has no transaction log  -  concurrent writes corrupt data. Hive Metastore tracks table metadata but not file-level changes. Delta tracks every operation in <code>_delta_log/</code>, enabling rollback, time travel, and optimistic concurrency.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta Lake: _delta_log/ structure ───────────────────────────────────────
@@ -89,7 +89,7 @@ export default function Delta({ completed, onComplete }: Props) {
 # └── ...
 
 # ── What a JSON commit file looks like ──────────────────────────────────────
-# 00000000000000000001.json (pretty-printed — real file is newline-delimited JSON)
+# 00000000000000000001.json (pretty-printed  -  real file is newline-delimited JSON)
 
 {
   "commitInfo": {
@@ -153,7 +153,7 @@ dt.history().select(
 ).show(truncate=False)
 
 # Log compaction: every 10 commits Delta writes a Parquet checkpoint
-# that encodes the full table state — no need to replay all JSON logs
+# that encodes the full table state  -  no need to replay all JSON logs
 # You can force a checkpoint:
 dt.toDF()  # triggers a read; checkpoint is written automatically by Delta engine
 
@@ -180,15 +180,15 @@ spark.sql("DESCRIBE DETAIL delta.\`/mnt/datalake/bronze/users\`").show(vertical=
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Optimistic Concurrency Control:</strong> Delta uses optimistic locking — writers proceed without acquiring locks, then verify at commit time that no conflicting operation occurred. Conflicts are rare in typical pipelines, making this highly efficient at scale.</div>
+            <div className="callout-body"><strong>Optimistic Concurrency Control:</strong> Delta uses optimistic locking  -  writers proceed without acquiring locks, then verify at commit time that no conflicting operation occurred. Conflicts are rare in typical pipelines, making this highly efficient at scale.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── ACID in Delta Lake ────────────────────────────────────────────────────────
 #
-# A  Atomicity  — a write either commits all files or none
-# C  Consistency — schema is enforced; bad writes are rejected entirely
-# I  Isolation  — optimistic concurrency control; readers never see partial writes
-# D  Durability  — committed data is in S3/ADLS/GCS + WAL in _delta_log/
+# A  Atomicity   -  a write either commits all files or none
+# C  Consistency  -  schema is enforced; bad writes are rejected entirely
+# I  Isolation   -  optimistic concurrency control; readers never see partial writes
+# D  Durability   -  committed data is in S3/ADLS/GCS + WAL in _delta_log/
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, current_timestamp
@@ -240,7 +240,7 @@ except Exception as e:
 #   - UPDATE + UPDATE on overlapping files: one retries or fails
 #   - INSERT OVERWRITE (partition) + reader: reader gets consistent snapshot
 
-# Simulate concurrent appends (both succeed — no conflict)
+# Simulate concurrent appends (both succeed  -  no conflict)
 from concurrent.futures import ThreadPoolExecutor
 
 def append_batch(batch_id):
@@ -282,12 +282,12 @@ spark.sql("""
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">Write Operations</h1>
-            <p className="topic-desc">Delta Lake supports a rich set of write patterns — from simple appends to selective partition overwrites. Choosing the right write mode avoids data duplication, minimises file churn, and keeps downstream consumers consistent.</p>
+            <p className="topic-desc">Delta Lake supports a rich set of write patterns  -  from simple appends to selective partition overwrites. Choosing the right write mode avoids data duplication, minimises file churn, and keeps downstream consumers consistent.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>replaceWhere is your friend:</strong> Instead of overwriting the whole table to refresh one partition, use <code>replaceWhere</code> to atomically replace only the matching rows — all other partitions remain untouched and readable.</div>
+            <div className="callout-body"><strong>replaceWhere is your friend:</strong> Instead of overwriting the whole table to refresh one partition, use <code>replaceWhere</code> to atomically replace only the matching rows  -  all other partitions remain untouched and readable.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta Write Modes: complete reference ────────────────────────────────────
@@ -329,7 +329,7 @@ spark.sql("""
 """)
 
 # ── 3. replaceWhere (selective partition overwrite) ───────────────────────────
-# Only overwrites rows matching the predicate — other partitions untouched.
+# Only overwrites rows matching the predicate  -  other partitions untouched.
 # This is the preferred pattern for incremental loads on partitioned tables.
 todays_data = spark.read.parquet("/mnt/landing/events/2024-01-16/") \
     .withColumn("event_date", lit("2024-01-16"))
@@ -350,7 +350,7 @@ todays_data.write \
 
 # ── 4. insertInto ────────────────────────────────────────────────────────────
 # Appends to a table registered in the catalog by name.
-# Column order must match — uses positional binding, NOT name binding.
+# Column order must match  -  uses positional binding, NOT name binding.
 spark.sql("CREATE DATABASE IF NOT EXISTS silver")
 spark.sql("""
   CREATE TABLE IF NOT EXISTS silver.orders (
@@ -377,7 +377,7 @@ df.write \
     .saveAsTable("silver.products")
 # Creates the table in the Hive Metastore / Unity Catalog if it doesn't exist.
 
-# ── 6. CTAS — CREATE TABLE AS SELECT ─────────────────────────────────────────
+# ── 6. CTAS  -  CREATE TABLE AS SELECT ─────────────────────────────────────────
 spark.sql("""
   CREATE TABLE gold.monthly_revenue
   USING DELTA
@@ -427,7 +427,7 @@ new_events.write \
           <Quiz topicId="delta-write-modes" questions={[
             { question: "You need to refresh only the data for 2024-01-16 in a partitioned Delta table without touching other dates. Which write option should you use?", options: ["mode('overwrite') with no extra options", "mode('append')", "mode('overwrite').option('replaceWhere', \"event_date = '2024-01-16'\")", "DROP PARTITION then INSERT"], correct: 2 },
             { question: "What is the key difference between insertInto() and append mode write()?", options: ["insertInto() uses name-based column binding; append uses positional", "insertInto() uses positional column binding and targets a catalog table by name", "insertInto() can overwrite data; append cannot", "They are functionally identical"], correct: 1 },
-            { question: "CREATE OR REPLACE TABLE differs from DROP TABLE + CREATE TABLE because:", options: ["CREATE OR REPLACE is faster", "CREATE OR REPLACE is atomic — concurrent readers get a consistent view throughout", "DROP + CREATE preserves the transaction log; CREATE OR REPLACE does not", "They are equivalent in Delta Lake"], correct: 1 },
+            { question: "CREATE OR REPLACE TABLE differs from DROP TABLE + CREATE TABLE because:", options: ["CREATE OR REPLACE is faster", "CREATE OR REPLACE is atomic  -  concurrent readers get a consistent view throughout", "DROP + CREATE preserves the transaction log; CREATE OR REPLACE does not", "They are equivalent in Delta Lake"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-write-modes'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -437,7 +437,7 @@ new_events.write \
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">MERGE Deep Dive</h1>
-            <p className="topic-desc">MERGE is Delta Lake's most powerful DML operation — it upserts, deletes, and inserts in a single atomic pass. Mastering MERGE is essential for CDC ingestion, SCD Type 1/2 patterns, and efficient Silver layer refreshes.</p>
+            <p className="topic-desc">MERGE is Delta Lake's most powerful DML operation  -  it upserts, deletes, and inserts in a single atomic pass. Mastering MERGE is essential for CDC ingestion, SCD Type 1/2 patterns, and efficient Silver layer refreshes.</p>
           </div>
           <MergeAnimation />
 
@@ -453,7 +453,7 @@ from delta.tables import DeltaTable
 
 spark = SparkSession.builder.appName("DeltaMerge").getOrCreate()
 
-# ── 1. Basic upsert (SCD Type 1 — overwrite on match) ────────────────────────
+# ── 1. Basic upsert (SCD Type 1  -  overwrite on match) ────────────────────────
 target = DeltaTable.forName(spark, "silver.customers")
 
 source_df = spark.read.table("bronze.customers_cdc") \
@@ -498,7 +498,7 @@ target.alias("t").merge(
     }
 ) \
 .whenNotMatchedBySourceUpdate(
-    # Rows in target with no match in source — mark as inactive
+    # Rows in target with no match in source  -  mark as inactive
     condition="t.is_active = true",
     set={ "is_active": "false", "deactivated_at": "current_timestamp()" }
 ) \
@@ -526,7 +526,7 @@ spark.sql("""
 """)
 
 # ── 4. SCD Type 2 with MERGE ──────────────────────────────────────────────────
-# Type 2: keep history — close old row, insert new row with new effective dates
+# Type 2: keep history  -  close old row, insert new row with new effective dates
 
 spark.sql("""
   MERGE INTO silver.dim_customer AS t
@@ -565,7 +565,7 @@ spark.sql("""
 # Note: this pattern requires two passes or use of foreachBatch in Structured Streaming
 
 # ── 5. Insert-only MERGE (deduplication pattern) ─────────────────────────────
-# Efficiently insert only rows that don't already exist — avoids duplicates
+# Efficiently insert only rows that don't already exist  -  avoids duplicates
 # without reading the whole target table.
 
 dedup_source = spark.read.table("bronze.raw_events") \
@@ -616,12 +616,12 @@ spark.sql("""
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">Schema Enforcement &amp; Evolution</h1>
-            <p className="topic-desc">Delta Lake enforces schema on write by default — mismatched columns raise an error before any data lands. Schema evolution options let you safely add columns and adapt to upstream changes without rewriting the entire table.</p>
+            <p className="topic-desc">Delta Lake enforces schema on write by default  -  mismatched columns raise an error before any data lands. Schema evolution options let you safely add columns and adapt to upstream changes without rewriting the entire table.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>mergeSchema vs overwriteSchema:</strong> <code>mergeSchema</code> adds new columns but keeps existing ones intact. <code>overwriteSchema</code> replaces the entire schema — use with caution as it rewrites the table definition and may break downstream consumers.</div>
+            <div className="callout-body"><strong>mergeSchema vs overwriteSchema:</strong> <code>mergeSchema</code> adds new columns but keeps existing ones intact. <code>overwriteSchema</code> replaces the entire schema  -  use with caution as it rewrites the table definition and may break downstream consumers.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta Schema: enforcement and evolution ──────────────────────────────────
@@ -653,7 +653,7 @@ try:
 except Exception as e:
     print(f"Schema enforcement blocked write: {e}")
 
-# ── 2. mergeSchema — add new columns on write ─────────────────────────────────
+# ── 2. mergeSchema  -  add new columns on write ─────────────────────────────────
 # Only safe additive changes: new nullable columns at the end of the schema.
 df_with_channel = spark.createDataFrame(
     [(9001, 42, 150.0, "2024-01-16", "web"), (9002, 43, 200.0, "2024-01-17", "mobile")],
@@ -671,7 +671,7 @@ df_with_channel.write \
 # Equivalent SQL session-level setting
 spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
 
-# ── 3. overwriteSchema — full schema replacement ──────────────────────────────
+# ── 3. overwriteSchema  -  full schema replacement ──────────────────────────────
 # Use only for complete reloads where schema changed incompatibly.
 completely_new_df = spark.createDataFrame(
     [(9001, 42, 150.0, "2024-01-16", "web", True)],
@@ -734,9 +734,9 @@ dt = DeltaTable.forName(spark, "silver.orders")
 print(dt.toDF().schema.simpleString())`}</CodeBlock>
 
           <Quiz topicId="delta-schema" questions={[
-            { question: "You want to add a new nullable column 'channel' to an existing Delta table during an append write, without touching existing data. Which option should you use?", options: [".option('overwriteSchema', 'true')", ".option('mergeSchema', 'true')", "ALTER TABLE ADD COLUMN only — it cannot be done during a write", "mode('overwrite') automatically merges schemas"], correct: 1 },
+            { question: "You want to add a new nullable column 'channel' to an existing Delta table during an append write, without touching existing data. Which option should you use?", options: [".option('overwriteSchema', 'true')", ".option('mergeSchema', 'true')", "ALTER TABLE ADD COLUMN only  -  it cannot be done during a write", "mode('overwrite') automatically merges schemas"], correct: 1 },
             { question: "What must you enable on a Delta table before you can perform a metadata-only column rename (without rewriting Parquet files)?", options: ["delta.enableChangeDataFeed = true", "delta.columnMapping.mode = 'name'", "spark.sql.sources.partitionOverwriteMode = dynamic", "delta.autoOptimize.optimizeWrite = true"], correct: 1 },
-            { question: "Schema enforcement in Delta Lake fires at which point?", options: ["When the table is queried (read time)", "When data is written — before any files are committed to storage", "Only during OPTIMIZE operations", "Only when explicitly invoked with ANALYZE TABLE"], correct: 1 },
+            { question: "Schema enforcement in Delta Lake fires at which point?", options: ["When the table is queried (read time)", "When data is written  -  before any files are committed to storage", "Only during OPTIMIZE operations", "Only when explicitly invoked with ANALYZE TABLE"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-schema'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -746,13 +746,13 @@ print(dt.toDF().schema.simpleString())`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">Time Travel</h1>
-            <p className="topic-desc">Delta Lake retains the full history of your table through its transaction log. Time travel lets you query, compare, or restore any previous version — invaluable for auditing, debugging bad pipelines, and disaster recovery.</p>
+            <p className="topic-desc">Delta Lake retains the full history of your table through its transaction log. Time travel lets you query, compare, or restore any previous version  -  invaluable for auditing, debugging bad pipelines, and disaster recovery.</p>
           </div>
           <TimelineAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Time Travel vs VACUUM:</strong> Time travel works only for versions whose underlying Parquet files still exist. Once VACUUM removes old files, those versions become unreadable. Default retention is 7 days — increase <code>delta.deletedFileRetentionDuration</code> if you need longer audit windows.</div>
+            <div className="callout-body"><strong>Time Travel vs VACUUM:</strong> Time travel works only for versions whose underlying Parquet files still exist. Once VACUUM removes old files, those versions become unreadable. Default retention is 7 days  -  increase <code>delta.deletedFileRetentionDuration</code> if you need longer audit windows.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta Time Travel: complete reference ────────────────────────────────────
@@ -793,7 +793,7 @@ v3_df = spark.read.format("delta") \
     .load("/mnt/datalake/silver/orders")
 
 # ── 3. Query by TIMESTAMP AS OF ───────────────────────────────────────────────
-# SQL — ISO 8601 or castable string
+# SQL  -  ISO 8601 or castable string
 spark.sql("""
   SELECT *
   FROM silver.orders
@@ -835,7 +835,7 @@ updated_orders = current_df.alias("cur").join(
 updated_orders.show()
 
 # ── 5. RESTORE TABLE ──────────────────────────────────────────────────────────
-# Restore to a previous version (creates a new commit — history is preserved)
+# Restore to a previous version (creates a new commit  -  history is preserved)
 spark.sql("RESTORE TABLE silver.orders TO VERSION AS OF 3")
 spark.sql("RESTORE TABLE silver.orders TO TIMESTAMP AS OF '2024-01-14T23:59:59'")
 
@@ -888,12 +888,12 @@ spark.sql("""
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">Change Data Feed</h1>
-            <p className="topic-desc">Change Data Feed (CDF) lets you efficiently read only the rows that changed between two versions of a Delta table — inserts, updates, and deletes. This powers incremental propagation patterns from Bronze all the way to Gold without full table scans.</p>
+            <p className="topic-desc">Change Data Feed (CDF) lets you efficiently read only the rows that changed between two versions of a Delta table  -  inserts, updates, and deletes. This powers incremental propagation patterns from Bronze all the way to Gold without full table scans.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>CDF vs Time Travel:</strong> Time travel gives you the full table state at a version. CDF gives you only the changed rows between versions — exactly what downstream consumers need for incremental refreshes. CDF is ideal for propagating Silver updates to Gold aggregations.</div>
+            <div className="callout-body"><strong>CDF vs Time Travel:</strong> Time travel gives you the full table state at a version. CDF gives you only the changed rows between versions  -  exactly what downstream consumers need for incremental refreshes. CDF is ideal for propagating Silver updates to Gold aggregations.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta Change Data Feed (CDF): complete reference ──────────────────────────
@@ -938,8 +938,8 @@ changes_df = spark.read.format("delta") \
 changes_df.show(truncate=False)
 # Extra columns added by CDF:
 # _change_type : insert | update_preimage | update_postimage | delete
-# _commit_version : BIGINT — which version this change belongs to
-# _commit_timestamp : TIMESTAMP — when the commit was made
+# _commit_version : BIGINT  -  which version this change belongs to
+# _commit_timestamp : TIMESTAMP  -  when the commit was made
 
 # By timestamp range
 changes_from_ts = spark.read.format("delta") \
@@ -1021,7 +1021,7 @@ spark.sql(f"""
 """)
 
 # ── 5. CDF in Structured Streaming ───────────────────────────────────────────
-# CDF works as a streaming source — new changes flow as micro-batches
+# CDF works as a streaming source  -  new changes flow as micro-batches
 cdf_stream = spark.readStream.format("delta") \
     .option("readChangeFeed", "true") \
     .option("startingVersion", 0) \
@@ -1039,7 +1039,7 @@ query.awaitTermination()`}</CodeBlock>
 
           <Quiz topicId="delta-cdf" questions={[
             { question: "When a row is updated in a Delta table with CDF enabled, how many CDF records are emitted?", options: ["One record with _change_type = 'update'", "Two records: update_preimage (before state) and update_postimage (after state)", "Three records: delete, insert, and update", "One record per changed column"], correct: 1 },
-            { question: "You enable CDF on a Delta table at version 15. What is the earliest version you can read changes from?", options: ["Version 0 — CDF retroactively covers all history", "Version 14 — one version before enabling", "Version 15 — CDF data is only available from when it was enabled", "Version 16 — the first commit after enabling"], correct: 2 },
+            { question: "You enable CDF on a Delta table at version 15. What is the earliest version you can read changes from?", options: ["Version 0  -  CDF retroactively covers all history", "Version 14  -  one version before enabling", "Version 15  -  CDF data is only available from when it was enabled", "Version 16  -  the first commit after enabling"], correct: 2 },
             { question: "Which read option starts reading CDF changes from a specific transaction log version?", options: [".option('versionAsOf', N)", ".option('startingVersion', N)", ".option('startFrom', N)", ".option('changeVersion', N)"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-cdf'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1050,12 +1050,12 @@ query.awaitTermination()`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">OPTIMIZE</h1>
-            <p className="topic-desc">Frequent writes — especially streaming micro-batches — create many small Parquet files that degrade read performance. OPTIMIZE compacts them into larger files through bin-packing, dramatically reducing file-open overhead and improving query speed.</p>
+            <p className="topic-desc">Frequent writes  -  especially streaming micro-batches  -  create many small Parquet files that degrade read performance. OPTIMIZE compacts them into larger files through bin-packing, dramatically reducing file-open overhead and improving query speed.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Target file size:</strong> Delta's default target is 1 GB per file after OPTIMIZE (configurable via <code>delta.targetFileSize</code>). Databricks also offers Auto Optimize — <code>optimizeWrite</code> and <code>autoCompact</code> — which applies OPTIMIZE automatically after each write.</div>
+            <div className="callout-body"><strong>Target file size:</strong> Delta's default target is 1 GB per file after OPTIMIZE (configurable via <code>delta.targetFileSize</code>). Databricks also offers Auto Optimize  -  <code>optimizeWrite</code> and <code>autoCompact</code>  -  which applies OPTIMIZE automatically after each write.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta OPTIMIZE: bin-packing and auto-optimization ─────────────────────────
@@ -1073,7 +1073,7 @@ dt = DeltaTable.forName(spark, "silver.orders")
 dt.optimize().executeCompaction()
 
 # ── 2. OPTIMIZE with a partition predicate ────────────────────────────────────
-# Only compact files in the specified partition(s) — much faster for large tables.
+# Only compact files in the specified partition(s)  -  much faster for large tables.
 spark.sql("""
   OPTIMIZE silver.orders
   WHERE order_date >= '2024-01-01' AND order_date < '2024-02-01'
@@ -1085,7 +1085,7 @@ dt.optimize() \
     .executeCompaction()
 
 # ── 3. Check file statistics before and after ─────────────────────────────────
-# Before OPTIMIZE — many small files
+# Before OPTIMIZE  -  many small files
 spark.sql("""
   SELECT
     COUNT(*)                       AS num_files,
@@ -1147,7 +1147,7 @@ spark.sql("""
 """)
 
 # ── 7. OPTIMIZE does not block reads or writes ───────────────────────────────
-# OPTIMIZE uses optimistic concurrency — readers get a consistent snapshot
+# OPTIMIZE uses optimistic concurrency  -  readers get a consistent snapshot
 # while compaction is running. New writes during OPTIMIZE are not blocked.
 print("OPTIMIZE is safe to run in production on live tables.")`}</CodeBlock>
 
@@ -1164,12 +1164,12 @@ print("OPTIMIZE is safe to run in production on live tables.")`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">Z-ORDER Clustering</h1>
-            <p className="topic-desc">Z-ORDER co-locates related rows in the same Parquet files based on the values of one or more columns. Combined with Delta's column statistics in the transaction log, this enables aggressive data skipping — reading only the files that could contain your query's rows.</p>
+            <p className="topic-desc">Z-ORDER co-locates related rows in the same Parquet files based on the values of one or more columns. Combined with Delta's column statistics in the transaction log, this enables aggressive data skipping  -  reading only the files that could contain your query's rows.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Z-ORDER vs Partitioning:</strong> Partitioning physically separates data into directories — great for high-selectivity columns like date. Z-ORDER clusters within files — ideal for high-cardinality columns like user_id or product_id where partitioning would create millions of tiny directories.</div>
+            <div className="callout-body"><strong>Z-ORDER vs Partitioning:</strong> Partitioning physically separates data into directories  -  great for high-selectivity columns like date. Z-ORDER clusters within files  -  ideal for high-cardinality columns like user_id or product_id where partitioning would create millions of tiny directories.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Z-ORDER Clustering: multi-dimensional data skipping ──────────────────────
@@ -1242,11 +1242,11 @@ add_df.select("path", "stats").show(5, truncate=False)
 # ── 4. Choosing Z-ORDER columns ───────────────────────────────────────────────
 # Good candidates:
 #   - Columns frequently used in WHERE / JOIN / GROUP BY
-#   - High cardinality (many distinct values) — e.g., user_id, session_id
+#   - High cardinality (many distinct values)  -  e.g., user_id, session_id
 #   - NOT already used as partition columns
 #
 # Bad candidates:
-#   - Low cardinality (e.g., status = 'active'/'inactive') — tiny data-skipping benefit
+#   - Low cardinality (e.g., status = 'active'/'inactive')  -  tiny data-skipping benefit
 #   - Columns that are never filtered
 
 # Practical example: event log table partitioned by date, Z-ORDERed by user_id
@@ -1304,12 +1304,12 @@ spark.sql("""
           <div className="topic-header">
             <div className="topic-eyebrow">Level 8 - Delta Lake</div>
             <h1 className="topic-title">VACUUM</h1>
-            <p className="topic-desc">Delta Lake accumulates obsolete Parquet files over time — files removed by UPDATE, DELETE, MERGE, OPTIMIZE, or overwrites. VACUUM permanently deletes these unreferenced files to reclaim storage. It is safe for concurrent readers because Delta's snapshot isolation guarantees they always see a consistent version.</p>
+            <p className="topic-desc">Delta Lake accumulates obsolete Parquet files over time  -  files removed by UPDATE, DELETE, MERGE, OPTIMIZE, or overwrites. VACUUM permanently deletes these unreferenced files to reclaim storage. It is safe for concurrent readers because Delta's snapshot isolation guarantees they always see a consistent version.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Retention &amp; Time Travel trade-off:</strong> VACUUM's default retention is 7 days. Files younger than this are never deleted, preserving time travel for that window. Reducing retention below 7 days requires disabling the safety check — only do this if you are certain no long-running query or streaming job is reading old snapshots.</div>
+            <div className="callout-body"><strong>Retention &amp; Time Travel trade-off:</strong> VACUUM's default retention is 7 days. Files younger than this are never deleted, preserving time travel for that window. Reducing retention below 7 days requires disabling the safety check  -  only do this if you are certain no long-running query or streaming job is reading old snapshots.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Delta VACUUM: file cleanup and retention ─────────────────────────────────
@@ -1327,9 +1327,9 @@ dt = DeltaTable.forName(spark, "silver.orders")
 dt.vacuum()          # uses default 168-hour (7-day) retention
 dt.vacuum(168)       # explicit 168-hour retention
 
-# ── 2. Dry run — see what WOULD be deleted ────────────────────────────────────
+# ── 2. Dry run  -  see what WOULD be deleted ────────────────────────────────────
 spark.sql("VACUUM silver.orders DRY RUN")
-# Returns a DataFrame listing all files that would be removed — no actual deletion.
+# Returns a DataFrame listing all files that would be removed  -  no actual deletion.
 
 dt.vacuum(168, dryRun=True)  # Python equivalent
 
@@ -1373,9 +1373,9 @@ spark.sql("""
 
 # ── 7. Concurrent reader safety ───────────────────────────────────────────────
 # Q: If a long-running query started 2 hours ago reads a snapshot from version N,
-#    and VACUUM removes files that version N references — does the query fail?
+#    and VACUUM removes files that version N references  -  does the query fail?
 #
-# A: YES — if the file has already been deleted by VACUUM.
+# A: YES  -  if the file has already been deleted by VACUUM.
 #    The default 7-day retention window exists precisely to prevent this.
 #    For streaming jobs with long checkpoints, ensure VACUUM retention >=
 #    the maximum lag of any consumer.
@@ -1391,7 +1391,7 @@ spark.sql("""
 """)
 
 # ── 8. Automate VACUUM in a Databricks Job ────────────────────────────────────
-# Notebook cell — runs nightly after ETL + OPTIMIZE
+# Notebook cell  -  runs nightly after ETL + OPTIMIZE
 tables_to_vacuum = [
     "silver.orders",
     "silver.customers",
@@ -1432,7 +1432,7 @@ except Exception as e:
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Why Liquid?</strong> Traditional partitioning requires knowing cardinality upfront and can cause small-file problems. Z-ORDER rewrites all files. Liquid Clustering clusters incrementally — only new/changed files are clustered when you run OPTIMIZE.
+              <strong>Why Liquid?</strong> Traditional partitioning requires knowing cardinality upfront and can cause small-file problems. Z-ORDER rewrites all files. Liquid Clustering clusters incrementally  -  only new/changed files are clustered when you run OPTIMIZE.
             </div>
           </div>
           <CodeBlock lang="sql">{`-- Create a table with Liquid Clustering
@@ -1451,7 +1451,7 @@ LOCATION 'abfss://silver@myaccount.dfs.core.windows.net/events';
 
 -- Incrementally cluster only new/changed files (run on a schedule)
 OPTIMIZE production.silver.events;
--- Liquid OPTIMIZE only rewrites unclustered files — much cheaper than Z-ORDER OPTIMIZE
+-- Liquid OPTIMIZE only rewrites unclustered files  -  much cheaper than Z-ORDER OPTIMIZE
 
 -- Change the clustering key without rewriting (metadata-only change)
 ALTER TABLE production.silver.events CLUSTER BY (region, event_date);
@@ -1473,9 +1473,9 @@ dt.optimize().executeCompaction()  # incremental clustering
 -- Z-ORDER:            good for existing tables that cannot be recreated
 -- Partitioning:       only for very low cardinality (e.g., date with ~365 partitions/year)`}</CodeBlock>
           <Quiz topicId="delta-liquid" questions={[
-            { question: "What is the main advantage of Liquid Clustering over Z-ORDER?", options: ["Liquid uses less storage", "Liquid clusters incrementally — only new/changed files are clustered, not the entire table", "Liquid supports more columns", "Liquid works without OPTIMIZE"], correct: 1 },
-            { question: "How do you change the clustering columns in a Liquid Clustered table?", options: ["Drop and recreate the table", "ALTER TABLE ... CLUSTER BY (...) — it is a metadata-only operation", "Run OPTIMIZE with new columns", "Use REORG TABLE"], correct: 1 },
-            { question: "When should you choose partitioning over Liquid Clustering?", options: ["Always — partitioning is faster", "For very low-cardinality columns like date (hundreds of distinct values), where partition pruning eliminates entire directories", "For string columns", "When using Auto Loader"], correct: 1 },
+            { question: "What is the main advantage of Liquid Clustering over Z-ORDER?", options: ["Liquid uses less storage", "Liquid clusters incrementally  -  only new/changed files are clustered, not the entire table", "Liquid supports more columns", "Liquid works without OPTIMIZE"], correct: 1 },
+            { question: "How do you change the clustering columns in a Liquid Clustered table?", options: ["Drop and recreate the table", "ALTER TABLE ... CLUSTER BY (...)  -  it is a metadata-only operation", "Run OPTIMIZE with new columns", "Use REORG TABLE"], correct: 1 },
+            { question: "When should you choose partitioning over Liquid Clustering?", options: ["Always  -  partitioning is faster", "For very low-cardinality columns like date (hundreds of distinct values), where partition pruning eliminates entire directories", "For string columns", "When using Auto Loader"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-liquid'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1523,8 +1523,8 @@ ALTER TABLE production.silver.orders
 -- They are enforced on INSERT, UPDATE, and MERGE operations
 -- They do NOT retroactively validate existing data (add constraint = future writes only)`}</CodeBlock>
           <Quiz topicId="delta-constraints" questions={[
-            { question: "When is a CHECK constraint enforced in Delta Lake?", options: ["When you run ANALYZE TABLE", "On every INSERT, UPDATE, and MERGE — bad rows are rejected before writing", "Only on INSERT, not on UPDATE or MERGE", "Only when explicitly called"], correct: 1 },
-            { question: "What happens to existing data when you ADD CONSTRAINT to a Delta table?", options: ["Existing rows that violate the constraint are deleted", "Existing rows are NOT validated — the constraint applies only to future writes", "The operation fails if any existing row violates the constraint", "A warning is logged for violating rows"], correct: 1 },
+            { question: "When is a CHECK constraint enforced in Delta Lake?", options: ["When you run ANALYZE TABLE", "On every INSERT, UPDATE, and MERGE  -  bad rows are rejected before writing", "Only on INSERT, not on UPDATE or MERGE", "Only when explicitly called"], correct: 1 },
+            { question: "What happens to existing data when you ADD CONSTRAINT to a Delta table?", options: ["Existing rows that violate the constraint are deleted", "Existing rows are NOT validated  -  the constraint applies only to future writes", "The operation fails if any existing row violates the constraint", "A warning is logged for violating rows"], correct: 1 },
             { question: "Where are Delta Lake constraints stored?", options: ["In a separate constraints catalog", "As table properties in the transaction log (_delta_log/)", "In the Hive metastore", "In a separate schema registry"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-constraints'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1589,7 +1589,7 @@ UNSET TBLPROPERTIES ('delta.autoOptimize.autoCompact');`}</CodeBlock>
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Rule of thumb:</strong> Partition only on columns with LOW cardinality (date, region, status). Target at least 1 GB of data per partition. Tables under 1 TB typically should NOT be partitioned at all — use Z-ORDER or Liquid Clustering instead.
+              <strong>Rule of thumb:</strong> Partition only on columns with LOW cardinality (date, region, status). Target at least 1 GB of data per partition. Tables under 1 TB typically should NOT be partitioned at all  -  use Z-ORDER or Liquid Clustering instead.
             </div>
           </div>
           <CodeBlock lang="python">{`# Good partition column selection
@@ -1654,7 +1654,7 @@ spark.sql("SHOW PARTITIONS production.silver.events").show()
 spark.sql("ALTER TABLE production.silver.events CLUSTER BY (event_date, region)")`}</CodeBlock>
           <Quiz topicId="delta-partitioning" questions={[
             { question: "What is the minimum recommended data volume per partition in a Delta table?", options: ["10 MB", "100 MB", "At least 1 GB to avoid the small-file problem", "10 GB"], correct: 2 },
-            { question: "Which column is a BAD choice for partitioning?", options: ["event_date (daily, ~365/year)", "region (5 distinct values)", "user_id (millions of distinct values — extreme over-partitioning)", "year_month (12/year)"], correct: 2 },
+            { question: "Which column is a BAD choice for partitioning?", options: ["event_date (daily, ~365/year)", "region (5 distinct values)", "user_id (millions of distinct values  -  extreme over-partitioning)", "year_month (12/year)"], correct: 2 },
             { question: "What does partition pruning do at query time?", options: ["Compresses partitions before reading", "Skips entire partition directories that do not match the WHERE clause filter, reducing I/O", "Merges small partitions automatically", "Sorts data within each partition"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-partitioning'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1668,7 +1668,7 @@ spark.sql("ALTER TABLE production.silver.events CLUSTER BY (event_date, region)"
           </div>
           <CodeBlock lang="python">{`# 1. DATA SKIPPING with column statistics
 # Delta auto-collects min/max/null counts for the first 32 columns
-# These stats live in the transaction log JSON files — no extra scan needed
+# These stats live in the transaction log JSON files  -  no extra scan needed
 # Control which columns get stats:
 spark.sql("""
     ALTER TABLE production.silver.events
@@ -1680,22 +1680,22 @@ spark.conf.set("spark.databricks.delta.dataSkippingNumIndexedCols", 32)
 # View data skipping effectiveness in query plan
 df = spark.sql("SELECT * FROM production.silver.events WHERE user_id = 12345")
 df.explain("cost")
-# Look for: numFiles read vs total files — high skip ratio = good Z-ORDER
+# Look for: numFiles read vs total files  -  high skip ratio = good Z-ORDER
 
 # 2. BLOOM FILTERS for high-cardinality exact match lookups (e.g., UUID, email)
 spark.sql("""
     CREATE BLOOMFILTER INDEX ON TABLE production.silver.events
     FOR COLUMNS (transaction_id OPTIONS (fpp=0.1, numItems=100000000))
 """)
-# fpp = false positive probability (0.1 = 10% — lower = bigger index, fewer false positives)
+# fpp = false positive probability (0.1 = 10%  -  lower = bigger index, fewer false positives)
 # numItems = expected distinct values
 
-# 3. DISK CACHE (Databricks) — caches Parquet/Delta files in SSD of worker nodes
+# 3. DISK CACHE (Databricks)  -  caches Parquet/Delta files in SSD of worker nodes
 spark.conf.set("spark.databricks.io.cache.enabled", "true")
 spark.conf.set("spark.databricks.io.cache.maxDiskUsage", "50g")
 spark.conf.set("spark.databricks.io.cache.maxMetaDataCache", "1g")
 # Best for: tables queried repeatedly within a cluster session
-# Cache is warm across queries — not cleared between jobs on same cluster
+# Cache is warm across queries  -  not cleared between jobs on same cluster
 
 # 4. PHOTON ENGINE (Databricks vectorized execution)
 # Enabled at cluster level: select "Use Photon Acceleration" in cluster config
@@ -1718,8 +1718,8 @@ spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")
 spark.sql("ANALYZE TABLE production.silver.events COMPUTE STATISTICS FOR ALL COLUMNS")
 # Provides row counts and column histograms to Catalyst for better join ordering`}</CodeBlock>
           <Quiz topicId="delta-performance" questions={[
-            { question: "What are Bloom filters used for in Delta Lake?", options: ["Compressing Parquet files", "Fast existence checks for high-cardinality columns like UUIDs — probabilistically skip files that cannot contain a value", "Tracking schema changes", "Enabling time travel"], correct: 1 },
-            { question: "Where are Delta Lake column statistics (min/max/null counts) stored?", options: ["In a separate stats table", "Inside the transaction log JSON commit files — read without scanning data files", "In the Hive metastore", "In a Bloom filter index"], correct: 1 },
+            { question: "What are Bloom filters used for in Delta Lake?", options: ["Compressing Parquet files", "Fast existence checks for high-cardinality columns like UUIDs  -  probabilistically skip files that cannot contain a value", "Tracking schema changes", "Enabling time travel"], correct: 1 },
+            { question: "Where are Delta Lake column statistics (min/max/null counts) stored?", options: ["In a separate stats table", "Inside the transaction log JSON commit files  -  read without scanning data files", "In the Hive metastore", "In a Bloom filter index"], correct: 1 },
             { question: "What is the Photon engine in Databricks?", options: ["A streaming protocol", "A vectorized query engine written in C++ that accelerates Spark SQL and DataFrame operations on Databricks clusters", "A file compression algorithm", "A cluster auto-scaling feature"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('delta-performance'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -1729,7 +1729,7 @@ spark.sql("ANALYZE TABLE production.silver.events COMPUTE STATISTICS FOR ALL COL
           <div className="topic-header">
             <div className="topic-eyebrow">Databricks + Unity Catalog</div>
             <h1 className="topic-title">Databricks Platform Overview</h1>
-            <p className="topic-desc">Databricks is the lakehouse platform built on Apache Spark. It provides managed clusters, notebooks, workflows, SQL warehouses, and Unity Catalog — all on top of customer cloud storage (ADLS Gen2, S3, GCS).</p>
+            <p className="topic-desc">Databricks is the lakehouse platform built on Apache Spark. It provides managed clusters, notebooks, workflows, SQL warehouses, and Unity Catalog  -  all on top of customer cloud storage (ADLS Gen2, S3, GCS).</p>
           </div>
           <CodeBlock lang="python">{`# Databricks Runtime (DBR) version controls Spark version + optimizations
 # DBR 14.3 LTS = Spark 3.5, Python 3.11, long-term support (recommended for production)
@@ -1737,17 +1737,17 @@ spark.sql("ANALYZE TABLE production.silver.events COMPUTE STATISTICS FOR ALL COL
 # DBR ML editions add MLflow, sklearn, PyTorch pre-installed
 
 # CLUSTER TYPES:
-# 1. All-Purpose Clusters — interactive notebooks and ad-hoc work
+# 1. All-Purpose Clusters  -  interactive notebooks and ad-hoc work
 #    - Persistent, shared, manually started/stopped
 #    - More expensive per hour (billed while idle)
 #    - Support notebooks + jobs
 
-# 2. Job Clusters — created per job run, terminated when done
-#    - No idle cost — only pay while running
+# 2. Job Clusters  -  created per job run, terminated when done
+#    - No idle cost  -  only pay while running
 #    - Best for scheduled production pipelines
 #    - Cannot run interactive notebooks
 
-# 3. SQL Warehouses — for Databricks SQL queries only
+# 3. SQL Warehouses  -  for Databricks SQL queries only
 #    - Serverless or classic
 #    - Auto-start, auto-stop, auto-scale
 #    - No Spark executor management needed
@@ -1770,13 +1770,13 @@ policy_example = {
 # Current: latest features, less stable, good for development
 
 # PHOTON: vectorized C++ execution engine
-# Enabled per cluster — checkbox "Use Photon Acceleration"
+# Enabled per cluster  -  checkbox "Use Photon Acceleration"
 # Benefits: 2-10x faster SQL queries, faster Delta reads/writes
 # Cost: Photon DBUs are priced higher than standard DBUs`}</CodeBlock>
           <Quiz topicId="databricks-platform" questions={[
-            { question: "What is the key cost difference between All-Purpose and Job clusters?", options: ["Job clusters are always more expensive", "All-Purpose clusters are billed while idle; Job clusters are created per run and terminated when done — no idle cost", "There is no cost difference", "Job clusters use more workers"], correct: 1 },
+            { question: "What is the key cost difference between All-Purpose and Job clusters?", options: ["Job clusters are always more expensive", "All-Purpose clusters are billed while idle; Job clusters are created per run and terminated when done  -  no idle cost", "There is no cost difference", "Job clusters use more workers"], correct: 1 },
             { question: "What is the purpose of Instance Pools in Databricks?", options: ["To share data between clusters", "To maintain pre-warmed VMs so clusters start faster (seconds instead of minutes)", "To reduce storage costs", "To enable cross-workspace access"], correct: 1 },
-            { question: "Which DBR version should you use for production workloads?", options: ["Always the latest version", "An LTS (Long Term Support) version like DBR 14.3 LTS — stable, 2-year support window", "The lowest version for compatibility", "ML edition only"], correct: 1 },
+            { question: "Which DBR version should you use for production workloads?", options: ["Always the latest version", "An LTS (Long Term Support) version like DBR 14.3 LTS  -  stable, 2-year support window", "The lowest version for compatibility", "ML edition only"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-platform'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1796,14 +1796,14 @@ policy_example = {
 
 -- Create catalog (workspace admin required)
 CREATE CATALOG IF NOT EXISTS production
-  COMMENT 'Production data — all teams';
+  COMMENT 'Production data  -  all teams';
 
 -- Create schema (database)
 CREATE SCHEMA IF NOT EXISTS production.silver
   MANAGED LOCATION 'abfss://silver@myaccount.dfs.core.windows.net/'
   COMMENT 'Cleansed and validated data';
 
--- Create managed table (UC owns lifecycle — DELETE TABLE deletes files)
+-- Create managed table (UC owns lifecycle  -  DELETE TABLE deletes files)
 CREATE TABLE production.silver.customers (
   customer_id  BIGINT  NOT NULL,
   email        STRING,
@@ -1834,9 +1834,9 @@ LIMIT 100;
 SELECT * FROM system.lineage.table_lineage    -- upstream/downstream tables
 WHERE target_table_full_name = 'production.silver.customers';`}</CodeBlock>
           <Quiz topicId="databricks-uc" questions={[
-            { question: "What is the difference between a Managed and External table in Unity Catalog?", options: ["No difference in behavior", "Managed: UC owns files — DROP TABLE deletes data. External: UC tracks location but files survive DROP TABLE", "External tables are read-only", "Managed tables cannot be partitioned"], correct: 1 },
+            { question: "What is the difference between a Managed and External table in Unity Catalog?", options: ["No difference in behavior", "Managed: UC owns files  -  DROP TABLE deletes data. External: UC tracks location but files survive DROP TABLE", "External tables are read-only", "Managed tables cannot be partitioned"], correct: 1 },
             { question: "What are Unity Catalog Volumes used for?", options: ["Storing Delta tables only", "Accessing non-tabular files (CSV, JSON, images, ML models) under UC governance via /Volumes/ path", "Replacing schemas", "Storing cluster logs"], correct: 1 },
-            { question: "How many Unity Catalog metastores exist per cloud region in Databricks?", options: ["One per workspace", "One per region — shared across all workspaces in that region", "One per catalog", "One per account"], correct: 1 },
+            { question: "How many Unity Catalog metastores exist per cloud region in Databricks?", options: ["One per workspace", "One per region  -  shared across all workspaces in that region", "One per catalog", "One per account"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-uc'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1845,7 +1845,7 @@ WHERE target_table_full_name = 'production.silver.customers';`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Databricks + Unity Catalog</div>
             <h1 className="topic-title">Unity Catalog Permissions</h1>
-            <p className="topic-desc">Unity Catalog uses an additive permission model — there is no DENY. Permissions cascade down the hierarchy (catalog → schema → table). Groups are the recommended way to manage access at scale.</p>
+            <p className="topic-desc">Unity Catalog uses an additive permission model  -  there is no DENY. Permissions cascade down the hierarchy (catalog → schema → table). Groups are the recommended way to manage access at scale.</p>
           </div>
           <CodeBlock lang="sql">{`-- GRANT syntax: GRANT <privilege> ON <securable_type> <name> TO <principal>
 -- Principals: user email, group name, service principal app ID
@@ -1894,9 +1894,9 @@ GRANT SELECT  ON TABLE production.silver.events  TO \`job-sp-app-id-12345\`;
 -- If a user is in two groups where one has SELECT and the other does not,
 -- they CAN read the table (additive wins).`}</CodeBlock>
           <Quiz topicId="databricks-uc-permissions" questions={[
-            { question: "A user needs to query production.silver.orders. What is the minimum set of grants required?", options: ["Only SELECT on the table", "USE CATALOG on production, USE SCHEMA on production.silver, and SELECT on the table — all three are required", "SELECT on production.silver.orders and USE CATALOG on production", "MODIFY on the table"], correct: 1 },
-            { question: "In Unity Catalog, what happens if a user is in Group A (has SELECT) and Group B (no SELECT on a table)?", options: ["The user cannot access the table — most restrictive wins", "The user CAN access the table — UC is additive only, there is no DENY", "An error is thrown due to conflicting permissions", "The user must explicitly be granted access"], correct: 1 },
-            { question: "What privilege is required for a job service principal to INSERT data into a Delta table?", options: ["SELECT", "CREATE TABLE", "MODIFY — covers INSERT, UPDATE, DELETE, and MERGE", "WRITE VOLUME"], correct: 2 },
+            { question: "A user needs to query production.silver.orders. What is the minimum set of grants required?", options: ["Only SELECT on the table", "USE CATALOG on production, USE SCHEMA on production.silver, and SELECT on the table  -  all three are required", "SELECT on production.silver.orders and USE CATALOG on production", "MODIFY on the table"], correct: 1 },
+            { question: "In Unity Catalog, what happens if a user is in Group A (has SELECT) and Group B (no SELECT on a table)?", options: ["The user cannot access the table  -  most restrictive wins", "The user CAN access the table  -  UC is additive only, there is no DENY", "An error is thrown due to conflicting permissions", "The user must explicitly be granted access"], correct: 1 },
+            { question: "What privilege is required for a job service principal to INSERT data into a Delta table?", options: ["SELECT", "CREATE TABLE", "MODIFY  -  covers INSERT, UPDATE, DELETE, and MERGE", "WRITE VOLUME"], correct: 2 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-uc-permissions'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -1971,7 +1971,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import col, to_timestamp, current_timestamp
 
 # ============================================================
-# BRONZE LAYER — Raw ingestion via Auto Loader
+# BRONZE LAYER  -  Raw ingestion via Auto Loader
 # ============================================================
 @dlt.table(
     name="orders_raw",
@@ -1995,7 +1995,7 @@ def orders_raw():
     )
 
 # ============================================================
-# SILVER LAYER — Cleaned + validated with expectations
+# SILVER LAYER  -  Cleaned + validated with expectations
 # ============================================================
 @dlt.table(
     name="orders",
@@ -2020,7 +2020,7 @@ def orders():
     )
 
 # ============================================================
-# GOLD LAYER — Business aggregation (batch read, not stream)
+# GOLD LAYER  -  Business aggregation (batch read, not stream)
 # ============================================================
 @dlt.table(
     name="revenue_by_day",
@@ -2042,7 +2042,7 @@ def revenue_by_day():
     )
 
 # ============================================================
-# DLT VIEWS — Temporary, not materialized as Delta tables
+# DLT VIEWS  -  Temporary, not materialized as Delta tables
 # ============================================================
 @dlt.view(name="cancelled_orders_v")
 def cancelled_orders_view():
@@ -2061,7 +2061,7 @@ def cancelled_orders_view():
           <Quiz topicId="databricks-dlt" questions={[
             { question: "What is the difference between @dlt.expect_or_drop and @dlt.expect_or_fail?", options: ["They are identical", "expect_or_drop silently removes violating rows and continues; expect_or_fail halts the entire pipeline on any violation", "expect_or_fail sends an alert; expect_or_drop logs to the event log", "expect_or_drop is for streaming; expect_or_fail is for batch"], correct: 1 },
             { question: "When should you use dlt.read() vs dlt.read_stream()?", options: ["They are interchangeable", "dlt.read_stream() for incremental/streaming sources (Bronze→Silver); dlt.read() for batch aggregations where you want to reprocess all data (Silver→Gold)", "dlt.read() is deprecated", "dlt.read_stream() only works with Auto Loader"], correct: 1 },
-            { question: "What is the DLT Event Log used for?", options: ["Storing raw data files", "Monitoring pipeline health — query it to see row counts, expectation failures, data quality metrics, and pipeline status per update", "Replacing the Delta transaction log", "Storing cluster logs"], correct: 1 },
+            { question: "What is the DLT Event Log used for?", options: ["Storing raw data files", "Monitoring pipeline health  -  query it to see row counts, expectation failures, data quality metrics, and pipeline status per update", "Replacing the Delta transaction log", "Storing cluster logs"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-dlt'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2072,7 +2072,7 @@ def cancelled_orders_view():
             <h1 className="topic-title">Auto Loader (cloudFiles)</h1>
             <p className="topic-desc">Auto Loader incrementally and efficiently processes new files from cloud storage. It tracks which files have been processed using a checkpoint, supports two file discovery modes, and handles schema inference and evolution automatically.</p>
           </div>
-          <CodeBlock lang="python">{`# Auto Loader — production-ready configuration
+          <CodeBlock lang="python">{`# Auto Loader  -  production-ready configuration
 from pyspark.sql import functions as F
 
 df_stream = (
@@ -2084,7 +2084,7 @@ df_stream = (
     .option("cloudFiles.schemaLocation", "/checkpoints/schema/orders")  # inferred schema storage
 
     # File discovery mode
-    # "directory" (default): lists the folder on each trigger — works everywhere
+    # "directory" (default): lists the folder on each trigger  -  works everywhere
     # "notification": uses Azure Event Grid / SNS for instant file detection (set up in cloud)
     .option("cloudFiles.useNotifications", "true")
     # For Azure: requires Event Grid subscription + storage queue configured
@@ -2136,7 +2136,7 @@ query.awaitTermination()
           <Quiz topicId="databricks-autoloader" questions={[
             { question: "What is the purpose of cloudFiles.rescuedDataColumn in Auto Loader?", options: ["It rescues corrupted files", "It captures unexpected columns or type mismatches into a separate JSON column, so data is never silently dropped", "It recovers files from a failed checkpoint", "It stores schema history"], correct: 1 },
             { question: "What is the difference between maxFilesPerTrigger and cloudFiles.backfillInterval?", options: ["They control the same thing", "maxFilesPerTrigger limits files per micro-batch (rate control); backfillInterval triggers periodic full directory re-scans to catch any files missed by event notifications", "maxFilesPerTrigger is for batch; backfillInterval is for streaming", "backfillInterval replaces the checkpoint"], correct: 1 },
-            { question: "What does trigger(availableNow=True) do in Auto Loader?", options: ["Runs continuously until stopped", "Processes all files currently in the landing zone in one or more micro-batches, then terminates the stream — useful for scheduled batch ingestion", "Triggers on file count exceeding a threshold", "Runs only on the most recently added file"], correct: 1 },
+            { question: "What does trigger(availableNow=True) do in Auto Loader?", options: ["Runs continuously until stopped", "Processes all files currently in the landing zone in one or more micro-batches, then terminates the stream  -  useful for scheduled batch ingestion", "Triggers on file count exceeding a threshold", "Runs only on the most recently added file"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-autoloader'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2148,7 +2148,7 @@ query.awaitTermination()
             <p className="topic-desc">Databricks Workflows (branded as Lakeflow Orchestration) is the native orchestration engine. It supports complex DAGs of tasks with dependencies, retry policies, alerting, and dynamic parameter passing.</p>
           </div>
           <CodeBlock lang="json">{`{
-  "name": "Production Gold Layer — Daily",
+  "name": "Production Gold Layer  -  Daily",
   "schedule": {
     "quartz_cron_expression": "0 30 2 * * ?",
     "timezone_id": "UTC",
@@ -2254,8 +2254,8 @@ query.awaitTermination()
   }
 }`}</CodeBlock>
           <Quiz topicId="databricks-workflows" questions={[
-            { question: "What does {{ds}} represent in a Databricks Workflow task parameter?", options: ["Data source name", "The scheduled run date in YYYY-MM-DD format — a dynamic value substituted at runtime", "Dataset size", "The Databricks SQL warehouse ID"], correct: 1 },
-            { question: "When two tasks both depend on compute_silver and have no dependency between each other, how does Databricks execute them?", options: ["Sequentially in alphabetical order", "In parallel — Databricks executes tasks as soon as all their dependencies succeed", "The first task defined in JSON runs first", "User must manually trigger each task"], correct: 1 },
+            { question: "What does {{ds}} represent in a Databricks Workflow task parameter?", options: ["Data source name", "The scheduled run date in YYYY-MM-DD format  -  a dynamic value substituted at runtime", "Dataset size", "The Databricks SQL warehouse ID"], correct: 1 },
+            { question: "When two tasks both depend on compute_silver and have no dependency between each other, how does Databricks execute them?", options: ["Sequentially in alphabetical order", "In parallel  -  Databricks executes tasks as soon as all their dependencies succeed", "The first task defined in JSON runs first", "User must manually trigger each task"], correct: 1 },
             { question: "What is a Repair Run in Databricks Workflows?", options: ["Re-runs the entire job from scratch", "Re-runs only the failed tasks (and their downstream dependents) without re-running successful tasks", "Fixes syntax errors in notebooks", "Restores Delta tables to a previous version"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-workflows'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -2267,7 +2267,7 @@ query.awaitTermination()
             <h1 className="topic-title">Databricks Asset Bundles (DAB)</h1>
             <p className="topic-desc">Databricks Asset Bundles (DAB) is the Infrastructure-as-Code solution for Databricks. Define jobs, pipelines, notebooks, and cluster configs in YAML, then deploy to dev/staging/prod with a single CLI command.</p>
           </div>
-          <CodeBlock lang="yaml">{`# bundle.yml — root configuration file
+          <CodeBlock lang="yaml">{`# bundle.yml  -  root configuration file
 bundle:
   name: gold-layer-pipeline
 
@@ -2395,7 +2395,7 @@ databricks bundle destroy --target dev
           <div className="topic-header">
             <div className="topic-eyebrow">Databricks + Unity Catalog</div>
             <h1 className="topic-title">Databricks SQL</h1>
-            <p className="topic-desc">Databricks SQL is the SQL analytics layer — SQL warehouses for BI tools, query history and profiling, alerts, and dashboards. Serverless warehouses start instantly and auto-scale with zero management.</p>
+            <p className="topic-desc">Databricks SQL is the SQL analytics layer  -  SQL warehouses for BI tools, query history and profiling, alerts, and dashboards. Serverless warehouses start instantly and auto-scale with zero management.</p>
           </div>
           <CodeBlock lang="sql">{`-- SQL WAREHOUSES: two types
 -- 1. Serverless: instant start (<5 sec), auto-scale, fully managed, higher cost/DBU
@@ -2459,7 +2459,7 @@ AS SELECT * FROM STREAM(production.bronze.events_landing);
 -- Declarative, managed incremental ingestion without DLT notebook`}</CodeBlock>
           <Quiz topicId="databricks-sql" questions={[
             { question: "What is the key operational difference between Serverless and Classic SQL warehouses?", options: ["Serverless only supports small queries", "Serverless starts in under 5 seconds and auto-scales with no cluster management; Classic requires manual configuration and has slower startup", "Classic is always faster", "Serverless does not support Unity Catalog"], correct: 1 },
-            { question: "What does the Query Profile in Databricks SQL show?", options: ["The user who ran the query", "A detailed operator tree showing execution phases, bottlenecks, spill-to-disk, and row counts per operator — like Spark's physical plan UI for SQL", "Query cost estimates only", "The SQL warehouse configuration"], correct: 1 },
+            { question: "What does the Query Profile in Databricks SQL show?", options: ["The user who ran the query", "A detailed operator tree showing execution phases, bottlenecks, spill-to-disk, and row counts per operator  -  like Spark's physical plan UI for SQL", "Query cost estimates only", "The SQL warehouse configuration"], correct: 1 },
             { question: "What is a Materialized View in Databricks SQL?", options: ["A view that materializes once and never updates", "A precomputed query result stored as a Delta table, automatically refreshed when upstream tables change", "A view stored in the client browser cache", "A synonym for a regular CREATE VIEW"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-sql'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
@@ -2513,7 +2513,7 @@ SHOW ALL IN SHARE partner_analytics_share;
 -- Option A: Databricks-to-Databricks (same account)
 -- Just use the table directly: SELECT * FROM production.gold.revenue_by_day
 
--- Option B: Open Sharing — any platform via credential file
+-- Option B: Open Sharing  -  any platform via credential file
 -- 1. Recipient activates link -> downloads credentials JSON
 -- 2. Connect from PySpark:
 from delta_sharing import SharingClient
@@ -2534,9 +2534,9 @@ SELECT * FROM system.delta_sharing.recipient_data_access
 WHERE share_name = 'partner_analytics_share'
 ORDER BY event_time DESC;`}</CodeBlock>
           <Quiz topicId="databricks-sharing" questions={[
-            { question: "What is the key advantage of Delta Sharing over traditional data export for partner sharing?", options: ["Delta Sharing is faster to query", "Recipients access live data directly from the provider's storage with no data copying or movement — always fresh, no ETL pipeline needed", "Delta Sharing compresses data automatically", "Recipients get full write access"], correct: 1 },
+            { question: "What is the key advantage of Delta Sharing over traditional data export for partner sharing?", options: ["Delta Sharing is faster to query", "Recipients access live data directly from the provider's storage with no data copying or movement  -  always fresh, no ETL pipeline needed", "Delta Sharing compresses data automatically", "Recipients get full write access"], correct: 1 },
             { question: "What is the difference between a Share and a Recipient in Delta Sharing?", options: ["They are the same concept", "A Share is a named collection of tables/schemas being offered; a Recipient is an identity (organization/team) that is granted access to one or more Shares", "A Recipient can modify the Share definition", "A Share belongs to a single workspace only"], correct: 1 },
-            { question: "Can a non-Databricks organization receive shared Delta data?", options: ["No — Delta Sharing requires both sides to be Databricks", "Yes — via the open sharing protocol using a credential file, recipients can query shared data from Spark, pandas, Power BI, or any Delta Sharing client", "Only if they use Apache Spark", "Only via REST API"], correct: 1 },
+            { question: "Can a non-Databricks organization receive shared Delta data?", options: ["No  -  Delta Sharing requires both sides to be Databricks", "Yes  -  via the open sharing protocol using a credential file, recipients can query shared data from Spark, pandas, Power BI, or any Delta Sharing client", "Only if they use Apache Spark", "Only via REST API"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-sharing'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2547,7 +2547,7 @@ ORDER BY event_time DESC;`}</CodeBlock>
           <div className="topic-header">
             <div className="topic-eyebrow">Table Formats Comparison</div>
             <h1 className="topic-title">Apache Iceberg Architecture</h1>
-            <p className="topic-desc">Apache Iceberg is an open table format for huge analytic datasets. Unlike Hive which tracks data at the partition directory level, Iceberg tracks files at the table level — enabling hidden partitioning, partition evolution, and snapshot isolation. The metadata layer (manifest files → manifest lists → table metadata JSON) is completely decoupled from the data files (Parquet/ORC/Avro), and a catalog (Hive/Glue/REST/Nessie) stores just a pointer to the current metadata file.</p>
+            <p className="topic-desc">Apache Iceberg is an open table format for huge analytic datasets. Unlike Hive which tracks data at the partition directory level, Iceberg tracks files at the table level  -  enabling hidden partitioning, partition evolution, and snapshot isolation. The metadata layer (manifest files → manifest lists → table metadata JSON) is completely decoupled from the data files (Parquet/ORC/Avro), and a catalog (Hive/Glue/REST/Nessie) stores just a pointer to the current metadata file.</p>
           </div>
 
           <div className="callout callout-info">
@@ -2624,7 +2624,7 @@ spark.sql("SELECT * FROM glue_catalog.db.events.history").show()
 spark.sql("SELECT * FROM glue_catalog.db.events.manifests").show()
 spark.sql("SELECT * FROM glue_catalog.db.events.files").show(5)
 
-# Inspect partitions (Iceberg tracks these in metadata — no directory scan needed)
+# Inspect partitions (Iceberg tracks these in metadata  -  no directory scan needed)
 spark.sql("SELECT * FROM glue_catalog.db.events.partitions").show()
 
 # ── Iceberg spec v2: row-level deletes ────────────────────────────────────────
@@ -2657,7 +2657,7 @@ spark.sql("""
 """)`}</CodeBlock>
 
           <Quiz topicId="iceberg-intro" questions={[
-            { question: "How does Apache Iceberg track table data differently from Apache Hive?", options: ["Iceberg stores data in HDFS only; Hive works on S3", "Iceberg tracks files at the table level via a metadata layer (manifest files/lists); Hive tracks at the partition directory level — Iceberg enables hidden partitioning and partition evolution without directory scans", "They track data identically — Iceberg just adds ACID on top", "Iceberg uses a RDBMS sidecar for file tracking; Hive does not"], correct: 1 },
+            { question: "How does Apache Iceberg track table data differently from Apache Hive?", options: ["Iceberg stores data in HDFS only; Hive works on S3", "Iceberg tracks files at the table level via a metadata layer (manifest files/lists); Hive tracks at the partition directory level  -  Iceberg enables hidden partitioning and partition evolution without directory scans", "They track data identically  -  Iceberg just adds ACID on top", "Iceberg uses a RDBMS sidecar for file tracking; Hive does not"], correct: 1 },
             { question: "What was added in Iceberg spec version 2 that spec v1 lacked?", options: ["Snapshot isolation", "Hidden partitioning", "Row-level deletes via position delete files and equality delete files", "Schema evolution"], correct: 2 },
             { question: "In the Iceberg metadata hierarchy, what is the correct order from outermost to innermost?", options: ["Manifest file → Manifest list → Table metadata JSON", "Data files → Manifest files → Manifest list → Table metadata JSON", "Table metadata JSON → Manifest list → Manifest files → Data files", "Catalog → Table metadata JSON → Snapshot → Manifest list → Manifest files"], correct: 3 },
           ]} />
@@ -2669,12 +2669,12 @@ spark.sql("""
           <div className="topic-header">
             <div className="topic-eyebrow">Table Formats Comparison</div>
             <h1 className="topic-title">Iceberg: Hidden Partitioning + Time Travel</h1>
-            <p className="topic-desc">Iceberg's hidden partitioning is one of its most powerful innovations — partition transforms (identity, bucket, truncate, year/month/day/hour) are applied automatically by the engine. Queries never need to know the physical partition layout. Combined with schema evolution, partition evolution, and time travel, Iceberg provides a full table management lifecycle without ever rewriting all your data.</p>
+            <p className="topic-desc">Iceberg's hidden partitioning is one of its most powerful innovations  -  partition transforms (identity, bucket, truncate, year/month/day/hour) are applied automatically by the engine. Queries never need to know the physical partition layout. Combined with schema evolution, partition evolution, and time travel, Iceberg provides a full table management lifecycle without ever rewriting all your data.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Partition Evolution:</strong> In Hive, changing the partition column requires rewriting all data. In Iceberg, you simply add a new partition spec — old files keep the old partitioning, new files use the new spec. Both coexist transparently. This is a zero-copy operation that takes milliseconds.</div>
+            <div className="callout-body"><strong>Partition Evolution:</strong> In Hive, changing the partition column requires rewriting all data. In Iceberg, you simply add a new partition spec  -  old files keep the old partitioning, new files use the new spec. Both coexist transparently. This is a zero-copy operation that takes milliseconds.</div>
           </div>
 
           <CodeBlock lang="python">{`# ── Iceberg Hidden Partitioning ──────────────────────────────────────────────
@@ -2683,13 +2683,13 @@ from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName("IcebergFeatures").getOrCreate()
 
 # ── Partition transforms ──────────────────────────────────────────────────────
-# identity(col)   — exact value (same as Hive partitioning)
-# bucket(N, col)  — hash into N buckets (hides high-cardinality from users)
-# truncate(W, col)— truncate string to W chars or integer to W multiples
-# year(col)       — extract year from timestamp/date
-# month(col)      — extract year-month
-# day(col)        — extract year-month-day
-# hour(col)       — extract year-month-day-hour
+# identity(col)    -  exact value (same as Hive partitioning)
+# bucket(N, col)   -  hash into N buckets (hides high-cardinality from users)
+# truncate(W, col) -  truncate string to W chars or integer to W multiples
+# year(col)        -  extract year from timestamp/date
+# month(col)       -  extract year-month
+# day(col)         -  extract year-month-day
+# hour(col)        -  extract year-month-day-hour
 
 spark.sql("""
   CREATE TABLE glue_catalog.db.events (
@@ -2705,7 +2705,7 @@ spark.sql("""
   )
 """)
 
-# Query WITHOUT specifying partition column — Iceberg applies transform automatically
+# Query WITHOUT specifying partition column  -  Iceberg applies transform automatically
 spark.sql("""
   SELECT * FROM glue_catalog.db.events
   WHERE event_ts >= '2024-01-15' AND event_ts < '2024-01-16'
@@ -2714,27 +2714,27 @@ spark.sql("""
 # No need to add WHERE event_day = '2024-01-15' like in Hive
 
 # ── Schema evolution ──────────────────────────────────────────────────────────
-# ADD — add a new column (safe, nullable by default)
+# ADD  -  add a new column (safe, nullable by default)
 spark.sql("ALTER TABLE glue_catalog.db.events ADD COLUMN channel STRING")
 spark.sql("ALTER TABLE glue_catalog.db.events ADD COLUMN metadata MAP<STRING,STRING> AFTER channel")
 
-# DROP — logically removed from schema; old files still have the physical column but readers skip it
+# DROP  -  logically removed from schema; old files still have the physical column but readers skip it
 spark.sql("ALTER TABLE glue_catalog.db.events DROP COLUMN channel")
 
-# RENAME — metadata-only, zero file rewrites
+# RENAME  -  metadata-only, zero file rewrites
 spark.sql("ALTER TABLE glue_catalog.db.events RENAME COLUMN amount TO order_amount")
 
-# REORDER — change column position in schema
+# REORDER  -  change column position in schema
 spark.sql("ALTER TABLE glue_catalog.db.events ALTER COLUMN metadata FIRST")
 
-# TYPE PROMOTION — safe widening only (int → long, float → double)
+# TYPE PROMOTION  -  safe widening only (int → long, float → double)
 spark.sql("ALTER TABLE glue_catalog.db.events ALTER COLUMN user_id TYPE BIGINT")
 
 # ── Partition evolution ───────────────────────────────────────────────────────
 # Old partitioning: by day
 # New requirement: partition by hour for higher granularity
 
-# Add new partition field — old files keep day partitioning, new files use hour
+# Add new partition field  -  old files keep day partitioning, new files use hour
 spark.sql("""
   ALTER TABLE glue_catalog.db.events
   ADD PARTITION FIELD hours(event_ts)
@@ -2796,9 +2796,9 @@ spark.sql("""
 spark.read.option("tag", "monthly_snapshot_jan_2024").table("glue_catalog.db.events")`}</CodeBlock>
 
           <Quiz topicId="iceberg-features" questions={[
-            { question: "With Iceberg hidden partitioning using PARTITIONED BY (days(event_ts)), what must the user include in their query to benefit from partition pruning?", options: ["They must add WHERE event_day = '...' using the derived partition column", "They must use a special PARTITION FILTER clause", "Nothing extra — Iceberg automatically applies the transform when filtering on event_ts, so a normal WHERE event_ts = '...' filter is enough", "They must call REFRESH TABLE first"], correct: 2 },
-            { question: "You change a table's partition spec from days(event_ts) to hours(event_ts). What happens to existing data files?", options: ["All existing files are rewritten with the new hourly partition structure", "The operation fails — partition specs cannot be changed in Iceberg", "Existing files retain their day-based partitioning; only new files use the hour-based spec — both coexist transparently", "Existing files are moved to an archive location"], correct: 2 },
-            { question: "Iceberg branching allows you to:", options: ["Create read replicas of a table for performance", "Isolate writes to a named branch (snapshot lineage) so you can validate changes before merging to main — similar to Git branches for table data", "Partition a table across multiple storage accounts", "Create materialized view snapshots"], correct: 1 },
+            { question: "With Iceberg hidden partitioning using PARTITIONED BY (days(event_ts)), what must the user include in their query to benefit from partition pruning?", options: ["They must add WHERE event_day = '...' using the derived partition column", "They must use a special PARTITION FILTER clause", "Nothing extra  -  Iceberg automatically applies the transform when filtering on event_ts, so a normal WHERE event_ts = '...' filter is enough", "They must call REFRESH TABLE first"], correct: 2 },
+            { question: "You change a table's partition spec from days(event_ts) to hours(event_ts). What happens to existing data files?", options: ["All existing files are rewritten with the new hourly partition structure", "The operation fails  -  partition specs cannot be changed in Iceberg", "Existing files retain their day-based partitioning; only new files use the hour-based spec  -  both coexist transparently", "Existing files are moved to an archive location"], correct: 2 },
+            { question: "Iceberg branching allows you to:", options: ["Create read replicas of a table for performance", "Isolate writes to a named branch (snapshot lineage) so you can validate changes before merging to main  -  similar to Git branches for table data", "Partition a table across multiple storage accounts", "Create materialized view snapshots"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('iceberg-features'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2808,7 +2808,7 @@ spark.read.option("tag", "monthly_snapshot_jan_2024").table("glue_catalog.db.eve
           <div className="topic-header">
             <div className="topic-eyebrow">Table Formats Comparison</div>
             <h1 className="topic-title">Apache Hudi (COW vs MOR)</h1>
-            <p className="topic-desc">Apache Hudi (Hadoop Upserts and Incremental Deletes) was built by Uber for record-level upserts on data lakes — a problem Delta and Iceberg solve differently. Hudi's defining architectural choice is its two table types: Copy-On-Write (COW) rewrites Parquet files on every write, while Merge-On-Read (MOR) appends delta log files and merges at read time. Every Hudi operation is recorded on the Hudi Timeline, providing a complete operational history.</p>
+            <p className="topic-desc">Apache Hudi (Hadoop Upserts and Incremental Deletes) was built by Uber for record-level upserts on data lakes  -  a problem Delta and Iceberg solve differently. Hudi's defining architectural choice is its two table types: Copy-On-Write (COW) rewrites Parquet files on every write, while Merge-On-Read (MOR) appends delta log files and merges at read time. Every Hudi operation is recorded on the Hudi Timeline, providing a complete operational history.</p>
           </div>
 
           <div className="callout callout-info">
@@ -2828,7 +2828,7 @@ spark = SparkSession.builder \
 
 # ── 1. Copy-On-Write (COW) table ──────────────────────────────────────────────
 # On every upsert: reads affected Parquet files, merges new records, rewrites
-# Reads always get latest data from clean Parquet files — no merge at read time.
+# Reads always get latest data from clean Parquet files  -  no merge at read time.
 
 hudi_options_cow = {
     "hoodie.table.name": "orders",
@@ -2851,7 +2851,7 @@ df.write \
     .save("s3://warehouse/silver/orders/")
 
 # ── 2. Merge-On-Read (MOR) table ──────────────────────────────────────────────
-# Writes append a delta log file (.log) — very fast writes.
+# Writes append a delta log file (.log)  -  very fast writes.
 # Reads: merge base Parquet file + delta log files for latest view.
 # Periodic compaction rewrites base files to absorb the logs.
 
@@ -2898,16 +2898,16 @@ timeline = spark.read.format("hudi").load("s3://warehouse/silver/orders/") \
 timeline.show(5)
 
 # ── 4. Three query types ──────────────────────────────────────────────────────
-# Snapshot Query — latest state (default) — for COW: clean Parquet; for MOR: merges base+log
+# Snapshot Query  -  latest state (default)  -  for COW: clean Parquet; for MOR: merges base+log
 snapshot_df = spark.read.format("hudi").load("s3://warehouse/silver/events/")
 
-# Incremental Query — changes since a commit time (like CDF in Delta)
+# Incremental Query  -  changes since a commit time (like CDF in Delta)
 incremental_df = spark.read.format("hudi") \
     .option("hoodie.datasource.query.type", "incremental") \
     .option("hoodie.datasource.read.begin.instanttime", "20240115000000000") \
     .load("s3://warehouse/silver/events/")
 
-# Read Optimized Query (MOR only) — reads only base Parquet files, skips delta logs
+# Read Optimized Query (MOR only)  -  reads only base Parquet files, skips delta logs
 # Fast but may not have the very latest records
 ro_df = spark.read.format("hudi") \
     .option("hoodie.datasource.query.type", "read_optimized") \
@@ -2927,9 +2927,9 @@ delete_df.write \
     .save("s3://warehouse/silver/orders/")`}</CodeBlock>
 
           <Quiz topicId="hudi-intro" questions={[
-            { question: "You have a high-frequency CDC pipeline ingesting 50,000 upserts/second. Which Hudi table type should you choose?", options: ["Copy-On-Write (COW) — rewrites Parquet files immediately for fast reads", "Merge-On-Read (MOR) — appends delta log files for fast writes, merges at read time", "Both are equivalent for streaming CDC", "Neither — use Delta Lake for streaming"], correct: 1 },
-            { question: "What is hoodie.datasource.write.precombine.field used for?", options: ["It defines the partition column for the table", "When multiple records share the same record key in a batch, the precombine field is used to pick the winner — the record with the higher value is kept", "It sets the sort order for Parquet files", "It controls the compaction trigger interval"], correct: 1 },
-            { question: "What does an Incremental Query in Hudi return?", options: ["A snapshot of the table at a historical timestamp", "Only the records that changed (inserted/updated/deleted) since a specified commit time — useful for propagating changes downstream", "All records sorted by commit time", "Records that failed validation"], correct: 1 },
+            { question: "You have a high-frequency CDC pipeline ingesting 50,000 upserts/second. Which Hudi table type should you choose?", options: ["Copy-On-Write (COW)  -  rewrites Parquet files immediately for fast reads", "Merge-On-Read (MOR)  -  appends delta log files for fast writes, merges at read time", "Both are equivalent for streaming CDC", "Neither  -  use Delta Lake for streaming"], correct: 1 },
+            { question: "What is hoodie.datasource.write.precombine.field used for?", options: ["It defines the partition column for the table", "When multiple records share the same record key in a batch, the precombine field is used to pick the winner  -  the record with the higher value is kept", "It sets the sort order for Parquet files", "It controls the compaction trigger interval"], correct: 1 },
+            { question: "What does an Incremental Query in Hudi return?", options: ["A snapshot of the table at a historical timestamp", "Only the records that changed (inserted/updated/deleted) since a specified commit time  -  useful for propagating changes downstream", "All records sorted by commit time", "Records that failed validation"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('hudi-intro'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -2939,12 +2939,12 @@ delete_df.write \
           <div className="topic-header">
             <div className="topic-eyebrow">Table Formats Comparison</div>
             <h1 className="topic-title">Delta vs Iceberg vs Hudi Comparison</h1>
-            <p className="topic-desc">Delta Lake, Apache Iceberg, and Apache Hudi all solve the same core problem — ACID transactions and reliable upserts on cloud data lakes — but with different architectural trade-offs, ecosystem alignments, and strengths. Understanding when to choose each format is critical for modern data platform design.</p>
+            <p className="topic-desc">Delta Lake, Apache Iceberg, and Apache Hudi all solve the same core problem  -  ACID transactions and reliable upserts on cloud data lakes  -  but with different architectural trade-offs, ecosystem alignments, and strengths. Understanding when to choose each format is critical for modern data platform design.</p>
           </div>
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Vendor alignment:</strong> Delta Lake = Databricks + Azure (native on Databricks; excellent on ADLS). Iceberg = AWS + Snowflake + Dremio (native on AWS Glue, S3Tables, Snowflake). Hudi = Uber origin, strong on AWS EMR + S3. In practice, multi-cloud platforms are moving toward supporting all three — but your primary cloud/vendor choice often dictates the default.</div>
+            <div className="callout-body"><strong>Vendor alignment:</strong> Delta Lake = Databricks + Azure (native on Databricks; excellent on ADLS). Iceberg = AWS + Snowflake + Dremio (native on AWS Glue, S3Tables, Snowflake). Hudi = Uber origin, strong on AWS EMR + S3. In practice, multi-cloud platforms are moving toward supporting all three  -  but your primary cloud/vendor choice often dictates the default.</div>
           </div>
 
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
@@ -3037,7 +3037,7 @@ hudi_opts = {
 # Write
 df.write.format("hudi").options(**hudi_opts).mode("append").save("s3://bucket/hudi/orders/")
 
-# Read (snapshot — latest)
+# Read (snapshot  -  latest)
 hudi_df = spark.read.format("hudi").load("s3://bucket/hudi/orders/")
 
 # Incremental read (changes since a commit time)
@@ -3067,9 +3067,9 @@ hudi_df_incr = spark.read.format("hudi") \
 #   - You need incremental processing built into the table format natively`}</CodeBlock>
 
           <Quiz topicId="format-comparison" questions={[
-            { question: "Which table format offers partition evolution (changing the partition spec without rewriting data) as a first-class zero-copy operation?", options: ["Delta Lake — via OPTIMIZE + ZORDER", "Apache Iceberg — add/drop partition fields in metadata only; old and new files coexist transparently", "Apache Hudi — via timeline compaction", "All three support zero-copy partition evolution"], correct: 1 },
-            { question: "You are building a data platform on AWS that must be queryable from Spark, Trino, Flink, and Snowflake without vendor lock-in. Which format is the best fit?", options: ["Delta Lake — best multi-engine support overall", "Apache Hudi — native AWS support via EMR", "Apache Iceberg — excellent multi-engine support on AWS (Glue, Athena, EMR) with first-class Trino and Snowflake integration", "All three are equally suited for this scenario"], correct: 2 },
-            { question: "What is the key architectural reason Apache Hudi MOR has faster write performance than Delta Lake or Iceberg for high-frequency upserts?", options: ["Hudi uses in-memory storage for recent writes", "MOR appends only a small delta log file per write batch without rewriting existing Parquet files — the merge cost is deferred to read time or periodic compaction", "Hudi skips ACID validation for speed", "Hudi uses columnar compression that is faster to write"], correct: 1 },
+            { question: "Which table format offers partition evolution (changing the partition spec without rewriting data) as a first-class zero-copy operation?", options: ["Delta Lake  -  via OPTIMIZE + ZORDER", "Apache Iceberg  -  add/drop partition fields in metadata only; old and new files coexist transparently", "Apache Hudi  -  via timeline compaction", "All three support zero-copy partition evolution"], correct: 1 },
+            { question: "You are building a data platform on AWS that must be queryable from Spark, Trino, Flink, and Snowflake without vendor lock-in. Which format is the best fit?", options: ["Delta Lake  -  best multi-engine support overall", "Apache Hudi  -  native AWS support via EMR", "Apache Iceberg  -  excellent multi-engine support on AWS (Glue, Athena, EMR) with first-class Trino and Snowflake integration", "All three are equally suited for this scenario"], correct: 2 },
+            { question: "What is the key architectural reason Apache Hudi MOR has faster write performance than Delta Lake or Iceberg for high-frequency upserts?", options: ["Hudi uses in-memory storage for recent writes", "MOR appends only a small delta log file per write batch without rewriting existing Parquet files  -  the merge cost is deferred to read time or periodic compaction", "Hudi skips ACID validation for speed", "Hudi uses columnar compression that is faster to write"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('format-comparison'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -3115,7 +3115,7 @@ function DeltaLogAnimation() {
         ))}
       </div>
       <div style={{ marginTop: 12, fontSize: '.8rem', color: 'var(--text-3)' }}>
-        Current version: <strong style={{ color: 'var(--blue-600)' }}>{version}</strong> — query any version with <code>VERSION AS OF {version}</code>
+        Current version: <strong style={{ color: 'var(--blue-600)' }}>{version}</strong>  -  query any version with <code>VERSION AS OF {version}</code>
       </div>
     </div>
   )
@@ -3139,7 +3139,7 @@ function MergeAnimation() {
   const labels = ['Source & Target', 'Match on ID', 'Apply MATCHED update', 'Apply NOT MATCHED insert']
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>MERGE Operation — Step {step + 1}: {labels[step]}</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>MERGE Operation  -  Step {step + 1}: {labels[step]}</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
         <div>
           <div style={{ fontSize: '.75rem', fontWeight: 700, color: 'var(--blue-600)', marginBottom: 8 }}>SOURCE (updates_df)</div>
@@ -3183,7 +3183,7 @@ function TimelineAnimation() {
   ]
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>Time Travel — Table Version Timeline</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>Time Travel  -  Table Version Timeline</div>
       <div style={{ fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 12 }}>Click any version to time-travel. Current active: v{current}</div>
       <div style={{ display: 'flex', gap: 0, alignItems: 'center', flexWrap: 'wrap' }}>
         {versions.map((v, i) => (
@@ -3200,7 +3200,7 @@ function TimelineAnimation() {
       </div>
       <div style={{ marginTop: 12, fontSize: '.8rem', color: 'var(--text-3)' }}>
         Viewing: <code style={{ color: 'var(--blue-600)' }}>SELECT * FROM table VERSION AS OF {current}</code>
-        {' '} — {versions[current].op} at {versions[current].time}
+        {' '}  -  {versions[current].op} at {versions[current].time}
       </div>
     </div>
   )
@@ -3266,7 +3266,7 @@ function DLTPipelineAnimation() {
   ]
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>DLT Pipeline — Bronze → Silver → Gold</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4, fontSize: '.9rem' }}>DLT Pipeline  -  Bronze → Silver → Gold</div>
       <div style={{ fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 12 }}>DLT manages execution order, retries, and lineage automatically.</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {layers.map((l, i) => (
@@ -3282,7 +3282,7 @@ function DLTPipelineAnimation() {
         ))}
       </div>
       <div style={{ marginTop: 10, fontSize: '.75rem', color: 'var(--text-3)' }}>
-        Active layer: <strong style={{ color: layers[active].color }}>{layers[active].label} — {layers[active].sublabel}</strong>
+        Active layer: <strong style={{ color: layers[active].color }}>{layers[active].label}  -  {layers[active].sublabel}</strong>
       </div>
     </div>
   )
