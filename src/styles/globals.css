@@ -682,15 +682,21 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 
 /* Undo / done state */
 .complete-btn.complete-btn-done{
-  background:linear-gradient(135deg,#ef4444 0%,#dc2626 50%,#b91c1c 100%);
-  box-shadow:0 4px 20px rgba(239,68,68,.3),0 1px 6px rgba(239,68,68,.15);
+  background:linear-gradient(135deg,#ff3b3b 0%,#ef4444 50%,#dc2626 100%) !important;
+  box-shadow:0 4px 20px rgba(239,68,68,.45),0 1px 6px rgba(239,68,68,.2) !important;
 }
 .complete-btn.complete-btn-done:hover{
-  background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);
-  box-shadow:0 10px 36px rgba(239,68,68,.4),0 2px 10px rgba(239,68,68,.2);
+  background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%) !important;
+  box-shadow:0 10px 36px rgba(239,68,68,.55),0 2px 10px rgba(239,68,68,.25) !important;
   transform:translateY(-3px) scale(1.02);
 }
 .complete-btn.complete-btn-done:focus{outline-color:rgba(239,68,68,.5);}
+
+/* Inline undo state (Foundations/Python/Azure/Delta) */
+.complete-btn-inline.complete-btn-inline-done{
+  background:linear-gradient(135deg,#ff3b3b 0%,#ef4444 50%,#dc2626 100%) !important;
+  box-shadow:0 4px 20px rgba(239,68,68,.45) !important;
+}
 
 /* Inline-style buttons in Foundations/Python/Azure/Delta */
 .complete-btn-inline{

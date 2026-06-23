@@ -232,7 +232,7 @@ print(struct.pack('>f', 3.14).hex())  # '4048f5c3'`}</CodeBlock>
 
           <button
             onClick={async () => { if (completed.has('binary')) { await unmarkTopicComplete('binary'); onUnmark('binary') } else { await markTopicComplete('binary'); onComplete('binary') } }}
-            className="complete-btn-inline" style={{ marginTop: 16 }}
+            className={`complete-btn-inline${completed.has('binary') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}
           >{completed.has('binary') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -411,7 +411,7 @@ print(f"Col-major: {time.perf_counter() - t:.3f}s")
 
           <button
             onClick={async () => { if (completed.has('cpu')) { await unmarkTopicComplete('cpu'); onUnmark('cpu') } else { await markTopicComplete('cpu'); onComplete('cpu') } }}
-            className="complete-btn-inline" style={{ marginTop: 16 }}
+            className={`complete-btn-inline${completed.has('cpu') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}
           >{completed.has('cpu') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -575,7 +575,7 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
 
           <button
             onClick={async () => { if (completed.has('memory')) { await unmarkTopicComplete('memory'); onUnmark('memory') } else { await markTopicComplete('memory'); onComplete('memory') } }}
-            className="complete-btn-inline" style={{ marginTop: 16 }}
+            className={`complete-btn-inline${completed.has('memory') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}
           >{completed.has('memory') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -779,7 +779,7 @@ du -sh /data/* # size of each item in /data`}</CodeBlock>
 
           <button
             onClick={async () => { if (completed.has('storage')) { await unmarkTopicComplete('storage'); onUnmark('storage') } else { await markTopicComplete('storage'); onComplete('storage') } }}
-            className="complete-btn-inline" style={{ marginTop: 16 }}
+            className={`complete-btn-inline${completed.has('storage') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}
           >{completed.has('storage') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -878,7 +878,7 @@ asyncio.run(main())`}</CodeBlock>
             { question: "Which scheduling algorithm does Linux use by default?", options: ["Round Robin", "Priority Scheduling", "Completely Fair Scheduler (CFS)", "First-Come-First-Served"], correct: 2 },
             { question: "When should you use asyncio coroutines instead of threads?", options: ["CPU-bound computations", "When you need true parallelism", "For I/O-bound tasks like API calls and database queries", "For spawning child processes"], correct: 2 },
           ]} />
-          <button onClick={async () => { if (completed.has('os')) { await unmarkTopicComplete('os'); onUnmark('os') } else { await markTopicComplete('os'); onComplete('os') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('os') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('os')) { await unmarkTopicComplete('os'); onUnmark('os') } else { await markTopicComplete('os'); onComplete('os') } }} className={`complete-btn-inline${completed.has('os') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('os') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* LINUX */}
@@ -996,7 +996,7 @@ log "Pipeline complete"`} />
             { question: "Which command counts the number of occurrences of each unique line in a sorted file?", options: ["wc -l file", "sort file | uniq -c", "grep -c file", "awk '{count[$0]++}' file"], correct: 1 },
             { question: "What is stored in /proc/meminfo?", options: ["Memory configuration files", "Virtual filesystem showing live kernel memory statistics", "RAM hardware specs", "Swap file configuration"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('linux')) { await unmarkTopicComplete('linux'); onUnmark('linux') } else { await markTopicComplete('linux'); onComplete('linux') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('linux') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('linux')) { await unmarkTopicComplete('linux'); onUnmark('linux') } else { await markTopicComplete('linux'); onComplete('linux') } }} className={`complete-btn-inline${completed.has('linux') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('linux') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* NETWORKING */}
@@ -1129,7 +1129,7 @@ def paginate(url):
             { question: "What is CIDR notation 10.0.1.0/24?", options: ["An IP address with 24 bits of host portion", "A subnet with 256 addresses where the first 24 bits are the network prefix", "A VLAN tag", "An IPv6 prefix"], correct: 1 },
             { question: "What is the key difference between bandwidth and throughput?", options: ["They are the same thing", "Bandwidth is theoretical maximum capacity; throughput is actual data transferred per second (always ≤ bandwidth)", "Throughput measures latency, bandwidth measures speed", "Bandwidth is for downloads, throughput for uploads"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('networking')) { await unmarkTopicComplete('networking'); onUnmark('networking') } else { await markTopicComplete('networking'); onComplete('networking') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('networking') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('networking')) { await unmarkTopicComplete('networking'); onUnmark('networking') } else { await markTopicComplete('networking'); onComplete('networking') } }} className={`complete-btn-inline${completed.has('networking') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('networking') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* DOCKER */}
@@ -1270,7 +1270,7 @@ docker system prune -af       # clean up stopped containers, images, volumes`}</
             { question: "What happens to data written inside a container when it stops?", options: ["It is saved to the image", "It persists in the container layer forever", "It is lost unless stored in a volume or bind mount", "It is synced to Docker Hub"], correct: 2 },
             { question: "What is a multi-stage Docker build used for?", options: ["Running multiple services in one container", "Keeping the final image small by separating build dependencies from runtime", "Building on multiple architectures simultaneously", "Caching build layers"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('docker')) { await unmarkTopicComplete('docker'); onUnmark('docker') } else { await markTopicComplete('docker'); onComplete('docker') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('docker') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('docker')) { await unmarkTopicComplete('docker'); onUnmark('docker') } else { await markTopicComplete('docker'); onComplete('docker') } }} className={`complete-btn-inline${completed.has('docker') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('docker') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* DATA TYPES */}
@@ -1371,7 +1371,7 @@ df = df.withColumn("days_since",  datediff(current_date(), "date"))`}</CodeBlock
             { question: "What is type widening vs narrowing?", options: ["Widening adds columns, narrowing removes them", "Widening converts to a larger type (safe, no data loss); narrowing converts to a smaller type (unsafe, may truncate)", "Widening is for strings, narrowing for numbers", "They refer to schema evolution in Parquet"], correct: 1 },
             { question: "What is the best practice for storing timestamps in a data lakehouse?", options: ["Store in local timezone of the source system", "Store in UTC always; convert to local only at display time", "Store as Unix epoch strings", "Store in the timezone of the data warehouse region"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('data-types')) { await unmarkTopicComplete('data-types'); onUnmark('data-types') } else { await markTopicComplete('data-types'); onComplete('data-types') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('data-types') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('data-types')) { await unmarkTopicComplete('data-types'); onUnmark('data-types') } else { await markTopicComplete('data-types'); onComplete('data-types') } }} className={`complete-btn-inline${completed.has('data-types') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-types') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* FILE FORMATS */}
@@ -1464,7 +1464,7 @@ for i in range(pf.num_row_groups):
             { question: "What is dictionary encoding in Parquet and when does it help most?", options: ["It compresses column names", "It stores unique values once and replaces repeated values with integer indexes  -  most effective for low-cardinality columns like country, status, category", "It encodes the schema in a dictionary", "It deduplicates row groups"], correct: 1 },
             { question: "Why is Avro preferred over Parquet for Kafka streaming?", options: ["Avro is a columnar format", "Avro is row-oriented making it efficient for writing individual events, and supports schema evolution via registry", "Avro has better compression", "Parquet doesn't support streaming"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('file-formats')) { await unmarkTopicComplete('file-formats'); onUnmark('file-formats') } else { await markTopicComplete('file-formats'); onComplete('file-formats') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('file-formats') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('file-formats')) { await unmarkTopicComplete('file-formats'); onUnmark('file-formats') } else { await markTopicComplete('file-formats'); onComplete('file-formats') } }} className={`complete-btn-inline${completed.has('file-formats') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('file-formats') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* COMPRESSION */}
@@ -1563,7 +1563,7 @@ print(f"Zstd:   {folder_size(path_zstd):.1f} MB")`}</CodeBlock>
             { question: "What does 'splittable' mean for a compressed file and why does it matter?", options: ["The file can be decompressed in parallel blocks, allowing multiple Spark tasks to read different parts simultaneously", "The file can be split across multiple disks", "The file supports partial writes", "It means the file has multiple compression levels"], correct: 0 },
             { question: "When would you choose Zstd over Snappy for Parquet files?", options: ["For real-time streaming where decompression speed is critical", "For Gold/archive layers where storage cost matters and you can afford slightly more CPU", "For CSV files on HDFS", "When Snappy is not available"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('compression')) { await unmarkTopicComplete('compression'); onUnmark('compression') } else { await markTopicComplete('compression'); onComplete('compression') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('compression') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('compression')) { await unmarkTopicComplete('compression'); onUnmark('compression') } else { await markTopicComplete('compression'); onComplete('compression') } }} className={`complete-btn-inline${completed.has('compression') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('compression') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* SERIALIZATION */}
@@ -1660,7 +1660,7 @@ producer.produce(
             { question: "Why is Avro preferred over JSON for Kafka events in enterprise systems?", options: ["Avro is human-readable like JSON", "Avro is binary (smaller, faster), enforces a schema via registry, and supports full schema evolution compatibility checks", "Avro supports more data types", "JSON doesn't support nested objects"], correct: 1 },
             { question: "What is the safest schema evolution change you can make to a 'full compatible' Avro schema?", options: ["Rename an existing field", "Remove a required field", "Add a new optional field with a default value", "Change a field's type from int to string"], correct: 2 },
           ]} />
-          <button onClick={async () => { if (completed.has('serialization')) { await unmarkTopicComplete('serialization'); onUnmark('serialization') } else { await markTopicComplete('serialization'); onComplete('serialization') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('serialization') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('serialization')) { await unmarkTopicComplete('serialization'); onUnmark('serialization') } else { await markTopicComplete('serialization'); onComplete('serialization') } }} className={`complete-btn-inline${completed.has('serialization') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('serialization') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* DATABASES */}
@@ -1754,7 +1754,7 @@ results = index.query(vector=query_embedding, top_k=10, include_metadata=True)`}
             { question: "Which database type is best suited for storing ML embeddings and performing semantic similarity search?", options: ["OLTP relational database", "Key-value store like Redis", "Vector database like Pinecone or pgvector", "Column-family database like Cassandra"], correct: 2 },
             { question: "What is the main tradeoff of NoSQL databases compared to relational OLTP databases?", options: ["NoSQL is always faster", "NoSQL sacrifices ACID transactions and complex joins for horizontal scalability and schema flexibility", "NoSQL stores less data", "NoSQL requires more storage"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databases')) { await unmarkTopicComplete('databases'); onUnmark('databases') } else { await markTopicComplete('databases'); onComplete('databases') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databases') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('databases')) { await unmarkTopicComplete('databases'); onUnmark('databases') } else { await markTopicComplete('databases'); onComplete('databases') } }} className={`complete-btn-inline${completed.has('databases') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('databases') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* DATA WAREHOUSE */}
@@ -1876,7 +1876,7 @@ ORDER BY 1,2,5 DESC;`}</CodeBlock>
             { question: "In SCD Type 2, how do you identify the current record for a customer?", options: ["The record with the highest surrogate key", "Using is_current = TRUE or WHERE effective_end IS NULL", "The record with the most recent effective_start date", "All records are current in SCD Type 2"], correct: 1 },
             { question: "Why is a star schema preferred over a snowflake schema for Power BI / BI tools?", options: ["Star schemas use less storage", "Star schemas require fewer joins  -  BI tools generate SQL with one level of joins, which is faster and easier to optimise", "Snowflake schemas don't support date dimensions", "Star schemas have better compression"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('data-warehouse')) { await unmarkTopicComplete('data-warehouse'); onUnmark('data-warehouse') } else { await markTopicComplete('data-warehouse'); onComplete('data-warehouse') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('data-warehouse') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('data-warehouse')) { await unmarkTopicComplete('data-warehouse'); onUnmark('data-warehouse') } else { await markTopicComplete('data-warehouse'); onComplete('data-warehouse') } }} className={`complete-btn-inline${completed.has('data-warehouse') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-warehouse') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* MEDALLION */}
@@ -1978,7 +1978,7 @@ spark.sql("""
             { question: "What type of data transformation should NOT happen in Bronze?", options: ["Adding ingestion metadata columns", "Recording the source file name", "Type casting, deduplication, and joins to lookup tables", "Appending new records as they arrive"], correct: 2 },
             { question: "When should you use a materialised Gold table instead of a view?", options: ["Always  -  views are never used in Gold", "When the aggregation is expensive and many BI users query the same data  -  pre-computation saves repeated compute costs", "Only when using Parquet instead of Delta", "When the source data changes every second"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('medallion')) { await unmarkTopicComplete('medallion'); onUnmark('medallion') } else { await markTopicComplete('medallion'); onComplete('medallion') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('medallion') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('medallion')) { await unmarkTopicComplete('medallion'); onUnmark('medallion') } else { await markTopicComplete('medallion'); onComplete('medallion') } }} className={`complete-btn-inline${completed.has('medallion') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('medallion') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* DATA QUALITY */}
@@ -2072,7 +2072,7 @@ good.write.format("delta").mode("append").saveAsTable("silver.orders")`}</CodeBl
             { question: "Which data quality dimension checks that data is available when it should be?", options: ["Accuracy", "Uniqueness", "Timeliness", "Validity"], correct: 2 },
             { question: "What is a key advantage of Deequ over Great Expectations for large-scale data engineering?", options: ["Deequ generates better HTML reports", "Deequ is built natively on Spark so DQ checks run distributed across the cluster without converting to Pandas", "Deequ supports more check types", "Deequ integrates with more orchestrators"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('data-quality')) { await unmarkTopicComplete('data-quality'); onUnmark('data-quality') } else { await markTopicComplete('data-quality'); onComplete('data-quality') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('data-quality') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('data-quality')) { await unmarkTopicComplete('data-quality'); onUnmark('data-quality') } else { await markTopicComplete('data-quality'); onComplete('data-quality') } }} className={`complete-btn-inline${completed.has('data-quality') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-quality') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* DATA GOVERNANCE */}
@@ -2160,7 +2160,7 @@ spark.sql("""
             { question: "Under GDPR's Right to Erasure, what must a data engineer implement?", options: ["Delete the user's account from the operational database only", "Delete all PII for a user across all systems (Bronze, Silver, Gold, backups) when requested, with audit trail", "Anonymise the data by removing the name field", "Archive the data to cold storage"], correct: 1 },
             { question: "What is the difference between pseudonymisation and anonymisation?", options: ["They are the same thing", "Pseudonymisation replaces identifiers with tokens while retaining re-linkability via a key; anonymisation is irreversible  -  re-identification is impossible", "Anonymisation uses hashing, pseudonymisation uses encryption", "Pseudonymisation is stronger than anonymisation"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('data-governance')) { await unmarkTopicComplete('data-governance'); onUnmark('data-governance') } else { await markTopicComplete('data-governance'); onComplete('data-governance') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('data-governance') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('data-governance')) { await unmarkTopicComplete('data-governance'); onUnmark('data-governance') } else { await markTopicComplete('data-governance'); onComplete('data-governance') } }} className={`complete-btn-inline${completed.has('data-governance') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-governance') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* BATCH VS STREAMING */}
@@ -2294,7 +2294,7 @@ windowed = (stream_df
             { question: "What is a watermark in Spark Structured Streaming?", options: ["A data quality check", "A threshold that defines how long to wait for late-arriving data before closing a time window", "A checkpoint for fault tolerance", "A trigger interval"], correct: 1 },
             { question: "When is batch processing the better choice over streaming?", options: ["Always  -  streaming is too complex", "When latency requirements are hourly or daily, data volumes are large, and simplicity/reprocessability are valued over low latency", "When the data source is Kafka", "When you need exactly-once semantics"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('batch-vs-streaming')) { await unmarkTopicComplete('batch-vs-streaming'); onUnmark('batch-vs-streaming') } else { await markTopicComplete('batch-vs-streaming'); onComplete('batch-vs-streaming') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('batch-vs-streaming') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('batch-vs-streaming')) { await unmarkTopicComplete('batch-vs-streaming'); onUnmark('batch-vs-streaming') } else { await markTopicComplete('batch-vs-streaming'); onComplete('batch-vs-streaming') } }} className={`complete-btn-inline${completed.has('batch-vs-streaming') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('batch-vs-streaming') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
       </main>

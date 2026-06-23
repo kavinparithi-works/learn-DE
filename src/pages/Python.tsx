@@ -187,7 +187,7 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
             { question: "For a CPU-bound pipeline task (e.g., parsing 10 GB of JSON files), the correct Python parallelism tool is:", options: ["threading.Thread  -  fastest for all tasks", "asyncio.gather  -  best for computation", "multiprocessing.Pool  -  bypasses the GIL with separate processes", "concurrent.futures.ThreadPoolExecutor  -  releases the GIL for CPU work"], correct: 2 },
             { question: "Why does PySpark not suffer from Python's GIL during data transformations?", options: ["PySpark uses PyPy which has no GIL", "PySpark automatically disables the GIL at startup", "Spark transformations execute in the JVM (Java/Scala workers)  -  Python only drives the driver logic", "PySpark uses asyncio internally"], correct: 2 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-execution')) { await unmarkTopicComplete('py-execution'); onUnmark('py-execution') } else { await markTopicComplete('py-execution'); onComplete('py-execution') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-execution') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-execution')) { await unmarkTopicComplete('py-execution'); onUnmark('py-execution') } else { await markTopicComplete('py-execution'); onComplete('py-execution') } }} className={`complete-btn-inline${completed.has('py-execution') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-execution') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-types ──────────────────────────────────────────────────── */}
@@ -362,7 +362,7 @@ def write_dataset(
             { question: "Which typing construct is best for defining the exact shape of a dictionary (like a JSON schema) with static checking?", options: ["dict[str, Any]  -  most flexible", "TypedDict  -  key names and value types are statically checked", "dataclass  -  required for dict-like objects", "NamedTuple  -  always use instead of TypedDict"], correct: 1 },
             { question: "A Protocol in Python's typing system enables:", options: ["Multiple inheritance without MRO issues", "Structural subtyping  -  any class with matching methods satisfies the Protocol, no explicit inheritance needed", "Runtime interface enforcement like Java interfaces", "Abstract method enforcement identical to ABC"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-types')) { await unmarkTopicComplete('py-types'); onUnmark('py-types') } else { await markTopicComplete('py-types'); onComplete('py-types') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-types') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-types')) { await unmarkTopicComplete('py-types'); onUnmark('py-types') } else { await markTopicComplete('py-types'); onComplete('py-types') } }} className={`complete-btn-inline${completed.has('py-types') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-types') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-structures ─────────────────────────────────────────────── */}
@@ -516,7 +516,7 @@ combined = today_counts + yesterday_counts`}</CodeBlock>
             { question: "You need to maintain the top-100 highest-value orders seen so far in a streaming pipeline without sorting the entire stream. The right structure is:", options: ["A sorted list  -  always O(1) access", "heapq (min-heap of size 100)  -  O(log 100) per insert, O(1) peek at min", "Counter.most_common()  -  designed for top-K", "deque(maxlen=100)  -  automatically evicts old items"], correct: 1 },
             { question: "collections.defaultdict(list) vs a plain dict: what problem does defaultdict solve?", options: ["defaultdict is faster for all operations", "defaultdict auto-initialises missing keys with the factory value, eliminating if-key-not-in-dict boilerplate", "defaultdict allows non-hashable keys", "defaultdict is thread-safe; plain dict is not"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-structures')) { await unmarkTopicComplete('py-structures'); onUnmark('py-structures') } else { await markTopicComplete('py-structures'); onComplete('py-structures') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-structures') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-structures')) { await unmarkTopicComplete('py-structures'); onUnmark('py-structures') } else { await markTopicComplete('py-structures'); onComplete('py-structures') } }} className={`complete-btn-inline${completed.has('py-structures') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-structures') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-comprehensions ─────────────────────────────────────────── */}
@@ -672,7 +672,7 @@ t_gen = timeit.timeit("sum(x**2 for x in range(100_000))", number=100)
             { question: "A list comprehension is generally faster than an equivalent for-loop + append because:", options: ["The Python interpreter optimises list comps with multi-threading", "The iteration loop executes in C within CPython, avoiding per-iteration Python bytecode overhead", "List comps are compiled to native machine code at parse time", "CPython pre-allocates the list at a fixed size to avoid reallocation"], correct: 1 },
             { question: "What is the key difference between [x*2 for x in data] and (x*2 for x in data)?", options: ["Brackets vs parentheses is purely stylistic  -  behaviour is identical", "The list comprehension builds the full list in memory immediately; the generator expression yields values one at a time lazily", "Generator expressions are always faster than list comprehensions", "List comprehensions support filtering with if; generator expressions do not"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-comprehensions')) { await unmarkTopicComplete('py-comprehensions'); onUnmark('py-comprehensions') } else { await markTopicComplete('py-comprehensions'); onComplete('py-comprehensions') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-comprehensions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-comprehensions')) { await unmarkTopicComplete('py-comprehensions'); onUnmark('py-comprehensions') } else { await markTopicComplete('py-comprehensions'); onComplete('py-comprehensions') } }} className={`complete-btn-inline${completed.has('py-comprehensions') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-comprehensions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-functions" ref={el => { if (el) sectionRefs.current['py-functions'] = el }} className="topic-section">
@@ -774,7 +774,7 @@ def _(obj: pd.DataFrame) -> str:
             { question: "What does functools.lru_cache do?", options: ["Runs functions in parallel", "Memoizes function results  -  returns cached output for repeated identical inputs", "Converts a function to a generator", "Adds retry logic to a function"], correct: 1 },
             { question: "What does functools.partial do?", options: ["Partially evaluates a function and returns a generator", "Creates a new function with some arguments pre-filled", "Splits a function into multiple steps", "Makes a function thread-safe"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-functions')) { await unmarkTopicComplete('py-functions'); onUnmark('py-functions') } else { await markTopicComplete('py-functions'); onComplete('py-functions') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-functions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-functions')) { await unmarkTopicComplete('py-functions'); onUnmark('py-functions') } else { await markTopicComplete('py-functions'); onComplete('py-functions') } }} className={`complete-btn-inline${completed.has('py-functions') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-functions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-generators" ref={el => { if (el) sectionRefs.current['py-generators'] = el }} className="topic-section">
@@ -892,7 +892,7 @@ cumulative = list(itertools.accumulate(daily_sales, operator.add))
             { question: "What does itertools.islice do?", options: ["Slices a list in place", "Lazily takes the first N items from any iterator without consuming the rest", "Creates a slice object for numpy arrays", "Splits an iterator into N equal parts"], correct: 1 },
             { question: "What requirement must be met before using itertools.groupby to group records?", options: ["Records must be stored in a dict", "Records must be sorted by the grouping key first  -  groupby only groups consecutive equal keys", "Records must be unique", "itertools.groupby has no requirements"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-generators')) { await unmarkTopicComplete('py-generators'); onUnmark('py-generators') } else { await markTopicComplete('py-generators'); onComplete('py-generators') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-generators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-generators')) { await unmarkTopicComplete('py-generators'); onUnmark('py-generators') } else { await markTopicComplete('py-generators'); onComplete('py-generators') } }} className={`complete-btn-inline${completed.has('py-generators') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-generators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-decorators" ref={el => { if (el) sectionRefs.current['py-decorators'] = el }} className="topic-section">
@@ -1033,7 +1033,7 @@ def process_event(record: dict) -> dict:
             { question: "When decorators are stacked as @A @B @C def func(), in what order are they applied?", options: ["A first, then B, then C (top to bottom)", "C first, then B, then A (bottom to top  -  C wraps func, B wraps that, A wraps that)", "All three are applied simultaneously", "Order depends on function signature"], correct: 1 },
             { question: "What advantage does a class-based decorator have over a function-based decorator?", options: ["Class decorators are faster", "Class decorators can maintain state (instance variables) across multiple calls", "Class decorators don't need functools.wraps", "Class decorators can decorate classes but not functions"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-decorators')) { await unmarkTopicComplete('py-decorators'); onUnmark('py-decorators') } else { await markTopicComplete('py-decorators'); onComplete('py-decorators') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-decorators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-decorators')) { await unmarkTopicComplete('py-decorators'); onUnmark('py-decorators') } else { await markTopicComplete('py-decorators'); onComplete('py-decorators') } }} className={`complete-btn-inline${completed.has('py-decorators') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-decorators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-oop" ref={el => { if (el) sectionRefs.current['py-oop'] = el }} className="topic-section">
@@ -1179,7 +1179,7 @@ full_etl = ingest | enrich   # DataPipeline(name='ingest|enrich', stages=6)`}</C
             { question: "What does @dataclass(frozen=True) do?", options: ["Prevents the dataclass from being serialized", "Makes the dataclass immutable and hashable (raises FrozenInstanceError on assignment)", "Freezes all class variables to their defaults", "Prevents subclassing"], correct: 1 },
             { question: "What is the purpose of __slots__ in a dataclass?", options: ["Enables multiple inheritance", "Replaces __dict__ with a fixed-size slot array, reducing per-instance memory by ~40%  -  important when creating millions of record objects", "Allows the class to be used as a context manager", "Enables the class to be iterated"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-oop')) { await unmarkTopicComplete('py-oop'); onUnmark('py-oop') } else { await markTopicComplete('py-oop'); onComplete('py-oop') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-oop') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-oop')) { await unmarkTopicComplete('py-oop'); onUnmark('py-oop') } else { await markTopicComplete('py-oop'); onComplete('py-oop') } }} className={`complete-btn-inline${completed.has('py-oop') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-oop') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-context" ref={el => { if (el) sectionRefs.current['py-context'] = el }} className="topic-section">
@@ -1300,7 +1300,7 @@ def pipeline_stage(name: str, conn):
             { question: "What is the advantage of @contextlib.contextmanager over writing a full class?", options: ["It is always faster", "It lets you write a context manager as a generator function with a single yield  -  much less boilerplate", "It supports async operations automatically", "It allows multiple yields"], correct: 1 },
             { question: "When should you use contextlib.ExitStack?", options: ["When you need to suppress all exceptions", "When the number of context managers to open is determined at runtime  -  ExitStack manages an arbitrary dynamic list of them", "When you need nested transactions", "When context managers don't have __exit__"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-context')) { await unmarkTopicComplete('py-context'); onUnmark('py-context') } else { await markTopicComplete('py-context'); onComplete('py-context') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-context') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-context')) { await unmarkTopicComplete('py-context'); onUnmark('py-context') } else { await markTopicComplete('py-context'); onComplete('py-context') } }} className={`complete-btn-inline${completed.has('py-context') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-context') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-errors" ref={el => { if (el) sectionRefs.current['py-errors'] = el }} className="topic-section">
@@ -1443,7 +1443,7 @@ log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</C
             { question: "Why define a custom exception hierarchy (e.g. DataQualityError inheriting PipelineError) instead of using generic Exception?", options: ["Custom exceptions are always faster", "A hierarchy allows callers to catch at different granularities  -  catch DataQualityError for DQ issues, PipelineError for any pipeline failure, Exception as last resort", "Python requires custom exceptions for logging", "Generic exceptions cannot be re-raised"], correct: 1 },
             { question: "When does the finally block execute in a try/except/finally?", options: ["Only when no exception is raised", "Only when an exception is raised", "Always  -  whether an exception was raised, caught, or not raised at all", "Only after the except block completes"], correct: 2 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-errors')) { await unmarkTopicComplete('py-errors'); onUnmark('py-errors') } else { await markTopicComplete('py-errors'); onComplete('py-errors') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-errors') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-errors')) { await unmarkTopicComplete('py-errors'); onUnmark('py-errors') } else { await markTopicComplete('py-errors'); onComplete('py-errors') } }} className={`complete-btn-inline${completed.has('py-errors') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-errors') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-async" ref={el => { if (el) sectionRefs.current['py-async'] = el }} className="topic-section">
@@ -1586,7 +1586,7 @@ async def fetch_with_timeout(url: str) -> dict | None:
             { question: "Why use asyncio.Semaphore when making concurrent API requests?", options: ["To make requests sequential", "To cap the number of concurrent requests  -  prevents overwhelming the API server with too many simultaneous connections", "To retry failed requests automatically", "To add authentication headers"], correct: 1 },
             { question: "What is the difference between asyncio concurrency and multiprocessing?", options: ["asyncio uses multiple CPU cores; multiprocessing uses one", "asyncio is single-threaded cooperative concurrency for I/O-bound tasks; multiprocessing spawns separate processes for CPU-bound work", "asyncio is faster for all workloads", "multiprocessing is for I/O; asyncio is for CPU tasks"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-async')) { await unmarkTopicComplete('py-async'); onUnmark('py-async') } else { await markTopicComplete('py-async'); onComplete('py-async') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-async') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-async')) { await unmarkTopicComplete('py-async'); onUnmark('py-async') } else { await markTopicComplete('py-async'); onComplete('py-async') } }} className={`complete-btn-inline${completed.has('py-async') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-async') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-io" ref={el => { if (el) sectionRefs.current['py-io'] = el }} className="topic-section">
@@ -1723,7 +1723,7 @@ def atomic_write_json(data: dict, path: Path) -> None:
             { question: "What advantage does pathlib.Path have over os.path string manipulation?", options: ["pathlib is faster than os.path", "pathlib provides an object-oriented API with / operator for joining, .stem/.suffix/.parent properties, and cross-platform path handling", "pathlib supports cloud paths natively", "pathlib paths are immutable"], correct: 1 },
             { question: "Why use load_dotenv() for environment variables in pipelines?", options: ["It encrypts environment variables", "It loads key=value pairs from a .env file into os.environ, enabling local development without setting system env vars  -  the .env file is gitignored", "It validates environment variable types", "It synchronizes env vars across machines"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-io')) { await unmarkTopicComplete('py-io'); onUnmark('py-io') } else { await markTopicComplete('py-io'); onComplete('py-io') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-io') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-io')) { await unmarkTopicComplete('py-io'); onUnmark('py-io') } else { await markTopicComplete('py-io'); onComplete('py-io') } }} className={`complete-btn-inline${completed.has('py-io') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-io') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-regex" ref={el => { if (el) sectionRefs.current['py-regex'] = el }} className="topic-section">
@@ -1820,7 +1820,7 @@ def validate_table_name(name: str) -> str:
             { question: "Why use re.compile() when applying a pattern inside a loop?", options: ["compile() makes the pattern case-insensitive", "Compiled patterns are parsed once and reused  -  avoids re-parsing the regex string on every iteration", "compile() is required for group extraction", "compile() enables multiline matching"], correct: 1 },
             { question: "What does the non-greedy quantifier *? do differently from *?", options: ["*? matches zero occurrences; * matches one or more", "*? matches as few characters as possible; * is greedy and matches as many as possible", "*? is case-insensitive; * is case-sensitive", "They are identical"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-regex')) { await unmarkTopicComplete('py-regex'); onUnmark('py-regex') } else { await markTopicComplete('py-regex'); onComplete('py-regex') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-regex') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-regex')) { await unmarkTopicComplete('py-regex'); onUnmark('py-regex') } else { await markTopicComplete('py-regex'); onComplete('py-regex') } }} className={`complete-btn-inline${completed.has('py-regex') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-regex') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-testing" ref={el => { if (el) sectionRefs.current['py-testing'] = el }} className="topic-section">
@@ -1944,7 +1944,7 @@ async def test_async_pipeline():
             { question: "What does @pytest.mark.parametrize do?", options: ["Marks a test as expected to fail", "Runs the same test function with multiple different input/output combinations  -  reduces duplicate test code", "Skips the test in CI", "Runs tests in parallel"], correct: 1 },
             { question: "When mocking with unittest.mock.patch, what does the mock replace?", options: ["The test function itself", "The named object in the module under test for the duration of the test, then restores the original", "All functions in the test file", "Only the return value of the patched function"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-testing')) { await unmarkTopicComplete('py-testing'); onUnmark('py-testing') } else { await markTopicComplete('py-testing'); onComplete('py-testing') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-testing') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-testing')) { await unmarkTopicComplete('py-testing'); onUnmark('py-testing') } else { await markTopicComplete('py-testing'); onComplete('py-testing') } }} className={`complete-btn-inline${completed.has('py-testing') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-testing') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-packages" ref={el => { if (el) sectionRefs.current['py-packages'] = el }} className="topic-section">
@@ -2054,7 +2054,7 @@ conda env export > environment.yml
             { question: "What does 'pip freeze > requirements.txt' do and when should you use it?", options: ["Installs packages from requirements.txt", "Saves a snapshot of all currently installed packages with exact versions  -  use before committing to pin a reproducible environment", "Updates all packages to latest versions", "Checks for conflicting dependencies"], correct: 1 },
             { question: "What advantage does poetry have over plain pip + requirements.txt?", options: ["poetry is faster at installing packages", "poetry manages a lock file with transitive dependencies, handles virtual environments automatically, and separates dev/prod dependency groups in pyproject.toml", "poetry supports conda packages", "poetry automatically publishes to PyPI"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-packages')) { await unmarkTopicComplete('py-packages'); onUnmark('py-packages') } else { await markTopicComplete('py-packages'); onComplete('py-packages') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-packages') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-packages')) { await unmarkTopicComplete('py-packages'); onUnmark('py-packages') } else { await markTopicComplete('py-packages'); onComplete('py-packages') } }} className={`complete-btn-inline${completed.has('py-packages') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-packages') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-pandas" ref={el => { if (el) sectionRefs.current['py-pandas'] = el }} className="topic-section">
@@ -2168,7 +2168,7 @@ df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=Fa
             { question: "What is the key reason to avoid df.apply(lambda row: ..., axis=1) for arithmetic?", options: ["apply() has a bug with lambda functions", "apply() runs a Python function per row in a Python loop  -  vectorized pandas/numpy ops run in C and are 10-100x faster", "apply() doesn't support arithmetic", "apply() produces incorrect results with float columns"], correct: 1 },
             { question: "What does pd.read_csv(path, chunksize=100_000) return?", options: ["A DataFrame with the first 100,000 rows", "A TextFileReader iterator that yields DataFrames of 100,000 rows at a time  -  enables processing files larger than RAM", "A list of 100,000 DataFrames", "An error if the file has more than 100,000 rows"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-pandas')) { await unmarkTopicComplete('py-pandas'); onUnmark('py-pandas') } else { await markTopicComplete('py-pandas'); onComplete('py-pandas') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-pandas') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-pandas')) { await unmarkTopicComplete('py-pandas'); onUnmark('py-pandas') } else { await markTopicComplete('py-pandas'); onComplete('py-pandas') } }} className={`complete-btn-inline${completed.has('py-pandas') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-pandas') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-db" ref={el => { if (el) sectionRefs.current['py-db'] = el }} className="topic-section">
@@ -2297,7 +2297,7 @@ def run_upsert(records: list[dict], table: str) -> int:
             { question: "What does pool_pre_ping=True do in SQLAlchemy?", options: ["Pings the DB to measure latency before each query", "Tests each connection for liveness before checking it out from the pool  -  prevents 'connection already closed' errors after network drops", "Limits the number of connections to the pool size", "Enables connection compression"], correct: 1 },
             { question: "Why use parameterized queries (text() with :param) instead of string formatting for SQL?", options: ["Parameterized queries are faster", "String formatting creates SQL injection vulnerabilities  -  parameterized queries safely escape user input", "Parameterized queries support more SQL features", "String formatting doesn't work with SQLAlchemy"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-db')) { await unmarkTopicComplete('py-db'); onUnmark('py-db') } else { await markTopicComplete('py-db'); onComplete('py-db') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-db') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-db')) { await unmarkTopicComplete('py-db'); onUnmark('py-db') } else { await markTopicComplete('py-db'); onComplete('py-db') } }} className={`complete-btn-inline${completed.has('py-db') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-db') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-http" ref={el => { if (el) sectionRefs.current['py-http'] = el }} className="topic-section">
@@ -2455,7 +2455,7 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
             { question: "What is cursor-based pagination and when is it preferred over page-number pagination?", options: ["Cursor pagination uses a database cursor", "Cursor pagination uses an opaque pointer to the next page position  -  it handles insertions/deletions correctly and is preferred for large, frequently-updated datasets where page numbers can skip or duplicate records", "Cursor pagination is faster for small datasets", "Page-number pagination always returns duplicate records"], correct: 1 },
             { question: "What HTTP status code indicates rate limiting and how should your client handle it?", options: ["404  -  retry immediately", "429 Too Many Requests  -  read the Retry-After header and sleep for that duration before retrying", "500  -  switch to a different endpoint", "401  -  refresh the OAuth token"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-http')) { await unmarkTopicComplete('py-http'); onUnmark('py-http') } else { await markTopicComplete('py-http'); onComplete('py-http') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-http') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-http')) { await unmarkTopicComplete('py-http'); onUnmark('py-http') } else { await markTopicComplete('py-http'); onComplete('py-http') } }} className={`complete-btn-inline${completed.has('py-http') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-http') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-linux" ref={el => { if (el) sectionRefs.current['py-linux'] = el }} className="topic-section">
@@ -2575,7 +2575,7 @@ wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</Cod
             { question: "What does 'xargs -P 4' do in a shell pipeline?", options: ["Limits file size to 4MB", "Runs up to 4 parallel processes of the given command  -  enables parallel file processing", "Sets process priority to 4", "Retries failed commands 4 times"], correct: 1 },
             { question: "Why use 'trap cleanup EXIT' in a shell script?", options: ["It logs all commands", "It registers a function to run when the script exits  -  whether normally or due to an error  -  ensuring cleanup always happens", "It prevents the script from exiting on errors", "It sends an exit signal to child processes"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-linux')) { await unmarkTopicComplete('py-linux'); onUnmark('py-linux') } else { await markTopicComplete('py-linux'); onComplete('py-linux') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-linux') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-linux')) { await unmarkTopicComplete('py-linux'); onUnmark('py-linux') } else { await markTopicComplete('py-linux'); onComplete('py-linux') } }} className={`complete-btn-inline${completed.has('py-linux') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-linux') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-git" ref={el => { if (el) sectionRefs.current['py-git'] = el }} className="topic-section">
@@ -2708,7 +2708,7 @@ jobs:
             { question: "When should you use git cherry-pick?", options: ["When you want to merge entire branches", "When you need to apply a specific commit (e.g., a hotfix) to another branch without merging all commits from the source branch", "When you want to undo a commit", "When bisecting to find a bug"], correct: 1 },
             { question: "What does 'git bisect run <test-command>' do?", options: ["Runs tests on the current branch only", "Automates the bisect process  -  git checks out commits and runs the test command; the exit code (0=good, non-zero=bad) tells git which direction to bisect until the offending commit is found", "Bisects the codebase into modules for parallel testing", "Runs all commits in parallel"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-git')) { await unmarkTopicComplete('py-git'); onUnmark('py-git') } else { await markTopicComplete('py-git'); onComplete('py-git') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-git') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-git')) { await unmarkTopicComplete('py-git'); onUnmark('py-git') } else { await markTopicComplete('py-git'); onComplete('py-git') } }} className={`complete-btn-inline${completed.has('py-git') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-git') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-pydantic ───────────────────────────────────────────────── */}
@@ -2951,7 +2951,7 @@ for raw_record in raw_batch:
             { question: "What is the primary purpose of BaseSettings in pydantic-settings?", options: ["Validate JSON schemas at runtime", "Load and validate configuration from environment variables and .env files with type checking and defaults", "Store Pydantic models in a settings registry", "Configure Pydantic's validation behavior globally"], correct: 1 },
             { question: "When using Field(gt=0, lt=1_000_000) on a float field, what does 'gt' enforce?", options: ["The value must be greater than or equal to 0 (inclusive lower bound)", "The value must be strictly greater than 0 (exclusive lower bound  -  0.0 would fail validation)", "The value must be a positive integer", "The field is globally typed (gt = global type)"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-pydantic')) { await unmarkTopicComplete('py-pydantic'); onUnmark('py-pydantic') } else { await markTopicComplete('py-pydantic'); onComplete('py-pydantic') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-pydantic') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-pydantic')) { await unmarkTopicComplete('py-pydantic'); onUnmark('py-pydantic') } else { await markTopicComplete('py-pydantic'); onComplete('py-pydantic') } }} className={`complete-btn-inline${completed.has('py-pydantic') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-pydantic') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-docker ─────────────────────────────────────────────────── */}
@@ -3182,7 +3182,7 @@ cat .dockerignore
             { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical  -  CMD is just an alias for ENTRYPOINT", "ENTRYPOINT defines the fixed executable that always runs; CMD provides default arguments that can be overridden at docker run time without replacing the entrypoint", "CMD runs at build time; ENTRYPOINT runs at container start", "ENTRYPOINT is for scripts; CMD is for binary executables only"], correct: 1 },
             { question: "Why should you run container processes as a non-root user in data pipelines?", options: ["Root containers are slower due to kernel overhead", "If the container is compromised or a pipeline bug escapes the container, a non-root user limits the blast radius  -  root would have full host privileges", "Docker requires non-root for bind mounts to work", "Non-root users have access to more memory"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-docker')) { await unmarkTopicComplete('py-docker'); onUnmark('py-docker') } else { await markTopicComplete('py-docker'); onComplete('py-docker') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-docker') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-docker')) { await unmarkTopicComplete('py-docker'); onUnmark('py-docker') } else { await markTopicComplete('py-docker'); onComplete('py-docker') } }} className={`complete-btn-inline${completed.has('py-docker') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-docker') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-k8s ────────────────────────────────────────────────────── */}
@@ -3407,7 +3407,7 @@ with DAG(
             { question: "When running Spark on Kubernetes, what role do executor pods play?", options: ["They run the Spark UI and store job history", "They are dynamically created by the driver pod to perform distributed computation; they are destroyed when the job finishes", "They are permanent pods that must be pre-provisioned before spark-submit", "They store shuffle data in persistent volumes only"], correct: 1 },
             { question: "What is the main advantage of using KubernetesPodOperator in Airflow over PythonOperator?", options: ["KubernetesPodOperator is always faster", "Each task runs in an isolated container with its own image, dependencies, and resource limits  -  preventing dependency conflicts between tasks and enabling fine-grained resource control", "KubernetesPodOperator has built-in retry logic that PythonOperator lacks", "KubernetesPodOperator automatically parallelizes tasks across nodes"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-k8s')) { await unmarkTopicComplete('py-k8s'); onUnmark('py-k8s') } else { await markTopicComplete('py-k8s'); onComplete('py-k8s') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-k8s') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-k8s')) { await unmarkTopicComplete('py-k8s'); onUnmark('py-k8s') } else { await markTopicComplete('py-k8s'); onComplete('py-k8s') } }} className={`complete-btn-inline${completed.has('py-k8s') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-k8s') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-deequ ──────────────────────────────────────────────────── */}
@@ -3595,7 +3595,7 @@ def validate_data_quality(execution_date: str) -> None:
             { question: "What is Deequ's constraint suggestions feature and when would you use it?", options: ["It suggests SQL indexes for faster queries", "It profiles the data and auto-generates Deequ constraint code based on observed statistics  -  useful when onboarding a new dataset with no existing DQ rules", "It suggests schema changes to reduce data size", "It suggests partition strategies based on cardinality"], correct: 1 },
             { question: "What does Great Expectations DataDocs provide that raw validation results do not?", options: ["Faster validation execution", "A human-readable HTML report showing expectation definitions, validation results, and historical trends  -  useful for stakeholder communication and debugging", "Automatic data remediation", "Streaming validation in real-time"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-deequ')) { await unmarkTopicComplete('py-deequ'); onUnmark('py-deequ') } else { await markTopicComplete('py-deequ'); onComplete('py-deequ') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-deequ') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-deequ')) { await unmarkTopicComplete('py-deequ'); onUnmark('py-deequ') } else { await markTopicComplete('py-deequ'); onComplete('py-deequ') } }} className={`complete-btn-inline${completed.has('py-deequ') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-deequ') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── py-memory ─────────────────────────────────────────────────── */}
@@ -3773,7 +3773,7 @@ total = sum(row.amount for row in iter_records(parquet_files))  # O(1) memory`}<
             { question: "A Pandas pipeline processing a 10 GB CSV hits OOM. Which approach fixes this with minimal code change?", options: ["Switch to PyPy  -  it has a more efficient garbage collector", "Use pd.read_csv(path, chunksize=N) to process the file in chunks, processing and writing each chunk before reading the next", "Increase Python recursion limit with sys.setrecursionlimit()", "Use multiprocessing to read the file in parallel  -  each process uses less memory"], correct: 1 },
             { question: "In a long-running Python pipeline, why should you explicitly call 'del large_df' followed by 'gc.collect()' after you are done with a large DataFrame?", options: ["del is required before a variable can be reassigned", "CPython's reference counting frees objects immediately on del; gc.collect() handles reference cycles that reference counting alone cannot detect  -  together they ensure memory is returned to the OS promptly rather than waiting for the next GC cycle", "gc.collect() compresses memory to reduce fragmentation", "This is required for thread safety in multi-threaded pipelines"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('py-memory')) { await unmarkTopicComplete('py-memory'); onUnmark('py-memory') } else { await markTopicComplete('py-memory'); onComplete('py-memory') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('py-memory') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
+          <button onClick={async () => { if (completed.has('py-memory')) { await unmarkTopicComplete('py-memory'); onUnmark('py-memory') } else { await markTopicComplete('py-memory'); onComplete('py-memory') } }} className={`complete-btn-inline${completed.has('py-memory') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-memory') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
       </main>
