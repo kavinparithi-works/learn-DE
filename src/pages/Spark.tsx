@@ -7,16 +7,40 @@ import { markTopicComplete } from '../lib/firebase'
 interface Props { completed: Set<string>; onComplete: () => void }
 
 const SECTIONS = [
-  { title: 'Level 7 - Apache Spark', items: [
-    { id: 'spark-arch', label: 'Spark Architecture and DAG' },
-    { id: 'spark-partitions', label: 'Partitions and Shuffles' },
-    { id: 'spark-memory', label: 'Memory Management and Tuning' },
-    { id: 'spark-df', label: 'DataFrame API and Optimizations' },
-    { id: 'spark-udfs', label: 'UDFs vs Built-ins' },
-    { id: 'spark-streaming', label: 'Structured Streaming' },
-    { id: 'spark-aqe', label: 'Catalyst, AQE, and Tungsten' },
+  { title: 'Level 7 - Apache Spark + PySpark', items: [
+    { id: 'spark-arch',             label: 'Spark Architecture' },
+    { id: 'spark-dag',              label: 'DAG, Stages & Tasks' },
+    { id: 'spark-lazy',             label: 'Lazy Evaluation' },
+    { id: 'spark-rdd',              label: 'RDD vs DataFrame vs Dataset' },
+    { id: 'spark-reading',          label: 'Reading Data' },
+    { id: 'spark-writing',          label: 'Writing Data' },
+    { id: 'spark-transforms',       label: 'Core Transformations' },
+    { id: 'spark-functions',        label: 'Built-in Functions Deep Dive' },
+    { id: 'spark-window',           label: 'Window Functions' },
+    { id: 'spark-joins',            label: 'Join Strategies' },
+    { id: 'spark-partitions',       label: 'Partitioning Deep Dive' },
+    { id: 'spark-skew',             label: 'Data Skew' },
+    { id: 'spark-memory',           label: 'Memory Management' },
+    { id: 'spark-cache',            label: 'Caching & Persistence' },
+    { id: 'spark-broadcast',        label: 'Broadcast Variables & Accumulators' },
+    { id: 'spark-udfs',             label: 'UDFs & Pandas UDFs' },
+    { id: 'spark-sql',              label: 'Spark SQL' },
+    { id: 'spark-streaming',        label: 'Structured Streaming' },
+    { id: 'spark-streaming-state',  label: 'Stateful Streaming' },
+    { id: 'spark-catalyst',         label: 'Catalyst Optimizer' },
+    { id: 'spark-aqe',              label: 'AQE (Adaptive Query Execution)' },
+    { id: 'spark-tungsten',         label: 'Tungsten Engine' },
+    { id: 'spark-config',           label: 'Performance Configuration' },
+    { id: 'spark-ui',               label: 'Spark UI Navigation' },
+    { id: 'spark-delta',            label: 'Spark + Delta Lake Integration' },
   ]},
 ]
+
+const MC_BTN = {
+  marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)',
+  background: 'var(--green-500)', color: 'white', border: 'none',
+  fontWeight: 700, cursor: 'pointer', fontSize: '.84rem'
+} as const
 
 export default function Spark({ completed, onComplete }: Props) {
   const [activeId, setActiveId] = useState('spark-arch')
@@ -28,323 +52,2917 @@ export default function Spark({ completed, onComplete }: Props) {
   }
 
   useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) setActiveId(e.target.id) })
-    }, { rootMargin: '-30% 0px -60% 0px' })
+    const observer = new IntersectionObserver(
+      entries => { entries.forEach(e => { if (e.isIntersecting) setActiveId(e.target.id) }) },
+      { rootMargin: '-30% 0px -60% 0px' }
+    )
     Object.values(sectionRefs.current).forEach(el => observer.observe(el))
     return () => observer.disconnect()
   }, [])
 
   const totalTopics = SECTIONS.flatMap(s => s.items).length
+  const ref = (id: string) => (el: HTMLElement | null) => { if (el) sectionRefs.current[id] = el }
+  const mc = (id: string) => async () => { await markTopicComplete(id); onComplete() }
 
   return (
     <div className="page-with-sidebar">
       <Sidebar sections={SECTIONS} activeId={activeId} completed={completed} totalTopics={totalTopics} onItemClick={scrollTo} />
       <main className="main-content">
 
-        <section id="spark-arch" ref={el => { if (el) sectionRefs.current['spark-arch'] = el }} className="topic-section">
+        {/* ─── SPARK ARCHITECTURE ─────────────────────────────────────────── */}
+        <section id="spark-arch" ref={ref('spark-arch')} className="topic-section">
           <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
-            <h1 className="topic-title">Spark Architecture and DAG</h1>
-            <p className="topic-desc">Spark's architecture is master-worker. The Driver coordinates; Executors compute. Every Spark job creates a DAG (Directed Acyclic Graph) that the Catalyst optimizer transforms into an efficient physical plan.</p>
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Spark Architecture</h1>
+            <p className="topic-desc">
+              Spark is a distributed compute engine built on a master-worker model. The <strong>Driver</strong> is the JVM process that hosts your application, creates the SparkContext/SparkSession, builds the logical plan, and coordinates execution. <strong>Executors</strong> are JVM processes on worker nodes that run tasks and cache data. A <strong>Cluster Manager</strong> (Standalone, YARN, or Kubernetes) allocates resources. Understanding this hierarchy is essential for debugging OOM errors, task failures, and performance tuning.
+            </p>
           </div>
           <SparkArchAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Lazy evaluation:</strong> Spark transformations (map, filter, join) build the DAG but don't execute. Only ACTIONS (count, collect, write, show) trigger actual computation. This enables Catalyst to optimize the full plan before executing.
+              <strong>SparkSession vs SparkContext:</strong> SparkContext (pre-2.0) is the low-level entry point to the cluster. SparkSession (2.0+) wraps it and adds DataFrame/SQL support. Always use <code>SparkSession.builder</code>. Access the underlying context via <code>spark.sparkContext</code> when you need RDD operations or broadcast variables.
             </div>
           </div>
-          <CodeBlock lang="python">{`# Spark Architecture concepts in code
+          <CodeBlock lang="python">{`from pyspark.sql import SparkSession
 
-# 1. DAG visualization
-df = spark.read.parquet("/data/events")        # transformation - adds to DAG
-df2 = df.filter(df.amount > 100)               # transformation - lazy
-df3 = df2.groupBy("user_id").sum("amount")     # transformation - lazy
-df3.explain(True)                              # show physical plan WITHOUT executing
-
-# 2. Stages and tasks
-# Wide transformations (require shuffle) = new stage boundary
-# Narrow transformations (map/filter) = same stage
-df_joined = large_df.join(small_df, "id", "inner")  # wide -> new stage
-df_filtered = df.filter(df.amount > 0)              # narrow -> same stage
-
-# 3. Actions trigger execution
-count = df3.count()         # action - executes DAG
-df3.write.parquet("/output") # action - executes DAG
-df3.show(10)                 # action - partial DAG execution
-
-# 4. Caching to avoid recomputation
-df.cache()                   # store in memory (best for repeated use)
-df.persist(StorageLevel.DISK_ONLY)  # spill to disk
-
-spark.sparkContext.setJobDescription("Gold layer aggregation")  # name in Spark UI`}</CodeBlock>
-          <Quiz topicId="spark-arch" questions={[
-            { question: "What is lazy evaluation in Spark?", options: ["Spark is slow", "Transformations build a DAG but don't execute until an action is called", "Spark waits for all data before processing", "Caching is deferred"], correct: 1 },
-            { question: "What creates a new stage boundary in Spark?", options: ["filter() operations", "Wide transformations like join() and groupBy() that require a shuffle", "count() actions", "Reading from ADLS"], correct: 1 },
-            { question: "What is the Spark Driver's role?", options: ["Execute tasks on data", "Coordinate the job - create DAG, schedule tasks to executors, collect results", "Store data in memory", "Manage cluster nodes"], correct: 1 },
-          ]} />
-          <button onClick={async () => { await markTopicComplete('spark-arch'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
-        </section>
-
-        <section id="spark-partitions" ref={el => { if (el) sectionRefs.current['spark-partitions'] = el }} className="topic-section">
-          <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
-            <h1 className="topic-title">Partitions and Shuffles</h1>
-            <p className="topic-desc">Partitioning is how Spark distributes data across executors. Shuffles (moving data between nodes) are the most expensive operation in Spark - minimize them.</p>
-          </div>
-          <CodeBlock lang="python">{`# Partitioning rules of thumb
-# - Default: spark.sql.shuffle.partitions = 200 (often too many/few)
-# - Target: 100-200MB per partition
-# - Formula: total_data_size / target_partition_size
-
-total_gb = 40  # 40GB dataset
-target_mb = 128
-num_partitions = int((total_gb * 1024) / target_mb)  # = 320
-
-spark.conf.set("spark.sql.shuffle.partitions", num_partitions)
-
-# Repartition vs Coalesce
-df.repartition(320)           # full shuffle, use when INCREASING partitions
-df.coalesce(10)               # no shuffle (merge), use when DECREASING for write
-df.repartition("country")     # repartition by column (for partition pruning)
-
-# Data skew - one partition has 80% of data
-# Detect skew:
-df.groupBy(spark_partition_id()).count().orderBy("count", ascending=False).show(5)
-
-# Fix skew with salting
-import pyspark.sql.functions as F
-skewed_df = skewed_df.withColumn("salt", (F.rand() * 10).cast("int"))
-other_df  = other_df.withColumn("salt", F.explode(F.array(*[F.lit(i) for i in range(10)])))
-
-joined = skewed_df.join(other_df, ["id", "salt"]).drop("salt")
-
-# AQE auto skew join handling (Spark 3.x)
-spark.conf.set("spark.sql.adaptive.enabled", "true")
-spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")`}</CodeBlock>
-          <Quiz topicId="spark-partitions" questions={[
-            { question: "What is the recommended partition size in Spark?", options: ["1MB", "10MB", "100-200MB", "1GB"], correct: 2 },
-            { question: "When should you use coalesce() instead of repartition()?", options: ["When increasing partition count", "When decreasing partition count - coalesce avoids a full shuffle", "Never - repartition is always better", "When joining two DataFrames"], correct: 1 },
-            { question: "What is data skew in Spark?", options: ["Corrupted data", "Uneven data distribution where one partition has significantly more data than others", "A network error", "Too many partitions"], correct: 1 },
-          ]} />
-          <button onClick={async () => { await markTopicComplete('spark-partitions'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
-        </section>
-
-        <section id="spark-memory" ref={el => { if (el) sectionRefs.current['spark-memory'] = el }} className="topic-section">
-          <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
-            <h1 className="topic-title">Memory Management and Tuning</h1>
-          </div>
-          <CodeBlock lang="python">{`# Spark memory model
-# spark.executor.memory = total executor memory (e.g., 8g)
-#   - 300MB reserved overhead (JVM, OS)
-#   - usableMemory = total - overhead
-#   - spark.memory.fraction (0.6) * usable = Spark memory pool
-#     - Execution memory (joins, aggregations, shuffles)
-#     - Storage memory (cached RDDs/DataFrames)
-#   - 0.4 * usable = User memory (UDFs, Python objects)
-
-# Recommended baseline config
-spark = SparkSession.builder \\
-    .config("spark.executor.memory",       "8g")
-    .config("spark.executor.cores",        "4")
-    .config("spark.executor.memoryOverhead","2g")  # for Python/PySpark workers
-    .config("spark.memory.fraction",       "0.8")
-    .config("spark.memory.storageFraction","0.3")
-    .config("spark.sql.shuffle.partitions","auto")  # AQE manages this
+# Production-grade SparkSession creation (spark-submit sets most via --conf)
+spark = SparkSession.builder \
+    .appName("gold_layer_aggregation") \
+    .config("spark.executor.memory",          "8g") \
+    .config("spark.executor.cores",           "4") \
+    .config("spark.executor.instances",       "10") \
+    .config("spark.driver.memory",            "4g") \
+    .config("spark.sql.adaptive.enabled",     "true") \
+    .config("spark.sql.shuffle.partitions",   "auto") \
+    .enableHiveSupport() \
     .getOrCreate()
 
-# Detect memory issues
-# 1. OOM: increase spark.executor.memory or reduce partition size
-# 2. GC overhead: look for "GC overhead limit exceeded" in logs
-# 3. Spill: check Spark UI -> Stages -> Shuffle Write (spill means disk I/O)
+sc = spark.sparkContext          # underlying SparkContext
+sc.setLogLevel("WARN")          # reduce noise in logs
+sc.setJobDescription("Agg daily revenue")  # visible in Spark UI
 
-# Broadcast join - broadcast small table to avoid shuffle
-from pyspark.sql.functions import broadcast
-result = large_df.join(broadcast(small_df), "key")
-# spark.sql.autoBroadcastJoinThreshold = 10MB (default)`}</CodeBlock>
-          <Quiz topicId="spark-memory" questions={[
-            { question: "What happens when Spark runs out of executor memory?", options: ["Job fails immediately", "Data spills to disk (NVMe), ~1000x slower than memory operations", "Spark requests more memory", "Tasks are killed"], correct: 1 },
-            { question: "When should you use a broadcast join?", options: ["For all joins", "When one table is small enough to fit in executor memory (< autoBroadcastJoinThreshold)", "When tables are the same size", "When joining more than 2 tables"], correct: 1 },
+# Inspect cluster topology
+print(f"App ID  : {sc.applicationId}")
+print(f"Master  : {sc.master}")           # local[*], yarn, k8s://...
+print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
+
+# spark-submit example (production)
+# spark-submit \\
+#   --master yarn \\
+#   --deploy-mode cluster \\          # driver runs on cluster node
+#   --num-executors 20 \\
+#   --executor-memory 8g \\
+#   --executor-cores 4 \\
+#   --driver-memory 4g \\
+#   --conf spark.sql.adaptive.enabled=true \\
+#   --conf spark.dynamicAllocation.enabled=true \\
+#   --conf spark.dynamicAllocation.maxExecutors=50 \\
+#   my_pipeline.py
+
+# Kubernetes deploy mode
+# spark-submit \\
+#   --master k8s://https://<k8s-api-server> \\
+#   --deploy-mode cluster \\
+#   --conf spark.kubernetes.container.image=my-registry/spark:3.5 \\
+#   --conf spark.kubernetes.namespace=spark-jobs \\
+#   my_pipeline.py`}
+          </CodeBlock>
+          <Quiz topicId="spark-arch" questions={[
+            {
+              question: "What is the Driver's primary role in a Spark application?",
+              options: [
+                "Execute shuffle operations between worker nodes",
+                "Host the SparkSession, build the DAG, schedule tasks to executors, and collect results",
+                "Manage cluster resources and executor allocation",
+                "Store cached DataFrames in memory"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the difference between --deploy-mode client and --deploy-mode cluster in spark-submit?",
+              options: [
+                "Client mode is faster; cluster mode uses more memory",
+                "In client mode the Driver runs on the submitting machine; in cluster mode the Driver runs on a cluster node — cluster mode is preferred for production so the driver isn't lost if the submitting shell dies",
+                "Client mode supports YARN; cluster mode supports Kubernetes only",
+                "There is no functional difference"
+              ],
+              correct: 1
+            },
+            {
+              question: "Which cluster manager is native to Spark and requires no additional infrastructure?",
+              options: ["YARN", "Kubernetes", "Mesos", "Spark Standalone mode"],
+              correct: 3
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('spark-memory'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          <button onClick={mc('spark-arch')} style={MC_BTN}>Mark Complete ✓</button>
         </section>
 
-        <section id="spark-df" ref={el => { if (el) sectionRefs.current['spark-df'] = el }} className="topic-section">
+        {/* ─── DAG, STAGES, TASKS ─────────────────────────────────────────── */}
+        <section id="spark-dag" ref={ref('spark-dag')} className="topic-section">
           <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
-            <h1 className="topic-title">DataFrame API and Optimizations</h1>
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">DAG, Stages, and Tasks</h1>
+            <p className="topic-desc">
+              Every Spark job is represented as a Directed Acyclic Graph (DAG) of stages. <strong>Narrow transformations</strong> (map, filter, withColumn) pipeline within a stage — each partition is processed independently with no data movement. <strong>Wide transformations</strong> (groupBy, join, repartition) require a <strong>shuffle</strong> — data is written to disk, transferred across the network, and re-read — creating a new stage boundary. Each stage is divided into <strong>tasks</strong>, one per partition, and tasks are serialized and sent to executor slots.
+            </p>
+          </div>
+          <DagAnimation />
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Shuffles are expensive.</strong> They write all data to disk, transfer it over the network, and read it back. Every wide transformation creates one. Minimise shuffles by: filtering early, broadcasting small tables, using partition-aware operations, and enabling AQE.
+            </div>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+
+# ── Narrow transformations (same stage, no shuffle) ──────────────────
+df = spark.read.parquet("/data/silver/events")     # Stage 0 begins
+df2 = df.filter(F.col("event_date") >= "2024-01-01")  # narrow
+df3 = df2.withColumn("revenue", F.col("qty") * F.col("price"))  # narrow
+df4 = df3.select("user_id", "event_date", "revenue")  # narrow (column pruning)
+
+# ── Wide transformation → Stage boundary (shuffle written to disk) ───
+agg = df4.groupBy("user_id", "event_date") \    # WIDE → new Stage
+          .agg(F.sum("revenue").alias("daily_rev"),
+               F.count("*").alias("events"))
+
+# ── Another wide transformation → another Stage boundary ────────────
+ranked = agg.join(                               # WIDE → new Stage
+    spark.table("dim.users").select("user_id", "tier"),
+    "user_id", "left"
+)
+
+# Understand the physical plan BEFORE running
+ranked.explain(extended=True)
+# Look for: Exchange (= shuffle), Sort, BroadcastHashJoin, SortMergeJoin
+
+# How tasks are created:
+# - 1 task per INPUT partition in a stage
+# - After a shuffle: spark.sql.shuffle.partitions tasks in the next stage
+# - With AQE: Spark coalesces empty/small shuffle partitions automatically
+
+# Task serialization: Spark serialises the task closure (lambda + captured vars)
+# Pitfall: capturing a large object in a closure → sent to ALL tasks
+huge_lookup = load_large_dict()   # BAD if used inside a map transformation
+# Fix: use a broadcast variable instead (shared once per executor)
+bc = sc.broadcast(huge_lookup)
+df.rdd.map(lambda row: bc.value.get(row.key))
+
+# Read the DAG in Spark UI: Jobs → click a Job → see Stage graph
+# Stages in blue = completed, orange = running, grey = skipped (cached)`}
+          </CodeBlock>
+          <Quiz topicId="spark-dag" questions={[
+            {
+              question: "What causes a new stage boundary in a Spark DAG?",
+              options: [
+                "Any transformation (filter, select, withColumn)",
+                "A wide transformation that requires a shuffle (groupBy, join, repartition, distinct)",
+                "Reading a new file",
+                "Calling explain()"
+              ],
+              correct: 1
+            },
+            {
+              question: "How many tasks does Spark create per stage?",
+              options: [
+                "One task per executor",
+                "One task per input partition in that stage",
+                "One task per column in the DataFrame",
+                "Always spark.sql.shuffle.partitions tasks"
+              ],
+              correct: 1
+            },
+            {
+              question: "Why is capturing a large Python dict inside a transformation closure a problem?",
+              options: [
+                "Python dicts are not serializable",
+                "The dict is serialized and sent to every individual task, not shared — use a broadcast variable instead",
+                "It disables lazy evaluation",
+                "It causes a shuffle"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-dag')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── LAZY EVALUATION ────────────────────────────────────────────── */}
+        <section id="spark-lazy" ref={ref('spark-lazy')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Lazy Evaluation and the Execution Model</h1>
+            <p className="topic-desc">
+              Spark does <em>nothing</em> when you call a transformation. It records the operation in the logical plan. Only when you call an <strong>action</strong> (count, collect, show, write, save) does Spark hand the full logical plan to Catalyst for optimization, generate a physical plan, and execute. This lazy model enables optimizations impossible in eager systems: Catalyst can push filters down to the data source, prune columns before reading, reorder joins, and fold constants — all because it sees the <em>complete</em> query before touching any data.
+            </p>
+          </div>
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Lineage for fault tolerance:</strong> Because transformations are recorded as a DAG of operations (lineage), if an executor dies mid-job, Spark can recompute only the lost partitions by replaying the lineage — no need for full data replication like Hadoop MapReduce's HDFS replication strategy.
+            </div>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+import time
+
+# ── Transformations are LAZY — zero computation happens here ─────────
+df = spark.read.parquet("/data/silver/transactions")   # no I/O yet
+df2 = df.filter(F.col("amount") > 1000)               # no compute
+df3 = df2.withColumn("tax", F.col("amount") * 0.2)    # no compute
+df4 = df3.groupBy("merchant_id").agg(
+    F.sum("amount").alias("total"),
+    F.count("*").alias("txn_count")
+)                                                       # still nothing!
+
+# ── Actions TRIGGER execution of the full DAG ────────────────────────
+t0 = time.time()
+total_merchants = df4.count()          # ACTION → Catalyst optimises → executes
+print(f"Merchants: {total_merchants}, took {time.time()-t0:.1f}s")
+
+df4.show(20)                           # ACTION → re-executes the full DAG!
+# ↑ This is a COMMON MISTAKE — df4 is recomputed from scratch
+
+# Fix: cache before multiple actions
+df4.cache()
+df4.count()   # first action — computes AND caches
+df4.show(20)  # served from cache, fast
+
+# ── Common actions ───────────────────────────────────────────────────
+df.count()                    # triggers full scan
+df.collect()                  # returns List[Row] to driver — CAREFUL on large DFs
+df.take(100)                  # first 100 rows to driver (no sort guarantee)
+df.first()                    # equivalent to take(1)[0]
+df.show(20, truncate=False)   # prints to stdout
+df.write.format("delta").mode("overwrite").save("/output/path")  # write action
+df.foreach(lambda row: print(row))  # custom side-effect per row
+
+# ── explain() shows plan WITHOUT executing ───────────────────────────
+df4.explain(True)
+# Output sections:
+#   == Parsed Logical Plan ==       (raw AST)
+#   == Analyzed Logical Plan ==     (column names resolved)
+#   == Optimized Logical Plan ==    (Catalyst applied rules: pushdown, pruning)
+#   == Physical Plan ==             (join strategies, exchange/shuffle details)
+
+# ── Lineage recovery example ─────────────────────────────────────────
+# If an executor holding partition 7 of df3 dies, Spark re-reads the
+# source parquet, re-applies filter, re-applies withColumn for partition 7 only.
+# With cache(), Spark can recover from the cached level instead of source.`}
+          </CodeBlock>
+          <Quiz topicId="spark-lazy" questions={[
+            {
+              question: "You call df.filter(...).groupBy(...).agg(...).show() then immediately df.filter(...).groupBy(...).agg(...).count(). How many times is the full DAG executed?",
+              options: [
+                "Once — Spark caches automatically",
+                "Twice — each action re-executes the entire DAG from scratch unless you cache",
+                "Zero — show() is not an action",
+                "Depends on spark.sql.adaptive.enabled"
+              ],
+              correct: 1
+            },
+            {
+              question: "What advantage does lazy evaluation give Catalyst over an eager execution model?",
+              options: [
+                "It reduces driver memory usage",
+                "Catalyst sees the complete query plan before executing, enabling cross-operation optimisations like filter pushdown and join reordering",
+                "It enables parallel reads from ADLS",
+                "It prevents OOM errors automatically"
+              ],
+              correct: 1
+            },
+            {
+              question: "How does Spark recover a lost partition without full data replication (unlike HDFS)?",
+              options: [
+                "It reads a backup copy from ADLS",
+                "It replays the transformation lineage to recompute only the lost partitions",
+                "It asks another executor for a copy",
+                "It aborts the job and restarts"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-lazy')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── RDD vs DataFrame vs Dataset ────────────────────────────────── */}
+        <section id="spark-rdd" ref={ref('spark-rdd')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">RDDs vs DataFrames vs Datasets</h1>
+            <p className="topic-desc">
+              Spark has three abstraction layers. <strong>RDDs</strong> (Resilient Distributed Datasets) are the low-level API — typed, unstructured partitions of JVM objects with no schema. <strong>DataFrames</strong> are distributed tables with a named schema, optimised by Catalyst and Tungsten — the right choice for 95% of work. <strong>Datasets</strong> are typed DataFrames available only in Scala/Java (Python has no Dataset API — PySpark DataFrames behave like untyped Datasets[Row]). In practice: always use DataFrames; drop to RDD only when you need low-level partition-level control unavailable in the DataFrame API.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
+
+# ── RDD API — avoid unless necessary ────────────────────────────────
+rdd = sc.textFile("/data/raw/access_logs/*.log")         # RDD[str]
+parsed = rdd.map(lambda line: line.split("\t")) \
+            .filter(lambda fields: len(fields) >= 5) \
+            .map(lambda f: (f[2], float(f[4])))          # RDD[(str, float)]
+result_rdd = parsed.reduceByKey(lambda a, b: a + b)      # RDD[(str, sum)]
+result_rdd.take(10)
+
+# Problems with RDD:
+# 1. No schema → no Catalyst optimisation
+# 2. Java/Python serialisation overhead for every operation
+# 3. No columnar storage → no Tungsten optimisations
+# 4. Verbose API
+
+# ── DataFrame API — preferred ────────────────────────────────────────
+# Explicit schema (always prefer over inferSchema=True in production)
+schema = StructType([
+    StructField("user_id",    LongType(),   nullable=False),
+    StructField("event_type", StringType(), nullable=True),
+    StructField("amount",     DoubleType(), nullable=True),
+    StructField("ts",         StringType(), nullable=True),
+])
+
+df = spark.read.schema(schema).json("/data/raw/events/")
+
+# Same logic as RDD above — but Catalyst optimises it
+result_df = df \
+    .filter(F.col("amount").isNotNull()) \
+    .groupBy("user_id") \
+    .agg(F.sum("amount").alias("total_spend"))
+
+# DataFrame → RDD: convert when you need partition-level iteration
+# (e.g., writing to a legacy system row-by-row)
+def process_partition(rows):
+    conn = get_db_connection()  # create once per partition
+    for row in rows:
+        conn.insert(row.user_id, row.total_spend)
+    conn.close()
+
+result_df.rdd.foreachPartition(process_partition)
+
+# ── When to use RDD ───────────────────────────────────────────────────
+# 1. Unstructured data with no schema (raw text, binary)
+# 2. Partition-level operations (foreachPartition for connection pooling)
+# 3. Complex custom serialization
+# 4. Legacy PySpark 1.x code migration
+
+# ── Dataset API (Scala only, shown for awareness) ─────────────────────
+# case class Event(userId: Long, amount: Double)
+# val ds: Dataset[Event] = spark.read.parquet(...).as[Event]
+# → compile-time type safety + Catalyst optimisation`}
+          </CodeBlock>
+          <Quiz topicId="spark-rdd" questions={[
+            {
+              question: "Why do DataFrames outperform RDDs for most workloads?",
+              options: [
+                "DataFrames are always cached in memory",
+                "DataFrames have a schema, enabling Catalyst query optimisation and Tungsten's columnar, off-heap execution — RDDs bypass both",
+                "DataFrames use more executor cores",
+                "DataFrames avoid network shuffles"
+              ],
+              correct: 1
+            },
+            {
+              question: "When is foreachPartition on an RDD a legitimate use case?",
+              options: [
+                "When you want to filter data",
+                "When you need to open a connection (DB, API) once per partition rather than once per row — amortises connection overhead",
+                "When the DataFrame API is unavailable",
+                "When you need to broadcast a variable"
+              ],
+              correct: 1
+            },
+            {
+              question: "Is the Dataset API available in PySpark?",
+              options: [
+                "Yes, via pyspark.sql.Dataset",
+                "No — Datasets are a Scala/Java API only. PySpark DataFrames are effectively untyped Dataset[Row]",
+                "Yes, but only in Spark 3.x",
+                "Yes, via spark.createDataset()"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-rdd')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── READING DATA ───────────────────────────────────────────────── */}
+        <section id="spark-reading" ref={ref('spark-reading')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Reading Data</h1>
+            <p className="topic-desc">
+              Spark can read from virtually any source. Understanding format-specific options — especially <code>inferSchema</code> vs explicit schema, <code>header</code>, <code>multiLine</code>, and predicate pushdown support — is critical for building reliable ingestion pipelines. Always define schemas explicitly in production; <code>inferSchema=True</code> triggers a full scan just to determine types.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql.types import *
+from pyspark.sql import functions as F
+
+# ── CSV ──────────────────────────────────────────────────────────────
+schema_csv = StructType([
+    StructField("order_id",    LongType(),   False),
+    StructField("customer_id", IntegerType(), True),
+    StructField("amount",      DoubleType(), True),
+    StructField("status",      StringType(), True),
+    StructField("created_at",  TimestampType(), True),
+])
+df_csv = spark.read \
+    .format("csv") \
+    .schema(schema_csv) \
+    .option("header",          "true") \
+    .option("sep",             ",") \
+    .option("quote",           '"') \
+    .option("escape",          '"') \
+    .option("nullValue",       "NULL") \
+    .option("timestampFormat", "yyyy-MM-dd HH:mm:ss") \
+    .option("mode",            "DROPMALFORMED") \  # or PERMISSIVE / FAILFAST
+    .load("abfss://raw@myaccount.dfs.core.windows.net/orders/*.csv")
+
+# ── JSON ─────────────────────────────────────────────────────────────
+df_json = spark.read \
+    .format("json") \
+    .option("multiLine",    "true") \    # for pretty-printed JSON files
+    .option("allowComments","true") \
+    .option("mode",         "PERMISSIVE") \
+    .schema(schema_json) \
+    .load("/data/raw/events/*.json")
+
+# ── Parquet (columnar, best for analytics) ───────────────────────────
+df_parquet = spark.read \
+    .format("parquet") \
+    .option("mergeSchema", "true") \     # handles schema evolution across files
+    .load("/data/silver/transactions/")
+# Parquet supports predicate pushdown (filters applied at file level)
+# and column pruning (only requested columns read from disk)
+
+# ── ORC ──────────────────────────────────────────────────────────────
+df_orc = spark.read.format("orc").load("/data/hive/warehouse/orders/")
+
+# ── Avro ─────────────────────────────────────────────────────────────
+df_avro = spark.read.format("avro").load("/data/kafka-dump/events/")
+
+# ── Delta ────────────────────────────────────────────────────────────
+df_delta = spark.read.format("delta").load("/data/delta/orders/")
+# Or via Unity Catalog:
+df_delta2 = spark.table("catalog.silver.orders")
+# Time travel:
+df_v5 = spark.read.format("delta").option("versionAsOf", 5).load("/data/delta/orders/")
+df_ts  = spark.read.format("delta").option("timestampAsOf", "2024-06-01").load("/data/delta/orders/")
+
+# ── JDBC ─────────────────────────────────────────────────────────────
+df_jdbc = spark.read \
+    .format("jdbc") \
+    .option("url",          "jdbc:sqlserver://myserver.database.windows.net:1433;databaseName=mydb") \
+    .option("dbtable",      "(SELECT * FROM orders WHERE status='PENDING') AS t") \
+    .option("user",         dbutils.secrets.get("kv", "sql-user")) \
+    .option("password",     dbutils.secrets.get("kv", "sql-pass")) \
+    .option("driver",       "com.microsoft.sqlserver.jdbc.SQLServerDriver") \
+    .option("numPartitions","10") \          # parallelism
+    .option("partitionColumn","order_id") \  # column to split on
+    .option("lowerBound",   "1") \
+    .option("upperBound",   "10000000") \
+    .load()
+
+# ── Kafka (Structured Streaming, also batch) ─────────────────────────
+df_kafka = spark.read \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "broker1:9092,broker2:9092") \
+    .option("subscribe",               "topic.orders") \
+    .option("startingOffsets",         "earliest") \
+    .option("endingOffsets",           "latest") \
+    .load()
+
+# Kafka value is binary — deserialise:
+df_events = df_kafka.select(
+    F.col("key").cast("string").alias("key"),
+    F.from_json(F.col("value").cast("string"), schema_json).alias("data"),
+    F.col("timestamp").alias("kafka_ts")
+).select("key", "data.*", "kafka_ts")`}
+          </CodeBlock>
+          <Quiz topicId="spark-reading" questions={[
+            {
+              question: "Why should you always define an explicit schema rather than using inferSchema=True in production?",
+              options: [
+                "inferSchema doesn't work with Parquet",
+                "inferSchema triggers a full scan of all data just to determine column types — wasting time and money on every job run",
+                "inferSchema causes type errors",
+                "Explicit schema uses less memory"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does option('mode', 'DROPMALFORMED') do when reading CSV?",
+              options: [
+                "Drops all rows with null values",
+                "Silently drops rows that cannot be parsed against the schema, rather than failing the job",
+                "Drops duplicate rows",
+                "Skips the header row"
+              ],
+              correct: 1
+            },
+            {
+              question: "For a JDBC read with numPartitions=10, partitionColumn='order_id', lowerBound=1, upperBound=10M — how does Spark parallelise the read?",
+              options: [
+                "It reads the full table then splits into 10 partitions in memory",
+                "Spark issues 10 parallel SQL queries each covering a range of order_id values — one per Spark partition",
+                "It reads one row at a time from 10 connections",
+                "Parallelism is determined by the database, not Spark"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-reading')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── WRITING DATA ───────────────────────────────────────────────── */}
+        <section id="spark-writing" ref={ref('spark-writing')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Writing Data</h1>
+            <p className="topic-desc">
+              Writing is an action — it triggers the full DAG. Key decisions: format (Parquet/Delta for analytics, CSV/JSON for interchange), <strong>save mode</strong> (append/overwrite/ignore/errorIfExists), and <strong>physical layout</strong> (partitionBy for read pruning, bucketBy+sortBy for join optimisation). The number of output files equals the number of active partitions at write time — control this with coalesce or repartition before writing.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+
+# ── Save modes ───────────────────────────────────────────────────────
+# append          → add new files, never touch existing
+# overwrite       → delete ALL existing data, write new (atomic on Delta)
+# ignore          → no-op if data already exists
+# errorIfExists   → raise error if data already exists (default)
+
+df.write \
+  .format("parquet") \
+  .mode("overwrite") \
+  .save("/data/silver/orders/")
+
+# ── partitionBy — hive-style directory partitioning ──────────────────
+# Creates: /data/silver/events/event_date=2024-01-01/part-00000.parquet
+# → Spark skips entire directories on read when filter matches partition col
+df.write \
+  .format("delta") \
+  .mode("append") \
+  .partitionBy("event_date", "region") \
+  .option("replaceWhere", "event_date >= '2024-01-01'") \  # partial overwrite
+  .save("/data/delta/events/")
+
+# ── bucketBy — pre-shuffle for joins ─────────────────────────────────
+# Both tables bucketed on the same key with the same bucket count
+# → Spark can skip the shuffle entirely during joins (co-located)
+# Requires Hive metastore (saveAsTable, not save)
+df.write \
+  .format("parquet") \
+  .bucketBy(64, "user_id") \
+  .sortBy("user_id") \
+  .mode("overwrite") \
+  .saveAsTable("silver.events_bucketed")
+
+# ── Control output file count ─────────────────────────────────────────
+# Too many small files → metadata overhead, slow reads
+# Too few large files → poor parallelism
+
+# Reduce to N files before writing (no shuffle):
+df.coalesce(10).write.format("parquet").mode("overwrite").save("/output/")
+
+# Repartition + write gives exactly N files with even distribution:
+df.repartition(20).write.format("delta").mode("overwrite").save("/output/")
+
+# ── Compression ──────────────────────────────────────────────────────
+df.write \
+  .format("parquet") \
+  .option("compression", "snappy") \   # snappy (default), gzip, zstd, lz4
+  .mode("overwrite") \
+  .save("/output/compressed/")
+# zstd gives best compression ratio; snappy gives best read speed
+
+# ── Writing to JDBC ──────────────────────────────────────────────────
+df.write \
+  .format("jdbc") \
+  .option("url",      "jdbc:postgresql://host:5432/mydb") \
+  .option("dbtable",  "staging.orders") \
+  .option("user",     "user") \
+  .option("password", "pass") \
+  .option("batchsize","10000") \    # rows per INSERT batch
+  .mode("append") \
+  .save()
+
+# ── Writing to Kafka ─────────────────────────────────────────────────
+df.select(
+    F.col("order_id").cast("string").alias("key"),
+    F.to_json(F.struct("*")).alias("value")
+).write \
+  .format("kafka") \
+  .option("kafka.bootstrap.servers", "broker1:9092") \
+  .option("topic", "output.orders") \
+  .save()`}
+          </CodeBlock>
+          <Quiz topicId="spark-writing" questions={[
+            {
+              question: "What does partitionBy('event_date') do to the physical storage?",
+              options: [
+                "Sorts data by event_date within each file",
+                "Creates a directory per event_date value — Spark can skip entire directories when filtering by that column (partition pruning)",
+                "Splits each file into date-based chunks",
+                "Creates a Z-order index on event_date"
+              ],
+              correct: 1
+            },
+            {
+              question: "When does bucketBy improve query performance?",
+              options: [
+                "When writing compressed files",
+                "When two tables are bucketed on the same key with the same bucket count — Spark can skip the shuffle entirely during joins",
+                "When writing to ADLS",
+                "When using append mode"
+              ],
+              correct: 1
+            },
+            {
+              question: "You have a 1TB DataFrame and want to write it as 100 Parquet files. You call coalesce(100). What is the risk?",
+              options: [
+                "coalesce fails for files > 100GB",
+                "coalesce doesn't shuffle, so partitions may be very uneven — some files much larger than others. Use repartition(100) for even distribution",
+                "It creates 200 files instead",
+                "There is no risk — coalesce is always safe"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-writing')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── CORE TRANSFORMATIONS ───────────────────────────────────────── */}
+        <section id="spark-transforms" ref={ref('spark-transforms')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Core Transformations</h1>
+            <p className="topic-desc">
+              The DataFrame API provides a rich transformation vocabulary. Mastering these — and knowing which require shuffles — separates efficient pipelines from slow ones. All of the following are lazy transformations; nothing executes until an action is called.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.types import DecimalType
+
+df = spark.table("silver.transactions")
+
+# ── Column selection & projection ─────────────────────────────────────
+df.select("txn_id", "amount", "ts")
+df.select(F.col("amount").alias("revenue"), "*")   # keep all + add alias
+df.drop("internal_field", "debug_col")             # remove columns
+
+# ── Filtering ─────────────────────────────────────────────────────────
+df.filter(F.col("amount") > 100)
+df.where("status = 'COMPLETED' AND amount IS NOT NULL")  # SQL string syntax
+df.filter(F.col("region").isin("EU", "APAC"))
+df.filter(F.col("tags").contains("premium"))
+
+# ── Adding / modifying columns ────────────────────────────────────────
+df.withColumn("tax",      F.col("amount") * 0.2)
+df.withColumn("amount",   F.col("amount").cast(DecimalType(18, 2)))  # overwrite
+df.withColumnRenamed("ts", "event_time")
+df.withColumns({"net": F.col("amount") - F.col("fee"),              # Spark 3.3+
+                "gross": F.col("amount") + F.col("tax")})
+
+# ── Aggregations ──────────────────────────────────────────────────────
+df.groupBy("merchant_id", "event_date") \
+  .agg(
+    F.sum("amount").alias("total_revenue"),
+    F.count("*").alias("txn_count"),
+    F.countDistinct("user_id").alias("unique_users"),
+    F.avg("amount").alias("avg_ticket"),
+    F.max("amount").alias("max_txn"),
+    F.min("amount").alias("min_txn"),
+    F.percentile_approx("amount", 0.95).alias("p95_amount"),
+    F.first("status", ignorenulls=True).alias("first_status"),
+  )
+
+# ── Sorting ───────────────────────────────────────────────────────────
+df.orderBy("event_date", F.col("amount").desc())
+df.sortWithinPartitions("user_id")   # sort within partition, no shuffle
+
+# ── Deduplication ─────────────────────────────────────────────────────
+df.distinct()                            # all columns
+df.dropDuplicates(["txn_id"])            # subset — keeps first occurrence
+df.dropDuplicates(["user_id", "event_date"])
+
+# ── Set operations ────────────────────────────────────────────────────
+df1.union(df2)             # stacks by position (column names ignored)
+df1.unionByName(df2)       # stacks by column name (handles column reorder)
+df1.unionByName(df2, allowMissingColumns=True)   # Spark 3.1+ — fills missing with null
+df1.intersect(df2)         # rows in both (needs same schema)
+df1.except_(df2)           # rows in df1 not in df2
+
+# ── Joins ─────────────────────────────────────────────────────────────
+# join types: inner, left, right, full, left_semi, left_anti, cross
+df.join(dim_users, "user_id", "left")                         # equi-join
+df.join(dim_users, df["user_id"] == dim_users["uid"], "inner") # different names
+df.join(dim_users, ["user_id", "region"], "inner")            # composite key
+df.crossJoin(dim_country)                                     # cartesian
+
+# ── Limits ────────────────────────────────────────────────────────────
+df.limit(1000)    # returns first 1000 rows (non-deterministic order without sort)
+
+# ── Null handling ─────────────────────────────────────────────────────
+df.na.fill({"amount": 0.0, "status": "UNKNOWN"})
+df.na.drop(how="any", subset=["txn_id", "user_id"])  # drop if any key col is null
+df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
+          </CodeBlock>
+          <Quiz topicId="spark-transforms" questions={[
+            {
+              question: "What is the difference between union() and unionByName()?",
+              options: [
+                "union() is faster; unionByName() handles duplicates",
+                "union() stacks by column position (risky if schemas differ); unionByName() matches by column name regardless of order",
+                "They are identical in Spark 3.x",
+                "union() requires a shuffle; unionByName() does not"
+              ],
+              correct: 1
+            },
+            {
+              question: "You need only rows in df_new that don't exist in df_existing (by order_id). Which operation?",
+              options: [
+                "df_new.except_(df_existing)",
+                "df_new.join(df_existing, 'order_id', 'left_anti') — returns only rows from the left that have NO match on the right",
+                "df_new.intersect(df_existing)",
+                "df_new.filter(~df_new.order_id.isin(df_existing.order_id))"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does sortWithinPartitions() do that orderBy() does not?",
+              options: [
+                "sortWithinPartitions sorts globally across all data",
+                "sortWithinPartitions sorts data within each partition without a shuffle — useful for file-level locality before writing",
+                "sortWithinPartitions uses less memory",
+                "They are equivalent"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-transforms')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── BUILT-IN FUNCTIONS ─────────────────────────────────────────── */}
+        <section id="spark-functions" ref={ref('spark-functions')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Built-in Functions Deep Dive</h1>
+            <p className="topic-desc">
+              <code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM — no Python serialisation. Always prefer these over Python UDFs. Categories: string, date/time, array, map, struct, JSON, aggregate, and conditional.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.types import MapType, StringType, ArrayType, LongType
+
+df = spark.table("silver.events")
+
+# ── String functions ──────────────────────────────────────────────────
+df.withColumn("full_name",    F.concat_ws(" ", "first_name", "last_name"))
+df.withColumn("clean_email",  F.lower(F.trim(F.col("email"))))
+df.withColumn("phone_digits", F.regexp_replace("phone", r"[^0-9]", ""))
+df.withColumn("domain",       F.regexp_extract("email", r"@(.+)$", 1))
+df.withColumn("parts",        F.split("full_name", " "))     # → ArrayType
+df.withColumn("first_name",   F.split("full_name", " ")[0])
+df.withColumn("code_sub",     F.substring("code", 1, 3))
+df.withColumn("padded",       F.lpad(F.col("id").cast("string"), 10, "0"))
+df.withColumn("masked",       F.overlay("card_num", F.lit("****"), 9, 4))
+df.withColumn("like_match",   F.col("name").like("John%"))
+df.withColumn("soundex",      F.soundex("name"))  # fuzzy name matching
+
+# ── Date & timestamp functions ────────────────────────────────────────
+df.withColumn("event_date",   F.to_date("event_ts", "yyyy-MM-dd HH:mm:ss"))
+df.withColumn("event_ts2",    F.to_timestamp("ts_str", "yyyy-MM-dd'T'HH:mm:ss"))
+df.withColumn("month_start",  F.date_trunc("month", "event_ts"))
+df.withColumn("week_start",   F.date_trunc("week",  "event_ts"))
+df.withColumn("next_day",     F.date_add("event_date", 1))
+df.withColumn("age_days",     F.datediff(F.current_date(), "birth_date"))
+df.withColumn("age_months",   F.months_between(F.current_date(), "birth_date"))
+df.withColumn("year",         F.year("event_ts"))
+df.withColumn("month",        F.month("event_ts"))
+df.withColumn("day_of_week",  F.dayofweek("event_ts"))  # 1=Sunday
+df.withColumn("hour",         F.hour("event_ts"))
+df.withColumn("unix_ts",      F.unix_timestamp("event_ts"))
+df.withColumn("from_unix",    F.from_unixtime(F.col("epoch_ms") / 1000))
+
+# ── Array functions ───────────────────────────────────────────────────
+df.withColumn("exploded",     F.explode("tags"))          # one row per array element
+df.withColumn("exploded_opt", F.explode_outer("tags"))    # keeps nulls (outer)
+df.withColumn("posexploded",  F.posexplode("tags"))       # adds position column
+df.withColumn("flat",         F.flatten("nested_array"))  # [[a,b],[c]] → [a,b,c]
+df.withColumn("has_vip",      F.array_contains("tags", "vip"))
+df.withColumn("tag_count",    F.size("tags"))
+df.withColumn("distinct_tags",F.array_distinct("tags"))
+df.withColumn("sorted_tags",  F.array_sort("tags"))
+df.withColumn("joined_tags",  F.array_join("tags", ","))
+# Higher-order: transform / filter / aggregate (Spark 3.1+)
+df.withColumn("upper_tags",   F.transform("tags", lambda x: F.upper(x)))
+df.withColumn("long_tags",    F.filter("tags", lambda x: F.length(x) > 5))
+df.withColumn("tag_lens",     F.aggregate("tags", F.lit(0),
+                                           lambda acc, x: acc + F.length(x)))
+
+# ── Map functions ─────────────────────────────────────────────────────
+df.withColumn("prop_keys",    F.map_keys("properties"))
+df.withColumn("prop_vals",    F.map_values("properties"))
+df.withColumn("platform",     F.col("properties")["platform"])
+df.withColumn("enriched",     F.map_concat("props1", "props2"))
+
+# ── JSON functions ────────────────────────────────────────────────────
+json_schema = "STRUCT<event:STRING, value:DOUBLE, tags:ARRAY<STRING>>"
+df.withColumn("parsed",       F.from_json("payload", json_schema))
+df.withColumn("serialized",   F.to_json(F.struct("user_id", "amount")))
+df.withColumn("event_type",   F.get_json_object("payload", "$.event.type"))
+df.withColumn("schema_of",    F.schema_of_json(df.select("payload").first()[0]))
+
+# ── Conditional functions ─────────────────────────────────────────────
+df.withColumn("tier",
+    F.when(F.col("spend") > 10000, "platinum")
+     .when(F.col("spend") > 1000,  "gold")
+     .when(F.col("spend") > 100,   "silver")
+     .otherwise("bronze"))
+
+df.withColumn("val",          F.coalesce("col_a", "col_b", F.lit(0)))  # first non-null
+df.withColumn("nvl_val",      F.expr("nvl(amount, 0)"))                # SQL-style
+df.withColumn("nullif_val",   F.nullif("status", F.lit("N/A")))        # null if equal
+
+# ── Aggregate functions ────────────────────────────────────────────────
+df.groupBy("user_id").agg(
+    F.collect_list("product_id").alias("all_products"),    # ordered list with dups
+    F.collect_set("category").alias("unique_categories"), # set, no dups
+    F.struct("ts", "amount").alias("latest"),              # struct aggregation
+)`}
+          </CodeBlock>
+          <Quiz topicId="spark-functions" questions={[
+            {
+              question: "What is the difference between explode() and explode_outer()?",
+              options: [
+                "explode_outer is faster",
+                "explode drops rows where the array is null or empty; explode_outer keeps them as a single null row — critical to avoid losing data",
+                "explode_outer works on maps; explode works on arrays",
+                "They are identical"
+              ],
+              correct: 1
+            },
+            {
+              question: "You have a JSON column 'payload' and need to extract $.user.id. Which function?",
+              options: [
+                "F.json_extract('payload', 'user.id')",
+                "F.get_json_object('payload', '$.user.id') — extracts a single value using JSONPath",
+                "F.from_json('payload', schema).user.id — you must parse the full schema first",
+                "F.col('payload.user.id')"
+              ],
+              correct: 1
+            },
+            {
+              question: "coalesce() vs when().otherwise() — when should you prefer coalesce()?",
+              options: [
+                "Always prefer when/otherwise",
+                "Use coalesce() when you want the first non-null value from a list of columns — it's more concise. Use when/otherwise for conditional logic based on values, not nullability",
+                "coalesce() only works with numeric columns",
+                "They are interchangeable"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-functions')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── WINDOW FUNCTIONS ───────────────────────────────────────────── */}
+        <section id="spark-window" ref={ref('spark-window')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">PySpark Window Functions</h1>
+            <p className="topic-desc">
+              Window functions compute a result for each row based on a <em>window</em> of related rows — without collapsing rows like groupBy does. They are indispensable for sessionisation, running totals, lag/lead comparisons, rankings, and SCD Type 2 logic. Every window function requires a <code>Window</code> spec defining partition, order, and optional frame bounds.
+            </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
-# Core transformations
-df = spark.read.format("delta").table("silver.events")
+df = spark.table("silver.transactions")
 
-result = df \\
-    .filter(F.col("event_time") >= "2024-01-01") \\
-    .withColumn("hour", F.hour("event_time")) \\
-    .withColumn("revenue", F.col("quantity") * F.col("price")) \\
-    .withColumn("is_mobile", F.col("platform").isin("ios", "android").cast("boolean")) \\
-    .withColumn("full_name", F.concat_ws(" ", "first_name", "last_name")) \\
-    .dropDuplicates(["event_id"]) \\
-    .na.fill({"amount": 0, "status": "unknown"})
+# ── Basic window spec ─────────────────────────────────────────────────
+w_user = Window.partitionBy("user_id").orderBy("ts")
 
-# Window functions
-w = Window.partitionBy("user_id").orderBy("event_time")
-df = df.withColumn("prev_event", F.lag("event_type", 1).over(w)) \\
-       .withColumn("running_total", F.sum("amount").over(w.rowsBetween(Window.unboundedPreceding, 0)))
+# ── Ranking functions ─────────────────────────────────────────────────
+df.withColumn("rank",        F.rank().over(w_user))         # 1,2,2,4 (gaps)
+df.withColumn("dense_rank",  F.dense_rank().over(w_user))   # 1,2,2,3 (no gaps)
+df.withColumn("row_number",  F.row_number().over(w_user))   # 1,2,3,4 (unique)
+df.withColumn("ntile_4",     F.ntile(4).over(w_user))       # quartile bucket
+df.withColumn("pct_rank",    F.percent_rank().over(w_user)) # 0.0 to 1.0
 
-# MERGE (upsert) with Delta
-from delta.tables import DeltaTable
-target = DeltaTable.forName(spark, "silver.users")
-target.alias("t").merge(
-    updates_df.alias("s"), "t.user_id = s.user_id"
-).whenMatchedUpdateAll() \\
- .whenNotMatchedInsertAll() \\
- .execute()
+# ── Deduplicate keeping latest (row_number pattern) ───────────────────
+from pyspark.sql.functions import row_number
+deduped = df \
+    .withColumn("rn", F.row_number().over(
+        Window.partitionBy("order_id").orderBy(F.col("updated_at").desc())
+    )) \
+    .filter(F.col("rn") == 1) \
+    .drop("rn")
 
-# Avoid common pitfalls
-# 1. Don't use collect() on large DataFrames (brings to driver memory)
-# 2. Don't use Python UDFs for simple transformations (use built-in F.*)
-# 3. Avoid iterative row-by-row processing (use vectorized operations)
-# 4. Select only needed columns early to reduce data movement`}</CodeBlock>
-          <Quiz topicId="spark-df" questions={[
-            { question: "Why should you avoid collect() on large DataFrames?", options: ["It creates a shuffle", "It brings all data to the driver's memory, causing OOM", "It's deprecated", "It disables lazy evaluation"], correct: 1 },
-            { question: "What does dropDuplicates(['event_id']) do?", options: ["Drops ALL duplicate rows", "Keeps only one row per unique event_id value", "Removes null event_ids", "Sorts by event_id"], correct: 1 },
+# ── Lag / Lead ────────────────────────────────────────────────────────
+df.withColumn("prev_amount",  F.lag("amount", 1).over(w_user))
+df.withColumn("next_amount",  F.lead("amount", 1).over(w_user))
+df.withColumn("prev_status",  F.lag("status", 1, "NONE").over(w_user))  # default val
+
+# ── Running aggregates (unbounded preceding → current row) ───────────
+w_running = Window.partitionBy("user_id").orderBy("ts") \
+                  .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+df.withColumn("running_total",  F.sum("amount").over(w_running))
+df.withColumn("running_count",  F.count("*").over(w_running))
+df.withColumn("running_avg",    F.avg("amount").over(w_running))
+
+# ── Rolling window (last 7 days using rangeBetween) ──────────────────
+# rangeBetween operates on values, not row counts
+# Need the orderBy column to be numeric (epoch seconds or long)
+df2 = df.withColumn("ts_epoch", F.unix_timestamp("ts"))
+w_7d = Window.partitionBy("user_id") \
+             .orderBy("ts_epoch") \
+             .rangeBetween(-7 * 86400, 0)   # 7 days in seconds
+df2.withColumn("rolling_7d_sum", F.sum("amount").over(w_7d))
+
+# ── Full partition aggregation (no frame = entire partition) ─────────
+w_partition = Window.partitionBy("merchant_id")
+df.withColumn("merchant_total",  F.sum("amount").over(w_partition))
+df.withColumn("pct_of_merchant", F.col("amount") / F.sum("amount").over(w_partition))
+
+# ── First/Last value ─────────────────────────────────────────────────
+df.withColumn("first_order",  F.first("amount", ignorenulls=True).over(w_running))
+df.withColumn("last_status",  F.last("status",  ignorenulls=True).over(
+    Window.partitionBy("user_id").orderBy("ts")
+           .rowsBetween(Window.unboundedPreceding, Window.currentRow)))
+
+# ── SCD Type 2 active flag ────────────────────────────────────────────
+w_scd = Window.partitionBy("customer_id").orderBy(F.col("effective_from").desc())
+df_scd = df_history \
+    .withColumn("rn", F.row_number().over(w_scd)) \
+    .withColumn("is_current", F.col("rn") == 1) \
+    .drop("rn")`}
+          </CodeBlock>
+          <Quiz topicId="spark-window" questions={[
+            {
+              question: "What is the difference between rank() and row_number() window functions?",
+              options: [
+                "rank() is faster",
+                "row_number() always produces unique sequential integers; rank() assigns the same rank to ties and skips the next rank (1,2,2,4). Use row_number() for deduplication.",
+                "They are identical",
+                "rank() works only with numeric columns"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the difference between rowsBetween() and rangeBetween() in window specs?",
+              options: [
+                "They are the same thing",
+                "rowsBetween counts physical rows relative to current; rangeBetween operates on the numeric value of the orderBy column — enabling time-range windows like 'last 7 days'",
+                "rangeBetween is deprecated in Spark 3.x",
+                "rowsBetween requires a partition key; rangeBetween does not"
+              ],
+              correct: 1
+            },
+            {
+              question: "How would you keep only the most recent record per order_id from a CDC (change data capture) stream?",
+              options: [
+                "df.distinct()",
+                "Use row_number() over Window.partitionBy('order_id').orderBy(col('updated_at').desc()), then filter rn == 1",
+                "df.dropDuplicates(['order_id'])",
+                "Use rank() and filter rank == 1"
+              ],
+              correct: 1
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('spark-df'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          <button onClick={mc('spark-window')} style={MC_BTN}>Mark Complete ✓</button>
         </section>
 
-        <section id="spark-udfs" ref={el => { if (el) sectionRefs.current['spark-udfs'] = el }} className="topic-section">
+        {/* ─── JOIN STRATEGIES ────────────────────────────────────────────── */}
+        <section id="spark-joins" ref={ref('spark-joins')} className="topic-section">
           <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
-            <h1 className="topic-title">UDFs vs Built-in Functions</h1>
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Join Strategies</h1>
+            <p className="topic-desc">
+              Spark has four physical join implementations. The right one is chosen automatically (or forced with hints). Understanding when each is used — and when to force one — is critical for avoiding shuffles and handling skew.
+            </p>
+          </div>
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Join strategy priority:</strong> BroadcastHashJoin (if one side ≤ autoBroadcastJoinThreshold, default 10MB) → ShuffleHashJoin (one side fits in executor memory) → SortMergeJoin (general-purpose, both sides shuffled and sorted) → CartesianJoin (no join key, explicit only).
+            </div>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.functions import broadcast
+
+# ── 1. Broadcast Hash Join (BHJ) ──────────────────────────────────────
+# Best for: large_df JOIN small_df (small < 10MB by default)
+# Mechanism: broadcast small table to ALL executors → no shuffle on either side
+# Config: spark.sql.autoBroadcastJoinThreshold = 10MB (set to -1 to disable)
+
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", str(50 * 1024 * 1024))  # 50MB
+
+# Spark chooses BHJ automatically if small_df is below threshold.
+# Force it with hint:
+result = large_df.join(broadcast(dim_country), "country_code", "left")
+
+# In SQL:
+spark.sql("""
+    SELECT /*+ BROADCAST(d) */ t.*, d.country_name
+    FROM silver.transactions t
+    JOIN dim.country d ON t.country_code = d.code
+""")
+
+# ── 2. Sort-Merge Join (SMJ) ───────────────────────────────────────────
+# Best for: two large tables
+# Mechanism: both sides shuffled by join key, then sorted, then merged
+# Creates 2 shuffle stages — expensive but correct for any data size
+
+# Spark chooses SMJ when BHJ isn't applicable.
+# Force with hint:
+result = df1.hint("merge").join(df2, "id")
+
+# ── 3. Shuffle Hash Join (SHJ) ────────────────────────────────────────
+# Best for: one side fits in executor memory, want to avoid sort overhead
+# Mechanism: shuffle both sides, build hash table from smaller side
+# Force: df1.hint("shuffle_hash").join(df2, "id")
+
+# ── 4. Cartesian (Cross) Join ─────────────────────────────────────────
+# Use with extreme care — row count = left × right
+df1.crossJoin(df2)
+df1.hint("cartesian").join(df2)
+
+# ── Diagnosing join strategy in explain() ─────────────────────────────
+result.explain()
+# Look for:
+#   BroadcastHashJoin      → BHJ (no shuffle needed for small side)
+#   SortMergeJoin          → SMJ (shuffle + sort on both sides)
+#   ShuffledHashJoin       → SHJ (shuffle + hash build)
+#   BroadcastNestedLoopJoin → fallback when no equi-join condition
+
+# ── Skew join hints (Spark 3.x) ───────────────────────────────────────
+# When one key has disproportionate rows, it causes stragglers
+result = skewed_df.hint("skew", "user_id").join(other_df, "user_id")
+# Spark splits the skewed partition into smaller sub-partitions and duplicates
+# the matching rows from the other side.
+# With AQE: automatic (spark.sql.adaptive.skewJoin.enabled=true)
+
+# ── Range join (inequality join) ──────────────────────────────────────
+# Spark 3.3+ range join optimisation via hint
+result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
+    intervals,
+    (events.ts >= intervals.start_ts) & (events.ts < intervals.end_ts)
+)`}
+          </CodeBlock>
+          <Quiz topicId="spark-joins" questions={[
+            {
+              question: "A Sort-Merge Join creates how many shuffle stages?",
+              options: [
+                "Zero — SMJ avoids shuffles",
+                "One — only the smaller table is shuffled",
+                "Two — both sides are shuffled by the join key, then sorted",
+                "Depends on spark.sql.shuffle.partitions"
+              ],
+              correct: 2
+            },
+            {
+              question: "Your job joins a 500GB fact table with a 8MB lookup table and is running slowly. What is the most impactful optimisation?",
+              options: [
+                "Increase spark.sql.shuffle.partitions",
+                "Force a Broadcast Hash Join on the 8MB table — eliminates the shuffle on both sides entirely",
+                "Repartition the fact table",
+                "Enable AQE"
+              ],
+              correct: 1
+            },
+            {
+              question: "When does Spark automatically choose a BroadcastHashJoin?",
+              options: [
+                "Always for dimension tables",
+                "When one side of the join is estimated to be below spark.sql.autoBroadcastJoinThreshold (default 10MB)",
+                "When both tables have the same schema",
+                "When partitionBy matches the join key"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-joins')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── PARTITIONING DEEP DIVE ──────────────────────────────────────── */}
+        <section id="spark-partitions" ref={ref('spark-partitions')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Partitioning Deep Dive</h1>
+            <p className="topic-desc">
+              Partitioning determines parallelism, shuffle size, and output file layout. There are two distinct concepts: <strong>in-memory partitions</strong> (how Spark distributes the DataFrame across executor cores) and <strong>physical/storage partitions</strong> (how files are organized on disk via <code>partitionBy</code> on write). Getting both right is the difference between a 10-minute and a 2-hour job.
+            </p>
+          </div>
+          <ShuffleAnimation />
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+
+# ── In-memory partition count ─────────────────────────────────────────
+df.rdd.getNumPartitions()   # current partition count
+
+# Initial partitions when reading files:
+# Parquet/Delta: typically 1 partition per 128MB file split
+# After a shuffle: spark.sql.shuffle.partitions (default 200, auto with AQE)
+
+# ── repartition() vs coalesce() ───────────────────────────────────────
+# repartition(n)         → full shuffle, even distribution, INCREASES or DECREASES
+# repartition(n, "col")  → hash-partition by column (good before joins/groupBy on same col)
+# coalesce(n)            → no shuffle, merges partitions, only DECREASES
+
+# Choose based on goal:
+df.repartition(200)               # even distribution before heavy transformation
+df.repartition(200, "user_id")    # co-locate user data (avoids later shuffle)
+df.coalesce(10)                   # reduce before writing (avoid 200 tiny files)
+
+# ── Optimal partition count calculation ───────────────────────────────
+# Rule: aim for 128-200MB per partition
+# Too few → long individual tasks, underutilised cores
+# Too many → scheduling overhead, many tiny files
+
+# total_gb = 100, target = 128MB
+num_partitions = int((100 * 1024) / 128)  # = 800
+
+spark.conf.set("spark.sql.shuffle.partitions", num_partitions)
+
+# With AQE (Spark 3.x) — just set auto:
+spark.conf.set("spark.sql.adaptive.enabled",                    "true")
+spark.conf.set("spark.sql.shuffle.partitions",                  "auto")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.initialPartitionNum", "500")
+spark.conf.set("spark.sql.adaptive.advisoryPartitionSizeInBytes","128mb")
+
+# ── Physical (storage) partitioning ──────────────────────────────────
+# partitionBy creates hive-style directories: /path/col=value/
+# Read with partition filter → Spark skips unneeded directories entirely
+
+# Write with partition columns:
+df.write.format("delta") \
+  .partitionBy("event_year", "event_month") \
+  .mode("overwrite") \
+  .save("/data/delta/events/")
+
+# Partition pruning on read (Catalyst pushes filter to file listing):
+df_jan = spark.read.format("delta").load("/data/delta/events/") \
+              .filter("event_year = 2024 AND event_month = 1")
+# → only reads files under event_year=2024/event_month=1/
+
+# ── Dynamic Partition Pruning (DPP) — Spark 3.x ──────────────────────
+# When joining a fact table partitioned by date_id with a dim table filtered by date:
+# DPP pushes the dimension filter to prune fact table partitions at runtime
+spark.conf.set("spark.sql.optimizer.dynamicPartitionPruning.enabled", "true")
+
+fact.join(
+    dim_date.filter(F.col("fiscal_year") == 2024),
+    "date_id"
+)
+# DPP: Spark first evaluates dim_date.filter, gets list of date_ids,
+# then uses them to prune fact table partitions before the join.
+
+# ── Partition column cardinality rules ────────────────────────────────
+# Good partition columns: date, region, status (low-medium cardinality)
+# Bad partition columns: user_id, order_id (millions of partitions → too many files)
+
+# ── Check partition sizes ─────────────────────────────────────────────
+from pyspark.sql.functions import spark_partition_id
+df.withColumn("pid", spark_partition_id()) \
+  .groupBy("pid").count() \
+  .orderBy(F.col("count").desc()) \
+  .show(20)   # diagnose skew`}
+          </CodeBlock>
+          <Quiz topicId="spark-partitions" questions={[
+            {
+              question: "You have 100GB of data and spark.sql.shuffle.partitions=200. After a groupBy shuffle, how large is each partition approximately?",
+              options: [
+                "100MB per partition (optimal)",
+                "512MB per partition — 200 is often far too few for 100GB; aim for 128-200MB per partition requiring ~500-800 partitions",
+                "200MB per partition",
+                "It depends on the join type"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is Dynamic Partition Pruning (DPP)?",
+              options: [
+                "Automatically removing empty partitions after a write",
+                "Spark evaluates a dimension filter at runtime and uses the result to prune fact table partitions before a join — reducing data scanned",
+                "Coalescing shuffle partitions with AQE",
+                "Removing duplicate partitions from Delta tables"
+              ],
+              correct: 1
+            },
+            {
+              question: "Why is user_id a bad physical partition column for a Delta table?",
+              options: [
+                "user_id is not sortable",
+                "High cardinality (millions of users) creates millions of tiny directories — metadata overhead explodes and reads become slow",
+                "Delta doesn't support string partition columns",
+                "It causes shuffle skew"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-partitions')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── DATA SKEW ──────────────────────────────────────────────────── */}
+        <section id="spark-skew" ref={ref('spark-skew')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Data Skew</h1>
+            <p className="topic-desc">
+              Data skew occurs when one or a few partition keys have significantly more rows than others. The result: 99% of tasks finish in 30 seconds, but 1 task runs for 30 minutes because it has 80% of the data. This single task becomes the bottleneck. Detection, salting, and AQE's automatic skew handling are the three tools to fix it.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.functions import spark_partition_id
+
+# ── Step 1: Detect skew ───────────────────────────────────────────────
+
+# Method A: Check partition sizes before a shuffle
+df.withColumn("pid", spark_partition_id()) \
+  .groupBy("pid").count() \
+  .orderBy(F.col("count").desc()) \
+  .show(10)
+# If max_count >> median_count → skew exists
+
+# Method B: Profile the key distribution
+df.groupBy("merchant_id") \
+  .count() \
+  .orderBy(F.col("count").desc()) \
+  .show(10)
+# Top 10 merchants with 60% of rows → skewed join key
+
+# Method C: Spark UI
+# Go to: Jobs → click a stage → Task Metrics
+# Sort by "Duration" — if one task takes 10x longer → skew
+# Also check "Input Size" column for uneven partition sizes
+
+# ── Step 2a: Fix with salting (manual) ───────────────────────────────
+# Use when: joining a fact table on a skewed key (e.g., merchant_id)
+# Technique: add a random salt to spread the skewed key across N partitions
+
+SALT_FACTOR = 10  # number of virtual partitions per skewed key
+
+# On the larger (skewed) side: add random salt 0..9
+skewed_df = large_fact.withColumn(
+    "salt", (F.rand() * SALT_FACTOR).cast("int")
+)
+
+# On the smaller side: explode salt to match all possible values
+dim_df_salted = dim_merchant.withColumn(
+    "salt", F.explode(F.array([F.lit(i) for i in range(SALT_FACTOR)]))
+)
+
+# Join on composite key (original_key + salt)
+result = skewed_df.join(
+    dim_df_salted,
+    on=["merchant_id", "salt"],
+    how="inner"
+).drop("salt")
+
+# ── Step 2b: AQE automatic skew handling (Spark 3.x) ─────────────────
+spark.conf.set("spark.sql.adaptive.enabled",                    "true")
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled",           "true")
+spark.conf.set("spark.sql.adaptive.skewJoin.skewedPartitionFactor",       "5")   # 5x median
+spark.conf.set("spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes", "256mb")
+
+# AQE detects skewed partitions AFTER the first shuffle and splits them,
+# then duplicates matching partitions from the other side.
+# No code changes needed — just enable AQE.
+
+# ── Step 2c: Skew hint (Spark 3.x) ───────────────────────────────────
+result = large_df.hint("skew", "merchant_id") \
+                 .join(dim_df, "merchant_id", "inner")
+
+# ── Step 3: Null key skew ─────────────────────────────────────────────
+# Nulls all hash to the same partition — a common hidden skew source
+# Fix: filter nulls before the join, handle separately
+non_null = df.filter(F.col("user_id").isNotNull())
+null_rows = df.filter(F.col("user_id").isNull()) \
+              .withColumn("fallback_col", F.lit("UNKNOWN"))
+
+result = non_null.join(dim_user, "user_id", "left") \
+                 .unionByName(null_rows, allowMissingColumns=True)`}
+          </CodeBlock>
+          <Quiz topicId="spark-skew" questions={[
+            {
+              question: "How do you identify data skew in the Spark UI?",
+              options: [
+                "Check the DAG visualization for red stages",
+                "Navigate to a Stage's Task Metrics — look for one task with dramatically longer Duration and larger Input Size than the median",
+                "Look at the executor memory graph",
+                "Check the driver logs for 'skew' warnings"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does the salting technique do to fix skew on a join?",
+              options: [
+                "Removes null keys before the join",
+                "Adds a random integer (0..N) to the skewed key on the large side, and explodes the small side N times — distributing the hot key across N partitions",
+                "Broadcasts the skewed table",
+                "Repartitions both tables by the join key"
+              ],
+              correct: 1
+            },
+            {
+              question: "How does AQE's skew join handling differ from manual salting?",
+              options: [
+                "AQE uses random salting internally",
+                "AQE detects and splits skewed partitions at runtime after observing actual shuffle statistics — no code changes needed, but it only works on Sort-Merge joins",
+                "AQE broadcasts the skewed partitions",
+                "AQE is less effective than manual salting"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-skew')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── MEMORY MANAGEMENT ──────────────────────────────────────────── */}
+        <section id="spark-memory" ref={ref('spark-memory')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Memory Management</h1>
+            <p className="topic-desc">
+              Spark's <strong>Unified Memory Model</strong> (since Spark 1.6) divides executor memory into pools that dynamically borrow from each other. Understanding this model is essential for diagnosing OOM errors, GC pressure, and spill-to-disk — the top three causes of slow Spark jobs.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`# ── Executor memory breakdown ─────────────────────────────────────────
+#
+#  spark.executor.memory = 8g
+#  ┌─────────────────────────────────────────────┐
+#  │  Reserved memory: 300MB (JVM, OS overhead)  │
+#  ├─────────────────────────────────────────────┤
+#  │  Usable = 8g - 300MB ≈ 7.7g                 │
+#  │  ┌─────────────────────────────────────────┐ │
+#  │  │ spark.memory.fraction = 0.6             │ │
+#  │  │ Spark Memory Pool = 7.7 * 0.6 ≈ 4.6g   │ │
+#  │  │  ┌──────────────────────────────────┐   │ │
+#  │  │  │ Execution Memory (joins/agg/sort) │   │ │
+#  │  │  │ ← borrows from Storage if free   │   │ │
+#  │  │  ├──────────────────────────────────┤   │ │
+#  │  │  │ Storage Memory (cache/broadcast) │   │ │
+#  │  │  │ spark.memory.storageFraction=0.5 │   │ │
+#  │  │  └──────────────────────────────────┘   │ │
+#  │  └─────────────────────────────────────────┘ │
+#  │  User Memory (UDFs, Python objs) ≈ 3.1g      │
+#  └─────────────────────────────────────────────┘
+#
+#  memoryOverhead (separate): spark.executor.memoryOverhead = max(0.1*executor.memory, 384m)
+#  For PySpark: add extra for Python workers (spark.executor.pyspark.memory)
+
+# ── Recommended production config ─────────────────────────────────────
+spark_conf = {
+    "spark.executor.memory":            "8g",
+    "spark.executor.cores":             "4",
+    "spark.executor.memoryOverhead":    "2g",     # for Python workers + Netty
+    "spark.driver.memory":              "4g",
+    "spark.driver.maxResultSize":       "2g",     # limit collect() result size
+    "spark.memory.fraction":            "0.8",    # increase Spark pool
+    "spark.memory.storageFraction":     "0.3",    # less for cache, more for execution
+    "spark.executor.pyspark.memory":    "1g",     # Python worker heap
+    "spark.sql.shuffle.partitions":     "auto",
+}
+
+# ── Diagnosing OOM ────────────────────────────────────────────────────
+# "Java heap space" → increase spark.executor.memory
+# "GC overhead limit exceeded" → executor spending > 98% time in GC
+#   Fix: increase memory, reduce partition size, avoid large UDF objects
+# "Container killed by YARN for exceeding memory limits"
+#   Fix: increase spark.executor.memoryOverhead (Python/native memory)
+
+# ── Spill to disk ─────────────────────────────────────────────────────
+# When execution memory fills, Spark spills shuffle data to local disk
+# Detect: Spark UI → Stage → Shuffle Write + Spill (Memory/Disk) columns
+# Fix options:
+#   1. More executor memory
+#   2. Fewer records per partition (more shuffle partitions)
+#   3. Broadcast small side to eliminate shuffle entirely
+#   4. Filter earlier in the pipeline
+
+# ── Off-heap memory (advanced) ───────────────────────────────────────
+spark.conf.set("spark.memory.offHeap.enabled",  "true")
+spark.conf.set("spark.memory.offHeap.size",      "4g")
+# Off-heap bypasses JVM GC — useful for caching large DataFrames
+# Reduces GC pressure significantly for cache-heavy workloads`}
+          </CodeBlock>
+          <Quiz topicId="spark-memory" questions={[
+            {
+              question: "An executor with 8g memory shows 'Container killed by YARN for exceeding memory limits' — what config should you increase?",
+              options: [
+                "spark.executor.memory",
+                "spark.executor.memoryOverhead — this controls off-JVM memory (Python workers, Netty, native libraries) which is where YARN limit breaches typically occur",
+                "spark.memory.fraction",
+                "spark.driver.memory"
+              ],
+              correct: 1
+            },
+            {
+              question: "In the Unified Memory Model, what happens when Execution Memory needs more space but Storage Memory is full?",
+              options: [
+                "The job fails with OOM",
+                "Execution can evict cached data from Storage Memory (Storage is not fully protected) — cached DataFrames may be partially evicted",
+                "Execution spills to disk immediately",
+                "Storage Memory cannot be borrowed"
+              ],
+              correct: 1
+            },
+            {
+              question: "How do you detect shuffle spill in the Spark UI?",
+              options: [
+                "Check executor memory usage graph",
+                "Go to Stages → click a stage → look at 'Shuffle Spill (Memory)' and 'Shuffle Spill (Disk)' columns in the task metrics table",
+                "Check the driver logs for 'SPILL' keyword",
+                "Look at the DAG for yellow stage nodes"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-memory')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── CACHING ────────────────────────────────────────────────────── */}
+        <section id="spark-cache" ref={ref('spark-cache')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Caching and Persistence</h1>
+            <p className="topic-desc">
+              Caching stores computed results so subsequent actions don't recompute from scratch. The <strong>wrong</strong> use of caching wastes memory and can slow jobs. Cache only when a DataFrame is used in multiple downstream actions and computing it is more expensive than the memory cost.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark import StorageLevel
+
+# ── When to cache ─────────────────────────────────────────────────────
+# GOOD: DataFrame reused in multiple actions (training split, iterative algorithms)
+# BAD:  DataFrame used only once (wastes memory + incurs caching overhead)
+# BAD:  Caching very large DataFrames that don't fit in memory (thrashing)
+
+# ── cache() vs persist() ──────────────────────────────────────────────
+df.cache()                                  # shortcut for MEMORY_AND_DISK
+df.persist()                                # same as cache()
+df.persist(StorageLevel.MEMORY_ONLY)        # evict if memory full (not resilient)
+df.persist(StorageLevel.MEMORY_AND_DISK)    # spill to disk if memory full (default)
+df.persist(StorageLevel.DISK_ONLY)          # always disk (slow, but always available)
+df.persist(StorageLevel.MEMORY_ONLY_2)      # replicate on 2 nodes (resilient)
+df.persist(StorageLevel.MEMORY_AND_DISK_2)  # replicate on 2 nodes + disk fallback
+df.persist(StorageLevel.OFF_HEAP)           # off-heap, avoids GC pressure
+
+# ── Cache is lazy too ─────────────────────────────────────────────────
+df.cache()    # registers intent to cache — nothing is stored yet
+df.count()    # FIRST action materialises and caches the DataFrame
+df.show()     # served from cache
+
+# Force eager caching:
+df = df.cache()
+df.count()    # materialise immediately
+
+# ── Always unpersist when done ────────────────────────────────────────
+df.unpersist()             # removes from cache (blocking=True to wait)
+df.unpersist(blocking=True)
+
+# ── Checkpointing vs caching ──────────────────────────────────────────
+# Cache:       in-memory/disk, lineage kept, re-computable if evicted
+# Checkpoint:  writes to reliable storage (HDFS/ADLS), lineage TRUNCATED
+# Use checkpoint for: iterative ML algorithms (break lineage after N iterations)
+#                     very long lineage chains (avoids stack overflow in driver)
+
+sc.setCheckpointDir("abfss://checkpoints@myaccount.dfs.core.windows.net/spark/")
+df.checkpoint()             # writes to checkpoint dir, returns new DF with no lineage
+
+# ── Named caching (catalog) ───────────────────────────────────────────
+df.createOrReplaceTempView("my_view")
+spark.catalog.cacheTable("my_view")
+spark.catalog.uncacheTable("my_view")
+
+# ── Production caching pattern for Gold layer pipelines ──────────────
+# Pattern: cache Silver output, run multiple Gold aggregations
+
+silver_df = spark.table("silver.events") \
+    .filter(F.col("event_date") >= "2024-01-01") \
+    .withColumn("revenue", F.col("qty") * F.col("price")) \
+    .persist(StorageLevel.MEMORY_AND_DISK)
+
+# Materialise (first action)
+total_rows = silver_df.count()
+print(f"Processing {total_rows:,} events")
+
+# Multiple Gold aggregations — all hit cache:
+gold_daily     = silver_df.groupBy("event_date", "merchant_id").agg(...)
+gold_weekly    = silver_df.groupBy(F.date_trunc("week", "event_date")).agg(...)
+gold_geography = silver_df.groupBy("country", "region").agg(...)
+
+gold_daily.write.format("delta").mode("overwrite").saveAsTable("gold.daily_revenue")
+gold_weekly.write.format("delta").mode("overwrite").saveAsTable("gold.weekly_revenue")
+gold_geography.write.format("delta").mode("overwrite").saveAsTable("gold.geo_revenue")
+
+silver_df.unpersist()   # free memory`}
+          </CodeBlock>
+          <Quiz topicId="spark-cache" questions={[
+            {
+              question: "What is the difference between cache() and checkpoint()?",
+              options: [
+                "checkpoint() is faster than cache()",
+                "cache() stores in memory/disk and keeps lineage; checkpoint() writes to reliable storage and TRUNCATES lineage — use checkpoint to break long lineage chains in iterative algorithms",
+                "They are identical",
+                "cache() works on RDDs; checkpoint() works on DataFrames"
+              ],
+              correct: 1
+            },
+            {
+              question: "You call df.cache() then df.filter(...).count(). Is df cached after this?",
+              options: [
+                "Yes — cache() stores data immediately",
+                "No — cache() is lazy. The first action that uses df (count here) materialises and caches it. But df.filter() creates a new DataFrame — df itself was never triggered as an action",
+                "Yes, but only the filtered result",
+                "No — filter() clears the cache"
+              ],
+              correct: 1
+            },
+            {
+              question: "When is MEMORY_AND_DISK preferred over MEMORY_ONLY?",
+              options: [
+                "When you want faster cache access",
+                "When the cached DataFrame might not fully fit in memory — MEMORY_AND_DISK spills to disk rather than evicting and recomputing, which is safer for large DataFrames",
+                "MEMORY_ONLY is always preferred",
+                "When using PySpark (Python serialisation)"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-cache')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── BROADCAST VARIABLES & ACCUMULATORS ─────────────────────────── */}
+        <section id="spark-broadcast" ref={ref('spark-broadcast')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Broadcast Variables and Accumulators</h1>
+            <p className="topic-desc">
+              <strong>Broadcast variables</strong> efficiently distribute a read-only value to every executor once — instead of serialising it into every task closure. <strong>Accumulators</strong> are write-only counters/sums that executors update and the driver reads — the only safe way to collect per-task metrics without breaking lazy evaluation.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark import AccumulatorParam
+
+# ── Broadcast variables ───────────────────────────────────────────────
+# Problem: using a large dict inside a map() sends it to EVERY task
+lookup = load_country_codes()   # e.g., {"US": "United States", ...} — 5MB dict
+
+# BAD: dict captured in closure — serialised + sent with every task
+df.rdd.map(lambda row: (row.id, lookup[row.country]))  # 5MB * 800 tasks = 4GB network
+
+# GOOD: broadcast once per executor (~20 executors = 100MB total)
+bc_lookup = sc.broadcast(lookup)
+df.rdd.map(lambda row: (row.id, bc_lookup.value[row.country]))  # bc_lookup.value to access
+
+# Broadcast in DataFrame API (for joins):
+from pyspark.sql.functions import broadcast
+result = large_df.join(broadcast(small_dim), "key")
+
+# Size limits:
+# Broadcast via join hint: spark.sql.autoBroadcastJoinThreshold (default 10MB)
+# sc.broadcast(): practical limit ~2GB (driver must hold it + serialize)
+# For very large lookups (>100MB): use Delta table + partition pruning instead
+
+# Unpickling broadcast variables:
+bc_lookup.unpersist()    # remove from executor memory when done
+bc_lookup.destroy()      # remove from driver + executors permanently
+
+# Broadcast in UDFs (common production pattern):
+@udf(returnType=StringType())
+def enrich_country(code):
+    return bc_lookup.value.get(code, "UNKNOWN")
+
+df.withColumn("country_name", enrich_country(F.col("country_code")))
+
+# ── Accumulators ──────────────────────────────────────────────────────
+# Built-in accumulator types: LongAccumulator, DoubleAccumulator, CollectionAccumulator
+
+# Count records that failed validation:
+bad_records = sc.accumulator(0)
+malformed_rows = sc.accumulator(0)
+
+def validate_and_parse(row):
+    global bad_records, malformed_rows
+    try:
+        if row.amount < 0:
+            bad_records.add(1)
+            return None
+        return row
+    except Exception:
+        malformed_rows.add(1)
+        return None
+
+# IMPORTANT: accumulators only guaranteed accurate after an ACTION completes
+# In transformations, Spark may re-execute tasks (speculative execution, retries)
+# → accumulator may be incremented multiple times for the same task
+result_rdd = df.rdd.map(validate_and_parse).filter(lambda x: x is not None)
+result_rdd.count()  # action — triggers execution
+
+print(f"Bad records: {bad_records.value}")
+print(f"Malformed:   {malformed_rows.value}")
+
+# Custom accumulator:
+class SetAccumulatorParam(AccumulatorParam):
+    def zero(self, v): return set()
+    def addInPlace(self, a, b): return a | b
+
+unique_errors = sc.accumulator(set(), SetAccumulatorParam())
+df.rdd.foreach(lambda row: unique_errors.add({row.error_code}) if row.error_code else None)
+print(unique_errors.value)   # set of all error codes seen`}
+          </CodeBlock>
+          <Quiz topicId="spark-broadcast" questions={[
+            {
+              question: "Why should you use sc.broadcast() instead of capturing a large dict in a closure?",
+              options: [
+                "Closures don't support dicts",
+                "A closure dict is serialised into every task (800 tasks × 5MB = 4GB of network traffic); broadcast sends it once per executor (~20 × 5MB = 100MB)",
+                "Broadcast variables are faster to access",
+                "Closures cause OOM on the driver"
+              ],
+              correct: 1
+            },
+            {
+              question: "Why might an accumulator show a higher count than expected?",
+              options: [
+                "Accumulators are thread-unsafe",
+                "Spark may re-execute tasks due to speculation or retries — each re-execution increments the accumulator again. Counts are only reliable after a successful action with no re-runs.",
+                "The driver doesn't receive updates from all executors",
+                "Accumulators only work in batch mode"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the practical size limit for a broadcast variable used in sc.broadcast()?",
+              options: [
+                "10MB — same as autoBroadcastJoinThreshold",
+                "Around 2GB in practice — the driver must serialise the entire value, and executors must deserialise it. For larger lookups, use a Delta table with partition pruning.",
+                "Unlimited — Spark streams it to executors",
+                "100MB — determined by spark.executor.memory"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-broadcast')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── UDFs ───────────────────────────────────────────────────────── */}
+        <section id="spark-udfs" ref={ref('spark-udfs')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">UDFs and Pandas UDFs</h1>
+            <p className="topic-desc">
+              Python UDFs are the single biggest performance trap in PySpark. Every row crosses the JVM-Python boundary — serialised, sent via socket, deserialized, processed, re-serialised. <strong>Always exhaust built-in functions first.</strong> When you genuinely need custom logic, use Pandas UDFs (vectorised) which process entire column batches via Apache Arrow — 10-100x faster than row UDFs.
+            </p>
           </div>
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
-            <div className="callout-body"><strong>Python UDFs are slow.</strong> They serialize each row, send to Python worker (serialization overhead + GIL), get result, deserialize back. Always use built-in F.* functions. Only use UDFs for logic that truly can't be expressed with built-ins.</div>
+            <div className="callout-body">
+              <strong>Python UDF checklist before writing one:</strong> Can you use when/otherwise? F.regexp_replace? F.expr()? spark.sql()? F.aggregate() on arrays? If yes to any — use built-ins. Only write a UDF if the logic genuinely requires Python libraries (scikit-learn, spaCy, etc.).
+            </div>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.functions import udf, pandas_udf, PandasUDFType
+from pyspark.sql.types import StringType, DoubleType, ArrayType, LongType
+import pandas as pd
+
+# ── Row-level Python UDF (SLOW) ───────────────────────────────────────
+@udf(returnType=StringType())
+def categorize_spend(amount):
+    """BAD: row-by-row JVM→Python serialisation overhead."""
+    if amount is None: return "unknown"
+    if amount > 10000: return "whale"
+    if amount > 1000:  return "high"
+    return "low"
+
+df.withColumn("tier", categorize_spend(F.col("amount")))  # avoid
+
+# BETTER: replace with built-ins (zero serialisation):
+df.withColumn("tier",
+    F.when(F.col("amount").isNull(),   "unknown")
+     .when(F.col("amount") > 10000,   "whale")
+     .when(F.col("amount") > 1000,    "high")
+     .otherwise("low"))
+
+# ── Pandas UDF — Scalar (vectorised, Arrow transport) ────────────────
+# Receives a pd.Series, returns a pd.Series — entire batch at once
+@pandas_udf(StringType())
+def clean_text(s: pd.Series) -> pd.Series:
+    """Good for: regex, NLP preprocessing, ML inference on batches."""
+    return (s.fillna("")
+             .str.lower()
+             .str.replace(r"[^a-z0-9 ]", "", regex=True)
+             .str.strip())
+
+df.withColumn("clean_desc", clean_text(F.col("description")))
+
+# ── Pandas UDF — Scalar Iterator (session connection reuse) ──────────
+# Receives an Iterator[pd.Series] — open connection once per partition
+from typing import Iterator
+@pandas_udf(StringType())
+def score_with_model(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
+    import joblib
+    model = joblib.load("/models/classifier.pkl")   # load ONCE per partition
+    for batch in batch_iter:
+        predictions = model.predict(batch.values.reshape(-1, 1))
+        yield pd.Series(predictions)
+
+df.withColumn("score", score_with_model(F.col("feature")))
+
+# ── Pandas UDF — Grouped Map (COGROUPED, returns full DataFrame) ─────
+# Use for: custom aggregations, group-level ML, sessionisation
+from pyspark.sql.functions import pandas_udf
+from pyspark.sql.types import StructType, StructField, LongType, DoubleType
+
+output_schema = StructType([
+    StructField("user_id",     LongType(),   True),
+    StructField("session_id",  LongType(),   True),
+    StructField("session_start", DoubleType(), True),
+])
+
+@pandas_udf(output_schema, PandasUDFType.GROUPED_MAP)
+def sessionise(pdf: pd.DataFrame) -> pd.DataFrame:
+    """Assigns session IDs: new session if gap > 30 min."""
+    pdf = pdf.sort_values("ts")
+    pdf["gap"] = pdf["ts"].diff().dt.total_seconds().fillna(0)
+    pdf["new_session"] = (pdf["gap"] > 1800).cumsum()
+    pdf["session_id"] = pdf["user_id"].astype(str) + "_" + pdf["new_session"].astype(str)
+    return pdf[["user_id", "session_id", "ts"]].rename(columns={"ts": "session_start"})
+
+df.groupBy("user_id").apply(sessionise)
+
+# ── SQL UDFs (registered to SparkSession catalog) ────────────────────
+# Usable in spark.sql() queries and SQL strings
+spark.udf.register("clean_text_sql", clean_text)
+spark.sql("SELECT clean_text_sql(description) as clean FROM silver.events")
+
+# ── Pandas UDFs with multiple input columns ──────────────────────────
+@pandas_udf(DoubleType())
+def weighted_score(amount: pd.Series, weight: pd.Series) -> pd.Series:
+    return amount * weight / weight.sum()
+
+df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
+          </CodeBlock>
+          <Quiz topicId="spark-udfs" questions={[
+            {
+              question: "What makes Python row UDFs slow in PySpark?",
+              options: [
+                "They run on the driver instead of executors",
+                "Each row is serialised in the JVM, sent over a socket to a Python worker process, processed, then the result is serialised back — the JVM-Python boundary crossing is orders of magnitude slower than JVM-native built-ins",
+                "Python UDFs can't be parallelised",
+                "They disable predicate pushdown"
+              ],
+              correct: 1
+            },
+            {
+              question: "When should you use a Scalar Iterator Pandas UDF over a regular Scalar Pandas UDF?",
+              options: [
+                "When the output is larger than the input",
+                "When the UDF needs to load a heavy resource (ML model, DB connection) once per partition — the iterator pattern loads it once and processes all batches in that partition",
+                "When the input has nulls",
+                "When processing arrays"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does spark.udf.register() enable?",
+              options: [
+                "It makes the UDF faster by registering it with Catalyst",
+                "It makes the UDF callable by name in spark.sql() queries and SQL strings — without needing to use the Python column API",
+                "It caches the UDF output",
+                "It converts a Python UDF to a Pandas UDF automatically"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-udfs')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── SPARK SQL ──────────────────────────────────────────────────── */}
+        <section id="spark-sql" ref={ref('spark-sql')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Spark SQL</h1>
+            <p className="topic-desc">
+              Spark SQL lets you write ANSI SQL that runs on the same engine as the DataFrame API — both compile to the same logical plan. You can freely mix SQL and DataFrame API in the same job, referencing the same data. Views are the bridge between the two worlds.
+            </p>
           </div>
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
-# SLOW: Python UDF - row-by-row Python serialization
-from pyspark.sql.functions import udf
-from pyspark.sql.types import StringType
+# ── spark.sql() — run ANSI SQL directly ──────────────────────────────
+result = spark.sql("""
+    SELECT
+        merchant_id,
+        date_trunc('month', event_ts)   AS month,
+        SUM(amount)                     AS revenue,
+        COUNT(DISTINCT user_id)         AS unique_buyers,
+        PERCENTILE_APPROX(amount, 0.95) AS p95_ticket
+    FROM silver.transactions
+    WHERE status = 'COMPLETED'
+      AND event_ts >= '2024-01-01'
+    GROUP BY 1, 2
+    HAVING SUM(amount) > 10000
+    ORDER BY month, revenue DESC
+""")
 
-@udf(returnType=StringType())
-def categorize_slow(amount):
-    if amount > 1000: return "high"
-    elif amount > 100: return "medium"
-    return "low"
+# ── createOrReplaceTempView — session-scoped, not shared ─────────────
+# DataFrames → SQL-queryable view (lives in SparkSession only)
+df.createOrReplaceTempView("transactions_filtered")
+spark.sql("SELECT COUNT(*) FROM transactions_filtered").show()
 
-df.withColumn("category", categorize_slow(F.col("amount")))  # SLOW!
+# Clean up to free metadata:
+spark.catalog.dropTempView("transactions_filtered")
 
-# FAST: Built-in functions - JVM, no serialization
-df.withColumn("category",
-    F.when(F.col("amount") > 1000, "high")
-     .when(F.col("amount") > 100, "medium")
-     .otherwise("low")
-)  # 10-100x faster
+# ── createGlobalTempView — shared across SparkSessions ───────────────
+df.createGlobalTempView("shared_events")
+# Access with global_temp prefix:
+spark.sql("SELECT * FROM global_temp.shared_events LIMIT 10")
+# Useful for sharing data between notebooks in the same Spark application
 
-# When you MUST use a UDF: use Pandas UDF (vectorized)
-from pyspark.sql.functions import pandas_udf
-import pandas as pd
+# ── Mixing SQL and DataFrame API ──────────────────────────────────────
+# Pattern: heavy aggregation in SQL, post-processing in DataFrame API
+base = spark.sql("""
+    SELECT user_id, SUM(amount) AS total, COUNT(*) AS cnt
+    FROM silver.transactions
+    GROUP BY user_id
+""")
 
-@pandas_udf(StringType())
-def classify_text_fast(s: pd.Series) -> pd.Series:
-    """Vectorized - receives a chunk as pandas Series, not row-by-row."""
-    return s.str.lower().str.replace(r'[^a-z ]', '', regex=True)
+# Continue with DataFrame API (uses same Catalyst engine):
+result = base \
+    .withColumn("avg_ticket", F.col("total") / F.col("cnt")) \
+    .filter(F.col("total") > 1000) \
+    .join(spark.table("dim.users"), "user_id", "left")
 
-df.withColumn("clean_text", classify_text_fast(F.col("description")))`}</CodeBlock>
-          <Quiz topicId="spark-udfs" questions={[
-            { question: "Why are Python UDFs slow in PySpark?", options: ["They use recursion", "Each row is serialized, sent to Python process, deserialized - massive overhead", "They don't support null values", "They run on the driver not executors"], correct: 1 },
-            { question: "What is a Pandas UDF and why is it faster than a regular UDF?", options: ["A UDF that uses pandas syntax", "A vectorized UDF that receives a pandas Series (batch) instead of individual rows", "A UDF that runs in parallel", "A UDF that avoids the GIL"], correct: 1 },
+# ── DDL and DML via SQL ───────────────────────────────────────────────
+spark.sql("""
+    CREATE TABLE IF NOT EXISTS gold.merchant_monthly (
+        merchant_id  BIGINT     NOT NULL,
+        month        DATE       NOT NULL,
+        revenue      DECIMAL(18,2),
+        unique_buyers INT
+    )
+    USING DELTA
+    PARTITIONED BY (month)
+    LOCATION 'abfss://gold@myaccount.dfs.core.windows.net/merchant_monthly'
+""")
+
+spark.sql("""
+    INSERT OVERWRITE gold.merchant_monthly
+    PARTITION (month = '2024-01-01')
+    SELECT merchant_id, SUM(amount), COUNT(DISTINCT user_id)
+    FROM silver.transactions
+    WHERE date_trunc('month', event_ts) = '2024-01-01'
+    GROUP BY 1
+""")
+
+# ── MERGE via SQL ─────────────────────────────────────────────────────
+spark.sql("""
+    MERGE INTO silver.customers AS target
+    USING (
+        SELECT * FROM staging.customer_updates
+    ) AS source
+    ON target.customer_id = source.customer_id
+    WHEN MATCHED AND source.updated_at > target.updated_at THEN
+        UPDATE SET *
+    WHEN NOT MATCHED THEN
+        INSERT *
+    WHEN NOT MATCHED BY SOURCE AND target.created_at < '2020-01-01' THEN
+        DELETE
+""")
+
+# ── SQL hints ─────────────────────────────────────────────────────────
+spark.sql("""
+    SELECT /*+ BROADCAST(d), REPARTITION(200) */
+           t.user_id, d.tier, SUM(t.amount) AS total
+    FROM silver.transactions t
+    JOIN dim.user_tiers d ON t.user_id = d.user_id
+    GROUP BY 1, 2
+""")`}
+          </CodeBlock>
+          <Quiz topicId="spark-sql" questions={[
+            {
+              question: "What is the difference between createOrReplaceTempView and createGlobalTempView?",
+              options: [
+                "TempView is faster; GlobalTempView persists to disk",
+                "TempView is scoped to the current SparkSession and disappears when the session ends; GlobalTempView is accessible from other SparkSessions in the same application via global_temp prefix",
+                "GlobalTempView supports DDL; TempView does not",
+                "TempView writes to the Hive metastore"
+              ],
+              correct: 1
+            },
+            {
+              question: "Do spark.sql() queries and DataFrame API operations use the same underlying execution engine?",
+              options: [
+                "No — spark.sql() uses a different SQL parser and engine",
+                "Yes — both compile to the same logical plan and go through Catalyst optimisation and Tungsten execution. You can freely mix them in the same job.",
+                "Only in Spark 3.x",
+                "Only when using Unity Catalog"
+              ],
+              correct: 1
+            },
+            {
+              question: "How do you pass a SQL hint to force a broadcast join inside spark.sql()?",
+              options: [
+                "spark.conf.set('spark.sql.autoBroadcastJoinThreshold', ...)",
+                "Use the /*+ BROADCAST(table_alias) */ hint syntax inside the SELECT statement",
+                "Call F.broadcast() before spark.sql()",
+                "SQL hints are not supported — use the DataFrame API"
+              ],
+              correct: 1
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('spark-udfs'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          <button onClick={mc('spark-sql')} style={MC_BTN}>Mark Complete ✓</button>
         </section>
 
-        <section id="spark-streaming" ref={el => { if (el) sectionRefs.current['spark-streaming'] = el }} className="topic-section">
+        {/* ─── STRUCTURED STREAMING ───────────────────────────────────────── */}
+        <section id="spark-streaming" ref={ref('spark-streaming')} className="topic-section">
           <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
             <h1 className="topic-title">Structured Streaming</h1>
+            <p className="topic-desc">
+              Structured Streaming treats a stream as an unbounded table that grows over time. Each micro-batch (or continuous trigger) appends new rows. You write the same DataFrame API you know from batch — Spark handles checkpointing, offsets, watermarks, and exactly-once semantics automatically.
+            </p>
           </div>
-          <CodeBlock lang="python">{`# Structured Streaming = continuous batch processing on a stream
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
-# Read from Event Hub / Kafka
-stream = spark.readStream \\
-    .format("eventhubs") \\
-    .options(**eventhub_conf) \\
+# ── Sources ───────────────────────────────────────────────────────────
+
+# Kafka source:
+raw_stream = spark.readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "broker1:9092,broker2:9092") \
+    .option("subscribe",               "topic.transactions") \
+    .option("startingOffsets",         "latest") \
+    .option("kafka.group.id",          "spark-etl-consumer") \
+    .option("maxOffsetsPerTrigger",    "100000") \   # back-pressure control
     .load()
 
-# Stateful aggregation with watermark
-# Watermark: how late data is allowed to arrive
-from pyspark.sql.functions import window, col
+# Event Hub source (Azure):
+eh_conf = {
+    "eventhubs.connectionString": sc._jvm.org.apache.spark.eventhubs \
+        .EventHubsUtils.encrypt(dbutils.secrets.get("kv", "eh-conn-str")),
+    "eventhubs.maxEventsPerTrigger": 10000,
+}
+raw_stream = spark.readStream.format("eventhubs").options(**eh_conf).load()
 
-result = stream \\
-    .withWatermark("event_time", "10 minutes") \\  # allow 10min late data
+# File (Auto Loader — Delta/Databricks, preferred for file ingestion):
+raw_stream = spark.readStream \
+    .format("cloudFiles") \
+    .option("cloudFiles.format",       "json") \
+    .option("cloudFiles.schemaLocation","/checkpoints/schema/events") \
+    .load("abfss://raw@account.dfs.core.windows.net/events/")
+
+# Delta table source:
+raw_stream = spark.readStream \
+    .format("delta") \
+    .option("ignoreChanges", "false") \
+    .table("bronze.raw_events")
+
+# ── Parsing + transformations ─────────────────────────────────────────
+event_schema = "STRUCT<txn_id:LONG, user_id:LONG, amount:DOUBLE, ts:TIMESTAMP>"
+
+parsed = raw_stream.select(
+    F.from_json(F.col("value").cast("string"), event_schema).alias("e"),
+    F.col("timestamp").alias("kafka_ts")
+).select("e.*", "kafka_ts")
+
+# ── Watermark for late data handling ─────────────────────────────────
+# Watermark = event_time - allowed_lateness
+# Spark discards state for windows older than (max event time - watermark delay)
+windowed = parsed \
+    .withWatermark("ts", "10 minutes") \
     .groupBy(
-        window("event_time", "5 minutes"),         # 5-minute tumbling window
-        col("product_id")
-    ) \\
-    .agg(F.sum("amount").alias("revenue"), F.count("*").alias("events"))
+        F.window("ts", "5 minutes"),         # 5-min tumbling window
+        F.col("user_id")
+    ) \
+    .agg(
+        F.sum("amount").alias("window_spend"),
+        F.count("*").alias("txn_count")
+    )
 
-# Output modes:
-# - append: only new rows (stateless or after watermark)
-# - update: only changed rows since last trigger
-# - complete: all rows every trigger (small result sets only)
+# ── Output modes ──────────────────────────────────────────────────────
+# append:   only emit rows where state is finalised (after watermark)
+# update:   emit rows that changed since last trigger (no delete support)
+# complete: re-emit ALL result rows every trigger (only for small aggregates)
 
-result.writeStream \\
-    .format("delta") \\
-    .outputMode("append") \\
-    .option("checkpointLocation", "/checkpoints/streaming-revenue") \\
-    .trigger(processingTime="1 minute") \\  # micro-batch every 1 min
-    .table("gold.revenue_5min")
+# ── Sinks ─────────────────────────────────────────────────────────────
 
-# Checkpointing saves: current offsets, state store
-# If job restarts, it resumes from last checkpoint (exactly-once semantics)`}</CodeBlock>
+# Delta sink (append mode):
+query = windowed.writeStream \
+    .format("delta") \
+    .outputMode("append") \
+    .option("checkpointLocation", "/checkpoints/streaming/txn-windows") \
+    .trigger(processingTime="1 minute") \   # micro-batch every 1 min
+    .table("silver.txn_windows")
+
+# Kafka sink:
+parsed.select(
+    F.col("txn_id").cast("string").alias("key"),
+    F.to_json(F.struct("*")).alias("value")
+).writeStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "broker1:9092") \
+    .option("topic",                   "output.enriched") \
+    .option("checkpointLocation",      "/checkpoints/kafka-sink") \
+    .start()
+
+# ── Triggers ─────────────────────────────────────────────────────────
+# processingTime="1 minute"    → micro-batch every 1 min (most common)
+# once=True                    → process all available data, then stop (deprecated 3.3)
+# availableNow=True            → process all available, then stop (Spark 3.3+)
+# continuous="1 second"        → low-latency continuous processing (experimental)
+
+# ── foreachBatch — run arbitrary code per micro-batch ────────────────
+def upsert_to_delta(micro_batch_df, batch_id):
+    from delta.tables import DeltaTable
+    target = DeltaTable.forName(spark, "silver.users")
+    target.alias("t").merge(
+        micro_batch_df.alias("s"), "t.user_id = s.user_id"
+    ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+parsed.writeStream \
+    .foreachBatch(upsert_to_delta) \
+    .option("checkpointLocation", "/checkpoints/upsert") \
+    .trigger(processingTime="2 minutes") \
+    .start()
+
+# ── Monitor streaming queries ─────────────────────────────────────────
+for q in spark.streams.active:
+    print(q.name, q.lastProgress["numInputRows"], q.lastProgress["processedRowsPerSecond"])`}
+          </CodeBlock>
           <Quiz topicId="spark-streaming" questions={[
-            { question: "What is a watermark in Structured Streaming?", options: ["A data quality check", "A threshold that tells Spark how late data is allowed to arrive before being dropped", "A checkpoint file", "A trigger interval"], correct: 1 },
-            { question: "What does checkpointing provide in Structured Streaming?", options: ["Faster processing", "Exactly-once semantics - job can resume from where it left off after failure", "Reduced memory usage", "Better partitioning"], correct: 1 },
+            {
+              question: "What is a watermark in Structured Streaming and what does it control?",
+              options: [
+                "The maximum number of rows per micro-batch",
+                "The threshold for how late data is allowed to arrive — Spark keeps state for a window open until (max_seen_event_time - watermark_delay), then finalises it and discards state",
+                "The checkpoint interval",
+                "The size of the Kafka consumer group"
+              ],
+              correct: 1
+            },
+            {
+              question: "When should you use foreachBatch instead of a native sink?",
+              options: [
+                "For better performance",
+                "When you need to run arbitrary code per micro-batch — like a MERGE/upsert into Delta, writing to multiple sinks, or applying idempotent custom logic that native sinks don't support",
+                "When processing Kafka streams",
+                "When using append output mode"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the difference between trigger(once=True) and trigger(availableNow=True)?",
+              options: [
+                "They are identical",
+                "once=True processes one micro-batch (may miss data); availableNow=True (Spark 3.3+) processes ALL available data as of start time across multiple micro-batches — preferred for scheduled incremental loads",
+                "availableNow is faster",
+                "once=True is for Kafka; availableNow is for Delta"
+              ],
+              correct: 1
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('spark-streaming'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          <button onClick={mc('spark-streaming')} style={MC_BTN}>Mark Complete ✓</button>
         </section>
 
-        <section id="spark-aqe" ref={el => { if (el) sectionRefs.current['spark-aqe'] = el }} className="topic-section">
+        {/* ─── STATEFUL STREAMING ─────────────────────────────────────────── */}
+        <section id="spark-streaming-state" ref={ref('spark-streaming-state')} className="topic-section">
           <div className="topic-header">
-            <div className="topic-eyebrow">Level 7 - Apache Spark</div>
-            <h1 className="topic-title">Catalyst Optimizer, AQE, and Tungsten</h1>
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Stateful Streaming</h1>
+            <p className="topic-desc">
+              Structured Streaming stores state across micro-batches in an in-memory <strong>state store</strong> (RocksDB or HDFS-backed). Stateful operations include windowed aggregations, deduplication, and the advanced APIs <code>mapGroupsWithState</code> / <code>flatMapGroupsWithState</code> for fully custom per-group state machines.
+            </p>
           </div>
-          <CodeBlock lang="python">{`# Catalyst Optimizer: SQL/DataFrame -> Logical Plan -> Physical Plan
-# Phases:
-# 1. Analysis: resolve column names, types
-# 2. Logical Optimization: predicate pushdown, column pruning, constant folding
-# 3. Physical Planning: choose join strategies (broadcast vs sort-merge vs hash)
-# 4. Code Generation (Tungsten): generate JVM bytecode
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
 
-# Predicate pushdown - Catalyst pushes filters to data source
-df.filter(col("date") == "2024-01").show()  # reads only 2024-01 partition
+# ── Streaming deduplication ───────────────────────────────────────────
+# Spark keeps a set of seen keys in the state store
+# Watermark bounds state store size (keys older than watermark are purged)
+deduped = parsed \
+    .withWatermark("ts", "1 hour") \
+    .dropDuplicates(["txn_id", "ts"])   # ts must be within watermark window
 
-# Column pruning - Catalyst removes unneeded columns early
-df.select("id", "amount").groupBy("id").sum("amount")  # only reads id + amount
+# Write deduplicated stream:
+deduped.writeStream \
+    .format("delta") \
+    .option("checkpointLocation", "/checkpoints/dedup") \
+    .outputMode("append") \
+    .table("silver.transactions_deduped")
 
-# AQE (Adaptive Query Execution) - Spark 3.x
-spark.conf.set("spark.sql.adaptive.enabled", "true")
-# AQE changes the plan at RUNTIME based on actual data statistics:
-# 1. Coalesces shuffle partitions (200 -> actual needed count)
-# 2. Converts sort-merge join to broadcast if one side is small
-# 3. Handles skewed partitions by splitting them
+# ── Stateful aggregation with watermark ──────────────────────────────
+# State is kept per (user_id, window) until window is finalised by watermark
+session_stats = parsed \
+    .withWatermark("ts", "30 minutes") \
+    .groupBy(F.window("ts", "10 minutes", "5 minutes"),   # sliding window
+             F.col("user_id")) \
+    .agg(F.sum("amount").alias("spend"),
+         F.count("*").alias("events"))
 
-# Tungsten: off-heap memory, cache-aware algorithms, whole-stage code gen
-spark.conf.set("spark.sql.codegen.wholeStage", "true")  # default true
+# ── mapGroupsWithState (Scala/Java only, Python via applyInPandasWithState) ─
+# Python equivalent: applyInPandasWithState (Spark 3.4+)
+from pyspark.sql.types import StructType, StructField, LongType, StringType, DoubleType
 
-# Check if a join uses broadcast
-df_result.explain(True)  # look for "BroadcastHashJoin" in physical plan`}</CodeBlock>
-          <Quiz topicId="spark-aqe" questions={[
-            { question: "What is predicate pushdown in Catalyst?", options: ["Pushing data down to workers", "Catalyst moves filter conditions to execute at the data source, reducing data read", "A shuffle optimization", "Pushing Python code to JVM"], correct: 1 },
-            { question: "What does AQE (Adaptive Query Execution) do?", options: ["Improves Python UDF performance", "Modifies the physical query plan at runtime based on actual shuffle statistics", "Reduces storage costs", "Manages executor memory"], correct: 1 },
+# State schema: track user session
+state_schema = StructType([
+    StructField("session_id",    StringType(), True),
+    StructField("session_start", DoubleType(), True),
+    StructField("total_spend",   DoubleType(), True),
+    StructField("last_seen",     DoubleType(), True),
+])
+
+# Output schema: emit completed sessions
+output_schema = StructType([
+    StructField("user_id",      LongType(),   True),
+    StructField("session_id",   StringType(), True),
+    StructField("session_spend",DoubleType(), True),
+    StructField("duration_sec", DoubleType(), True),
+])
+
+def update_sessions(key, pdf_iter, state: GroupState):
+    """Called per group (user_id) per micro-batch."""
+    import uuid, time
+    user_id = key[0]
+
+    if state.hasTimedOut:
+        # Session expired — emit final session
+        s = state.get
+        yield pd.DataFrame([{
+            "user_id": user_id, "session_id": s["session_id"],
+            "session_spend": s["total_spend"],
+            "duration_sec": s["last_seen"] - s["session_start"]
+        }])
+        state.remove()
+        return
+
+    for pdf in pdf_iter:
+        for _, row in pdf.iterrows():
+            ts = row["ts"].timestamp()
+            if not state.exists:
+                state.update({"session_id": str(uuid.uuid4()),
+                              "session_start": ts, "total_spend": row["amount"], "last_seen": ts})
+            else:
+                s = state.get
+                if ts - s["last_seen"] > 1800:    # 30-min inactivity = new session
+                    yield pd.DataFrame([{...}])   # emit old session
+                    state.update({"session_id": str(uuid.uuid4()), "session_start": ts,
+                                  "total_spend": row["amount"], "last_seen": ts})
+                else:
+                    state.update({**s, "total_spend": s["total_spend"] + row["amount"], "last_seen": ts})
+
+    state.setTimeoutDuration(1800 * 1000)   # 30-min TTL
+
+# Apply stateful function:
+sessions = parsed \
+    .groupBy("user_id") \
+    .applyInPandasWithState(
+        update_sessions,
+        outputStructType=output_schema,
+        stateStructType=state_schema,
+        outputMode="append",
+        timeoutConf=GroupStateTimeout.ProcessingTimeTimeout,
+    )
+
+# ── RocksDB state store (Spark 3.2+) ─────────────────────────────────
+# Default: in-memory HDFS state (limited to executor memory)
+# RocksDB: disk-backed, handles much larger state
+spark.conf.set("spark.sql.streaming.stateStore.providerClass",
+               "org.apache.spark.sql.execution.streaming.state.RocksDBStateStoreProvider")`}
+          </CodeBlock>
+          <Quiz topicId="spark-streaming-state" questions={[
+            {
+              question: "Why must streaming deduplication always be paired with a watermark?",
+              options: [
+                "Without a watermark, deduplication doesn't work",
+                "Without a watermark, Spark must keep ALL seen keys in state forever — the state store grows unboundedly and eventually OOMs. The watermark bounds state to only the recent window.",
+                "Watermarks improve deduplication accuracy",
+                "Watermarks enable parallel state updates"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the advantage of the RocksDB state store over the default in-memory state store?",
+              options: [
+                "Faster reads",
+                "RocksDB is disk-backed and can handle state much larger than executor memory — critical for long-running streams with high-cardinality keys",
+                "It automatically cleans up expired state",
+                "It supports custom state schemas"
+              ],
+              correct: 1
+            },
+            {
+              question: "What triggers a GroupState timeout in applyInPandasWithState?",
+              options: [
+                "The watermark passing the group's event time",
+                "When no new data arrives for the group within the TTL set by state.setTimeoutDuration() — Spark calls the function with state.hasTimedOut=True so you can emit a final result and remove state",
+                "When the state store exceeds memory",
+                "When the streaming query is stopped"
+              ],
+              correct: 1
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('spark-aqe'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          <button onClick={mc('spark-streaming-state')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── CATALYST OPTIMIZER ─────────────────────────────────────────── */}
+        <section id="spark-catalyst" ref={ref('spark-catalyst')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Catalyst Optimizer</h1>
+            <p className="topic-desc">
+              Catalyst is Spark SQL's query optimizer. It transforms your logical query plan through four phases before execution. Understanding what Catalyst does automatically helps you write plans that Catalyst can optimise further — and diagnose plans where it can't.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from pyspark.sql import functions as F
+
+# ── 4 phases of Catalyst ──────────────────────────────────────────────
+#
+# 1. ANALYSIS
+#    - Resolve column names against catalog (unknown column → AnalysisException)
+#    - Resolve data types
+#    - Expand * into actual column list
+#
+# 2. LOGICAL OPTIMIZATION (rule-based)
+#    - Predicate pushdown:    filter pushed to data source / before join
+#    - Column pruning:        drop columns not used downstream
+#    - Constant folding:      1 + 1 → 2 at plan time
+#    - Filter reordering:     cheaper filters first
+#    - Subquery elimination:  convert correlated subqueries to joins
+#    - Null propagation:      null + x → null (avoid null checks in UDFs)
+#
+# 3. PHYSICAL PLANNING (cost-based)
+#    - Choose join strategy (BHJ vs SMJ vs SHJ) based on table stats
+#    - Choose sort order for SMJ
+#    - Cost model uses column statistics from ANALYZE TABLE
+#
+# 4. CODE GENERATION (Tungsten)
+#    - Generate JVM bytecode for the physical plan
+#    - Whole-stage code gen fuses multiple operators into one tight loop
+
+# ── Read the query plan ───────────────────────────────────────────────
+df = spark.table("silver.transactions") \
+    .filter(F.col("status") == "COMPLETED") \
+    .filter(F.col("amount") > 100) \
+    .join(spark.table("dim.users").select("user_id", "tier"), "user_id") \
+    .groupBy("tier") \
+    .agg(F.sum("amount").alias("total"))
+
+# Full plan with all 4 phases:
+df.explain(extended=True)
+# Or just physical plan:
+df.explain()
+
+# Example physical plan output interpretation:
+# == Physical Plan ==
+# *(3) HashAggregate(keys=[tier], functions=[sum(amount)])          ← Stage 3
+# +- Exchange hashpartitioning(tier#12, 200)                       ← SHUFFLE
+#    +- *(2) HashAggregate(keys=[tier], functions=[partial_sum(..)])← Stage 2 (partial agg)
+#       +- *(2) Project [tier, amount]                              ← column pruning (Catalyst)
+#          +- *(2) BroadcastHashJoin [user_id], [user_id]           ← BHJ chosen (dim.users is small)
+#             :- *(2) Filter (status = 'COMPLETED') AND (amount > 100) ← predicate pushdown
+#             :  +- *(2) ColumnarToRow
+#             :     +- FileScan parquet [user_id,status,amount]     ← only reads 3 cols (pruning!)
+#             +- BroadcastExchange HashedRelationBroadcastMode([user_id])
+#                +- *(1) Project [user_id, tier]                    ← dim pruned to 2 cols
+#                   +- *(1) FileScan parquet [user_id,tier]
+
+# Key things to look for:
+# *(N)           = whole-stage code gen active for this operator
+# Exchange       = shuffle (expensive)
+# BroadcastHashJoin vs SortMergeJoin
+# FileScan with column list = column pruning working
+# Filter before Join = predicate pushdown working
+
+# ── Help Catalyst with statistics ────────────────────────────────────
+# Without statistics, Catalyst can't make cost-based decisions
+spark.sql("ANALYZE TABLE silver.transactions COMPUTE STATISTICS FOR ALL COLUMNS")
+# Now Catalyst knows cardinality, min/max, null count → better join planning
+
+# ── Force Catalyst rules for debugging ───────────────────────────────
+spark.conf.set("spark.sql.optimizer.excludedRules",
+               "org.apache.spark.sql.catalyst.optimizer.PushDownPredicates")
+# ^ Disables predicate pushdown — only for debugging!`}
+          </CodeBlock>
+          <Quiz topicId="spark-catalyst" questions={[
+            {
+              question: "What does 'predicate pushdown' mean in Catalyst?",
+              options: [
+                "Pushing filter conditions to execute earlier in the query plan — ideally at the data source level so fewer rows are read from disk",
+                "Converting WHERE clauses to HAVING clauses",
+                "Reordering predicates for readability",
+                "Caching filter results"
+              ],
+              correct: 0
+            },
+            {
+              question: "In explain() output, what does '*(2)' before an operator indicate?",
+              options: [
+                "The operator runs on Stage 2",
+                "Whole-stage code generation is active — this operator and adjacent *(2) operators are fused into a single generated JVM method for maximum performance",
+                "The operator uses 2 CPU cores",
+                "The operator has been replicated twice for fault tolerance"
+              ],
+              correct: 1
+            },
+            {
+              question: "How do you give Catalyst the statistics it needs for cost-based join planning?",
+              options: [
+                "Catalyst collects statistics automatically from Parquet metadata",
+                "Run ANALYZE TABLE ... COMPUTE STATISTICS FOR ALL COLUMNS — this populates column-level statistics (cardinality, min/max, nulls) that the cost-based optimizer uses to choose join strategies",
+                "Enable spark.sql.cbo.enabled=true (no data scan needed)",
+                "Use DataFrame.cache() before joins"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-catalyst')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── AQE ────────────────────────────────────────────────────────── */}
+        <section id="spark-aqe" ref={ref('spark-aqe')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">AQE (Adaptive Query Execution)</h1>
+            <p className="topic-desc">
+              AQE (Spark 3.0+) re-optimises the physical plan at runtime using <em>actual</em> shuffle statistics — not estimates. It solves three of the hardest Spark tuning problems automatically: too many shuffle partitions, suboptimal join strategies, and data skew. Enabled by default in Spark 3.2+.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`# ── Enable AQE ───────────────────────────────────────────────────────
+spark.conf.set("spark.sql.adaptive.enabled", "true")          # default true in 3.2+
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")  # default true
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled",           "true")  # default true
+
+# ── Feature 1: Coalesce Shuffle Partitions ────────────────────────────
+# Problem: You set shuffle.partitions=500 for a large job.
+#          After the shuffle, 450 of 500 partitions are tiny (< 1MB).
+#          500 small tasks = massive scheduling overhead.
+# AQE fix: After shuffle map stage completes, AQE reads actual partition sizes
+#          and coalesces consecutive small partitions into larger ones.
+#          The 500 output partitions → maybe 80 meaningful partitions.
+
+spark.conf.set("spark.sql.shuffle.partitions",                  "auto")   # let AQE manage
+spark.conf.set("spark.sql.adaptive.advisoryPartitionSizeInBytes","128mb")  # target size
+spark.conf.set("spark.sql.adaptive.coalescePartitions.initialPartitionNum","500")  # starting point
+
+# ── Feature 2: Convert Sort-Merge Join to Broadcast Join ─────────────
+# Problem: At plan time, Catalyst estimated table B was too large to broadcast.
+#          After the shuffle, actual data for table B is only 3MB.
+# AQE fix: After the first stage, AQE sees table B's actual size = 3MB
+#          → switches from SortMergeJoin to BroadcastHashJoin at runtime.
+#          This eliminates the second shuffle entirely.
+
+spark.conf.set("spark.sql.adaptive.autoBroadcastJoinThreshold", "30mb")   # override for AQE
+
+# ── Feature 3: Skew Join Splitting ────────────────────────────────────
+# Problem: One reducer partition has 10GB of data; others have ~50MB.
+#          The 10GB task is a straggler that blocks the whole stage.
+# AQE fix: AQE splits the skewed partition into N sub-partitions,
+#          duplicates the corresponding other-side partitions, and runs
+#          N smaller tasks instead of 1 huge one.
+
+spark.conf.set("spark.sql.adaptive.skewJoin.skewedPartitionFactor",           "5")
+spark.conf.set("spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes", "256mb")
+
+# ── Reading AQE plans in explain() ───────────────────────────────────
+# Before AQE: explain() shows static plan
+# After execution: AQE plans visible in Spark UI → SQL → query detail
+# Look for:
+#   - "AdaptiveSparkPlan" as root node
+#   - "== Final Plan ==" vs "== Initial Plan =="
+#   - BroadcastHashJoin where SMJ was in initial plan → AQE converted it
+
+df = spark.table("large_fact").join(spark.table("medium_dim"), "key")
+df.explain()                    # initial static plan
+df.count()                      # execute
+# Check Spark UI → SQL tab → click the query → see AQE-modified plan
+
+# ── AQE with Dynamic Partition Pruning ───────────────────────────────
+# AQE + DPP work together: AQE handles partition count; DPP handles data skip
+spark.conf.set("spark.sql.optimizer.dynamicPartitionPruning.enabled", "true")
+
+# ── Disable AQE for specific queries (testing/debugging) ─────────────
+with spark.conf as c:
+    c.set("spark.sql.adaptive.enabled", "false")
+    df.explain()    # see static plan without AQE
+    c.set("spark.sql.adaptive.enabled", "true")
+
+# ── AQE limitations ───────────────────────────────────────────────────
+# - Only applies AFTER a shuffle — first stage always uses static plan
+# - Doesn't help with single-stage (no-shuffle) jobs
+# - Skew join only works on Sort-Merge joins, not Shuffle Hash joins`}
+          </CodeBlock>
+          <Quiz topicId="spark-aqe" questions={[
+            {
+              question: "How does AQE coalesce shuffle partitions differently from setting spark.sql.shuffle.partitions to a fixed value?",
+              options: [
+                "AQE uses random partition assignment",
+                "AQE reads actual partition sizes after the shuffle completes and merges consecutive small partitions — it adapts to the real data volume rather than a pre-set estimate",
+                "AQE coalesces are lossless; fixed partitions can lose data",
+                "They are equivalent with spark.sql.shuffle.partitions=auto"
+              ],
+              correct: 1
+            },
+            {
+              question: "AQE converts a Sort-Merge Join to a Broadcast Hash Join at runtime. What condition triggers this?",
+              options: [
+                "When both tables are under 10MB",
+                "When the actual shuffle output of one side is smaller than spark.sql.adaptive.autoBroadcastJoinThreshold — measured after the map stage, not estimated at planning time",
+                "When the query has been running for more than 5 minutes",
+                "When AQE detects skew on the join key"
+              ],
+              correct: 1
+            },
+            {
+              question: "AQE skew join splitting only works on which join type?",
+              options: [
+                "Broadcast Hash Joins",
+                "Sort-Merge Joins — AQE splits the skewed partition and duplicates the corresponding other-side partitions. Broadcast joins don't need skew handling since the broadcast side is replicated to all executors already.",
+                "Shuffle Hash Joins",
+                "All join types"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-aqe')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── TUNGSTEN ───────────────────────────────────────────────────── */}
+        <section id="spark-tungsten" ref={ref('spark-tungsten')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Tungsten Engine</h1>
+            <p className="topic-desc">
+              Tungsten is Spark's physical execution engine, introduced in Spark 1.4. It bypasses JVM object overheads and GC through three innovations: <strong>off-heap binary memory</strong> (UnsafeRow format), <strong>cache-aware algorithms</strong> (data accessed sequentially, not by pointer chasing), and <strong>whole-stage code generation</strong> (fusing operators into a single generated JVM method that the JIT can optimise fully).
+            </p>
+          </div>
+          <CodeBlock lang="python">{`# ── Tungsten's 3 pillars ─────────────────────────────────────────────
+
+# 1. UnsafeRow (off-heap binary format)
+#    Traditional Java objects:
+#      - Each field is a heap object with 16-byte header
+#      - Object references → pointer chasing → cache misses
+#    UnsafeRow:
+#      - Compact binary layout: nulls bitmap + fixed-size fields + variable data
+#      - Stored off-heap: bypasses GC entirely
+#      - No serialisation needed to shuffle: the binary format IS the wire format
+#      - Significantly reduces memory footprint and GC pause time
+
+# 2. Cache-aware algorithms
+#    Hash aggregation:
+#      - In-memory hash table with compact binary keys
+#      - Accesses memory sequentially → CPU cache friendly
+#    Sort:
+#      - Cache-aware sorting on binary data (not Java objects)
+#      - Avoids pointer-chasing during comparisons
+
+# 3. Whole-stage code generation (WholeStageCodeGen)
+#    Traditional Volcano iterator model: each operator calls next() on child
+#      - Method call overhead per row
+#      - JIT can't optimise across operator boundaries
+#    Whole-stage codegen:
+#      - Fuses adjacent operators into ONE generated Java class
+#      - Single tight loop over data (JIT-friendly)
+#      - No virtual dispatch, direct variable access
+
+# ── Enabling and verifying ────────────────────────────────────────────
+spark.conf.set("spark.sql.codegen.wholeStage",         "true")   # default true
+spark.conf.set("spark.sql.codegen.fallback",           "true")   # fallback if codegen fails
+spark.conf.set("spark.sql.codegen.maxFields",          "100")    # max fields for codegen
+spark.conf.set("spark.sql.codegen.factoryMode",        "CODEGEN_ONLY")  # debug: force codegen
+
+# Verify in explain():
+df.explain()
+# *(N) prefix = this operator IS covered by whole-stage codegen
+# Operators WITHOUT * = interpreted (fallback mode — check why)
+
+# ── When codegen is disabled (fallback cases) ─────────────────────────
+# 1. Python UDFs — can't generate JVM code for Python functions
+#    → This is another reason to avoid Python UDFs (breaks codegen chain)
+# 2. Too many fields (> spark.sql.codegen.maxFields)
+# 3. Complex expressions that trigger codegen bugs (rare)
+# 4. Some join types (BroadcastNestedLoopJoin)
+
+# Check if codegen is being bypassed:
+spark.sql("SET spark.sql.codegen.wholeStage").show()
+
+# ── Inspecting generated code (advanced debugging) ────────────────────
+# Enable to log generated code:
+spark.conf.set("spark.sql.codegen.logging.maxLines", "1000")
+# Then look for "Generated class" in executor logs
+
+# ── Tungsten memory in practice ───────────────────────────────────────
+# UnsafeRow memory usage vs Java objects:
+# Java String("hello"):  ~48 bytes (object header + char array + length)
+# UnsafeRow VARCHAR:     5 bytes (length prefix + bytes)
+# 100M rows × (Java: 200 bytes/row) = 19GB
+# 100M rows × (UnsafeRow: 40 bytes/row) = 3.7GB → 5x more rows fit in cache
+
+# Off-heap config (bypasses JVM heap for cache operations):
+spark.conf.set("spark.memory.offHeap.enabled", "true")
+spark.conf.set("spark.memory.offHeap.size",    "8g")
+# Off-heap = no GC pauses for cached data (GC only touches on-heap references)`}
+          </CodeBlock>
+          <Quiz topicId="spark-tungsten" questions={[
+            {
+              question: "Why do Python UDFs break whole-stage code generation?",
+              options: [
+                "Python UDFs use too much memory",
+                "Whole-stage codegen generates a single JVM method fusing adjacent operators. A Python UDF introduces a JVM→Python boundary — Catalyst can't generate JVM code for Python logic, so the codegen chain is broken at that point.",
+                "Python UDFs are executed on the driver",
+                "Codegen doesn't support string types, which UDFs often return"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is UnsafeRow and why is it more efficient than regular Java objects?",
+              options: [
+                "UnsafeRow bypasses Spark's type system for faster processing",
+                "UnsafeRow is a compact binary representation stored off-heap — it avoids JVM object overhead (16-byte headers, pointer indirection), reduces memory footprint 5-10x, and bypasses GC entirely since it's off-heap",
+                "UnsafeRow is a mutable DataFrame for in-place updates",
+                "UnsafeRow skips null checks for faster computation"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the Volcano iterator model and what problem did whole-stage codegen solve?",
+              options: [
+                "An older shuffle algorithm replaced in Spark 2.0",
+                "The Volcano model has each operator calling next() on its child per row — causing virtual method dispatch overhead and preventing JIT optimization across operators. Codegen fuses adjacent operators into one tight generated loop that JIT can optimize holistically.",
+                "A memory model that caused OOM errors",
+                "A join strategy superseded by Sort-Merge Join"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-tungsten')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── PERFORMANCE CONFIG ─────────────────────────────────────────── */}
+        <section id="spark-config" ref={ref('spark-config')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Performance Configuration Reference</h1>
+            <p className="topic-desc">
+              A practical reference for the configurations that matter most in production Spark jobs. These are the knobs you'll actually tune — not an exhaustive list of every property.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`# ── Production baseline configuration ────────────────────────────────
+spark = SparkSession.builder \
+    .appName("production_etl") \
+    .config("spark.executor.memory",                        "8g") \
+    .config("spark.executor.cores",                         "4") \
+    .config("spark.executor.instances",                     "20") \   # static allocation
+    .config("spark.executor.memoryOverhead",                "2g") \   # off-JVM (Python, Netty)
+    .config("spark.driver.memory",                          "4g") \
+    .config("spark.driver.maxResultSize",                   "2g") \
+    .config("spark.sql.shuffle.partitions",                 "auto") \ # AQE manages
+    .config("spark.sql.adaptive.enabled",                   "true") \
+    .config("spark.sql.adaptive.coalescePartitions.enabled","true") \
+    .config("spark.sql.adaptive.skewJoin.enabled",          "true") \
+    .config("spark.sql.adaptive.advisoryPartitionSizeInBytes","128mb") \
+    .config("spark.sql.autoBroadcastJoinThreshold",         str(50*1024*1024)) \  # 50MB
+    .config("spark.memory.fraction",                        "0.8") \
+    .config("spark.memory.storageFraction",                 "0.3") \
+    .config("spark.serializer",                             "org.apache.spark.serializer.KryoSerializer") \
+    .config("spark.sql.codegen.wholeStage",                 "true") \
+    .config("spark.sql.files.maxPartitionBytes",            str(128*1024*1024)) \  # 128MB per partition
+    .config("spark.sql.files.openCostInBytes",              str(4*1024*1024)) \   # 4MB small file merge
+    .getOrCreate()
+
+# ── Dynamic allocation (scale up/down based on load) ─────────────────
+spark.conf.set("spark.dynamicAllocation.enabled",           "true")
+spark.conf.set("spark.dynamicAllocation.minExecutors",      "2")
+spark.conf.set("spark.dynamicAllocation.maxExecutors",      "100")
+spark.conf.set("spark.dynamicAllocation.initialExecutors",  "10")
+spark.conf.set("spark.dynamicAllocation.executorIdleTimeout","60s")  # release idle executors
+# Requires shuffle tracking (Spark 3.x):
+spark.conf.set("spark.dynamicAllocation.shuffleTracking.enabled", "true")
+
+# ── Speculative execution (retry slow tasks) ──────────────────────────
+spark.conf.set("spark.speculation",                         "true")
+spark.conf.set("spark.speculation.multiplier",              "1.5")    # task 1.5x slower than median → speculate
+spark.conf.set("spark.speculation.quantile",                "0.75")   # wait for 75% tasks done first
+
+# ── I/O optimisations ─────────────────────────────────────────────────
+spark.conf.set("spark.sql.parquet.compression.codec",       "snappy")
+spark.conf.set("spark.sql.parquet.mergeSchema",             "false")  # faster reads if schemas match
+spark.conf.set("spark.sql.parquet.filterPushdown",          "true")   # pushdown to Parquet reader
+spark.conf.set("spark.sql.orc.filterPushdown",              "true")
+spark.conf.set("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version", "2")  # faster commits
+
+# ── Network / shuffle ─────────────────────────────────────────────────
+spark.conf.set("spark.shuffle.compress",                    "true")
+spark.conf.set("spark.shuffle.spill.compress",              "true")
+spark.conf.set("spark.reducer.maxSizeInFlight",             "96m")    # shuffle fetch buffer
+spark.conf.set("spark.shuffle.io.maxRetries",               "10")
+spark.conf.set("spark.shuffle.io.retryWait",                "30s")
+
+# ── Executor sizing rule of thumb ─────────────────────────────────────
+# - 4-5 cores per executor (> 5 cores = too much HDFS contention)
+# - 4-8GB RAM per core (16-32GB executor)
+# - Leave 1 core and 1GB per node for OS/other processes
+# Example: 10 node cluster, 16 cores/64GB each:
+#   Per node: 15 cores usable, 60GB usable
+#   3 executors per node: 5 cores × 20GB each
+#   Total: 30 executors × 5 cores × 20GB`}
+          </CodeBlock>
+          <Quiz topicId="spark-config" questions={[
+            {
+              question: "Why is more than 5 executor cores per executor not recommended?",
+              options: [
+                "Spark can't schedule more than 5 cores per executor",
+                "With >5 cores, HDFS/ADLS concurrent access from one JVM causes throughput degradation — each core opens its own stream and the storage system is overwhelmed",
+                "More cores increase GC pause time linearly",
+                "Dynamic allocation only supports up to 5 cores"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does spark.speculation do?",
+              options: [
+                "Estimates partition sizes before executing",
+                "When a task is significantly slower than the median for its stage (multiplier × median), Spark launches a duplicate speculative task on another executor — whichever finishes first wins",
+                "Pre-fetches data for upcoming stages",
+                "Predicts which stages will cause OOM"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the difference between dynamic allocation and static executor allocation?",
+              options: [
+                "Dynamic allocation is always better",
+                "Static: fixed number of executors for the job's lifetime. Dynamic: Spark requests/releases executors based on workload — cost-efficient for bursty jobs but adds latency for executor provisioning",
+                "Dynamic allocation requires YARN; static works with K8s",
+                "They are identical with spark.executor.instances set"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-config')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── SPARK UI ───────────────────────────────────────────────────── */}
+        <section id="spark-ui" ref={ref('spark-ui')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Spark UI Navigation</h1>
+            <p className="topic-desc">
+              The Spark UI (port 4040 by default) is the primary tool for diagnosing slow jobs. Knowing <em>exactly</em> where to look for GC time, spill, skew, and excessive shuffle is the difference between guessing at a fix and knowing the root cause.
+            </p>
+          </div>
+          <SparkUiAnimation />
+          <CodeBlock lang="python">{`# ── Spark UI navigation guide ─────────────────────────────────────────
+#
+# URL: http://driver-host:4040  (or :4041, :4042 for concurrent apps)
+# On Databricks: Compute → cluster → Spark UI
+#
+# ── JOBS tab ──────────────────────────────────────────────────────────
+# - Shows one row per ACTION (count, write, show, collect)
+# - Each job has a DAG Visualization (click "DAG Visualization")
+# - Skipped stages = data served from cache (good!)
+# - Failed stages = expand to see error message
+#
+# ── STAGES tab ────────────────────────────────────────────────────────
+# - Shows each stage with aggregated metrics
+# Key columns:
+#   Input Size/Records   → data read from storage
+#   Shuffle Read         → data received from previous stage
+#   Shuffle Write        → data sent to next stage
+#   Shuffle Spill (Disk) → data spilled to local disk (BAD — needs more memory or fewer records/partition)
+#   Duration             → total wall time for the stage
+# - Sort by Duration descending to find the slowest stage
+#
+# ── TASKS (click a Stage) ─────────────────────────────────────────────
+# - Shows one row per task
+# Key columns:
+#   Duration             → sort descending, look for stragglers (skew!)
+#   Input Size           → should be ~equal across tasks (check for skew)
+#   GC Time              → > 10% of Duration = GC problem (need more memory)
+#   Shuffle Spill (Disk) → >0 = spilling (reduce partition size)
+#   Peak Execution Memory
+# - Click the "Event Timeline" at top to visualise executor utilisation
+#
+# ── SQL tab ───────────────────────────────────────────────────────────
+# - Shows the physical plan with timing overlaid
+# - Each plan node shows: rows processed, time, bytes
+# - Look for: FileScan (how many files/bytes read)
+#             Exchange (= shuffle — shows shuffle bytes)
+#             BroadcastHashJoin vs SortMergeJoin
+#             Photon nodes (on Databricks)
+#
+# ── STORAGE tab ───────────────────────────────────────────────────────
+# - Shows cached RDDs/DataFrames
+# - Fraction cached (< 100% = not enough memory, evictions happening)
+# - Size in memory vs on disk
+#
+# ── EXECUTORS tab ─────────────────────────────────────────────────────
+# - Per-executor: cores, memory used, GC time, task count
+# - Look for: one executor with 10x more tasks → uneven work distribution
+# - Blacklisted executors = node failures
+#
+# ── Practical debugging workflow ─────────────────────────────────────
+
+import time
+
+spark.sparkContext.setJobDescription("Debug: daily revenue aggregation")
+
+# 1. Run the job with timing:
+t0 = time.time()
+df_result.write.format("delta").mode("overwrite").save("/output/debug/")
+print(f"Job took: {time.time() - t0:.1f}s")
+
+# 2. Check Spark UI → Jobs → find the job → DAG visualization
+# 3. Identify slowest stage (most time in STAGES tab)
+# 4. Click the stage → Tasks → sort by Duration
+#    - All tasks similar duration? → not skew
+#    - One task 10x longer? → data skew on the shuffle key
+#    - High GC time? → increase executor memory
+#    - Shuffle Spill > 0? → reduce partition size or increase memory
+
+# 5. Check SQL tab → physical plan
+#    - Is BHJ used where you expected? (check autoBroadcastJoinThreshold)
+#    - Is predicate pushdown working? (filter before FileScan in plan)
+#    - How many bytes in FileScan? (partition pruning working?)
+
+# 6. Add logging for your own metrics:
+spark.sparkContext.setLocalProperty("callSite.short", "gold_daily_revenue")
+spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
+          </CodeBlock>
+          <Quiz topicId="spark-ui" questions={[
+            {
+              question: "In the Spark UI Stages tab, you see 'Shuffle Spill (Disk) = 45 GB'. What does this tell you and how do you fix it?",
+              options: [
+                "45GB was written to Delta — this is normal",
+                "Shuffle data that couldn't fit in execution memory was spilled to local disk. Fix: increase spark.executor.memory, increase spark.sql.shuffle.partitions to reduce data per partition, or broadcast the smaller side to eliminate the shuffle",
+                "The output files are 45GB — reduce with coalesce",
+                "45GB of cached data was evicted — increase storage memory fraction"
+              ],
+              correct: 1
+            },
+            {
+              question: "In the Tasks view of a stage, you see one task took 45 minutes while 199 other tasks took 30 seconds each. What is the root cause and fix?",
+              options: [
+                "The executor hosting that task is overloaded — fix with dynamic allocation",
+                "Data skew: one shuffle partition has disproportionately more data. Fix: enable AQE skew join handling, use salting, or filter null keys before the join",
+                "GC pressure — increase executor memory",
+                "The task is reading from a cold ADLS partition"
+              ],
+              correct: 1
+            },
+            {
+              question: "You see 'Skipped' stages in the Spark UI Jobs DAG. What does this mean?",
+              options: [
+                "Those stages failed and were skipped",
+                "The DataFrame for those stages was cached — Spark served the data from cache and didn't need to recompute those stages. This is the expected behaviour when caching correctly.",
+                "AQE eliminated those stages",
+                "Those stages had no data to process"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-ui')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── SPARK + DELTA LAKE ─────────────────────────────────────────── */}
+        <section id="spark-delta" ref={ref('spark-delta')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 7 - Apache Spark + PySpark</div>
+            <h1 className="topic-title">Spark + Delta Lake Integration</h1>
+            <p className="topic-desc">
+              Delta Lake integrates deeply with Spark, adding ACID transactions, schema enforcement, time travel, and the MERGE API on top of Parquet files. In Databricks, Delta is the default table format. Understanding the Spark-side API for Delta is essential for production data engineering.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from delta.tables import DeltaTable
+from pyspark.sql import functions as F
+
+# ── Reading Delta ─────────────────────────────────────────────────────
+# By path:
+df = spark.read.format("delta").load("/data/delta/orders/")
+# By catalog table (Unity Catalog):
+df = spark.table("catalog.silver.orders")
+# Time travel by version:
+df_v10 = spark.read.format("delta").option("versionAsOf", 10).load("/data/delta/orders/")
+# Time travel by timestamp:
+df_yesterday = spark.read.format("delta") \
+    .option("timestampAsOf", "2024-06-01T00:00:00") \
+    .load("/data/delta/orders/")
+
+# ── Writing Delta ─────────────────────────────────────────────────────
+# Simple write:
+df.write.format("delta").mode("overwrite").save("/data/delta/orders/")
+# Or saveAsTable (registers in Hive/Unity Catalog):
+df.write.format("delta").mode("overwrite").saveAsTable("silver.orders")
+
+# Partial overwrite using replaceWhere:
+df_jan.write.format("delta") \
+    .mode("overwrite") \
+    .option("replaceWhere", "event_date >= '2024-01-01' AND event_date < '2024-02-01'") \
+    .save("/data/delta/events/")
+
+# ── MERGE (upsert) API ────────────────────────────────────────────────
+target = DeltaTable.forName(spark, "silver.orders")
+
+target.alias("t").merge(
+    source=updates_df.alias("s"),
+    condition="t.order_id = s.order_id"
+) \
+.whenMatchedUpdate(
+    condition="s.updated_at > t.updated_at",
+    set={"status": "s.status", "amount": "s.amount", "updated_at": "s.updated_at"}
+) \
+.whenNotMatchedInsert(
+    values={"order_id": "s.order_id", "status": "s.status",
+            "amount": "s.amount", "created_at": "s.created_at", "updated_at": "s.updated_at"}
+) \
+.whenNotMatchedBySourceDelete(   # Delta 2.0+ / DBR 12.2+
+    condition="t.status = 'CANCELLED' AND t.updated_at < '2023-01-01'"
+) \
+.execute()
+
+# MERGE in Structured Streaming (foreachBatch):
+def merge_micro_batch(micro_df, batch_id):
+    """Idempotent upsert — safe to re-run on failure."""
+    target = DeltaTable.forName(spark, "silver.orders")
+    target.alias("t").merge(
+        micro_df.dropDuplicates(["order_id"]).alias("s"),
+        "t.order_id = s.order_id"
+    ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+stream.writeStream.foreachBatch(merge_micro_batch) \
+    .option("checkpointLocation", "/checkpoints/orders-merge") \
+    .trigger(processingTime="2 minutes") \
+    .start()
+
+# ── Schema evolution ──────────────────────────────────────────────────
+# Fail on schema change (default):
+df.write.format("delta").mode("append").save("/path/")  # fails if new column
+
+# Allow schema evolution:
+df.write.format("delta").mode("append") \
+    .option("mergeSchema", "true") \   # new columns added to table schema
+    .save("/path/")
+
+# Force overwrite schema:
+df.write.format("delta").mode("overwrite") \
+    .option("overwriteSchema", "true") \
+    .save("/path/")
+
+# ── Delta Lake table operations ───────────────────────────────────────
+dt = DeltaTable.forName(spark, "silver.orders")
+
+# History:
+dt.history().select("version", "timestamp", "operation", "operationMetrics").show(10)
+
+# Restore to previous version:
+dt.restoreToVersion(5)
+dt.restoreToTimestamp("2024-06-01")
+
+# OPTIMIZE + Z-ORDER (in PySpark — Databricks/Delta OSS 2.0+):
+spark.sql("OPTIMIZE silver.orders ZORDER BY (customer_id, order_date)")
+spark.sql("VACUUM silver.orders RETAIN 168 HOURS")  # delete files > 7 days old
+
+# ── Change Data Feed ──────────────────────────────────────────────────
+spark.sql("ALTER TABLE silver.orders SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+
+# Read incremental changes:
+changes = spark.read.format("delta") \
+    .option("readChangeFeed",  "true") \
+    .option("startingVersion", "10") \
+    .table("silver.orders")
+# _change_type: insert / update_preimage / update_postimage / delete`}
+          </CodeBlock>
+          <Quiz topicId="spark-delta" questions={[
+            {
+              question: "What does the 'replaceWhere' option in a Delta write do?",
+              options: [
+                "Overwrites only rows matching the condition (like an in-place update)",
+                "Atomically replaces only the partitions matching the predicate with new data — other partitions are untouched. This is a safe partial overwrite that avoids rewriting the entire table.",
+                "Filters out rows matching the condition before writing",
+                "Creates a new partition for rows matching the condition"
+              ],
+              correct: 1
+            },
+            {
+              question: "Why is dropDuplicates(['order_id']) important inside a foreachBatch MERGE function?",
+              options: [
+                "MERGE fails with duplicate source keys",
+                "The micro-batch may contain multiple updates for the same order_id (e.g., two Kafka messages). Without deduplication, MERGE throws a non-deterministic update error because it can't decide which source row wins.",
+                "It improves MERGE performance",
+                "Delta requires unique rows in append mode"
+              ],
+              correct: 1
+            },
+            {
+              question: "What information does Delta Lake's Change Data Feed expose?",
+              options: [
+                "The transaction log in JSON format",
+                "Each row change with a _change_type column: insert, update_preimage (before), update_postimage (after), or delete — enables downstream incremental processing without full table scans",
+                "Schema changes only",
+                "VACUUM and OPTIMIZE operation history"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('spark-delta')} style={MC_BTN}>Mark Complete ✓</button>
         </section>
 
       </main>
@@ -352,38 +2970,212 @@ df_result.explain(True)  # look for "BroadcastHashJoin" in physical plan`}</Code
   )
 }
 
+// ─── ANIMATION COMPONENTS ────────────────────────────────────────────────────
+
 function SparkArchAnimation() {
   return (
-    <svg viewBox="0 0 600 180" style={{ width: '100%', maxHeight: 180, borderRadius: 'var(--radius-xl)', background: '#fff7ed', border: '1px solid #fed7aa', marginBottom: 24 }}>
-      {/* Driver */}
-      <rect x="20" y="40" width="100" height="100" rx="8" fill="white" stroke="#f97316" strokeWidth="2"/>
-      <text x="70" y="70" textAnchor="middle" fill="#f97316" fontSize="10" fontWeight="700">DRIVER</text>
-      <text x="70" y="85" textAnchor="middle" fill="#94a3b8" fontSize="8">SparkContext</text>
-      <text x="70" y="100" textAnchor="middle" fill="#94a3b8" fontSize="8">DAG Scheduler</text>
-      <text x="70" y="115" textAnchor="middle" fill="#94a3b8" fontSize="8">Task Scheduler</text>
+    <svg viewBox="0 0 700 200" style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-xl)', background: '#fff7ed', border: '1px solid #fed7aa', marginBottom: 24 }}>
+      {/* Driver box */}
+      <rect x="20" y="30" width="130" height="140" rx="10" fill="white" stroke="#f97316" strokeWidth="2"/>
+      <text x="85" y="52" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="700">DRIVER</text>
+      <rect x="30" y="58" width="110" height="20" rx="4" fill="#fff7ed"/>
+      <text x="85" y="72" textAnchor="middle" fill="#78716c" fontSize="8">SparkSession</text>
+      <rect x="30" y="82" width="110" height="20" rx="4" fill="#fff7ed"/>
+      <text x="85" y="96" textAnchor="middle" fill="#78716c" fontSize="8">DAG Scheduler</text>
+      <rect x="30" y="106" width="110" height="20" rx="4" fill="#fff7ed"/>
+      <text x="85" y="120" textAnchor="middle" fill="#78716c" fontSize="8">Task Scheduler</text>
+      <rect x="30" y="130" width="110" height="20" rx="4" fill="#fff7ed"/>
+      <text x="85" y="144" textAnchor="middle" fill="#78716c" fontSize="8">Block Manager</text>
+
+      {/* Arrow: Driver → Cluster Manager */}
+      <line x1="150" y1="100" x2="240" y2="100" stroke="#8b5cf6" strokeWidth="1.5" strokeDasharray="5 3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.2s" repeatCount="indefinite"/>
+      </line>
+      <text x="193" y="93" textAnchor="middle" fill="#8b5cf6" fontSize="8">resources</text>
 
       {/* Cluster Manager */}
-      <rect x="220" y="60" width="120" height="60" rx="8" fill="white" stroke="#8b5cf6" strokeWidth="2"/>
-      <text x="280" y="85" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="700">CLUSTER MGR</text>
-      <text x="280" y="100" textAnchor="middle" fill="#94a3b8" fontSize="8">Spark/YARN/K8s</text>
+      <rect x="240" y="65" width="140" height="70" rx="10" fill="white" stroke="#8b5cf6" strokeWidth="2"/>
+      <text x="310" y="88" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="700">CLUSTER MGR</text>
+      <text x="310" y="105" textAnchor="middle" fill="#78716c" fontSize="8">YARN / K8s / Standalone</text>
+      <text x="310" y="120" textAnchor="middle" fill="#78716c" fontSize="8">Allocates Containers</text>
+
+      {/* Arrow: Cluster Manager → Executors */}
+      <line x1="380" y1="100" x2="460" y2="60" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4 3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <line x1="380" y1="100" x2="460" y2="100" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4 3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.1s" repeatCount="indefinite"/>
+      </line>
+      <line x1="380" y1="100" x2="460" y2="140" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4 3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.2s" repeatCount="indefinite"/>
+      </line>
 
       {/* Executors */}
       {[0, 1, 2].map(i => (
         <g key={i}>
-          <rect x={430} y={20 + i * 50} width={120} height={40} rx="6" fill="white" stroke="#22c55e" strokeWidth="1.5"/>
-          <text x={490} y={36 + i * 50} textAnchor="middle" fill="#22c55e" fontSize="9" fontWeight="700">Executor {i + 1}</text>
-          <text x={490} y={50 + i * 50} textAnchor="middle" fill="#94a3b8" fontSize="8">Tasks | Cache</text>
+          <rect x={460} y={30 + i * 55} width={210} height={45} rx="8" fill="white" stroke="#22c55e" strokeWidth="1.5"/>
+          <text x={565} y={48 + i * 55} textAnchor="middle" fill="#22c55e" fontSize="9" fontWeight="700">Executor {i + 1}  (Worker Node)</text>
+          <rect x={468} y={54 + i * 55} width={45} height={14} rx="3" fill="#f0fdf4"/>
+          <text x={491} y={64 + i * 55} textAnchor="middle" fill="#16a34a" fontSize="7">Task Slot</text>
+          <rect x={518} y={54 + i * 55} width={45} height={14} rx="3" fill="#f0fdf4"/>
+          <text x={541} y={64 + i * 55} textAnchor="middle" fill="#16a34a" fontSize="7">Task Slot</text>
+          <rect x={568} y={54 + i * 55} width={45} height={14} rx="3" fill="#fef9c3"/>
+          <text x={591} y={64 + i * 55} textAnchor="middle" fill="#ca8a04" fontSize="7">Block Cache</text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function DagAnimation() {
+  return (
+    <svg viewBox="0 0 680 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: '#f0f9ff', border: '1px solid #bae6fd', marginBottom: 24 }}>
+      {/* Stage 0 */}
+      <rect x="10" y="10" width="150" height="140" rx="8" fill="white" stroke="#38bdf8" strokeWidth="1.5"/>
+      <text x="85" y="28" textAnchor="middle" fill="#0284c7" fontSize="9" fontWeight="700">STAGE 0 (narrow)</text>
+      {['Read Parquet','filter(amount>0)','withColumn(tax)','select(cols)'].map((t, i) => (
+        <g key={i}>
+          <rect x="20" y={35 + i * 28} width="130" height="20" rx="4" fill="#e0f2fe"/>
+          <text x="85" y={49 + i * 28} textAnchor="middle" fill="#0369a1" fontSize="8">{t}</text>
         </g>
       ))}
 
-      {/* Arrows */}
-      <line x1="120" y1="90" x2="220" y2="90" stroke="#8b5cf6" strokeWidth="1.5" strokeDasharray="4 2">
-        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="1s" repeatCount="indefinite"/>
+      {/* Shuffle boundary arrow */}
+      <line x1="160" y1="80" x2="205" y2="80" stroke="#f59e0b" strokeWidth="2" strokeDasharray="6 3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1s" repeatCount="indefinite"/>
       </line>
-      {[0, 1, 2].map(i => (
-        <line key={i} x1="340" y1="90" x2="430" y2={40 + i * 50} stroke="#22c55e" strokeWidth="1.5" strokeDasharray="3 2">
-          <animate attributeName="stroke-dashoffset" from="0" to="-10" dur={`${0.8 + i * 0.2}s`} repeatCount="indefinite"/>
-        </line>
+      <rect x="162" y="60" width="44" height="16" rx="4" fill="#fef3c7"/>
+      <text x="184" y="71" textAnchor="middle" fill="#92400e" fontSize="7" fontWeight="700">SHUFFLE</text>
+
+      {/* Stage 1 */}
+      <rect x="205" y="10" width="150" height="140" rx="8" fill="white" stroke="#f59e0b" strokeWidth="1.5"/>
+      <text x="280" y="28" textAnchor="middle" fill="#d97706" fontSize="9" fontWeight="700">STAGE 1 (wide)</text>
+      {['groupBy(merchant)','sum(amount)','count(*)','avg(amount)'].map((t, i) => (
+        <g key={i}>
+          <rect x="215" y={35 + i * 28} width="130" height="20" rx="4" fill="#fef9c3"/>
+          <text x="280" y={49 + i * 28} textAnchor="middle" fill="#92400e" fontSize="8">{t}</text>
+        </g>
+      ))}
+
+      {/* Shuffle boundary arrow 2 */}
+      <line x1="355" y1="80" x2="400" y2="80" stroke="#f59e0b" strokeWidth="2" strokeDasharray="6 3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.1s" repeatCount="indefinite"/>
+      </line>
+      <rect x="357" y="60" width="44" height="16" rx="4" fill="#fef3c7"/>
+      <text x="379" y="71" textAnchor="middle" fill="#92400e" fontSize="7" fontWeight="700">SHUFFLE</text>
+
+      {/* Stage 2 */}
+      <rect x="400" y="10" width="150" height="140" rx="8" fill="white" stroke="#a78bfa" strokeWidth="1.5"/>
+      <text x="475" y="28" textAnchor="middle" fill="#7c3aed" fontSize="9" fontWeight="700">STAGE 2 (join)</text>
+      {['join(dim_merchant)','withColumn(rank)','orderBy(total)','limit(100)'].map((t, i) => (
+        <g key={i}>
+          <rect x="410" y={35 + i * 28} width="130" height="20" rx="4" fill="#f5f3ff"/>
+          <text x="475" y={49 + i * 28} textAnchor="middle" fill="#6d28d9" fontSize="8">{t}</text>
+        </g>
+      ))}
+
+      {/* Write arrow */}
+      <line x1="550" y1="80" x2="590" y2="80" stroke="#22c55e" strokeWidth="2">
+        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="0.8s" repeatCount="indefinite"/>
+      </line>
+      <rect x="590" y="55" width="80" height="50" rx="8" fill="white" stroke="#22c55e" strokeWidth="1.5"/>
+      <text x="630" y="75" textAnchor="middle" fill="#15803d" fontSize="9" fontWeight="700">ACTION</text>
+      <text x="630" y="90" textAnchor="middle" fill="#15803d" fontSize="8">write()</text>
+      <text x="630" y="103" textAnchor="middle" fill="#78716c" fontSize="7">Triggers DAG</text>
+    </svg>
+  )
+}
+
+function ShuffleAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => (t + 1) % 60), 60)
+    return () => clearInterval(id)
+  }, [])
+
+  const progress = (tick % 60) / 60
+  const colors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7']
+
+  return (
+    <svg viewBox="0 0 600 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: '#fafafa', border: '1px solid #e2e8f0', marginBottom: 24 }}>
+      <text x="300" y="18" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="700">Shuffle: data moves across partitions by hash(key)</text>
+
+      {/* Source partitions */}
+      {[0,1,2,3].map(i => (
+        <g key={i}>
+          <rect x={20} y={30 + i * 30} width={100} height={22} rx="5" fill={colors[i]} fillOpacity="0.15" stroke={colors[i]} strokeWidth="1.5"/>
+          <text x={70} y={45 + i * 30} textAnchor="middle" fill={colors[i]} fontSize="8" fontWeight="600">Partition {i} (pre-shuffle)</text>
+        </g>
+      ))}
+
+      {/* Animated lines */}
+      {[0,1,2,3].map(src => [0,1,2,3].map(dst => {
+        const x1 = 120, y1 = 41 + src * 30
+        const x2 = 480, y2 = 41 + dst * 30
+        const px = x1 + (x2 - x1) * progress
+        const py = y1 + (y2 - y1) * progress
+        return (
+          <g key={`${src}-${dst}`}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={colors[src]} strokeWidth="0.5" strokeOpacity="0.2"/>
+            <circle cx={px} cy={py} r="3" fill={colors[src]} fillOpacity="0.8"/>
+          </g>
+        )
+      }))}
+
+      {/* Shuffle label */}
+      <rect x="255" y="60" width="90" height="40" rx="8" fill="#fff7ed" stroke="#f97316" strokeWidth="1.5"/>
+      <text x="300" y="76" textAnchor="middle" fill="#f97316" fontSize="9" fontWeight="700">SHUFFLE</text>
+      <text x="300" y="91" textAnchor="middle" fill="#78716c" fontSize="7">hash(key) % N</text>
+
+      {/* Destination partitions */}
+      {[0,1,2,3].map(i => (
+        <g key={i}>
+          <rect x={480} y={30 + i * 30} width={110} height={22} rx="5" fill={colors[i]} fillOpacity="0.15" stroke={colors[i]} strokeWidth="1.5"/>
+          <text x={535} y={45 + i * 30} textAnchor="middle" fill={colors[i]} fontSize="8" fontWeight="600">Partition {i} (post-shuffle)</text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function SparkUiAnimation() {
+  return (
+    <svg viewBox="0 0 680 200" style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-xl)', background: '#1e293b', border: '1px solid #334155', marginBottom: 24 }}>
+      {/* Tab bar */}
+      <rect x="0" y="0" width="680" height="28" rx="0" fill="#0f172a"/>
+      {['Jobs', 'Stages', 'Storage', 'Environment', 'Executors', 'SQL'].map((t, i) => (
+        <g key={i}>
+          <rect x={8 + i * 80} y="4" width="72" height="20" rx="4" fill={i === 1 ? '#3b82f6' : '#1e293b'} stroke={i === 1 ? '#60a5fa' : '#334155'} strokeWidth="1"/>
+          <text x={44 + i * 80} y="18" textAnchor="middle" fill={i === 1 ? 'white' : '#94a3b8'} fontSize="8" fontWeight={i === 1 ? '700' : '400'}>{t}</text>
+        </g>
+      ))}
+      {/* Stage list header */}
+      <text x="10" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">STAGE ID</text>
+      <text x="80" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">DESCRIPTION</text>
+      <text x="280" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">TASKS</text>
+      <text x="340" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">INPUT</text>
+      <text x="410" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">SHUFFLE READ</text>
+      <text x="510" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">SHUFFLE WRITE</text>
+      <text x="610" y="46" fill="#94a3b8" fontSize="8" fontWeight="700">DURATION</text>
+      <line x1="0" y1="50" x2="680" y2="50" stroke="#334155" strokeWidth="1"/>
+      {/* Stage rows */}
+      {[
+        { id: 2, desc: 'SortMergeJoin → write', tasks: '200/200', input: '—', shRead: '45.2 GB', shWrite: '—', dur: '8.2 min', color: '#22c55e' },
+        { id: 1, desc: 'groupBy(merchant) agg', tasks: '200/200', input: '—', shRead: '102 GB', shWrite: '45.2 GB', dur: '12.4 min', color: '#f59e0b' },
+        { id: 0, desc: 'scan Parquet + filter', tasks: '832/832', input: '102 GB', shRead: '—', shWrite: '102 GB', dur: '4.1 min', color: '#22c55e' },
+      ].map((s, i) => (
+        <g key={i}>
+          <rect x="0" y={55 + i * 44} width="680" height="40" fill={i % 2 === 0 ? '#1e293b' : '#0f172a'}/>
+          <circle cx="18" cy={75 + i * 44} r="6" fill={s.color}/>
+          <text x="10" y={79 + i * 44} fill={s.color} fontSize="8" fontWeight="700">{s.id}</text>
+          <text x="80" y={72 + i * 44} fill="#e2e8f0" fontSize="8">{s.desc}</text>
+          <text x="80" y={86 + i * 44} fill="#64748b" fontSize="7">Click to see task timeline</text>
+          <text x="280" y={78 + i * 44} fill="#e2e8f0" fontSize="8">{s.tasks}</text>
+          <text x="340" y={78 + i * 44} fill="#e2e8f0" fontSize="8">{s.input}</text>
+          <text x="410" y={78 + i * 44} fill={s.shRead !== '—' ? '#f59e0b' : '#64748b'} fontSize="8">{s.shRead}</text>
+          <text x="510" y={78 + i * 44} fill={s.shWrite !== '—' ? '#f97316' : '#64748b'} fontSize="8">{s.shWrite}</text>
+          <text x="610" y={78 + i * 44} fill="#e2e8f0" fontSize="8">{s.dur}</text>
+        </g>
       ))}
     </svg>
   )
