@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
@@ -271,6 +271,7 @@ df.rdd.map(lambda row: bc.value.get(row.key))
               Spark does <em>nothing</em> when you call a transformation. It records the operation in the logical plan. Only when you call an <strong>action</strong> (count, collect, show, write, save) does Spark hand the full logical plan to Catalyst for optimization, generate a physical plan, and execute. This lazy model enables optimizations impossible in eager systems: Catalyst can push filters down to the data source, prune columns before reading, reorder joins, and fold constants  -  all because it sees the <em>complete</em> query before touching any data.
             </p>
           </div>
+          <LazyEvalAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -368,6 +369,7 @@ df4.explain(True)
               Spark has three abstraction layers. <strong>RDDs</strong> (Resilient Distributed Datasets) are the low-level API  -  typed, unstructured partitions of JVM objects with no schema. <strong>DataFrames</strong> are distributed tables with a named schema, optimised by Catalyst and Tungsten  -  the right choice for 95% of work. <strong>Datasets</strong> are typed DataFrames available only in Scala/Java (Python has no Dataset API  -  PySpark DataFrames behave like untyped Datasets[Row]). In practice: always use DataFrames; drop to RDD only when you need low-level partition-level control unavailable in the DataFrame API.
             </p>
           </div>
+          <RDDAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
 
@@ -467,6 +469,7 @@ result_df.rdd.foreachPartition(process_partition)
               Spark can read from virtually any source. Understanding format-specific options  -  especially <code>inferSchema</code> vs explicit schema, <code>header</code>, <code>multiLine</code>, and predicate pushdown support  -  is critical for building reliable ingestion pipelines. Always define schemas explicitly in production; <code>inferSchema=True</code> triggers a full scan just to determine types.
             </p>
           </div>
+          <ReadingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql.types import *
 from pyspark.sql import functions as F
 
@@ -595,6 +598,7 @@ df_events = df_kafka.select(
               Writing is an action  -  it triggers the full DAG. Key decisions: format (Parquet/Delta for analytics, CSV/JSON for interchange), <strong>save mode</strong> (append/overwrite/ignore/errorIfExists), and <strong>physical layout</strong> (partitionBy for read pruning, bucketBy+sortBy for join optimisation). The number of output files equals the number of active partitions at write time  -  control this with coalesce or repartition before writing.
             </p>
           </div>
+          <WritingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── Save modes ───────────────────────────────────────────────────────
@@ -712,6 +716,7 @@ df.select(
               The DataFrame API provides a rich transformation vocabulary. Mastering these  -  and knowing which require shuffles  -  separates efficient pipelines from slow ones. All of the following are lazy transformations; nothing executes until an action is called.
             </p>
           </div>
+          <TransformsAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType
 
@@ -823,6 +828,7 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               <code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM  -  no Python serialisation. Always prefer these over Python UDFs. Categories: string, date/time, array, map, struct, JSON, aggregate, and conditional.
             </p>
           </div>
+          <FunctionsAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import MapType, StringType, ArrayType, LongType
 
@@ -947,6 +953,7 @@ df.groupBy("user_id").agg(
               Window functions compute a result for each row based on a <em>window</em> of related rows  -  without collapsing rows like groupBy does. They are indispensable for sessionisation, running totals, lag/lead comparisons, rankings, and SCD Type 2 logic. Every window function requires a <code>Window</code> spec defining partition, order, and optional frame bounds.
             </p>
           </div>
+          <WindowAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
@@ -1054,6 +1061,7 @@ df_scd = df_history \
               Spark has four physical join implementations. The right one is chosen automatically (or forced with hints). Understanding when each is used  -  and when to force one  -  is critical for avoiding shuffles and handling skew.
             </p>
           </div>
+          <JoinStrategiesAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -1166,6 +1174,7 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
               Partitioning determines parallelism, shuffle size, and output file layout. There are two distinct concepts: <strong>in-memory partitions</strong> (how Spark distributes the DataFrame across executor cores) and <strong>physical/storage partitions</strong> (how files are organized on disk via <code>partitionBy</code> on write). Getting both right is the difference between a 10-minute and a 2-hour job.
             </p>
           </div>
+          <PartitionsAnimation />
           <ShuffleAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
@@ -1284,6 +1293,7 @@ df.withColumn("pid", spark_partition_id()) \
               Data skew occurs when one or a few partition keys have significantly more rows than others. The result: 99% of tasks finish in 30 seconds, but 1 task runs for 30 minutes because it has 80% of the data. This single task becomes the bottleneck. Detection, salting, and AQE's automatic skew handling are the three tools to fix it.
             </p>
           </div>
+          <SkewAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.functions import spark_partition_id
 
@@ -1399,6 +1409,7 @@ result = non_null.join(dim_user, "user_id", "left") \
               Spark's <strong>Unified Memory Model</strong> (since Spark 1.6) divides executor memory into pools that dynamically borrow from each other. Understanding this model is essential for diagnosing OOM errors, GC pressure, and spill-to-disk  -  the top three causes of slow Spark jobs.
             </p>
           </div>
+          <MemoryAnimation />
           <CodeBlock lang="python">{`# ── Executor memory breakdown ─────────────────────────────────────────
 #
 #  spark.executor.memory = 8g
@@ -1502,6 +1513,7 @@ spark.conf.set("spark.memory.offHeap.size",      "4g")
               Caching stores computed results so subsequent actions don't recompute from scratch. The <strong>wrong</strong> use of caching wastes memory and can slow jobs. Cache only when a DataFrame is used in multiple downstream actions and computing it is more expensive than the memory cost.
             </p>
           </div>
+          <CacheAnimation />
           <CodeBlock lang="python">{`from pyspark import StorageLevel
 
 # ── When to cache ─────────────────────────────────────────────────────
@@ -1613,6 +1625,7 @@ silver_df.unpersist()   # free memory`}
               <strong>Broadcast variables</strong> efficiently distribute a read-only value to every executor once  -  instead of serialising it into every task closure. <strong>Accumulators</strong> are write-only counters/sums that executors update and the driver reads  -  the only safe way to collect per-task metrics without breaking lazy evaluation.
             </p>
           </div>
+          <BroadcastAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark import AccumulatorParam
 
@@ -1727,6 +1740,7 @@ print(unique_errors.value)   # set of all error codes seen`}
               Python UDFs are the single biggest performance trap in PySpark. Every row crosses the JVM-Python boundary  -  serialised, sent via socket, deserialized, processed, re-serialised. <strong>Always exhaust built-in functions first.</strong> When you genuinely need custom logic, use Pandas UDFs (vectorised) which process entire column batches via Apache Arrow  -  10-100x faster than row UDFs.
             </p>
           </div>
+          <UDFAnimation />
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
             <div className="callout-body">
@@ -1859,6 +1873,7 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               Spark SQL lets you write ANSI SQL that runs on the same engine as the DataFrame API  -  both compile to the same logical plan. You can freely mix SQL and DataFrame API in the same job, referencing the same data. Views are the bridge between the two worlds.
             </p>
           </div>
+          <SparkSQLAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── spark.sql()  -  run ANSI SQL directly ──────────────────────────────
@@ -1995,6 +2010,7 @@ spark.sql("""
               Structured Streaming treats a stream as an unbounded table that grows over time. Each micro-batch (or continuous trigger) appends new rows. You write the same DataFrame API you know from batch  -  Spark handles checkpointing, offsets, watermarks, and exactly-once semantics automatically.
             </p>
           </div>
+          <StreamingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── Sources ───────────────────────────────────────────────────────────
@@ -2146,6 +2162,7 @@ for q in spark.streams.active:
               Structured Streaming stores state across micro-batches in an in-memory <strong>state store</strong> (RocksDB or HDFS-backed). Stateful operations include windowed aggregations, deduplication, and the advanced APIs <code>mapGroupsWithState</code> / <code>flatMapGroupsWithState</code> for fully custom per-group state machines.
             </p>
           </div>
+          <StatefulStreamingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
 
@@ -2286,6 +2303,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               Catalyst is Spark SQL's query optimizer. It transforms your logical query plan through four phases before execution. Understanding what Catalyst does automatically helps you write plans that Catalyst can optimise further  -  and diagnose plans where it can't.
             </p>
           </div>
+          <CatalystAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── 4 phases of Catalyst ──────────────────────────────────────────────
@@ -2400,6 +2418,7 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               AQE (Spark 3.0+) re-optimises the physical plan at runtime using <em>actual</em> shuffle statistics  -  not estimates. It solves three of the hardest Spark tuning problems automatically: too many shuffle partitions, suboptimal join strategies, and data skew. Enabled by default in Spark 3.2+.
             </p>
           </div>
+          <AQEAnimation />
           <CodeBlock lang="python">{`# ── Enable AQE ───────────────────────────────────────────────────────
 spark.conf.set("spark.sql.adaptive.enabled", "true")          # default true in 3.2+
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")  # default true
@@ -2508,6 +2527,7 @@ with spark.conf as c:
               Tungsten is Spark's physical execution engine, introduced in Spark 1.4. It bypasses JVM object overheads and GC through three innovations: <strong>off-heap binary memory</strong> (UnsafeRow format), <strong>cache-aware algorithms</strong> (data accessed sequentially, not by pointer chasing), and <strong>whole-stage code generation</strong> (fusing operators into a single generated JVM method that the JIT can optimise fully).
             </p>
           </div>
+          <TungstenAnimation />
           <CodeBlock lang="python">{`# ── Tungsten's 3 pillars ─────────────────────────────────────────────
 
 # 1. UnsafeRow (off-heap binary format)
@@ -2619,6 +2639,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               A practical reference for the configurations that matter most in production Spark jobs. These are the knobs you'll actually tune  -  not an exhaustive list of every property.
             </p>
           </div>
+          <ConfigAnimation />
           <CodeBlock lang="python">{`# ── Production baseline configuration ────────────────────────────────
 spark = SparkSession.builder \
     .appName("production_etl") \
@@ -2845,6 +2866,7 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
               Delta Lake integrates deeply with Spark, adding ACID transactions, schema enforcement, time travel, and the MERGE API on top of Parquet files. In Databricks, Delta is the default table format. Understanding the Spark-side API for Delta is essential for production data engineering.
             </p>
           </div>
+          <DeltaAnimation />
           <CodeBlock lang="python">{`from delta.tables import DeltaTable
 from pyspark.sql import functions as F
 
@@ -2988,6 +3010,7 @@ changes = spark.read.format("delta") \
               Apache Kafka is a distributed commit log  -  an append-only, ordered, immutable sequence of records. A Kafka <strong>cluster</strong> is formed by multiple <strong>brokers</strong> (servers). <strong>Topics</strong> are logical channels divided into <strong>partitions</strong>. Each partition is an ordered, immutable log replicated across brokers. The <strong>leader</strong> partition handles all reads and writes; <strong>ISR (In-Sync Replicas)</strong> are the set of replicas caught up with the leader. If the leader fails, a new leader is elected from the ISR. Historically Kafka used ZooKeeper for cluster metadata  -  from Kafka 3.3+ the <strong>KRaft</strong> mode replaces ZooKeeper with a built-in Raft consensus protocol. <strong>Consumer groups</strong> allow horizontal scaling: each partition is consumed by exactly one consumer per group. <strong>Offsets</strong> track the consumer's position in each partition. Retention can be time-based (<code>retention.ms</code>), size-based (<code>retention.bytes</code>), or log compaction (keeps only the latest value per key  -  ideal for changelog topics).
             </p>
           </div>
+          <KafkaArchAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -3076,6 +3099,7 @@ changes = spark.read.format("delta") \
               The <strong>confluent-kafka</strong> Python library is the production-grade client for Kafka (based on librdkafka). The <strong>Producer</strong> sends messages asynchronously  -  configure <code>bootstrap.servers</code>, <code>acks='all'</code> for durability, and <code>enable.idempotence=True</code> for safe retries. A <strong>delivery report callback</strong> confirms each message was committed. The <strong>Consumer</strong> joins a consumer group via <code>group.id</code>, sets <code>auto.offset.reset='earliest'</code> to start from the beginning, and uses <code>enable.auto.commit=False</code> with manual commits  -  offsets are committed only after successful processing, preventing data loss on crashes.
             </p>
           </div>
+          <KafkaPythonAnimation />
           <CodeBlock lang="python">{`from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
 import json
 
@@ -3193,6 +3217,7 @@ finally:
               Exactly-once processing requires three things: <strong>idempotent source reads</strong> (re-reading from offset doesn't create duplicates), <strong>idempotent transformations</strong> (running the same computation twice produces the same result), and <strong>atomic sink writes</strong> (writes either fully succeed or fully fail). In Kafka, <strong>idempotent producers</strong> use a Producer ID + per-partition sequence number to deduplicate retried sends. <strong>Transactions</strong> extend this: <code>begin_transaction</code> → produce messages → <code>commit_transaction</code> (or <code>abort_transaction</code>) atomically across multiple partitions. In Spark Structured Streaming, exactly-once is achieved by combining checkpoint-based offset tracking with a Delta Lake ACID sink  -  Spark generates unique batch IDs and Delta's transaction log rejects duplicate writes.
             </p>
           </div>
+          <KafkaEOSAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -3314,6 +3339,7 @@ stream_df.writeStream \\
               <strong>Kafka Connect</strong> is a scalable framework for streaming data between Kafka and external systems without writing custom producers/consumers. <strong>Source connectors</strong> pull data into Kafka (databases, object storage, APIs). <strong>Sink connectors</strong> push Kafka data to destinations (data lakes, databases, Elasticsearch). Connectors are deployed as JSON configuration  -  no custom code for standard integrations. <strong>Debezium</strong> is the leading CDC (Change Data Capture) source connector  -  it tails database transaction logs (MySQL binlog, PostgreSQL WAL, SQL Server CDC) and streams every INSERT/UPDATE/DELETE as a Kafka event. Topics follow the naming convention <code>server.database.table</code>. The <strong>dead letter queue (DLQ)</strong> captures records that fail to process, enabling debugging without blocking the main pipeline.
             </p>
           </div>
+          <KafkaConnectAnimation />
           <CodeBlock lang="json">{`// ── Debezium PostgreSQL CDC Connector config ──────────────────────────
 // PUT http://kafka-connect:8083/connectors/postgres-cdc/config
 {
@@ -3403,6 +3429,7 @@ stream_df.writeStream \\
               The <strong>Confluent Schema Registry</strong> is a central repository for Avro, Protobuf, and JSON Schema definitions. Producers register a schema before publishing; the Registry returns a schema ID that is embedded in each message (4 bytes). Consumers look up the schema by ID to deserialize  -  this decouples schema management from application code. Schemas are versioned by <strong>subject</strong> (typically <code>topic-value</code> or <code>topic-key</code>). <strong>Compatibility modes</strong> enforce evolution rules: <strong>BACKWARD</strong> (new schema can read data written with old schema  -  add optional fields), <strong>FORWARD</strong> (old schema can read data written with new schema  -  remove fields), <strong>FULL</strong> (both directions  -  safest). This prevents producers from breaking consumers with incompatible schema changes.
             </p>
           </div>
+          <SchemaRegistryAnimation />
           <CodeBlock lang="python">{`# ── Avro Producer with Schema Registry ───────────────────────────────
 from confluent_kafka import Producer
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -3517,6 +3544,7 @@ while True:
               Azure Event Hub is a fully managed, Kafka-compatible streaming service. It exposes the Kafka protocol  -  most Kafka clients work against Event Hub with only a <code>bootstrap.servers</code> change. Key differences: Event Hub has a maximum retention of 90 days (long-term retention requires Blob Capture); partitions are fixed at namespace creation and cannot be increased; Kafka protocol is available on Event Hub Premium. Event Hub integrates natively with the Azure ecosystem (Auto Loader, ADF, Stream Analytics). Self-managed Kafka offers more flexibility: unlimited retention, dynamic partition increases, the full Kafka Connect ecosystem, Kafka Streams, and multi-cloud deployments. Choose Event Hub for Azure-native low-ops platforms. Choose Kafka when you need the full ecosystem, multi-cloud, or complex routing.
             </p>
           </div>
+          <KafkaVsEventHubAnimation />
           <CodeBlock lang="python">{`# ── Connecting an existing Kafka client to Azure Event Hub ────────────
 # Only bootstrap.servers and security config change.
 from confluent_kafka import Producer
@@ -3607,6 +3635,768 @@ df.writeStream \\
 }
 
 // ─── ANIMATION COMPONENTS ────────────────────────────────────────────────────
+
+function LazyEvalAnimation() {
+  const [running, setRunning] = useState(false)
+  const [step, setStep] = useState(0)
+  const steps = ['filter(amount > 1000)', 'map(add tax col)', 'join(customers)', 'groupBy(merchant)', 'write(parquet)']
+  useEffect(() => {
+    if (!running) return
+    if (step >= steps.length) return
+    const t = setTimeout(() => setStep(s => s + 1), 400)
+    return () => clearTimeout(t)
+  }, [running, step])
+  const reset = () => { setRunning(false); setStep(0) }
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Lazy Evaluation — Transformations queue until Action fires</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:12 }}>
+        {steps.map((s, i) => (
+          <div key={i} style={{ padding:'6px 12px', borderRadius:8, fontSize:13, border:'1px solid', borderColor: running && step > i ? '#22c55e' : 'var(--border)', background: running && step > i ? '#dcfce7' : 'var(--surface-1)', color: running && step > i ? '#16a34a' : 'var(--text-2)', transition:'all 0.3s' }}>{s}</div>
+        ))}
+      </div>
+      {!running && step === 0 && <div style={{ color:'#f59e0b', fontSize:13, marginBottom:12 }}>No computation until action!</div>}
+      {running && step < steps.length && <div style={{ color:'#3b82f6', fontSize:13, marginBottom:12 }}>Executing step {step + 1}/{steps.length}…</div>}
+      {step >= steps.length && <div style={{ color:'#22c55e', fontSize:13, marginBottom:12 }}>Action complete — all steps executed!</div>}
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={() => setRunning(true)} disabled={running} style={{ padding:'6px 14px', borderRadius:6, background:'#f97316', color:'#fff', border:'none', cursor:'pointer', fontSize:13 }}>Trigger Action</button>
+        <button onClick={reset} style={{ padding:'6px 14px', borderRadius:6, background:'var(--surface-1)', color:'var(--text-1)', border:'1px solid var(--border)', cursor:'pointer', fontSize:13 }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function RDDAnimation() {
+  const [tab, setTab] = useState(0)
+  const tabs = ['RDD', 'DataFrame', 'Dataset']
+  const chips: Record<number, {label:string; color:string}[]> = {
+    0: [{label:'No optimizer',color:'#ef4444'},{label:'Low-level API',color:'#f97316'},{label:'Java objects',color:'#eab308'},{label:'Manual schema',color:'#8b5cf6'}],
+    1: [{label:'Catalyst optimizer',color:'#22c55e'},{label:'Named schema',color:'#3b82f6'},{label:'SQL support',color:'#06b6d4'},{label:'Tungsten codegen',color:'#8b5cf6'}],
+    2: [{label:'Type-safe',color:'#22c55e'},{label:'Encoder-based',color:'#3b82f6'},{label:'Scala/Java only',color:'#f97316'},{label:'Compile-time checks',color:'#8b5cf6'}],
+  }
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Spark Abstraction Layers</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+        {tabs.map((t, i) => <button key={i} onClick={() => setTab(i)} style={{ padding:'6px 16px', borderRadius:6, border:'1px solid var(--border)', background: tab===i ? '#f97316' : 'var(--surface-1)', color: tab===i ? '#fff' : 'var(--text-1)', cursor:'pointer', fontWeight: tab===i ? 700 : 400 }}>{t}</button>)}
+      </div>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+        {chips[tab].map((c, i) => <span key={i} style={{ padding:'4px 12px', borderRadius:20, background: c.color + '22', color: c.color, border:`1px solid ${c.color}44`, fontSize:13 }}>{c.label}</span>)}
+      </div>
+    </div>
+  )
+}
+
+function ReadingAnimation() {
+  const [fmt, setFmt] = useState(0)
+  const formats = ['parquet','delta','csv','json','orc']
+  const data = [
+    { pushdown:'Yes', schemaEvol:'No', splittable:'Yes', compression:'Snappy/Zstd', speed:95 },
+    { pushdown:'Yes', schemaEvol:'Yes', splittable:'Yes', compression:'Snappy/Zstd', speed:98 },
+    { pushdown:'No',  schemaEvol:'No', splittable:'Yes', compression:'None/Gzip', speed:30 },
+    { pushdown:'No',  schemaEvol:'No', splittable:'No',  compression:'None/Gzip', speed:25 },
+    { pushdown:'Yes', schemaEvol:'No', splittable:'Yes', compression:'Zlib', speed:80 },
+  ]
+  const d = data[fmt]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Format Comparison</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        {formats.map((f, i) => <button key={i} onClick={() => setFmt(i)} style={{ padding:'5px 12px', borderRadius:6, border:'1px solid var(--border)', background: fmt===i ? '#3b82f6' : 'var(--surface-1)', color: fmt===i ? '#fff' : 'var(--text-1)', cursor:'pointer' }}>{f}</button>)}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12 }}>
+        {[['Predicate Pushdown', d.pushdown],['Schema Evolution', d.schemaEvol],['Splittable', d.splittable],['Compression', d.compression]].map(([k,v]) => (
+          <div key={k} style={{ background:'var(--surface-1)', borderRadius:8, padding:'8px 12px' }}>
+            <div style={{ fontSize:11, color:'var(--text-2)' }}>{k}</div>
+            <div style={{ fontWeight:600, color: v==='Yes'?'#22c55e':v==='No'?'#ef4444':'var(--text-1)' }}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize:12, color:'var(--text-2)', marginBottom:4 }}>Relative Read Speed</div>
+      <div style={{ background:'var(--surface-1)', borderRadius:4, height:16 }}>
+        <div style={{ width:`${d.speed}%`, height:'100%', background:'#3b82f6', borderRadius:4, transition:'width 0.4s' }}/>
+      </div>
+    </div>
+  )
+}
+
+function WritingAnimation() {
+  const [mode, setMode] = useState(0)
+  const modes = ['overwrite','append','ignore','errorIfExists']
+  const info = [
+    { icon:'🔄', desc:'Deletes ALL existing data, writes new data atomically', color:'#ef4444' },
+    { icon:'➕', desc:'Adds new files without touching existing data', color:'#22c55e' },
+    { icon:'⏭️', desc:'No-op if destination already has data', color:'#eab308' },
+    { icon:'🚫', desc:'Raises AnalysisException if data already exists', color:'#8b5cf6' },
+  ]
+  const m = info[mode]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Write Modes</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        {modes.map((md, i) => <button key={i} onClick={() => setMode(i)} style={{ padding:'5px 12px', borderRadius:6, border:'1px solid var(--border)', background: mode===i ? m.color : 'var(--surface-1)', color: mode===i ? '#fff' : 'var(--text-1)', cursor:'pointer' }}>{md}</button>)}
+      </div>
+      <div style={{ fontSize:32, marginBottom:8 }}>{m.icon}</div>
+      <div style={{ fontSize:14, color:'var(--text-1)', marginBottom:12 }}>{m.desc}</div>
+      <div style={{ background:'var(--surface-1)', borderRadius:8, padding:10, fontSize:12, color:'var(--text-2)' }}>
+        df.write.mode("{modes[mode]}").partitionBy("year","month").parquet("/data/output/")
+      </div>
+    </div>
+  )
+}
+
+function TransformsAnimation() {
+  const [selected, setSelected] = useState<string|null>(null)
+  const narrow = ['map','filter','union','withColumn','select','dropDuplicates (single)']
+  const wide   = ['groupBy','join','distinct','repartition','orderBy','dropDuplicates (multi)']
+  const isWide = (t: string) => wide.includes(t)
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Narrow vs Wide Transformations — click to inspect</div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        <div>
+          <div style={{ fontWeight:600, color:'#22c55e', marginBottom:8 }}>Narrow (no shuffle)</div>
+          {narrow.map(t => <div key={t} onClick={() => setSelected(t)} style={{ padding:'6px 10px', borderRadius:6, marginBottom:4, cursor:'pointer', background: selected===t ? '#dcfce7' : 'var(--surface-1)', border:`1px solid ${selected===t?'#22c55e':'var(--border)'}`, fontSize:13 }}>{t}</div>)}
+        </div>
+        <div>
+          <div style={{ fontWeight:600, color:'#ef4444', marginBottom:8 }}>Wide (shuffle)</div>
+          {wide.map(t => <div key={t} onClick={() => setSelected(t)} style={{ padding:'6px 10px', borderRadius:6, marginBottom:4, cursor:'pointer', background: selected===t ? '#fee2e2' : 'var(--surface-1)', border:`1px solid ${selected===t?'#ef4444':'var(--border)'}`, fontSize:13 }}>{t}</div>)}
+        </div>
+      </div>
+      {selected && <div style={{ marginTop:12, padding:10, borderRadius:8, background: isWide(selected)?'#fee2e2':'#dcfce7', fontSize:13 }}>
+        <strong>{selected}</strong> — Shuffle: <strong>{isWide(selected)?'YES — network transfer between executors':'NO — single partition only'}</strong>
+      </div>}
+    </div>
+  )
+}
+
+function FunctionsAnimation() {
+  const [cat, setCat] = useState(0)
+  const cats = ['String','Date','Array','Math']
+  const demos = [
+    [['lower("Hello")','hello'],['trim("  hi  ")','hi'],['split("a,b,c",",")','["a","b","c"]'],['regexp_replace("a1b2","[0-9]","")','ab']],
+    [['current_date()','2024-06-01'],['date_add("2024-01-01",7)','2024-01-08'],['datediff("2024-02-01","2024-01-01")','31'],['date_format(ts,"yyyy-MM")','2024-06']],
+    [['size(array(1,2,3))','3'],['explode([1,2,3])','1 / 2 / 3'],['array_contains([1,2],1)','true'],['flatten([[1,2],[3]])','[1,2,3]']],
+    [['round(3.567,2)','3.57'],['abs(-42)','42'],['sqrt(144)','12.0'],['log(2.718)','1.0']],
+  ]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Built-in Functions — input → output</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {cats.map((c,i) => <button key={i} onClick={() => setCat(i)} style={{ padding:'5px 12px', borderRadius:6, border:'1px solid var(--border)', background: cat===i?'#8b5cf6':'var(--surface-1)', color: cat===i?'#fff':'var(--text-1)', cursor:'pointer' }}>{c}</button>)}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        {demos[cat].map(([inp, out]) => (
+          <div key={inp} style={{ background:'var(--surface-1)', borderRadius:8, padding:10 }}>
+            <code style={{ fontSize:12, color:'#3b82f6' }}>{inp}</code>
+            <div style={{ fontSize:11, color:'var(--text-2)', margin:'2px 0' }}>→</div>
+            <code style={{ fontSize:12, color:'#22c55e' }}>{out}</code>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function WindowAnimation() {
+  const [fn, setFn] = useState(0)
+  const fns = ['ROW_NUMBER','RANK','DENSE_RANK','LAG','SUM (running)']
+  const rows = [
+    {name:'Alice', score:90},
+    {name:'Bob',   score:85},
+    {name:'Carol', score:85},
+    {name:'Dave',  score:70},
+    {name:'Eve',   score:60},
+  ]
+  const calc = (i: number): string => {
+    if (fn===0) return String(i+1)
+    if (fn===1) { const scores=rows.map(r=>r.score); return String(scores.slice(0,i).filter(s=>s>rows[i].score).length+1) }
+    if (fn===2) { const uniq=[...new Set(rows.map(r=>r.score))].sort((a,b)=>b-a); return String(uniq.indexOf(rows[i].score)+1) }
+    if (fn===3) return i===0 ? 'null' : String(rows[i-1].score)
+    return String(rows.slice(0,i+1).reduce((s,r)=>s+r.score,0))
+  }
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Window Functions Demo</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14 }}>
+        {fns.map((f,i) => <button key={i} onClick={() => setFn(i)} style={{ padding:'5px 10px', borderRadius:6, border:'1px solid var(--border)', background: fn===i?'#06b6d4':'var(--surface-1)', color: fn===i?'#fff':'var(--text-1)', cursor:'pointer', fontSize:13 }}>{f}</button>)}
+      </div>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+        <thead><tr>{['Name','Score',fns[fn]].map(h => <th key={h} style={{ padding:'6px 10px', background:'var(--surface-1)', textAlign:'left', borderBottom:'1px solid var(--border)' }}>{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r,i) => <tr key={i}><td style={{ padding:'5px 10px' }}>{r.name}</td><td style={{ padding:'5px 10px' }}>{r.score}</td><td style={{ padding:'5px 10px', color:'#06b6d4', fontWeight:600 }}>{calc(i)}</td></tr>)}</tbody>
+      </table>
+    </div>
+  )
+}
+
+function JoinStrategiesAnimation() {
+  const [sel, setSel] = useState(0)
+  const strategies = [
+    { name:'Broadcast Hash Join', when:'Small table ≤ 10MB (autoBroadcastJoinThreshold)', cost:'Low — no shuffle', condition:'Any equi-join; small side broadcast to all executors', color:'#22c55e' },
+    { name:'Sort-Merge Join', when:'Both tables large, no memory fit', cost:'High — both sides shuffled + sorted', condition:'Equi-join; default for large-large joins', color:'#3b82f6' },
+    { name:'Shuffle Hash Join', when:'One side fits executor memory', cost:'Medium — one side shuffled + hashed', condition:'Equi-join; one side must fit in memory', color:'#f97316' },
+    { name:'Cartesian Join', when:'No join key (cross join)', cost:'Extreme — O(N×M) rows', condition:'Must use CROSS JOIN syntax explicitly', color:'#ef4444' },
+  ]
+  const s = strategies[sel]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Join Strategies — click to compare</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14 }}>
+        {strategies.map((st,i) => <button key={i} onClick={() => setSel(i)} style={{ padding:'5px 10px', borderRadius:6, border:`1px solid ${sel===i?st.color:'var(--border)'}`, background: sel===i?st.color+'22':'var(--surface-1)', color:'var(--text-1)', cursor:'pointer', fontSize:12 }}>{st.name.split(' ')[0]}</button>)}
+      </div>
+      <div style={{ padding:14, borderRadius:8, border:`1px solid ${s.color}44`, background:`${s.color}11` }}>
+        <div style={{ fontWeight:700, color:s.color, marginBottom:8 }}>{s.name}</div>
+        {[['When Used',s.when],['Cost',s.cost],['Condition',s.condition]].map(([k,v]) => (
+          <div key={k} style={{ marginBottom:4, fontSize:13 }}><span style={{ color:'var(--text-2)' }}>{k}: </span><span style={{ color:'var(--text-1)' }}>{v}</span></div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PartitionsAnimation() {
+  const [count, setCount] = useState(16)
+  const boxes = Math.min(count, 64)
+  const sizeFor = (i: number) => { const v = ((i*7+3)%10)/10; return v }
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Partition Visualizer</div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14 }}>
+        <span style={{ fontSize:13, color:'var(--text-2)' }}>Partitions: <strong style={{ color:'var(--text-1)' }}>{count}</strong></span>
+        <input type="range" min={4} max={200} value={count} onChange={e => setCount(Number(e.target.value))} style={{ flex:1 }}/>
+      </div>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:3, marginBottom:12 }}>
+        {Array.from({length:boxes}).map((_,i) => { const s=sizeFor(i); return <div key={i} title={String(i)} style={{ width:14, height:14, borderRadius:3, background:`hsl(${s*120},70%,50%)` }}/> })}
+        {count > 64 && <div style={{ fontSize:12, color:'var(--text-2)', alignSelf:'center' }}>+{count-64} more</div>}
+      </div>
+      <div style={{ fontSize:13, color:'var(--text-2)' }}>Total tasks = {count} &nbsp;|&nbsp; {count<16?'⚠️ Too few — underutilized cores':count>400?'⚠️ Too many — scheduling overhead':'✅ Healthy range'}</div>
+    </div>
+  )
+}
+
+function SkewAnimation() {
+  const [salted, setSalted] = useState(false)
+  const before = [8, 7, 100, 6]
+  const after  = [12,11,14,13,15,12,13,14]
+  const tasks  = salted ? after : before
+  const maxVal = Math.max(...tasks)
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Data Skew — {salted ? 'After Salting' : 'Before (Skewed)'}</div>
+      <div style={{ display:'flex', gap:6, alignItems:'flex-end', height:80, marginBottom:12 }}>
+        {tasks.map((v,i) => <div key={i} style={{ flex:1, borderRadius:4, background: v===maxVal&&!salted?'#ef4444':'#3b82f6', height:`${(v/maxVal)*100}%`, transition:'height 0.4s', display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
+          <span style={{ fontSize:10, color:'#fff', paddingBottom:2 }}>{v}</span>
+        </div>)}
+      </div>
+      <button onClick={() => setSalted(s => !s)} style={{ padding:'6px 14px', borderRadius:6, background: salted?'#22c55e':'#f97316', color:'#fff', border:'none', cursor:'pointer', fontSize:13 }}>
+        {salted ? 'Show Before (Skewed)' : 'Apply Salting →'}
+      </button>
+    </div>
+  )
+}
+
+function MemoryAnimation() {
+  const [sel, setSel] = useState<number|null>(null)
+  const slices = [
+    { label:'Execution', pct:40, color:'#3b82f6', desc:'Joins, aggregations, sorts, shuffles. Can borrow from Storage.' },
+    { label:'Storage', pct:40, color:'#22c55e', desc:'Cached DataFrames, broadcast variables. Can borrow from Execution.' },
+    { label:'User', pct:10, color:'#f97316', desc:'User data structures, RDD operations outside Spark SQL.' },
+    { label:'Reserved', pct:10, color:'#9ca3af', desc:'JVM overhead, OS, Spark internals (300MB fixed).' },
+  ]
+  let offset = 0
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Spark Executor Memory Layout — click a segment</div>
+      <div style={{ display:'flex', height:32, borderRadius:8, overflow:'hidden', marginBottom:14, cursor:'pointer' }}>
+        {slices.map((s,i) => { offset+=s.pct; return <div key={i} onClick={() => setSel(sel===i?null:i)} style={{ width:`${s.pct}%`, background:s.color, opacity: sel===null||sel===i?1:0.4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:'#fff', fontWeight:600, transition:'opacity 0.2s' }}>{s.label}</div> })}
+      </div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:8 }}>
+        {slices.map((s,i) => <span key={i} style={{ fontSize:12, color:s.color }}>{s.label} {s.pct}%</span>)}
+      </div>
+      {sel!==null && <div style={{ padding:10, borderRadius:8, background:slices[sel].color+'22', border:`1px solid ${slices[sel].color}44`, fontSize:13 }}>{slices[sel].desc}</div>}
+    </div>
+  )
+}
+
+function CacheAnimation() {
+  const [lvl, setLvl] = useState(0)
+  const levels = [
+    { name:'MEMORY_ONLY', spills:'No', serialized:'No', cost:'High RAM', useCase:'Small hot DataFrames', color:'#3b82f6' },
+    { name:'MEMORY_AND_DISK', spills:'Yes', serialized:'No', cost:'Medium RAM', useCase:'Default — most workloads', color:'#22c55e' },
+    { name:'DISK_ONLY', spills:'N/A', serialized:'Yes', cost:'Low RAM', useCase:'Large infrequently-accessed', color:'#f97316' },
+    { name:'OFF_HEAP', spills:'No', serialized:'Yes', cost:'Managed memory', useCase:'Avoid GC on large caches', color:'#8b5cf6' },
+  ]
+  const l = levels[lvl]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Storage Levels</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14 }}>
+        {levels.map((lv,i) => <button key={i} onClick={() => setLvl(i)} style={{ padding:'5px 10px', borderRadius:6, border:'1px solid var(--border)', background: lvl===i?lv.color:'var(--surface-1)', color: lvl===i?'#fff':'var(--text-1)', cursor:'pointer', fontSize:12 }}>{lv.name}</button>)}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        {[['Spills to Disk',l.spills],['Serialized',l.serialized],['Memory Cost',l.cost],['Best For',l.useCase]].map(([k,v]) => (
+          <div key={k} style={{ background:'var(--surface-1)', borderRadius:8, padding:'8px 12px' }}>
+            <div style={{ fontSize:11, color:'var(--text-2)' }}>{k}</div>
+            <div style={{ fontWeight:600, color:'var(--text-1)', fontSize:13 }}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BroadcastAnimation() {
+  const [mode, setMode] = useState<'broadcast'|'shuffle'>('broadcast')
+  const executors = [0,1,2,3]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Broadcast vs Shuffle Join</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+        {(['broadcast','shuffle'] as const).map(m => <button key={m} onClick={() => setMode(m)} style={{ padding:'6px 14px', borderRadius:6, border:'1px solid var(--border)', background: mode===m?(m==='broadcast'?'#22c55e':'#ef4444'):'var(--surface-1)', color: mode===m?'#fff':'var(--text-1)', cursor:'pointer' }}>{m==='broadcast'?'Broadcast Join':'Shuffle Join'}</button>)}
+      </div>
+      {mode==='broadcast' ? (
+        <div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+            <div style={{ padding:'8px 14px', borderRadius:8, background:'#dcfce7', border:'1px solid #22c55e', fontSize:13, fontWeight:600 }}>Driver</div>
+            <span style={{ fontSize:20 }}>→</span>
+            <div style={{ display:'flex', gap:6 }}>
+              {executors.map(i => <div key={i} style={{ padding:'6px 10px', borderRadius:8, background:'#eff6ff', border:'1px solid #3b82f6', fontSize:12 }}>Exec {i+1}</div>)}
+            </div>
+          </div>
+          <div style={{ fontSize:12, color:'#16a34a' }}>Small table sent once to each executor — NO shuffle needed</div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
+            {[...executors,...executors].map((i,j) => <div key={j} style={{ padding:'6px 10px', borderRadius:8, background:'#fee2e2', border:'1px solid #ef4444', fontSize:12 }}>Exec {i+1}</div>)}
+          </div>
+          <div style={{ fontSize:12, color:'#dc2626' }}>Both sides shuffled across network — expensive!</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function UDFAnimation() {
+  const [sel, setSel] = useState(0)
+  const udfs = [
+    { name:'Python UDF', overhead:'Very High', batch:'No', speed:10, color:'#ef4444', note:'Row-by-row JVM↔Python serialization' },
+    { name:'Pandas UDF', overhead:'Low', batch:'Yes (Arrow)', speed:80, color:'#22c55e', note:'Vectorized via Apache Arrow — 10-100x faster' },
+    { name:'Built-in Function', overhead:'None', batch:'Yes', speed:100, color:'#3b82f6', note:'Runs entirely in JVM — always prefer these' },
+  ]
+  const u = udfs[sel]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>UDF Performance Comparison</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap' }}>
+        {udfs.map((u,i) => <button key={i} onClick={() => setSel(i)} style={{ padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)', background: sel===i?u.color:'var(--surface-1)', color: sel===i?'#fff':'var(--text-1)', cursor:'pointer', fontSize:13 }}>{u.name}</button>)}
+      </div>
+      <div style={{ marginBottom:8, fontSize:13 }}><span style={{ color:'var(--text-2)' }}>Overhead: </span><strong style={{ color:u.color }}>{u.overhead}</strong> &nbsp;|&nbsp; <span style={{ color:'var(--text-2)' }}>Batch: </span><strong>{u.batch}</strong></div>
+      <div style={{ marginBottom:6, fontSize:12, color:'var(--text-2)' }}>Relative Speed</div>
+      <div style={{ background:'var(--surface-1)', borderRadius:4, height:16, marginBottom:8 }}>
+        <div style={{ width:`${u.speed}%`, height:'100%', background:u.color, borderRadius:4, transition:'width 0.4s' }}/>
+      </div>
+      <div style={{ fontSize:12, color:'var(--text-2)' }}>{u.note}</div>
+    </div>
+  )
+}
+
+function SparkSQLAnimation() {
+  const [step, setStep] = useState(-1)
+  const steps = [
+    { label:'Parse SQL', desc:'Tokenize + build unresolved AST', icon:'📝' },
+    { label:'Analyze', desc:'Resolve columns against catalog', icon:'🔍' },
+    { label:'Optimize', desc:'Catalyst rule-based rewrites (pushdown, pruning)', icon:'⚡' },
+    { label:'Physical Plan', desc:'Select join strategies, scan methods', icon:'🗺️' },
+    { label:'Execute', desc:'Tungsten codegen + run on executors', icon:'🚀' },
+  ]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Catalyst Pipeline — click Next to walk through</div>
+      <div style={{ display:'flex', gap:4, flexWrap:'wrap', alignItems:'center', marginBottom:14 }}>
+        {steps.map((s,i) => <React.Fragment key={i}>
+          <div onClick={() => setStep(i)} style={{ padding:'6px 10px', borderRadius:8, cursor:'pointer', background: step>=i?'#6366f1':'var(--surface-1)', color: step>=i?'#fff':'var(--text-1)', border:`1px solid ${step>=i?'#6366f1':'var(--border)'}`, fontSize:12, transition:'all 0.2s' }}>{s.icon} {s.label}</div>
+          {i<steps.length-1 && <span style={{ color:'var(--text-2)', fontSize:16 }}>→</span>}
+        </React.Fragment>)}
+      </div>
+      {step>=0 && <div style={{ padding:10, borderRadius:8, background:'#eef2ff', border:'1px solid #a5b4fc', fontSize:13 }}>{steps[Math.min(step,steps.length-1)].desc}</div>}
+      <div style={{ display:'flex', gap:8, marginTop:12 }}>
+        <button onClick={() => setStep(s => Math.min(s+1, steps.length-1))} style={{ padding:'6px 12px', borderRadius:6, background:'#6366f1', color:'#fff', border:'none', cursor:'pointer', fontSize:13 }}>Next Step</button>
+        <button onClick={() => setStep(-1)} style={{ padding:'6px 12px', borderRadius:6, background:'var(--surface-1)', color:'var(--text-1)', border:'1px solid var(--border)', cursor:'pointer', fontSize:13 }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function StreamingAnimation() {
+  const [sel, setSel] = useState(0)
+  const modes = [
+    { name:'Continuous', trigger:'processingTime="0 seconds"', latency:'~1ms', useCase:'Ultra-low latency; limited operations', color:'#22c55e' },
+    { name:'Fixed Interval', trigger:'processingTime="30 seconds"', latency:'Seconds-minutes', useCase:'Standard streaming; most workloads', color:'#3b82f6' },
+    { name:'Once / AvailableNow', trigger:'once() / availableNow()', latency:'Batch', useCase:'Incremental batch loads on schedule', color:'#f97316' },
+  ]
+  const m = modes[sel]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Structured Streaming Trigger Modes</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap' }}>
+        {modes.map((md,i) => <button key={i} onClick={() => setSel(i)} style={{ padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)', background: sel===i?md.color:'var(--surface-1)', color: sel===i?'#fff':'var(--text-1)', cursor:'pointer' }}>{md.name}</button>)}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        {[['Trigger Code',m.trigger],['Latency',m.latency],['Use Case',m.useCase]].map(([k,v]) => (
+          <div key={k} style={{ background:'var(--surface-1)', borderRadius:8, padding:'8px 12px', gridColumn: k==='Use Case'?'span 2':'auto' }}>
+            <div style={{ fontSize:11, color:'var(--text-2)' }}>{k}</div>
+            <div style={{ fontWeight:600, color:'var(--text-1)', fontSize:13 }}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function StatefulStreamingAnimation() {
+  const [tick, setTick] = useState(0)
+  const watermarkDelay = 2
+  const events = [
+    {t:1,name:'E1'},{t:2,name:'E2'},{t:3,name:'E3'},{t:4,name:'E4'},
+    {t:5,name:'E5'},{t:1,name:'E6(late)'},{t:2,name:'E7(late)'},
+  ]
+  const shown = events.slice(0, Math.min(tick+1, events.length))
+  const maxT  = shown.reduce((m,e) => Math.max(m,e.t), 0)
+  const watermark = Math.max(0, maxT - watermarkDelay)
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Watermark — Late Event Handling</div>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
+        {shown.map((e,i) => {
+          const late = e.t <= watermark
+          return <div key={i} style={{ padding:'4px 10px', borderRadius:6, fontSize:12, background: late?'#fee2e2':'#dcfce7', border:`1px solid ${late?'#ef4444':'#22c55e'}`, color: late?'#dc2626':'#16a34a' }}>{e.name} (t={e.t}){late?' ✗':' ✓'}</div>
+        })}
+      </div>
+      <div style={{ fontSize:13, color:'var(--text-2)', marginBottom:10 }}>Watermark: <strong style={{ color:'#f97316' }}>t={watermark}</strong> (max_event_time - {watermarkDelay}s) | Events at t≤{watermark} dropped</div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={() => setTick(t => Math.min(t+1, events.length-1))} style={{ padding:'6px 12px', borderRadius:6, background:'#3b82f6', color:'#fff', border:'none', cursor:'pointer', fontSize:13 }}>Next Event →</button>
+        <button onClick={() => setTick(0)} style={{ padding:'6px 12px', borderRadius:6, background:'var(--surface-1)', color:'var(--text-1)', border:'1px solid var(--border)', cursor:'pointer', fontSize:13 }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function CatalystAnimation() {
+  const [expanded, setExpanded] = useState<number|null>(null)
+  const phases = [
+    { icon:'🔍', label:'Analysis', color:'#3b82f6', desc:'Resolves column names against catalog. Expands * wildcards. Resolves data types. Raises AnalysisException for unknown columns.' },
+    { icon:'🧠', label:'Logical Optimization', color:'#8b5cf6', desc:'Predicate pushdown, column pruning, constant folding, filter reordering, subquery elimination — all rule-based rewrites.' },
+    { icon:'⚙️', label:'Physical Planning', color:'#f97316', desc:'Selects join strategies (BHJ/SMJ/SHJ), scan methods, aggregate implementations. Cost-based optimization with statistics.' },
+    { icon:'🚀', label:'Code Generation', color:'#22c55e', desc:'Whole-stage codegen: fuses operator pipeline into a single JVM method. JIT compiles to native code. 10-100x faster than interpreted execution.' },
+  ]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Catalyst Optimizer Phases — click to expand</div>
+      <div style={{ display:'flex', gap:4, alignItems:'center', flexWrap:'wrap', marginBottom:4 }}>
+        {phases.map((p,i) => <React.Fragment key={i}>
+          <div onClick={() => setExpanded(expanded===i?null:i)} style={{ padding:'8px 12px', borderRadius:8, cursor:'pointer', background: expanded===i?p.color+'22':'var(--surface-1)', border:`1px solid ${expanded===i?p.color:'var(--border)'}`, fontSize:13 }}>{p.icon} {p.label}</div>
+          {i<phases.length-1 && <span style={{ color:'var(--text-2)' }}>→</span>}
+        </React.Fragment>)}
+      </div>
+      {expanded!==null && <div style={{ marginTop:12, padding:12, borderRadius:8, background:phases[expanded].color+'11', border:`1px solid ${phases[expanded].color}33`, fontSize:13, color:'var(--text-1)' }}>{phases[expanded].desc}</div>}
+    </div>
+  )
+}
+
+function AQEAnimation() {
+  const [feat, setFeat] = useState(0)
+  const features = [
+    { name:'Skew Join', before:'1 task = 80% of data', after:'Split into 4 sub-tasks evenly', metric:'Partitions: 1 → 4', color:'#ef4444' },
+    { name:'Coalescing', before:'500 shuffle partitions (many tiny)', after:'Coalesced to 80 meaningful partitions', metric:'Partitions: 500 → 80', color:'#3b82f6' },
+    { name:'Join Strategy Switch', before:'Sort-Merge Join planned (large tables)', after:'Switched to Broadcast Join (one side was small)', metric:'No shuffle on small side', color:'#22c55e' },
+  ]
+  const f = features[feat]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>AQE Runtime Optimizations</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap' }}>
+        {features.map((fe,i) => <button key={i} onClick={() => setFeat(i)} style={{ padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)', background: feat===i?fe.color:'var(--surface-1)', color: feat===i?'#fff':'var(--text-1)', cursor:'pointer', fontSize:13 }}>{fe.name}</button>)}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        <div style={{ background:'#fee2e2', borderRadius:8, padding:'10px 12px' }}>
+          <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, marginBottom:4 }}>BEFORE (Planned)</div>
+          <div style={{ fontSize:13 }}>{f.before}</div>
+        </div>
+        <div style={{ background:'#dcfce7', borderRadius:8, padding:'10px 12px' }}>
+          <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, marginBottom:4 }}>AFTER (AQE Applied)</div>
+          <div style={{ fontSize:13 }}>{f.after}</div>
+        </div>
+      </div>
+      <div style={{ marginTop:10, fontSize:13, color:f.color, fontWeight:600 }}>→ {f.metric}</div>
+    </div>
+  )
+}
+
+function TungstenAnimation() {
+  const features = [
+    { icon:'💾', title:'Off-Heap Binary (UnsafeRow)', metric:'~5x less memory vs Java objects', desc:'Compact binary layout; no GC pressure; binary IS the wire format for shuffles', color:'#3b82f6' },
+    { icon:'📦', title:'Cache-Aware Algorithms', metric:'~3x fewer cache misses', desc:'Sequential memory access; hash tables fit in CPU L2/L3 cache; sort-based aggregation', color:'#8b5cf6' },
+    { icon:'⚡', title:'Whole-Stage Code Generation', metric:'~10x faster operator fusion', desc:'Fuses filter+project+join into one JIT-compiled method; eliminates virtual dispatch', color:'#22c55e' },
+  ]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Tungsten Engine — 3 Pillars</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+        {features.map(f => (
+          <div key={f.title} style={{ background:'var(--surface-1)', borderRadius:10, padding:12, border:`1px solid ${f.color}33` }}>
+            <div style={{ fontSize:24, marginBottom:6 }}>{f.icon}</div>
+            <div style={{ fontWeight:600, fontSize:13, color:f.color, marginBottom:4 }}>{f.title}</div>
+            <div style={{ fontSize:12, color:'var(--text-2)', marginBottom:6 }}>{f.metric}</div>
+            <div style={{ fontSize:11, color:'var(--text-2)' }}>{f.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ConfigAnimation() {
+  const [mem, setMem] = useState(8)
+  const [cores, setCores] = useState(4)
+  const [shuffle, setShuffle] = useState(200)
+  const parallelism = cores * 2
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Interactive Config — tune and see impact</div>
+      <div style={{ display:'grid', gap:10, marginBottom:14 }}>
+        {[
+          {label:'executor.memory (GB)', val:mem, set:setMem, min:2, max:64, note:`Spark memory pool ≈ ${Math.round(mem*0.6*10)/10}g`},
+          {label:'executor.cores', val:cores, set:setCores, min:1, max:16, note:`Threads per executor`},
+          {label:'sql.shuffle.partitions', val:shuffle, set:setShuffle, min:10, max:2000, note: shuffle<100?'⚠️ May be too few for large joins':shuffle>500?'⚠️ May cause overhead':'✅ Reasonable'},
+        ].map(c => (
+          <div key={c.label}>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, marginBottom:4 }}><span style={{ color:'var(--text-2)' }}>{c.label}</span><strong style={{ color:'var(--text-1)' }}>{c.val}</strong></div>
+            <input type="range" min={c.min} max={c.max} value={c.val} onChange={e => c.set(Number(e.target.value))} style={{ width:'100%' }}/>
+            <div style={{ fontSize:11, color:'var(--text-2)' }}>{c.note}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding:12, borderRadius:8, background:'var(--surface-1)', fontSize:13 }}>
+        <strong>Cluster Summary:</strong> Memory {mem}g × Cores {cores} | Parallelism target {parallelism} | Shuffle partitions {shuffle}
+      </div>
+    </div>
+  )
+}
+
+function DeltaAnimation() {
+  const [mode, setMode] = useState<'acid'|'timetravel'>('acid')
+  const [version, setVersion] = useState(0)
+  const ttData = [{rows:1000,desc:'Initial load'},{rows:1050,desc:'Appended 50 rows'},{rows:980,desc:'Deleted 70 rows'}]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Delta Lake — ACID &amp; Time Travel</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {(['acid','timetravel'] as const).map(m => <button key={m} onClick={() => setMode(m)} style={{ padding:'6px 14px', borderRadius:6, border:'1px solid var(--border)', background: mode===m?'#f97316':'var(--surface-1)', color: mode===m?'#fff':'var(--text-1)', cursor:'pointer' }}>{m==='acid'?'ACID Transactions':'Time Travel'}</button>)}
+      </div>
+      {mode==='acid' ? (
+        <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+          {['Writer begins','Data written','Transaction log updated','Readers see consistent snapshot'].map((s,i) => <React.Fragment key={i}>
+            <div style={{ padding:'6px 10px', borderRadius:6, background:'#fff7ed', border:'1px solid #fed7aa', fontSize:12 }}>{s}</div>
+            {i<3 && <span style={{ color:'#f97316' }}>→</span>}
+          </React.Fragment>)}
+        </div>
+      ) : (
+        <div>
+          <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+            {ttData.map((_,i) => <button key={i} onClick={() => setVersion(i)} style={{ padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)', background: version===i?'#3b82f6':'var(--surface-1)', color: version===i?'#fff':'var(--text-1)', cursor:'pointer' }}>v{i}</button>)}
+          </div>
+          <div style={{ padding:12, borderRadius:8, background:'#eff6ff', border:'1px solid #bfdbfe', fontSize:13 }}>
+            <strong>Version {version}:</strong> {ttData[version].desc} — {ttData[version].rows.toLocaleString()} rows
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function KafkaArchAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setTick(x => (x+1)%8), 800)
+    return () => clearInterval(t)
+  }, [])
+  const partitions = [0,1,2,3]
+  const brokers = ['B1','B2','B3']
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Kafka Architecture — Brokers, Partitions &amp; Replication</div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        <div>
+          <div style={{ fontSize:12, color:'var(--text-2)', marginBottom:8 }}>Topic Partitions</div>
+          {partitions.map(p => (
+            <div key={p} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+              <div style={{ fontSize:12, color:'var(--text-2)', width:24 }}>P{p}</div>
+              <div style={{ flex:1, height:18, background:'var(--surface-1)', borderRadius:4, overflow:'hidden', position:'relative' }}>
+                {[0,1,2,3,4].map(i => <div key={i} style={{ position:'absolute', left:`${(i*20)}%`, top:2, width:16, height:14, borderRadius:3, background: (tick+p+i)%4===0?'#f97316':'#3b82f633', transition:'background 0.3s' }}/>)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <div style={{ fontSize:12, color:'var(--text-2)', marginBottom:8 }}>Replication (RF=2)</div>
+          {brokers.map(b => (
+            <div key={b} style={{ padding:'6px 10px', borderRadius:6, background:'var(--surface-1)', border:'1px solid var(--border)', marginBottom:6, fontSize:12 }}>
+              {b}: {partitions.filter(p => (p+brokers.indexOf(b))%3<2).map(p => `P${p}`).join(', ')}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function KafkaPythonAnimation() {
+  const [mode, setMode] = useState<'producer'|'consumer'>('producer')
+  const [step, setStep] = useState(0)
+  const prodSteps = [['Message created','{key:"user_1", value:{...}}'],['Key hashed → partition','hash("user_1") % 4 → P2'],['Sent to broker leader','Broker 1 leader for P2'],['ack received','offset=142 committed']]
+  const consSteps = [['Join consumer group','group.id="analytics-cg"'],['Partitions assigned','P0,P1 → Consumer A | P2,P3 → Consumer B'],['Poll for messages','consumer.poll(timeout=1.0)'],['Commit offset','consumer.commit() at offset 143']]
+  const steps = mode==='producer' ? prodSteps : consSteps
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Kafka Python API Flow</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {(['producer','consumer'] as const).map(m => <button key={m} onClick={() => { setMode(m); setStep(0) }} style={{ padding:'6px 14px', borderRadius:6, border:'1px solid var(--border)', background: mode===m?'#8b5cf6':'var(--surface-1)', color: mode===m?'#fff':'var(--text-1)', cursor:'pointer' }}>{m==='producer'?'Producer':'Consumer'}</button>)}
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {steps.map(([label, detail], i) => (
+          <div key={i} style={{ padding:'8px 12px', borderRadius:8, background: step>=i?'#f5f3ff':'var(--surface-1)', border:`1px solid ${step>=i?'#8b5cf6':'var(--border)'}`, opacity: step>=i?1:0.5, transition:'all 0.3s', fontSize:13 }}>
+            <strong>{i+1}. {label}</strong><br/><code style={{ fontSize:11, color:'var(--text-2)' }}>{detail}</code>
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:8, marginTop:12 }}>
+        <button onClick={() => setStep(s => Math.min(s+1, steps.length-1))} style={{ padding:'6px 12px', borderRadius:6, background:'#8b5cf6', color:'#fff', border:'none', cursor:'pointer', fontSize:13 }}>Next →</button>
+        <button onClick={() => setStep(0)} style={{ padding:'6px 12px', borderRadius:6, background:'var(--surface-1)', color:'var(--text-1)', border:'1px solid var(--border)', cursor:'pointer', fontSize:13 }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function KafkaEOSAnimation() {
+  const [sel, setSel] = useState(0)
+  const modes = [
+    { name:'At-Most-Once', guarantee:'May lose messages', duplicates:'None', useCase:'Metrics, logs where loss is OK', color:'#ef4444', icon:'📉' },
+    { name:'At-Least-Once', guarantee:'No loss, duplicates possible', duplicates:'Yes — on retry', useCase:'Most default configs; needs idempotent sink', color:'#f97316', icon:'🔄' },
+    { name:'Exactly-Once', guarantee:'No loss, no duplicates', duplicates:'None', useCase:'Financial transactions, billing', color:'#22c55e', icon:'✅' },
+  ]
+  const m = modes[sel]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Delivery Guarantees</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:14 }}>
+        {modes.map((md,i) => <button key={i} onClick={() => setSel(i)} style={{ padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)', background: sel===i?md.color:'var(--surface-1)', color: sel===i?'#fff':'var(--text-1)', cursor:'pointer', fontSize:13 }}>{md.name}</button>)}
+      </div>
+      <div style={{ padding:14, borderRadius:10, background:`${m.color}11`, border:`1px solid ${m.color}33` }}>
+        <div style={{ fontSize:28, marginBottom:8 }}>{m.icon}</div>
+        {[['Guarantee',m.guarantee],['Duplicates',m.duplicates],['Use Case',m.useCase]].map(([k,v]) => (
+          <div key={k} style={{ marginBottom:4, fontSize:13 }}><span style={{ color:'var(--text-2)' }}>{k}: </span><strong style={{ color:'var(--text-1)' }}>{v}</strong></div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function KafkaConnectAnimation() {
+  const [dir, setDir] = useState<'source'|'sink'>('source')
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Kafka Connect — Source &amp; Sink</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+        {(['source','sink'] as const).map(d => <button key={d} onClick={() => setDir(d)} style={{ padding:'6px 14px', borderRadius:6, border:'1px solid var(--border)', background: dir===d?'#06b6d4':'var(--surface-1)', color: dir===d?'#fff':'var(--text-1)', cursor:'pointer' }}>{d==='source'?'Source Connector':'Sink Connector'}</button>)}
+      </div>
+      {dir==='source' ? (
+        <div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            {['PostgreSQL WAL','Debezium CDC','Kafka Connect Worker','Kafka Topic (ecommerce.orders)'].map((s,i,arr) => <React.Fragment key={i}>
+              <div style={{ padding:'8px 12px', borderRadius:8, background:'#ecfeff', border:'1px solid #a5f3fc', fontSize:12 }}>{s}</div>
+              {i<arr.length-1 && <span style={{ color:'#06b6d4', fontSize:16 }}>→</span>}
+            </React.Fragment>)}
+          </div>
+          <div style={{ marginTop:8, fontSize:12, color:'var(--text-2)' }}>CDC event: INSERT/UPDATE/DELETE → Avro envelope with before/after fields</div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            {['Kafka Topic','Kafka Connect Worker','ADLS / Snowflake / Elasticsearch'].map((s,i,arr) => <React.Fragment key={i}>
+              <div style={{ padding:'8px 12px', borderRadius:8, background:'#fdf4ff', border:'1px solid #e9d5ff', fontSize:12 }}>{s}</div>
+              {i<arr.length-1 && <span style={{ color:'#8b5cf6', fontSize:16 }}>→</span>}
+            </React.Fragment>)}
+          </div>
+          <div style={{ marginTop:8, fontSize:12, color:'var(--text-2)' }}>Sink handles offset commits; DLQ captures failed records</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SchemaRegistryAnimation() {
+  const [step, setStep] = useState(0)
+  const [compat, setCompat] = useState(0)
+  const steps = [
+    { label:'Producer registers schema', detail:'POST /subjects/orders-value → schema_id=42', icon:'📤' },
+    { label:'Serialize with schema ID', detail:'[0x00][schema_id=42][avro_bytes...]', icon:'🔧' },
+    { label:'Message sent to Kafka', detail:'Topic: orders | Partition: 1 | Offset: 99', icon:'📨' },
+    { label:'Consumer fetches schema', detail:'GET /schemas/ids/42 → returns Avro schema', icon:'📥' },
+    { label:'Deserialize message', detail:'schema_id=42 → parse Avro bytes → Python dict', icon:'✅' },
+  ]
+  const compats = [
+    { name:'BACKWARD', desc:'New schema reads old data. Add optional fields only.', color:'#22c55e' },
+    { name:'FORWARD',  desc:'Old schema reads new data. Remove fields only.', color:'#3b82f6' },
+    { name:'FULL',     desc:'Both directions. Most restrictive — only add/remove optional fields.', color:'#8b5cf6' },
+  ]
+  return (
+    <div style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, color:'var(--text-1)' }}>Schema Registry Flow</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:12 }}>
+        {steps.map((s,i) => (
+          <div key={i} onClick={() => setStep(i)} style={{ padding:'7px 12px', borderRadius:8, cursor:'pointer', background: step===i?'#eff6ff':'var(--surface-1)', border:`1px solid ${step===i?'#3b82f6':'var(--border)'}`, fontSize:13, display:'flex', alignItems:'center', gap:8 }}>
+            <span>{s.icon}</span><div><strong>{s.label}</strong><br/><code style={{ fontSize:11, color:'var(--text-2)' }}>{s.detail}</code></div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize:12, color:'var(--text-2)', marginBottom:6 }}>Compatibility Mode:</div>
+      <div style={{ display:'flex', gap:6 }}>
+        {compats.map((c,i) => <button key={i} onClick={() => setCompat(i)} style={{ padding:'5px 10px', borderRadius:6, border:'1px solid var(--border)', background: compat===i?c.color:'var(--surface-1)', color: compat===i?'#fff':'var(--text-1)', cursor:'pointer', fontSize:12 }}>{c.name}</button>)}
+      </div>
+      {<div style={{ marginTop:8, fontSize:12, color:compats[compat].color }}>{compats[compat].desc}</div>}
+    </div>
+  )
+}
+
+function KafkaVsEventHubAnimation() {
+  const [sel, setSel] = useState<string|null>(null)
+  const rows = [
+    {feature:'Protocol',kafka:'Native Kafka protocol',hub:'Kafka-compatible (no code change!)'},
+    {feature:'Partitions',kafka:'1–thousands',hub:'1–32 (Standard), 1–100 (Premium)'},
+    {feature:'Retention',kafka:'Configurable (forever)',hub:'1–90 days (Standard)'},
+    {feature:'Consumer groups',kafka:'Unlimited',hub:'Limited per tier'},
+    {feature:'Schema Registry',kafka:'Confluent Schema Registry',hub:'Event Hub Schema Registry'},
+    {feature:'Cost model',kafka:'Self-managed or Confluent',hub:'Throughput Units (pay-as-go)'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Kafka vs Azure Event Hub — Feature Comparison</div>
+      <div style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'.78rem'}}>
+          <thead><tr>{['Feature','Kafka','Event Hub'].map(h=><th key={h} style={{padding:'7px 10px',background:'#1e293b',color:'white',textAlign:'left',fontWeight:700}}>{h}</th>)}</tr></thead>
+          <tbody>{rows.map((r,i)=>(
+            <tr key={r.feature} onClick={()=>setSel(sel===r.feature?null:r.feature)} style={{background:sel===r.feature?'#eff6ff':i%2===0?'white':'#f8fafc',cursor:'pointer',transition:'background .2s'}}>
+              <td style={{padding:'6px 10px',fontWeight:700,color:'#4f8ef7',borderBottom:'1px solid var(--border)'}}>{r.feature}</td>
+              <td style={{padding:'6px 10px',borderBottom:'1px solid var(--border)',fontFamily:'monospace'}}>{r.kafka}</td>
+              <td style={{padding:'6px 10px',borderBottom:'1px solid var(--border)',fontFamily:'monospace'}}>{r.hub}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
 
 function SparkArchAnimation() {
   return (
