@@ -36,6 +36,12 @@ const SECTIONS = [
     { id: 'databricks-sql', label: 'Databricks SQL' },
     { id: 'databricks-sharing', label: 'Delta Sharing' },
   ]},
+  { title: 'Table Formats Comparison', items: [
+    { id: 'iceberg-intro', label: 'Apache Iceberg Architecture' },
+    { id: 'iceberg-features', label: 'Iceberg: Hidden Partitioning + Time Travel' },
+    { id: 'hudi-intro', label: 'Apache Hudi (COW vs MOR)' },
+    { id: 'format-comparison', label: 'Delta vs Iceberg vs Hudi Comparison' },
+  ]},
 ]
 
 export default function Delta({ completed, onComplete }: Props) {
@@ -2530,6 +2536,539 @@ ORDER BY event_time DESC;`}</CodeBlock>
             { question: "Can a non-Databricks organization receive shared Delta data?", options: ["No — Delta Sharing requires both sides to be Databricks", "Yes — via the open sharing protocol using a credential file, recipients can query shared data from Spark, pandas, Power BI, or any Delta Sharing client", "Only if they use Apache Spark", "Only via REST API"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('databricks-sharing'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+
+        {/* ── ICEBERG INTRO ─────────────────────────────────────────────── */}
+        <section id="iceberg-intro" ref={el => { if (el) sectionRefs.current['iceberg-intro'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Table Formats Comparison</div>
+            <h1 className="topic-title">Apache Iceberg Architecture</h1>
+            <p className="topic-desc">Apache Iceberg is an open table format for huge analytic datasets. Unlike Hive which tracks data at the partition directory level, Iceberg tracks files at the table level — enabling hidden partitioning, partition evolution, and snapshot isolation. The metadata layer (manifest files → manifest lists → table metadata JSON) is completely decoupled from the data files (Parquet/ORC/Avro), and a catalog (Hive/Glue/REST/Nessie) stores just a pointer to the current metadata file.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Iceberg Spec Versions:</strong> v1 provides basic snapshot isolation and schema evolution. v2 (current standard) adds row-level deletes via delete files (position deletes and equality deletes), enabling efficient UPDATE/DELETE without full file rewrites. Most modern engines (Spark 3.x, Trino, Flink) support v2.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Apache Iceberg: architecture and metadata layer ──────────────────────────
+#
+# my_table/
+# ├── data/
+# │   ├── 00000-0-abc123.parquet          ← actual data files (Parquet/ORC/Avro)
+# │   └── 00001-1-def456.parquet
+# └── metadata/
+#     ├── v1.metadata.json                ← table metadata (schema, partition spec, snapshot list)
+#     ├── v2.metadata.json                ← updated after each commit
+#     ├── snap-1234567890.avro            ← snapshot manifest list (points to manifest files)
+#     ├── 0000-abc.avro                   ← manifest file (list of data files + stats)
+#     └── version-hint.text              ← catalog hint for latest metadata version
+#
+# Catalog (Hive/Glue/REST/Nessie) stores:
+#   table_name → pointer to latest metadata.json
+#
+# Read path:
+#   Catalog → current metadata.json → manifest list → manifest files → data files
+
+# ── Iceberg table metadata.json structure (simplified) ───────────────────────
+# {
+#   "format-version": 2,
+#   "table-uuid": "9c12d441-...",
+#   "location": "s3://bucket/warehouse/db/my_table",
+#   "schema": { "type": "struct", "fields": [...] },
+#   "partition-spec": { "fields": [{"name": "event_day", "transform": "day", "source-id": 3}] },
+#   "current-snapshot-id": 1234567890,
+#   "snapshots": [
+#     { "snapshot-id": 1234567890, "manifest-list": "snap-1234567890.avro", ... }
+#   ]
+# }
+
+# ── Working with Iceberg in PySpark ──────────────────────────────────────────
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("IcebergDemo") \
+    .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
+    .config("spark.sql.catalog.glue_catalog", "org.apache.iceberg.spark.SparkCatalog") \
+    .config("spark.sql.catalog.glue_catalog.warehouse", "s3://my-bucket/warehouse") \
+    .config("spark.sql.catalog.glue_catalog.catalog-impl", "org.apache.iceberg.aws.glue.GlueCatalog") \
+    .getOrCreate()
+
+# Create an Iceberg table
+spark.sql("""
+  CREATE TABLE glue_catalog.db.events (
+    event_id   BIGINT,
+    user_id    BIGINT,
+    event_type STRING,
+    amount     DOUBLE,
+    event_ts   TIMESTAMP
+  ) USING iceberg
+  PARTITIONED BY (days(event_ts))
+  TBLPROPERTIES (
+    'format-version' = '2',
+    'write.target-file-size-bytes' = '134217728'
+  )
+""")
+
+# Write data
+df = spark.read.parquet("s3://landing/events/")
+df.writeTo("glue_catalog.db.events").append()
+
+# Inspect metadata
+spark.sql("SELECT * FROM glue_catalog.db.events.snapshots").show()
+spark.sql("SELECT * FROM glue_catalog.db.events.history").show()
+spark.sql("SELECT * FROM glue_catalog.db.events.manifests").show()
+spark.sql("SELECT * FROM glue_catalog.db.events.files").show(5)
+
+# Inspect partitions (Iceberg tracks these in metadata — no directory scan needed)
+spark.sql("SELECT * FROM glue_catalog.db.events.partitions").show()
+
+# ── Iceberg spec v2: row-level deletes ────────────────────────────────────────
+# Equality delete file: records matching delete predicates
+# Position delete file: specific (file_path, row_position) pairs to delete
+# Both approaches avoid rewriting large data files for small deletes.
+
+spark.sql("""
+  DELETE FROM glue_catalog.db.events
+  WHERE event_type = 'test_event' AND event_ts < '2024-01-01'
+""")
+# Under the hood: Iceberg writes an equality delete file pointing to matching rows.
+# Next compaction (rewrite_data_files) physically removes them.
+
+# Trigger compaction to rewrite files and remove delete files
+spark.sql("""
+  CALL glue_catalog.system.rewrite_data_files(
+    table => 'db.events',
+    options => map('min-input-files', '5')
+  )
+""")
+
+# Expire old snapshots to reclaim storage
+spark.sql("""
+  CALL glue_catalog.system.expire_snapshots(
+    table => 'db.events',
+    older_than => TIMESTAMP '2024-01-01 00:00:00',
+    retain_last => 5
+  )
+""")`}</CodeBlock>
+
+          <Quiz topicId="iceberg-intro" questions={[
+            { question: "How does Apache Iceberg track table data differently from Apache Hive?", options: ["Iceberg stores data in HDFS only; Hive works on S3", "Iceberg tracks files at the table level via a metadata layer (manifest files/lists); Hive tracks at the partition directory level — Iceberg enables hidden partitioning and partition evolution without directory scans", "They track data identically — Iceberg just adds ACID on top", "Iceberg uses a RDBMS sidecar for file tracking; Hive does not"], correct: 1 },
+            { question: "What was added in Iceberg spec version 2 that spec v1 lacked?", options: ["Snapshot isolation", "Hidden partitioning", "Row-level deletes via position delete files and equality delete files", "Schema evolution"], correct: 2 },
+            { question: "In the Iceberg metadata hierarchy, what is the correct order from outermost to innermost?", options: ["Manifest file → Manifest list → Table metadata JSON", "Data files → Manifest files → Manifest list → Table metadata JSON", "Table metadata JSON → Manifest list → Manifest files → Data files", "Catalog → Table metadata JSON → Snapshot → Manifest list → Manifest files"], correct: 3 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('iceberg-intro'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── ICEBERG FEATURES ──────────────────────────────────────────── */}
+        <section id="iceberg-features" ref={el => { if (el) sectionRefs.current['iceberg-features'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Table Formats Comparison</div>
+            <h1 className="topic-title">Iceberg: Hidden Partitioning + Time Travel</h1>
+            <p className="topic-desc">Iceberg's hidden partitioning is one of its most powerful innovations — partition transforms (identity, bucket, truncate, year/month/day/hour) are applied automatically by the engine. Queries never need to know the physical partition layout. Combined with schema evolution, partition evolution, and time travel, Iceberg provides a full table management lifecycle without ever rewriting all your data.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Partition Evolution:</strong> In Hive, changing the partition column requires rewriting all data. In Iceberg, you simply add a new partition spec — old files keep the old partitioning, new files use the new spec. Both coexist transparently. This is a zero-copy operation that takes milliseconds.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Iceberg Hidden Partitioning ──────────────────────────────────────────────
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("IcebergFeatures").getOrCreate()
+
+# ── Partition transforms ──────────────────────────────────────────────────────
+# identity(col)   — exact value (same as Hive partitioning)
+# bucket(N, col)  — hash into N buckets (hides high-cardinality from users)
+# truncate(W, col)— truncate string to W chars or integer to W multiples
+# year(col)       — extract year from timestamp/date
+# month(col)      — extract year-month
+# day(col)        — extract year-month-day
+# hour(col)       — extract year-month-day-hour
+
+spark.sql("""
+  CREATE TABLE glue_catalog.db.events (
+    event_id   BIGINT,
+    user_id    BIGINT,
+    event_type STRING,
+    amount     DOUBLE,
+    event_ts   TIMESTAMP
+  ) USING iceberg
+  PARTITIONED BY (
+    days(event_ts),        -- hidden: no 'event_day' column needed in schema
+    bucket(16, user_id)    -- hash user_id into 16 buckets
+  )
+""")
+
+# Query WITHOUT specifying partition column — Iceberg applies transform automatically
+spark.sql("""
+  SELECT * FROM glue_catalog.db.events
+  WHERE event_ts >= '2024-01-15' AND event_ts < '2024-01-16'
+""")
+# Iceberg translates event_ts filter → partition pruning on days(event_ts) = 2024-01-15
+# No need to add WHERE event_day = '2024-01-15' like in Hive
+
+# ── Schema evolution ──────────────────────────────────────────────────────────
+# ADD — add a new column (safe, nullable by default)
+spark.sql("ALTER TABLE glue_catalog.db.events ADD COLUMN channel STRING")
+spark.sql("ALTER TABLE glue_catalog.db.events ADD COLUMN metadata MAP<STRING,STRING> AFTER channel")
+
+# DROP — logically removed from schema; old files still have the physical column but readers skip it
+spark.sql("ALTER TABLE glue_catalog.db.events DROP COLUMN channel")
+
+# RENAME — metadata-only, zero file rewrites
+spark.sql("ALTER TABLE glue_catalog.db.events RENAME COLUMN amount TO order_amount")
+
+# REORDER — change column position in schema
+spark.sql("ALTER TABLE glue_catalog.db.events ALTER COLUMN metadata FIRST")
+
+# TYPE PROMOTION — safe widening only (int → long, float → double)
+spark.sql("ALTER TABLE glue_catalog.db.events ALTER COLUMN user_id TYPE BIGINT")
+
+# ── Partition evolution ───────────────────────────────────────────────────────
+# Old partitioning: by day
+# New requirement: partition by hour for higher granularity
+
+# Add new partition field — old files keep day partitioning, new files use hour
+spark.sql("""
+  ALTER TABLE glue_catalog.db.events
+  ADD PARTITION FIELD hours(event_ts)
+""")
+
+# Drop old day partition (still compatible with old files)
+spark.sql("""
+  ALTER TABLE glue_catalog.db.events
+  DROP PARTITION FIELD days(event_ts)
+""")
+
+# ── Time travel ───────────────────────────────────────────────────────────────
+# By snapshot ID
+spark.sql("""
+  SELECT COUNT(*) FROM glue_catalog.db.events
+  VERSION AS OF 1234567890
+""")
+
+# By timestamp
+spark.sql("""
+  SELECT * FROM glue_catalog.db.events
+  TIMESTAMP AS OF '2024-01-15T10:00:00'
+""")
+
+# PySpark API
+snapshot_df = spark.read \
+    .option("snapshot-id", "1234567890") \
+    .table("glue_catalog.db.events")
+
+ts_df = spark.read \
+    .option("as-of-timestamp", "1705312800000") \  # epoch milliseconds
+    .table("glue_catalog.db.events")
+
+# ── Incremental reads: changes between snapshots ──────────────────────────────
+incremental_df = spark.read \
+    .option("start-snapshot-id", "1000000000") \
+    .option("end-snapshot-id",   "1234567890") \
+    .format("iceberg") \
+    .load("glue_catalog.db.events")
+
+# ── Branching and tagging (Iceberg v2) ────────────────────────────────────────
+# Create a branch for data quality validation before promoting to main
+spark.sql("ALTER TABLE glue_catalog.db.events CREATE BRANCH dq_validation")
+
+# Write to the branch
+df.writeTo("glue_catalog.db.events.branch_dq_validation").append()
+
+# Read from a specific branch
+spark.read.option("branch", "dq_validation").table("glue_catalog.db.events")
+
+# Tag a known-good snapshot for auditing
+spark.sql("""
+  ALTER TABLE glue_catalog.db.events
+  CREATE TAG monthly_snapshot_jan_2024
+  AS OF VERSION 1234567890
+""")
+
+# Read from a tag
+spark.read.option("tag", "monthly_snapshot_jan_2024").table("glue_catalog.db.events")`}</CodeBlock>
+
+          <Quiz topicId="iceberg-features" questions={[
+            { question: "With Iceberg hidden partitioning using PARTITIONED BY (days(event_ts)), what must the user include in their query to benefit from partition pruning?", options: ["They must add WHERE event_day = '...' using the derived partition column", "They must use a special PARTITION FILTER clause", "Nothing extra — Iceberg automatically applies the transform when filtering on event_ts, so a normal WHERE event_ts = '...' filter is enough", "They must call REFRESH TABLE first"], correct: 2 },
+            { question: "You change a table's partition spec from days(event_ts) to hours(event_ts). What happens to existing data files?", options: ["All existing files are rewritten with the new hourly partition structure", "The operation fails — partition specs cannot be changed in Iceberg", "Existing files retain their day-based partitioning; only new files use the hour-based spec — both coexist transparently", "Existing files are moved to an archive location"], correct: 2 },
+            { question: "Iceberg branching allows you to:", options: ["Create read replicas of a table for performance", "Isolate writes to a named branch (snapshot lineage) so you can validate changes before merging to main — similar to Git branches for table data", "Partition a table across multiple storage accounts", "Create materialized view snapshots"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('iceberg-features'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── HUDI INTRO ────────────────────────────────────────────────── */}
+        <section id="hudi-intro" ref={el => { if (el) sectionRefs.current['hudi-intro'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Table Formats Comparison</div>
+            <h1 className="topic-title">Apache Hudi (COW vs MOR)</h1>
+            <p className="topic-desc">Apache Hudi (Hadoop Upserts and Incremental Deletes) was built by Uber for record-level upserts on data lakes — a problem Delta and Iceberg solve differently. Hudi's defining architectural choice is its two table types: Copy-On-Write (COW) rewrites Parquet files on every write, while Merge-On-Read (MOR) appends delta log files and merges at read time. Every Hudi operation is recorded on the Hudi Timeline, providing a complete operational history.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>COW vs MOR trade-off:</strong> COW has fast reads (no merge needed) but slow writes (full Parquet file rewrite per update). MOR has fast writes (appends to delta log) but slower reads (must merge base + log files). Choose COW for read-heavy analytical workloads; choose MOR for high-frequency upsert pipelines (CDC, streaming ingestion).</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Apache Hudi: COW vs MOR and key concepts ─────────────────────────────────
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("HudiDemo") \
+    .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.hudi.catalog.HoodieCatalog") \
+    .config("spark.sql.extensions", "org.apache.spark.sql.hudi.HoodieSparkSessionExtension") \
+    .getOrCreate()
+
+# ── 1. Copy-On-Write (COW) table ──────────────────────────────────────────────
+# On every upsert: reads affected Parquet files, merges new records, rewrites
+# Reads always get latest data from clean Parquet files — no merge at read time.
+
+hudi_options_cow = {
+    "hoodie.table.name": "orders",
+    "hoodie.datasource.write.table.type": "COPY_ON_WRITE",
+    "hoodie.datasource.write.operation": "upsert",          # upsert | insert | bulk_insert | delete
+    "hoodie.datasource.write.recordkey.field": "order_id",  # unique key field
+    "hoodie.datasource.write.precombine.field": "updated_at",  # tie-break: higher value wins
+    "hoodie.datasource.write.partitionpath.field": "order_date",
+    "hoodie.datasource.hive_sync.enable": "true",
+    "hoodie.datasource.hive_sync.table": "orders",
+    "hoodie.datasource.hive_sync.database": "silver",
+    "hoodie.cleaner.commits.retained": "10",
+}
+
+df = spark.read.parquet("s3://landing/orders/")
+df.write \
+    .format("hudi") \
+    .options(**hudi_options_cow) \
+    .mode("append") \
+    .save("s3://warehouse/silver/orders/")
+
+# ── 2. Merge-On-Read (MOR) table ──────────────────────────────────────────────
+# Writes append a delta log file (.log) — very fast writes.
+# Reads: merge base Parquet file + delta log files for latest view.
+# Periodic compaction rewrites base files to absorb the logs.
+
+hudi_options_mor = {
+    "hoodie.table.name": "events",
+    "hoodie.datasource.write.table.type": "MERGE_ON_READ",  # key difference
+    "hoodie.datasource.write.operation": "upsert",
+    "hoodie.datasource.write.recordkey.field": "event_id",
+    "hoodie.datasource.write.precombine.field": "event_ts",
+    "hoodie.datasource.write.partitionpath.field": "event_date",
+    "hoodie.compact.inline": "false",       # manual compaction (better for streaming)
+    "hoodie.compact.inline.max.delta.commits": "5",
+}
+
+# Streaming upsert (foreachBatch pattern)
+def upsert_to_hudi(batch_df, batch_id):
+    batch_df.write \
+        .format("hudi") \
+        .options(**hudi_options_mor) \
+        .mode("append") \
+        .save("s3://warehouse/silver/events/")
+
+streaming_query = spark.readStream \
+    .format("delta") \
+    .table("bronze.events_cdc") \
+    .writeStream \
+    .foreachBatch(upsert_to_hudi) \
+    .option("checkpointLocation", "/checkpoints/events_hudi") \
+    .start()
+
+# ── 3. Hudi Timeline ──────────────────────────────────────────────────────────
+# Every operation creates an instant on the timeline:
+# .hoodie/
+#   20240115143000000.commit         ← completed commit
+#   20240115143000000.commit.request ← in-flight (incomplete)
+#   20240115143000000.rollback       ← rolled back commit
+#   20240115143000000.compaction     ← compaction instant
+#   20240115143000000.clean          ← cleaner instant
+
+# Read timeline programmatically
+from pyspark.sql.functions import col
+timeline = spark.read.format("hudi").load("s3://warehouse/silver/orders/") \
+    .select("_hoodie_commit_time", "_hoodie_commit_seqno", "_hoodie_record_key", "_hoodie_partition_path")
+timeline.show(5)
+
+# ── 4. Three query types ──────────────────────────────────────────────────────
+# Snapshot Query — latest state (default) — for COW: clean Parquet; for MOR: merges base+log
+snapshot_df = spark.read.format("hudi").load("s3://warehouse/silver/events/")
+
+# Incremental Query — changes since a commit time (like CDF in Delta)
+incremental_df = spark.read.format("hudi") \
+    .option("hoodie.datasource.query.type", "incremental") \
+    .option("hoodie.datasource.read.begin.instanttime", "20240115000000000") \
+    .load("s3://warehouse/silver/events/")
+
+# Read Optimized Query (MOR only) — reads only base Parquet files, skips delta logs
+# Fast but may not have the very latest records
+ro_df = spark.read.format("hudi") \
+    .option("hoodie.datasource.query.type", "read_optimized") \
+    .load("s3://warehouse/silver/events/")
+
+# ── 5. Compaction (MOR only) ──────────────────────────────────────────────────
+# Merges delta log files into base Parquet files
+# Can run inline (during write) or as a separate scheduled job
+spark.sql("CALL run_compaction(table => 'silver.events')")
+
+# ── 6. Delete a record ────────────────────────────────────────────────────────
+delete_df = spark.createDataFrame([("ORDER-9999",)], ["order_id"])
+delete_df.write \
+    .format("hudi") \
+    .options(**{**hudi_options_cow, "hoodie.datasource.write.operation": "delete"}) \
+    .mode("append") \
+    .save("s3://warehouse/silver/orders/")`}</CodeBlock>
+
+          <Quiz topicId="hudi-intro" questions={[
+            { question: "You have a high-frequency CDC pipeline ingesting 50,000 upserts/second. Which Hudi table type should you choose?", options: ["Copy-On-Write (COW) — rewrites Parquet files immediately for fast reads", "Merge-On-Read (MOR) — appends delta log files for fast writes, merges at read time", "Both are equivalent for streaming CDC", "Neither — use Delta Lake for streaming"], correct: 1 },
+            { question: "What is hoodie.datasource.write.precombine.field used for?", options: ["It defines the partition column for the table", "When multiple records share the same record key in a batch, the precombine field is used to pick the winner — the record with the higher value is kept", "It sets the sort order for Parquet files", "It controls the compaction trigger interval"], correct: 1 },
+            { question: "What does an Incremental Query in Hudi return?", options: ["A snapshot of the table at a historical timestamp", "Only the records that changed (inserted/updated/deleted) since a specified commit time — useful for propagating changes downstream", "All records sorted by commit time", "Records that failed validation"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('hudi-intro'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── FORMAT COMPARISON ─────────────────────────────────────────── */}
+        <section id="format-comparison" ref={el => { if (el) sectionRefs.current['format-comparison'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Table Formats Comparison</div>
+            <h1 className="topic-title">Delta vs Iceberg vs Hudi Comparison</h1>
+            <p className="topic-desc">Delta Lake, Apache Iceberg, and Apache Hudi all solve the same core problem — ACID transactions and reliable upserts on cloud data lakes — but with different architectural trade-offs, ecosystem alignments, and strengths. Understanding when to choose each format is critical for modern data platform design.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Vendor alignment:</strong> Delta Lake = Databricks + Azure (native on Databricks; excellent on ADLS). Iceberg = AWS + Snowflake + Dremio (native on AWS Glue, S3Tables, Snowflake). Hudi = Uber origin, strong on AWS EMR + S3. In practice, multi-cloud platforms are moving toward supporting all three — but your primary cloud/vendor choice often dictates the default.</div>
+          </div>
+
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.8rem', fontFamily: 'var(--font-mono)' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-100)', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-1)' }}>Feature</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: '#2563eb' }}>Delta Lake</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: '#7c3aed' }}>Apache Iceberg</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: '#059669' }}>Apache Hudi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { feature: 'ACID Transactions', delta: 'Yes (OCC)', iceberg: 'Yes (OCC)', hudi: 'Yes (OCC)' },
+                  { feature: 'Row-level Upsert', delta: 'MERGE (rewrite)', iceberg: 'MERGE + delete files (v2)', hudi: 'Native (COW/MOR)' },
+                  { feature: 'Time Travel', delta: 'Yes (version/timestamp)', iceberg: 'Yes (snapshot/timestamp)', hudi: 'Yes (commit timeline)' },
+                  { feature: 'Schema Evolution', delta: 'Yes (add/rename/drop)', iceberg: 'Yes (add/drop/rename/reorder/promote)', hudi: 'Yes (add/rename)' },
+                  { feature: 'Partition Evolution', delta: 'No (requires rewrite)', iceberg: 'Yes (zero-copy, backward compatible)', hudi: 'Limited' },
+                  { feature: 'Hidden Partitioning', delta: 'No', iceberg: 'Yes (transforms: day/month/bucket/truncate)', hudi: 'No' },
+                  { feature: 'Streaming Support', delta: 'Yes (Structured Streaming)', iceberg: 'Yes (Flink + Spark Streaming)', hudi: 'Yes (Spark Streaming, native)' },
+                  { feature: 'Incremental Reads', delta: 'CDF (Change Data Feed)', iceberg: 'Incremental scan between snapshots', hudi: 'Incremental query type' },
+                  { feature: 'Catalog Support', delta: 'Hive, Unity, Glue, Nessie', iceberg: 'Hive, Glue, REST, Nessie, JDBC', hudi: 'Hive, Glue, Alluxio' },
+                  { feature: 'Spark Support', delta: 'Excellent (native)', iceberg: 'Excellent', hudi: 'Good' },
+                  { feature: 'Flink Support', delta: 'Good', iceberg: 'Excellent (first-class)', hudi: 'Good' },
+                  { feature: 'Trino/Presto Support', delta: 'Good', iceberg: 'Excellent (native)', hudi: 'Good' },
+                  { feature: 'Concurrency Model', delta: 'Optimistic (S3/ADLS)', iceberg: 'Optimistic (pluggable)', hudi: 'Optimistic (file-level)' },
+                  { feature: 'Cloud Alignment', delta: 'Databricks, Azure', iceberg: 'AWS, Snowflake, Dremio', hudi: 'AWS EMR, Uber' },
+                  { feature: 'Write Amplification', delta: 'Medium (COW always)', iceberg: 'Low (v2 delete files)', hudi: 'Low (MOR log append)' },
+                ].map((row, i) => (
+                  <tr key={row.feature} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '7px 12px', fontWeight: 600, color: 'var(--text-1)' }}>{row.feature}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: '#2563eb' }}>{row.delta}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: '#7c3aed' }}>{row.iceberg}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: '#059669' }}>{row.hudi}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Reading and writing each format in PySpark ───────────────────────────────
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("FormatComparison").getOrCreate()
+
+# ── Delta Lake ────────────────────────────────────────────────────────────────
+# Write
+df.write.format("delta").mode("overwrite").save("s3://bucket/delta/orders/")
+
+# Read
+delta_df = spark.read.format("delta").load("s3://bucket/delta/orders/")
+
+# MERGE upsert
+from delta.tables import DeltaTable
+DeltaTable.forPath(spark, "s3://bucket/delta/orders/").alias("t").merge(
+    df.alias("s"), "t.order_id = s.order_id"
+).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+# Time travel
+spark.read.format("delta").option("versionAsOf", 3).load("s3://bucket/delta/orders/")
+
+# ── Apache Iceberg ────────────────────────────────────────────────────────────
+# Write (requires Iceberg catalog configured in SparkSession)
+df.writeTo("catalog.db.orders").append()
+
+# Alternative: write via DataFrameWriter
+df.write.format("iceberg").mode("append").save("catalog.db.orders")
+
+# Read
+iceberg_df = spark.table("catalog.db.orders")
+iceberg_df = spark.read.format("iceberg").load("s3://bucket/iceberg/orders/")
+
+# Time travel by snapshot
+spark.read.option("snapshot-id", "1234567890").table("catalog.db.orders")
+
+# Time travel by timestamp
+spark.sql("SELECT * FROM catalog.db.orders TIMESTAMP AS OF '2024-01-15 10:00:00'")
+
+# ── Apache Hudi ───────────────────────────────────────────────────────────────
+hudi_opts = {
+    "hoodie.table.name": "orders",
+    "hoodie.datasource.write.table.type": "COPY_ON_WRITE",
+    "hoodie.datasource.write.operation": "upsert",
+    "hoodie.datasource.write.recordkey.field": "order_id",
+    "hoodie.datasource.write.precombine.field": "updated_at",
+    "hoodie.datasource.write.partitionpath.field": "order_date",
+}
+
+# Write
+df.write.format("hudi").options(**hudi_opts).mode("append").save("s3://bucket/hudi/orders/")
+
+# Read (snapshot — latest)
+hudi_df = spark.read.format("hudi").load("s3://bucket/hudi/orders/")
+
+# Incremental read (changes since a commit time)
+hudi_df_incr = spark.read.format("hudi") \
+    .option("hoodie.datasource.query.type", "incremental") \
+    .option("hoodie.datasource.read.begin.instanttime", "20240115000000000") \
+    .load("s3://bucket/hudi/orders/")
+
+# ── Decision guide: when to choose each ──────────────────────────────────────
+# Choose DELTA LAKE when:
+#   - Your primary platform is Databricks or Azure Synapse
+#   - You need tight integration with Unity Catalog / Delta Sharing
+#   - Your team is already Spark-centric; you want the simplest ACID story
+#   - DLT (Delta Live Tables) pipelines are part of your architecture
+
+# Choose APACHE ICEBERG when:
+#   - You're on AWS (native on Glue, S3 Tables, Athena, EMR)
+#   - You need partition evolution without data rewrites
+#   - You want multi-engine support: Spark + Trino + Flink + Snowflake + Dremio
+#   - You're building an open lakehouse that must work across cloud vendors
+#   - Hidden partitioning is important for your use cases
+
+# Choose APACHE HUDI when:
+#   - You need the lowest write latency for high-frequency upserts (MOR)
+#   - You're on AWS EMR and following Uber's patterns
+#   - Your primary use case is near-real-time CDC ingestion
+#   - You need incremental processing built into the table format natively`}</CodeBlock>
+
+          <Quiz topicId="format-comparison" questions={[
+            { question: "Which table format offers partition evolution (changing the partition spec without rewriting data) as a first-class zero-copy operation?", options: ["Delta Lake — via OPTIMIZE + ZORDER", "Apache Iceberg — add/drop partition fields in metadata only; old and new files coexist transparently", "Apache Hudi — via timeline compaction", "All three support zero-copy partition evolution"], correct: 1 },
+            { question: "You are building a data platform on AWS that must be queryable from Spark, Trino, Flink, and Snowflake without vendor lock-in. Which format is the best fit?", options: ["Delta Lake — best multi-engine support overall", "Apache Hudi — native AWS support via EMR", "Apache Iceberg — excellent multi-engine support on AWS (Glue, Athena, EMR) with first-class Trino and Snowflake integration", "All three are equally suited for this scenario"], correct: 2 },
+            { question: "What is the key architectural reason Apache Hudi MOR has faster write performance than Delta Lake or Iceberg for high-frequency upserts?", options: ["Hudi uses in-memory storage for recent writes", "MOR appends only a small delta log file per write batch without rewriting existing Parquet files — the merge cost is deferred to read time or periodic compaction", "Hudi skips ACID validation for speed", "Hudi uses columnar compression that is faster to write"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('format-comparison'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
       </main>
