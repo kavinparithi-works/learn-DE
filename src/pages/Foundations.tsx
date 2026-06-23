@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Sidebar from '../components/Sidebar'
 import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
@@ -9,15 +9,25 @@ interface Props { completed: Set<string>; onComplete: () => void }
 const SECTIONS = [
   { title: 'Level 1 - Computer Fundamentals', items: [
     { id: 'binary', label: 'Binary and Number Systems' },
-    { id: 'cpu', label: 'CPU, Memory and Storage' },
+    { id: 'cpu', label: 'CPU Architecture' },
+    { id: 'memory', label: 'Memory Deep Dive' },
+    { id: 'storage', label: 'Storage Systems' },
     { id: 'os', label: 'Operating Systems' },
+    { id: 'linux', label: 'Linux for Data Engineers' },
     { id: 'networking', label: 'Networking Basics' },
+    { id: 'docker', label: 'Docker and Containers' },
   ]},
   { title: 'Level 2 - Data Fundamentals', items: [
     { id: 'data-types', label: 'Data Types and Schemas' },
     { id: 'file-formats', label: 'File Formats: CSV, JSON, Parquet, Avro' },
+    { id: 'compression', label: 'Compression Algorithms' },
+    { id: 'serialization', label: 'Serialization Formats' },
+    { id: 'databases', label: 'Databases Deep Dive' },
+    { id: 'data-warehouse', label: 'Data Warehouses' },
     { id: 'medallion', label: 'Medallion Architecture' },
-    { id: 'databases', label: 'Databases vs Data Warehouses vs Data Lakes' },
+    { id: 'data-quality', label: 'Data Quality' },
+    { id: 'data-governance', label: 'Data Governance' },
+    { id: 'batch-vs-streaming', label: 'Batch vs Streaming' },
   ]},
 ]
 
@@ -45,122 +55,733 @@ export default function Foundations({ completed, onComplete }: Props) {
       <Sidebar sections={SECTIONS} activeId={activeId} completed={completed} totalTopics={totalTopics} onItemClick={scrollTo} />
       <main className="main-content">
 
-        {/* BINARY */}
+        {/* ─────────────────────────────────────────────────────────── BINARY */}
         <section id="binary" ref={el => { if (el) sectionRefs.current['binary'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
             <h1 className="topic-title">Binary and Number Systems</h1>
-            <p className="topic-desc">Everything in a computer is stored as 0s and 1s. Understanding binary is the foundation of understanding data storage, processing, and networking.</p>
+            <p className="topic-desc">
+              Everything a computer stores or processes — integers, floats, text, images, instructions — is ultimately
+              a sequence of 0s and 1s. Understanding why, and how different number systems relate, is the foundation
+              every engineer needs before touching a data pipeline.
+            </p>
           </div>
+
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            A transistor is a tiny electronic switch. It is either conducting current (<strong>on = 1</strong>) or not
+            (<strong>off = 0</strong>). Modern CPUs pack billions of transistors onto a chip the size of a fingernail.
+            Because a transistor reliably represents exactly two states, and because noise, heat, and manufacturing
+            variation make more-than-two states impractical at scale, <em>binary</em> became the universal language of
+            computing. Every piece of data you will ever work with — a Parquet file, a Kafka message, a database
+            index — is stored as patterns of these two states.
+          </p>
 
           <BinaryAnimation />
 
-          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Why Binary?</h3>
-          <p style={{ color: 'var(--text-2)', lineHeight: 1.8, marginBottom: 16 }}>
-            Computers use binary because transistors - the physical switches inside a CPU - have exactly two states: ON (1) and OFF (0). This maps perfectly to Boolean logic (true/false) and electrical circuits.
-          </p>
-
-          <div className="callout callout-info">
-            <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>1 byte = 8 bits.</strong> A bit is a single 0 or 1. A byte can represent 256 different values (2^8). All data - text, images, video - is just bytes.</div>
-          </div>
-
-          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Number Systems</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, margin: '24px 0' }}>
             {[
-              { name: 'Binary', base: 'Base 2', digits: '0-1', example: '1010 = 10' },
-              { name: 'Octal', base: 'Base 8', digits: '0-7', example: '12 = 10' },
-              { name: 'Decimal', base: 'Base 10', digits: '0-9', example: '10 = 10' },
-              { name: 'Hexadecimal', base: 'Base 16', digits: '0-F', example: '0xA = 10' },
+              { base: 'Binary', radix: 2, digits: '0–1', example: '1010 = 10', note: 'Native to hardware. Each digit is one bit.' },
+              { base: 'Octal', radix: 8, digits: '0–7', example: '12 = 10', note: 'Groups of 3 bits. Used in Unix file permissions (chmod 755).' },
+              { base: 'Decimal', radix: 10, digits: '0–9', example: '10 = 10', note: 'Human-friendly. Every position is a power of 10.' },
+              { base: 'Hexadecimal', radix: 16, digits: '0–9, A–F', example: '0xA = 10', note: 'Groups of 4 bits. Used in memory addresses, colour codes, hashes.' },
             ].map(ns => (
-              <div key={ns.name} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 16 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 4 }}>{ns.name}</div>
-                <div style={{ fontSize: '.8rem', color: 'var(--text-3)' }}>{ns.base} | Digits: {ns.digits}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '.8rem', marginTop: 6, color: 'var(--blue-600)' }}>{ns.example}</div>
+              <div key={ns.base} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 4 }}>{ns.base} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '.85rem' }}>base {ns.radix}</span></div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: 6 }}>Digits: {ns.digits}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.9rem', background: 'var(--surface-3)', borderRadius: 6, padding: '4px 8px', marginBottom: 8 }}>{ns.example}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{ns.note}</div>
               </div>
             ))}
           </div>
 
-          <CodeBlock lang="python">{`# Python number conversions
-decimal = 42
-print(bin(decimal))   # '0b101010'  - binary
-print(oct(decimal))   # '0o52'      - octal
-print(hex(decimal))   # '0x2a'      - hexadecimal
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '28px 0 10px' }}>Signed Integers: Two's Complement</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 12 }}>
+            How does a computer store <strong>negative numbers</strong> using only 0s and 1s? The answer is
+            <em> two's complement</em>. In an 8-bit signed integer, the most significant bit is the <em>sign bit</em>:
+            0 means positive, 1 means negative. The value <code>-1</code> is stored as <code>11111111</code> in 8 bits.
+          </p>
+          <p style={{ lineHeight: 1.8, marginBottom: 12 }}>
+            <strong>How to compute two's complement of a number:</strong>
+          </p>
+          <ol style={{ lineHeight: 2, paddingLeft: 24, marginBottom: 16 }}>
+            <li>Write the positive value in binary (e.g. <code>+1</code> → <code>00000001</code>).</li>
+            <li>Invert all bits (flip every 0 to 1 and vice versa): <code>11111110</code>.</li>
+            <li>Add 1 to the result: <code>11111110 + 1 = 11111111</code>. That is <code>-1</code>.</li>
+          </ol>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            This scheme is elegant because the same addition hardware works for both positive and negative numbers
+            — no special cases needed. An 8-bit signed integer can represent −128 to +127; an unsigned 8-bit integer
+            can represent 0 to 255.
+          </p>
 
-# Convert back to decimal
-print(int('101010', 2))  # 42 from binary
-print(int('2a', 16))     # 42 from hex
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '28px 0 10px' }}>IEEE 754 Floating-Point</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 12 }}>
+            Real numbers like 3.14 cannot be stored exactly in a fixed number of bits. IEEE 754 uses three fields
+            packed into 32 bits (single precision) or 64 bits (double precision):
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, margin: '12px 0 20px' }}>
+            {[
+              { name: 'Sign bit', bits: '1 bit', desc: '0 = positive, 1 = negative' },
+              { name: 'Exponent', bits: '8 bits (32-bit)', desc: 'Biased by 127. Controls the magnitude (scale).' },
+              { name: 'Mantissa', bits: '23 bits (32-bit)', desc: 'Fractional significand. Encodes the precision.' },
+            ].map(f => (
+              <div key={f.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.82rem', color: 'var(--accent)', marginBottom: 6 }}>{f.bits}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{f.desc}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            The value is computed as: <code>(-1)^sign × 1.mantissa × 2^(exponent−127)</code>. This lets floats
+            cover an enormous range (±3.4 × 10^38 for 32-bit), but at the cost of precision — most decimal fractions
+            are rounded to the nearest representable value.
+          </p>
 
-# Bit operations - crucial for data engineering masks and flags
-a, b = 0b1100, 0b1010
-print(a & b)   # AND  -> 0b1000 = 8
-print(a | b)   # OR   -> 0b1110 = 14
-print(a ^ b)   # XOR  -> 0b0110 = 6
-print(a << 1)  # Left shift  -> 0b11000 = 24
-print(a >> 1)  # Right shift -> 0b0110 = 6`}</CodeBlock>
+          <CodeBlock lang="python">{`# ── Number system conversions ─────────────────────────────────────────────
+n = 255
+print(bin(n))    # '0b11111111'
+print(oct(n))    # '0o377'
+print(hex(n))    # '0xff'
+
+# Parse from any base
+print(int('ff', 16))   # 255
+print(int('377', 8))   # 255
+print(int('11111111', 2))  # 255
+
+# ── Bitwise operations ────────────────────────────────────────────────────
+a, b = 0b1100, 0b1010   # 12 and 10
+print(bin(a & b))   # AND  → 0b1000  (8)
+print(bin(a | b))   # OR   → 0b1110  (14)
+print(bin(a ^ b))   # XOR  → 0b0110  (6)
+print(bin(~a))      # NOT  → -0b1101 (-13, two's complement)
+print(bin(a << 1))  # left shift  → 0b11000 (24, multiply by 2)
+print(bin(a >> 1))  # right shift → 0b110   (6,  divide by 2)
+
+# Bit flags are common in data engineering (permissions, bitmask columns)
+READ    = 0b001  # 1
+WRITE   = 0b010  # 2
+EXECUTE = 0b100  # 4
+perms = READ | WRITE   # 3
+print(bool(perms & READ))    # True  — has read
+print(bool(perms & EXECUTE)) # False — no execute
+
+# ── Two's complement manually ──────────────────────────────────────────────
+def twos_complement(n, bits=8):
+    if n >= 0:
+        return format(n, f'0{bits}b')
+    return format((1 << bits) + n, f'0{bits}b')
+
+print(twos_complement(-1))   # 11111111
+print(twos_complement(-128)) # 10000000
+print(twos_complement(127))  # 01111111
+
+# ── Floating-point precision pitfall ──────────────────────────────────────
+print(0.1 + 0.2)          # 0.30000000000000004  ← NOT 0.3!
+print(0.1 + 0.2 == 0.3)   # False
+import math
+print(math.isclose(0.1 + 0.2, 0.3))  # True — use this for comparisons
+
+import struct
+# See the raw IEEE 754 bytes of a float
+print(struct.pack('>f', 3.14).hex())  # '4048f5c3'`}</CodeBlock>
+
+          <div style={{ background: 'var(--warning-bg, #2d2000)', border: '1px solid var(--warning-border, #7a5500)', borderRadius: 'var(--radius-lg)', padding: '14px 18px', margin: '20px 0', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+            <div>
+              <strong>Floating-point precision in data pipelines</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>
+                Never use <code>float</code> or <code>DOUBLE</code> for monetary values. Use <code>DECIMAL</code> /
+                <code>NUMERIC</code> in SQL or Python's <code>decimal.Decimal</code>. Accumulating rounding errors
+                across billions of transactions will cause reconciliation nightmares. Also be careful when joining
+                tables on float columns — <code>0.1 + 0.2 ≠ 0.3</code> means equality checks silently miss rows.
+              </p>
+            </div>
+          </div>
 
           <Quiz topicId="binary" questions={[
-            { question: "How many different values can 1 byte represent?", options: ["8", "16", "128", "256"], correct: 3 },
-            { question: "What is the decimal value of binary 1010?", options: ["5", "8", "10", "12"], correct: 2 },
-            { question: "In data engineering, why is hexadecimal commonly used for memory addresses?", options: ["It's faster to compute", "Each hex digit represents exactly 4 bits, making it compact", "It uses less storage", "Computers only understand hex"], correct: 1 },
+            {
+              question: "What is the decimal value of the binary number 10110101?",
+              options: ["181", "165", "171", "185"],
+              correct: 0,
+              explanation: "128+32+16+4+1 = 181"
+            },
+            {
+              question: "In two's complement, how is -5 represented in 8 bits?",
+              options: ["10000101", "11111010", "11111011", "10000100"],
+              correct: 2,
+              explanation: "Invert 00000101 → 11111010, then add 1 → 11111011"
+            },
+            {
+              question: "Why should you never store currency as a floating-point number?",
+              options: [
+                "Floats are too slow for financial calculations",
+                "Floats cannot represent numbers larger than 1000",
+                "Most decimal fractions cannot be represented exactly in binary floating point, causing rounding errors",
+                "Databases don't support float columns"
+              ],
+              correct: 2,
+              explanation: "IEEE 754 cannot represent most decimal fractions exactly, leading to cumulative rounding errors"
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('binary'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+
+          <button
+            onClick={async () => { await markTopicComplete('binary'); onComplete() }}
+            style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
+          >
             Mark Complete ✓
           </button>
         </section>
 
-        {/* CPU */}
+        {/* ──────────────────────────────────────────────────────────────── CPU */}
         <section id="cpu" ref={el => { if (el) sectionRefs.current['cpu'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
-            <h1 className="topic-title">CPU, Memory and Storage</h1>
-            <p className="topic-desc">Understanding the hardware hierarchy directly impacts how you write efficient Spark jobs, tune memory settings, and diagnose performance issues.</p>
+            <h1 className="topic-title">CPU Architecture</h1>
+            <p className="topic-desc">
+              Understanding how a CPU executes instructions — and where it spends time waiting — helps you write
+              data pipelines that are orders of magnitude faster without changing your algorithm.
+            </p>
           </div>
 
           <CpuAnimation />
 
-          <h3 style={{ marginBottom: 12, marginTop: 24 }}>The Memory Hierarchy</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '28px 0 10px' }}>Core Components</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
             {[
-              { level: 'CPU Registers', speed: '< 1ns', size: 'Bytes', color: '#ef4444', desc: 'Fastest, inside CPU, holds current instruction data' },
-              { level: 'L1/L2/L3 Cache', speed: '1-10ns', size: 'KB-MB', color: '#f97316', desc: 'SRAM, built into CPU, avoids slow RAM fetches (cache miss = 100x slower)' },
-              { level: 'RAM (DRAM)', speed: '60-100ns', size: 'GB', color: '#f59e0b', desc: 'Working memory for active processes, volatile, Spark uses this heavily' },
-              { level: 'NVMe SSD', speed: '50-100μs', size: 'TB', color: '#22c55e', desc: 'Local disk, fast but 1000x slower than RAM, Spark spills here' },
-              { level: 'HDD / Network Storage', speed: '1-10ms', size: 'TB-PB', color: '#3b82f6', desc: 'ADLS Gen2, S3, Delta Lake live here - slowest tier' },
-            ].map(m => (
-              <div key={m.level} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', background: 'white' }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
-                <div style={{ minWidth: 160, fontWeight: 700, fontSize: '.88rem' }}>{m.level}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '.8rem', color: 'var(--blue-600)', minWidth: 80 }}>{m.speed}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '.8rem', color: 'var(--purple-600)', minWidth: 60 }}>{m.size}</div>
-                <div style={{ fontSize: '.82rem', color: 'var(--text-3)', lineHeight: 1.5 }}>{m.desc}</div>
+              { name: 'ALU', full: 'Arithmetic Logic Unit', desc: 'Executes all arithmetic (add, multiply) and logical (AND, OR, compare) operations. This is where your SQL aggregations actually happen.' },
+              { name: 'CU', full: 'Control Unit', desc: 'Fetches instructions from memory, decodes them, and orchestrates the ALU, registers, and memory bus. The conductor of the CPU orchestra.' },
+              { name: 'Registers', full: 'On-chip storage', desc: 'Tiny, ultra-fast storage (32 or 64 bits each) directly on the CPU die. There are typically 16–32 general-purpose registers. Fastest storage that exists.' },
+            ].map(c => (
+              <div key={c.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 2 }}>{c.name}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--accent)', marginBottom: 8 }}>{c.full}</div>
+                <div style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{c.desc}</div>
               </div>
             ))}
           </div>
 
-          <div className="callout callout-warning">
-            <span className="callout-icon">⚠️</span>
-            <div className="callout-body"><strong>Spark and the memory hierarchy:</strong> Spark keeps RDDs in RAM for fast reuse. When executor memory is exhausted it spills to disk (NVMe) - 1000x slower. Always size your executor memory to avoid spills. Use <code>spark.executor.memory</code> and <code>spark.memory.fraction</code>.</div>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Fetch–Decode–Execute Cycle</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            Every instruction your Python or SQL query becomes goes through this cycle billions of times per second:
+          </p>
+          <div style={{ display: 'flex', gap: 0, marginBottom: 24, flexWrap: 'wrap' }}>
+            {['1. Fetch — CU reads the next instruction from memory (via the program counter)', '2. Decode — CU interprets the opcode to determine what operation to perform', '3. Execute — ALU performs the operation; result is written to a register or memory'].map((step, i) => (
+              <div key={i} style={{ flex: '1 1 200px', background: i % 2 === 0 ? 'var(--surface-2)' : 'var(--surface-3)', padding: '14px 18px', borderRadius: 8, margin: 4, fontSize: '.88rem', lineHeight: 1.6 }}>
+                {step}
+              </div>
+            ))}
           </div>
 
-          <CodeBlock lang="python">{`# Spark memory configuration - understanding hardware tiers
-spark = SparkSession.builder \\
-    .config("spark.executor.memory", "8g")       # Total executor memory (RAM)
-    .config("spark.executor.cores", "4")          # CPU cores per executor
-    .config("spark.memory.fraction", "0.6")       # 60% for execution+storage
-    .config("spark.memory.storageFraction", "0.5")# 50% of above for RDD cache
-    .config("spark.sql.shuffle.partitions", "200")# Shuffle output partitions
-    .getOrCreate()
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Clock Speed, Cores, and Hyper-Threading</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            <strong>Clock speed</strong> (GHz) counts how many cycles per second the CPU runs — more cycles means more
+            instructions per second, all else being equal. <strong>Multiple cores</strong> allow true parallel
+            execution; a 16-core CPU can genuinely run 16 instruction streams simultaneously.
+            <strong> Hyper-threading</strong> (Intel) / SMT (AMD) lets each physical core present two <em>logical</em>
+            cores to the OS by sharing execution units between two threads — useful when one thread is stalled on
+            a memory access. <strong>SIMD</strong> (Single Instruction Multiple Data) instructions like AVX-512 apply
+            one operation to 8 doubles at once — this is how columnar engines like DuckDB and Apache Arrow achieve
+            their speed on aggregations.
+          </p>
 
-# Check if spilling is occurring
-df.explain(True)  # Look for "Exchange" nodes (shuffles = network + disk I/O)`}</CodeBlock>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Cache Hierarchy — Why Data Locality Matters</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 14 }}>
+            The CPU is orders of magnitude faster than RAM. To bridge this gap, CPUs have layers of progressively
+            larger but slower cache memory. A cache miss — when data is not in the cache and must be fetched from
+            a lower level — can stall the CPU for tens or hundreds of nanoseconds. Columnar storage formats like
+            Parquet are fast partly because they pack the same column's values together, maximising cache reuse
+            during aggregations.
+          </p>
+
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  {['Level', 'Typical Size', 'Latency', 'Where'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontWeight: 700 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['L1 Cache', '32 KB / core', '~1 ns', 'On each core'],
+                  ['L2 Cache', '256 KB / core', '~4 ns', 'On each core'],
+                  ['L3 Cache', '8–32 MB shared', '~10 ns', 'Shared across cores'],
+                  ['RAM', '16–512 GB', '~60 ns', 'On the motherboard (DIMM slots)'],
+                  ['NVMe SSD', '1–4 TB', '~50 µs', 'PCIe slot or M.2'],
+                  ['HDD', '1–20 TB', '~5 ms', 'SATA or SAS bay'],
+                ].map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--surface-1)' }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '9px 14px', borderBottom: '1px solid var(--border)', fontFamily: j === 0 ? 'monospace' : 'inherit', fontWeight: j === 0 ? 600 : 400 }}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Branch Prediction</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            Modern CPUs speculatively execute code <em>before</em> knowing the outcome of a branch (if/else). If the
+            prediction is wrong, the CPU must flush the pipeline and re-execute — wasting ~15 cycles. This is why
+            data engineers sometimes see better performance with branchless code (e.g., using
+            <code> CASE WHEN</code> with arithmetic instead of nested <code>IF</code>). It also underlies the infamous
+            Spectre and Meltdown CPU vulnerabilities.
+          </p>
+
+          <CodeBlock lang="python">{`# ── CPU-aware data engineering ─────────────────────────────────────────────
+import os, multiprocessing
+
+# Always size your thread/process pool to physical cores, not logical
+cpu_count = multiprocessing.cpu_count()
+print(f"Logical CPUs: {cpu_count}")
+
+# In PySpark, set parallelism based on available cores
+# spark.conf.set("spark.default.parallelism", str(cpu_count * 2))
+
+# ── NumPy uses SIMD under the hood ─────────────────────────────────────────
+import numpy as np
+
+# This single line uses AVX vectorisation on modern CPUs:
+arr = np.arange(10_000_000, dtype=np.float64)
+result = arr.sum()   # ~10 ms — SIMD adds 4 doubles per clock cycle
+
+# A pure Python loop doing the same:
+# total = sum(arr)   # ~500 ms — no SIMD, no cache prefetch
+
+# ── Measure cache effects ──────────────────────────────────────────────────
+import time
+
+# Row-major access (cache friendly — reads contiguous memory)
+matrix = [[0] * 1000 for _ in range(1000)]
+t = time.perf_counter()
+for i in range(1000):
+    for j in range(1000):
+        matrix[i][j] += 1
+print(f"Row-major: {time.perf_counter() - t:.3f}s")
+
+# Column-major access (cache unfriendly — jumps 1000 elements each step)
+t = time.perf_counter()
+for j in range(1000):
+    for i in range(1000):
+        matrix[i][j] += 1
+print(f"Col-major: {time.perf_counter() - t:.3f}s")
+# Column-major will be noticeably slower due to cache misses`}</CodeBlock>
 
           <Quiz topicId="cpu" questions={[
-            { question: "Why does a Spark cache miss hurt performance so much?", options: ["It re-runs the entire job", "Data must be fetched from disk (1000x slower than RAM)", "It causes a shuffle", "It increases network traffic"], correct: 1 },
-            { question: "What is L1/L2 cache?", options: ["A Redis cache", "Fast SRAM built into the CPU to avoid slow RAM fetches", "A Spark cache layer", "A type of SSD"], correct: 1 },
-            { question: "When Spark executor memory is exhausted, data spills to:", options: ["RAM on another node", "The JVM heap", "Local disk (NVMe/SSD)", "ADLS Gen2"], correct: 2 },
+            {
+              question: "What is the primary purpose of the CPU's L1 cache?",
+              options: [
+                "Store the operating system kernel",
+                "Hold frequently accessed data close to the execution units to avoid slow RAM accesses",
+                "Buffer data being written to disk",
+                "Store the program's source code"
+              ],
+              correct: 1,
+              explanation: "L1 cache is on-die, ~1 ns latency, and holds the hottest data to avoid 60 ns RAM round trips"
+            },
+            {
+              question: "Why do columnar formats like Parquet perform better for aggregations than row-oriented formats?",
+              options: [
+                "Parquet files are always smaller than CSV",
+                "Columnar storage places a single column's values contiguously, maximising CPU cache reuse during scans",
+                "Parquet uses a faster compression algorithm",
+                "Row formats require more network bandwidth"
+              ],
+              correct: 1,
+              explanation: "Cache locality: when scanning column A, all of column A fits in cache — no wasted bytes from columns B, C, D"
+            },
+            {
+              question: "Hyper-threading presents two logical cores per physical core. What is the main benefit?",
+              options: [
+                "It doubles the number of ALUs available",
+                "It doubles the clock speed",
+                "It allows one thread to use execution units while another thread is stalled on a memory access",
+                "It prevents cache misses entirely"
+              ],
+              correct: 2,
+              explanation: "HT hides memory latency by keeping the execution units busy with a second thread while the first waits for data"
+            },
           ]} />
-          <button onClick={async () => { await markTopicComplete('cpu'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+
+          <button
+            onClick={async () => { await markTopicComplete('cpu'); onComplete() }}
+            style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
+          >
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* ─────────────────────────────────────────────────────────── MEMORY */}
+        <section id="memory" ref={el => { if (el) sectionRefs.current['memory'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
+            <h1 className="topic-title">Memory Deep Dive</h1>
+            <p className="topic-desc">
+              RAM is the working space of every program. Understanding how memory is allocated, accessed, and
+              reclaimed explains why Spark jobs OOM, why Python can be slow, and how to tune JVM heap settings.
+            </p>
+          </div>
+
+          <MemoryHierarchyAnimation />
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '28px 0 10px' }}>DRAM vs SRAM</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            {[
+              { name: 'SRAM (Static RAM)', points: ['Uses 6 transistors per bit — no refresh needed', 'Extremely fast (~1–4 ns)', 'Very expensive — used for CPU caches (L1/L2/L3)', 'Holds state as long as power is supplied'] },
+              { name: 'DRAM (Dynamic RAM)', points: ['Uses 1 transistor + 1 capacitor per bit', 'Must be electrically refreshed thousands of times/second', 'Much cheaper — used for main memory (16/32/64 GB)', '~60 ns latency; bandwidth ~50 GB/s (DDR5)'] },
+            ].map(t => (
+              <div key={t.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, marginBottom: 10 }}>{t.name}</div>
+                <ul style={{ paddingLeft: 18, margin: 0, lineHeight: 2 }}>
+                  {t.points.map((p, i) => <li key={i} style={{ fontSize: '.85rem', color: 'var(--text-secondary)' }}>{p}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Virtual Memory and Paging</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            The OS gives every process the illusion that it has the entire address space to itself (e.g., 0 to 2^64 − 1
+            on a 64-bit system). This is <em>virtual memory</em>. Behind the scenes the OS maps virtual pages (usually
+            4 KB each) to physical RAM frames via a <em>page table</em>. When a process accesses a virtual address that
+            is not currently in physical RAM, a <strong>page fault</strong> occurs: the OS pauses the process, loads the
+            required page from disk (swap space / page file), updates the page table, and resumes execution. This is
+            enormously expensive (~5 ms) compared to a normal memory access (~60 ns) — roughly 80,000× slower. When
+            a Spark executor or Pandas DataFrame exceeds available RAM and starts hitting swap, performance collapses.
+          </p>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Stack vs Heap</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            {[
+              { name: 'Stack', color: 'var(--accent)', points: ['LIFO structure managed automatically by the CPU', 'Stores local variables, function call frames', 'Allocation/deallocation is O(1) — just move the stack pointer', 'Fixed size (usually 1–8 MB per thread); stack overflow = crash', 'Lives for the duration of the function call'] },
+              { name: 'Heap', color: 'var(--warning-color, #f59e0b)', points: ['Unstructured pool of free memory', 'Stores objects, arrays, all dynamically-sized data', 'Allocation (malloc/new) is slower; fragmentation is a concern', 'Can grow to use all available RAM', 'Must be explicitly freed or managed by a garbage collector'] },
+            ].map(t => (
+              <div key={t.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 16, border: `1px solid ${t.color}` }}>
+                <div style={{ fontWeight: 700, color: t.color, marginBottom: 10 }}>{t.name}</div>
+                <ul style={{ paddingLeft: 18, margin: 0, lineHeight: 2 }}>
+                  {t.points.map((p, i) => <li key={i} style={{ fontSize: '.85rem', color: 'var(--text-secondary)' }}>{p}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Garbage Collection</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 12 }}>
+            Most high-level languages (Python, Java/Scala, Go) automatically reclaim heap memory via a garbage
+            collector (GC). Understanding the GC strategy is critical for data engineers tuning Spark (JVM) or
+            optimising Python memory usage.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
+            {[
+              { name: 'Reference Counting', lang: 'Python (CPython)', desc: 'Each object tracks how many references point to it. When count → 0, memory is freed immediately. Cycles (A → B → A) require a separate cycle detector.' },
+              { name: 'Mark-and-Sweep', lang: 'Go, older JVMs', desc: 'GC traverses all live objects from roots (mark phase), then sweeps unreachable objects. Can cause "stop-the-world" pauses.' },
+              { name: 'Generational GC', lang: 'JVM (G1/ZGC), Python 3', desc: 'Most objects die young. GC divides heap into generations (young/old). Frequently collects the young generation cheaply; rarely collects old objects. Reduces pause times.' },
+            ].map(g => (
+              <div key={g.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, marginBottom: 3 }}>{g.name}</div>
+                <div style={{ fontSize: '.78rem', fontFamily: 'monospace', color: 'var(--accent)', marginBottom: 8 }}>{g.lang}</div>
+                <div style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{g.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <CodeBlock lang="python">{`# ── Memory sizes of common objects ────────────────────────────────────────
+import sys
+
+print(sys.getsizeof(42))          # 28 bytes  — Python int has overhead!
+print(sys.getsizeof(3.14))        # 24 bytes
+print(sys.getsizeof("hello"))     # 54 bytes  — str includes length + hash
+print(sys.getsizeof([1, 2, 3]))   # 88 bytes  — list has per-element pointers
+
+# Python objects are expensive. A list of 1M integers = ~8 MB (pointers)
+# + 28 MB (the int objects themselves) = 36 MB for what could be 8 MB in C.
+
+import numpy as np
+arr = np.arange(1_000_000, dtype=np.int64)
+print(arr.nbytes)  # 8,000,000 bytes = 8 MB — no Python object overhead
+
+# ── Garbage collection controls ────────────────────────────────────────────
+import gc
+
+gc.disable()   # Disable automatic GC (useful in tight loops)
+# ... do allocation-heavy work ...
+gc.collect()   # Force a full collection
+gc.enable()
+
+# Check reference count (CPython only)
+import ctypes
+x = [1, 2, 3]
+ref_id = id(x)
+print(sys.getrefcount(x))  # Usually n+1 because getrefcount holds a ref
+
+# ── Memory profiling with tracemalloc ──────────────────────────────────────
+import tracemalloc
+
+tracemalloc.start()
+data = [i ** 2 for i in range(100_000)]
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.statistics('lineno')
+for stat in top_stats[:3]:
+    print(stat)
+
+# ── pandas memory reduction tips ──────────────────────────────────────────
+import pandas as pd
+df = pd.DataFrame({'id': range(100_000), 'status': ['active'] * 100_000})
+print(df.memory_usage(deep=True).sum())  # ~5.6 MB
+
+df['id'] = df['id'].astype('int32')          # int64 → int32: half the memory
+df['status'] = df['status'].astype('category')  # repeated strings → category
+print(df.memory_usage(deep=True).sum())  # ~0.5 MB — 10x smaller!`}</CodeBlock>
+
+          <Quiz topicId="memory" questions={[
+            {
+              question: "Why does hitting swap space (page file) cause dramatic performance degradation?",
+              options: [
+                "Swap uses a different memory bus",
+                "The CPU must switch to kernel mode to access swap",
+                "Swap is on disk, which is ~80,000x slower than RAM — a page fault stalls the process for ~5 ms",
+                "Swap only supports 32-bit addresses"
+              ],
+              correct: 2,
+              explanation: "A page fault requires reading from disk (~5 ms) vs RAM (~60 ns) — about 80,000x slower"
+            },
+            {
+              question: "A Spark job using Python UDFs is much slower than one using native SQL functions. The main memory reason is:",
+              options: [
+                "Python UDFs use the stack instead of the heap",
+                "Each Python UDF call creates a full Python object with reference counting overhead; native SQL stays in JVM heap with raw arrays",
+                "Python uses mark-and-sweep GC which is slower",
+                "Python UDFs require more CPU registers"
+              ],
+              correct: 1,
+              explanation: "Python object overhead (~28 bytes per int) and serialisation between JVM and Python processes is the bottleneck"
+            },
+            {
+              question: "Converting a Pandas string column with many repeated values to 'category' dtype reduces memory because:",
+              options: [
+                "Category dtype compresses strings using gzip",
+                "Category dtype stores an integer code per row and a single dictionary of unique values, instead of a full string per row",
+                "Category dtype uses SRAM instead of DRAM",
+                "Category dtype disables garbage collection for that column"
+              ],
+              correct: 1,
+              explanation: "Like an enum/dictionary encoding — store an int8 code (1 byte) instead of the full string per row"
+            },
+          ]} />
+
+          <button
+            onClick={async () => { await markTopicComplete('memory'); onComplete() }}
+            style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
+          >
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* ─────────────────────────────────────────────────────────── STORAGE */}
+        <section id="storage" ref={el => { if (el) sectionRefs.current['storage'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
+            <h1 className="topic-title">Storage Systems</h1>
+            <p className="topic-desc">
+              From spinning hard drives to cloud object stores, storage technology shapes every architectural
+              decision in data engineering — from file format choice to pipeline throughput.
+            </p>
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 10px' }}>HDD — Hard Disk Drives</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            HDDs store data on <strong>spinning magnetic platters</strong>. A read/write head on an actuator arm must
+            physically move to the correct track (<em>seek time</em>, ~2–10 ms) and then wait for the disk to rotate
+            the target sector underneath it (<em>rotational latency</em>, ~2–8 ms at 7200 RPM). This mechanical motion
+            makes random I/O extremely expensive. Sequential I/O is much better because the head sweeps continuously
+            along a track. HDDs are the cheapest $/GB storage and are still used for archival and cold data tiers.
+          </p>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '20px 0 10px' }}>SSD — Solid State Drives</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            SSDs use <strong>NAND flash memory</strong> — no moving parts. Data is stored as electrical charge in
+            floating-gate transistors. Because there is no mechanical seek, random I/O latency drops to ~100 µs
+            (SATA SSD). <strong>Wear leveling</strong> is the controller algorithm that distributes writes evenly
+            across all cells to extend drive lifetime — flash cells wear out after ~3,000–100,000 program/erase cycles
+            depending on the NAND type (TLC, MLC, SLC).
+          </p>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '20px 0 10px' }}>NVMe — Non-Volatile Memory Express</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            NVMe drives use the <strong>PCIe bus</strong> instead of the older SATA bus, which was originally designed
+            for spinning drives and became the bottleneck for fast flash. PCIe provides multiple lanes of high-speed
+            serial communication directly to the CPU, cutting latency to ~20 µs and pushing sequential bandwidth to
+            7 GB/s on PCIe 4.0 — over 12× faster than SATA SSD. Modern cloud machines (AWS i3/i4i) use NVMe
+            instance storage for Spark shuffle and temp data.
+          </p>
+
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  {['Type', 'Random IOPS', 'Sequential Bandwidth', 'Latency', 'Best For'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontWeight: 700 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['HDD 7200 RPM', '100–200 IOPS', '~150 MB/s', '5–10 ms', 'Archival, cold storage'],
+                  ['SATA SSD', '~100K IOPS', '~550 MB/s', '~100 µs', 'OS drives, general purpose'],
+                  ['NVMe PCIe 4.0', '~500K IOPS', '~7 GB/s', '~20 µs', 'Spark shuffle, databases, hot data'],
+                ].map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--surface-1)' }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '9px 14px', borderBottom: '1px solid var(--border)', fontWeight: j === 0 ? 600 : 400 }}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>RAID Levels</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 14 }}>
+            RAID (Redundant Array of Independent Disks) combines multiple physical drives into a logical volume for
+            performance and/or redundancy. Understanding RAID helps when designing on-prem storage for databases or
+            Hadoop clusters, and the same concepts appear in distributed storage systems.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+            {[
+              { level: 'RAID 0', name: 'Striping', note: 'No redundancy', desc: 'Data split across all drives. Maximum performance; if any drive fails, all data is lost.' },
+              { level: 'RAID 1', name: 'Mirroring', note: '50% capacity', desc: 'Data written identically to two drives. Survives one drive failure. Simple and reliable.' },
+              { level: 'RAID 5', name: 'Stripe + Parity', note: 'N−1 capacity', desc: 'Parity distributed across all drives. Survives one failure; needs ≥3 drives.' },
+              { level: 'RAID 6', name: 'Dual Parity', note: 'N−2 capacity', desc: 'Like RAID 5 but two independent parity blocks. Survives two simultaneous drive failures.' },
+              { level: 'RAID 10', name: 'Stripe of Mirrors', note: '50% capacity', desc: 'Combines RAID 1+0. High performance and redundancy. Needs ≥4 drives. Favoured for databases.' },
+            ].map(r => (
+              <div key={r.level} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontFamily: 'monospace', marginBottom: 2 }}>{r.level}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--accent)', marginBottom: 4 }}>{r.name} — {r.note}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>File Systems</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { name: 'NTFS', os: 'Windows', desc: 'Journaled FS; supports ACLs, encryption, compression. Max file size 16 EB. Standard for Windows data pipelines.' },
+              { name: 'ext4', os: 'Linux', desc: 'Most common Linux FS. Journaled, supports files up to 16 TB. Default on Ubuntu/RHEL data engineering VMs.' },
+              { name: 'HDFS', os: 'Distributed', desc: 'Hadoop Distributed File System. Splits files into 128 MB blocks replicated 3× across a cluster. Designed for high-throughput sequential reads of very large files.' },
+            ].map(fs => (
+              <div key={fs.name} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 2 }}>{fs.name}</div>
+                <div style={{ fontSize: '.78rem', fontFamily: 'monospace', color: 'var(--accent)', marginBottom: 8 }}>{fs.os}</div>
+                <div style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{fs.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '24px 0 10px' }}>Sequential vs Random I/O</h2>
+          <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
+            <strong>Sequential I/O</strong> reads/writes consecutive blocks — the OS and drive can predict the next
+            block and prefetch it. On HDDs this is critical (the head doesn't need to seek). On SSDs and NVMe the gap
+            is smaller but still significant because of read-ahead buffers and OS page cache.
+            <strong> Random I/O</strong> accesses scattered sectors — each requires a new seek on HDD, and even on
+            SSDs/NVMe the controller must service independent requests. This is why columnar formats (Parquet, ORC)
+            dramatically outperform row formats (CSV) for analytical queries that only read a few columns out of
+            hundreds — they enable sequential I/O on just the needed column chunks.
+          </p>
+
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '20px 0 10px' }}>Key Metrics: IOPS, Throughput, Latency</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { metric: 'IOPS', full: 'I/O Operations Per Second', desc: 'Count of read/write operations per second. Critical for transactional databases (many small random reads/writes).' },
+              { metric: 'Throughput', full: 'MB/s or GB/s', desc: 'Total data volume transferred per second. Critical for analytics and ETL pipelines moving large files.' },
+              { metric: 'Latency', full: 'µs or ms per operation', desc: 'Time from request to completion. Critical for interactive queries and real-time pipelines where user/system waits.' },
+            ].map(m => (
+              <div key={m.metric} style={{ background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: 14, border: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 2 }}>{m.metric}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginBottom: 8 }}>{m.full}</div>
+                <div style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <CodeBlock lang="bash">{`# ── Check disk info on Linux ──────────────────────────────────────────────
+lsblk -o NAME,SIZE,TYPE,ROTA,MOUNTPOINT
+# ROTA=1 → spinning HDD; ROTA=0 → SSD/NVMe
+
+# Check NVMe drives specifically
+ls /dev/nvme*
+
+# ── Benchmark sequential read throughput ──────────────────────────────────
+# dd: read 4 GB of zeros sequentially, measure throughput
+dd if=/dev/zero of=/tmp/testfile bs=1M count=4096 oflag=direct
+# oflag=direct bypasses the OS page cache for a true disk measurement
+
+# Read it back
+dd if=/tmp/testfile of=/dev/null bs=1M iflag=direct
+
+# ── fio: more accurate I/O benchmark ─────────────────────────────────────
+# Random read IOPS (4K blocks — typical database workload)
+fio --name=randread --ioengine=libaio --iodepth=32 \
+    --rw=randread --bs=4k --size=1G --numjobs=4 --runtime=60 \
+    --group_reporting
+
+# Sequential write throughput (1M blocks — ETL workload)
+fio --name=seqwrite --ioengine=libaio --iodepth=1 \
+    --rw=write --bs=1M --size=4G --numjobs=1 --runtime=60 \
+    --group_reporting
+
+# ── Python: check if disk is SSD or HDD ───────────────────────────────────
+# On Linux, read the rotational flag
+with open('/sys/block/sda/queue/rotational') as f:
+    is_hdd = f.read().strip() == '1'
+print("HDD" if is_hdd else "SSD/NVMe")
+
+# ── Disk usage ──────────────────────────────────────────────────────────
+df -h          # human-readable disk free space
+du -sh /data/* # size of each item in /data`}</CodeBlock>
+
+          <Quiz topicId="storage" questions={[
+            {
+              question: "Why is sequential I/O so much faster than random I/O on HDDs?",
+              options: [
+                "Sequential I/O uses a different storage bus",
+                "Sequential blocks are read without mechanical seek time or rotational latency — the head moves once and sweeps continuously",
+                "HDDs cache sequential reads in SRAM",
+                "The OS allocates more memory for sequential operations"
+              ],
+              correct: 1,
+              explanation: "Each random I/O requires a seek (~5 ms) + rotational wait (~4 ms) = ~9 ms; sequential reads eliminate most of this"
+            },
+            {
+              question: "A data engineer needs to store 10 years of raw clickstream logs cheaply. No real-time access needed. Which storage type is most cost-effective?",
+              options: [
+                "NVMe SSD — fastest access for future queries",
+                "RAID 10 array of SSDs — maximum redundancy",
+                "HDD-based cold storage or cloud archival (S3 Glacier) — cheapest $/GB for rarely accessed data",
+                "In-memory storage — eliminates disk I/O entirely"
+              ],
+              correct: 2,
+              explanation: "Cold/archival tiers are 10–100x cheaper per GB than hot SSD storage for data accessed infrequently"
+            },
+            {
+              question: "NVMe is significantly faster than SATA SSD primarily because:",
+              options: [
+                "NVMe uses a different type of NAND flash",
+                "NVMe drives spin faster than SATA drives",
+                "NVMe communicates over the PCIe bus which provides direct high-bandwidth lanes to the CPU, bypassing the SATA controller bottleneck",
+                "NVMe has larger cache chips"
+              ],
+              correct: 2,
+              explanation: "SATA was designed for HDDs (600 MB/s ceiling); PCIe 4.0 x4 provides ~7 GB/s — the bus, not the flash, was the bottleneck"
+            },
+          ]} />
+
+          <button
+            onClick={async () => { await markTopicComplete('storage'); onComplete() }}
+            style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
+          >
             Mark Complete ✓
           </button>
         </section>
@@ -170,52 +791,217 @@ df.explain(True)  # Look for "Exchange" nodes (shuffles = network + disk I/O)`}<
           <div className="topic-header">
             <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
             <h1 className="topic-title">Operating Systems</h1>
-            <p className="topic-desc">Linux is the OS of cloud infrastructure. Every Databricks cluster, Azure VM, and Docker container runs Linux. You need to be comfortable in the terminal.</p>
+            <p className="topic-desc">The OS is the software layer between hardware and applications. Every Databricks cluster, Azure VM, and Docker container runs Linux. Understanding processes, scheduling, and IPC is essential for debugging distributed systems.</p>
           </div>
 
-          <h3 style={{ marginBottom: 12 }}>Processes and Threads</h3>
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Kernel vs User Space</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 16 }}>
+            The OS is split into two protection rings. The <strong>kernel space</strong> runs privileged code that can access hardware directly (CPU, memory, disks, network). The <strong>user space</strong> is where your applications run. To access hardware, user programs make <strong>system calls</strong> (syscalls) — like read(), write(), fork(), socket() — which cross the kernel boundary. Context switching between user and kernel mode has overhead (~1-5μs).
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
+            {[
+              { name: 'Process', icon: '🔲', desc: 'Independent program with its own memory space (virtual address space). Spark executors are JVM processes. Creating a process (fork) is expensive — copies entire memory space.' },
+              { name: 'Thread', icon: '🧵', desc: 'Lightweight execution unit within a process. Shares memory with other threads. Python GIL limits true parallelism — only one thread runs Python bytecode at a time.' },
+              { name: 'Coroutine', icon: '⚡', desc: 'Cooperative multitasking within a single thread. Python asyncio uses coroutines for non-blocking I/O. Zero context-switch overhead. Great for API calls and network I/O.' },
+            ].map(item => (
+              <div key={item.name} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>{item.icon}</div>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>{item.name}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Scheduling Algorithms</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+            {[
+              { name: 'Round Robin', desc: 'Each process gets equal CPU time slice (quantum ~10ms). Fair but ignores priority. Used in basic systems.' },
+              { name: 'Priority Scheduling', desc: 'Higher priority processes run first. Risk of starvation for low-priority tasks. Used in real-time systems.' },
+              { name: 'CFS (Completely Fair Scheduler)', desc: 'Linux default. Uses a red-black tree ordered by "virtual runtime". Tracks how much CPU each task has used and gives CPU to the most-deprived task. Balances fairness and throughput.' },
+            ].map(s => (
+              <div key={s.name} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontWeight: 700, fontSize: '.88rem', minWidth: 200 }}>{s.name}</div>
+                <div style={{ fontSize: '.84rem', color: 'var(--text-secondary)' }}>{s.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Inter-Process Communication (IPC)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 24 }}>
+            {[
+              { name: 'Pipes', desc: 'One-directional byte stream. `cmd1 | cmd2` in shell. Fast for parent-child processes.' },
+              { name: 'Sockets', desc: 'Network or Unix domain. Spark driver ↔ executor communication. TCP/IP or local socket.' },
+              { name: 'Shared Memory', desc: 'Fastest IPC — processes map the same physical memory. No data copying. Requires synchronization.' },
+              { name: 'Message Queues', desc: 'OS-level FIFO queues. Kafka borrows this concept. Decouples sender from receiver.' },
+            ].map(ipc => (
+              <div key={ipc.name} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: '.85rem', marginBottom: 6 }}>{ipc.name}</div>
+                <div style={{ fontSize: '.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{ipc.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Context switching overhead:</strong> When the OS switches between processes/threads it must save the full CPU state (registers, stack pointer, program counter) — takes ~1-10μs. With 200 Spark tasks on 8 cores, the OS is constantly context-switching. Minimize threads and use async I/O where possible.</div>
+          </div>
+
+          <CodeBlock lang="python">{`import os, threading, asyncio, multiprocessing
+
+# Processes — separate memory, true parallelism (bypasses Python GIL)
+def worker(n):
+    return sum(range(n))
+
+with multiprocessing.Pool(4) as pool:
+    results = pool.map(worker, [10_000_000] * 4)
+
+# Threads — shared memory, GIL limits CPU parallelism but good for I/O
+import threading
+threads = [threading.Thread(target=worker, args=(1000,)) for _ in range(4)]
+[t.start() for t in threads]
+[t.join() for t in threads]
+
+# Coroutines — single-threaded, cooperative, great for async I/O
+async def fetch(url):
+    # non-blocking: yields control while waiting for network
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return await resp.json()
+
+async def main():
+    urls = ["https://api.example.com/data"] * 100
+    tasks = [fetch(u) for u in urls]
+    results = await asyncio.gather(*tasks)  # 100 concurrent requests, 1 thread
+
+asyncio.run(main())`}</CodeBlock>
+
+          <Quiz topicId="os" questions={[
+            { question: "What is the main reason Python threads don't achieve true CPU parallelism?", options: ["Python threads are too slow", "The Global Interpreter Lock (GIL) allows only one thread to execute Python bytecode at a time", "Python doesn't support threads", "Threads require kernel mode"], correct: 1 },
+            { question: "Which scheduling algorithm does Linux use by default?", options: ["Round Robin", "Priority Scheduling", "Completely Fair Scheduler (CFS)", "First-Come-First-Served"], correct: 2 },
+            { question: "When should you use asyncio coroutines instead of threads?", options: ["CPU-bound computations", "When you need true parallelism", "For I/O-bound tasks like API calls and database queries", "For spawning child processes"], correct: 2 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('os'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* LINUX */}
+        <section id="linux" ref={el => { if (el) sectionRefs.current['linux'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
+            <h1 className="topic-title">Linux for Data Engineers</h1>
+            <p className="topic-desc">Linux powers every cloud VM, container, and Databricks cluster. Being fluent in the terminal is a force-multiplier — you can diagnose issues, automate workflows, and understand system behaviour that GUIs hide.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>File System Hierarchy</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 24 }}>
+            {[
+              { path: '/etc', desc: 'System configuration files. /etc/hosts, /etc/fstab, /etc/cron.d' },
+              { path: '/var', desc: 'Variable data — logs (/var/log), databases, spool files, temp state' },
+              { path: '/tmp', desc: 'Temporary files, cleared on reboot. Spark uses this for spills' },
+              { path: '/opt', desc: 'Optional/third-party software. Databricks installs libraries here' },
+              { path: '/proc', desc: 'Virtual FS — kernel state. /proc/meminfo, /proc/cpuinfo, /proc/{pid}' },
+              { path: '/home', desc: 'User home directories. ~/.bashrc, ~/.ssh/authorized_keys' },
+              { path: '/usr', desc: 'User programs: /usr/bin, /usr/lib, /usr/local' },
+              { path: '/dev', desc: 'Device files — /dev/sda (disk), /dev/null, /dev/urandom' },
+            ].map(d => (
+              <div key={d.path} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 12 }}>
+                <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--blue-600)', marginBottom: 4, fontSize: '.9rem' }}>{d.path}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{d.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>File Permissions</h3>
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
-              <strong>Process:</strong> Independent program with its own memory space. Spark executors are JVM processes.<br/>
-              <strong>Thread:</strong> Lightweight unit of execution within a process. Python's GIL restricts to one thread at a time.
+              <strong>rwxrwxrwx</strong> = owner/group/others. r=4, w=2, x=1. Octal 755 = rwxr-xr-x.<br/>
+              <code>chmod 755 script.sh</code> — owner can execute; group/others can read+execute<br/>
+              <code>chmod 644 config.env</code> — owner read+write; others read-only<br/>
+              <code>chown user:group file</code> — change owner and group
             </div>
           </div>
 
-          <CodeBlock lang="bash">{`# Essential Linux commands for data engineers
+          <CodeBlock lang="bash">{`# ── FILE SYSTEM ──────────────────────────────────────────
+ls -la /data                     # list with permissions, sizes, dates
+find /data -name "*.parquet" -mtime -1   # parquet files modified in last 24h
+find /tmp -size +100M -type f    # files larger than 100MB
+du -sh /var/log/*                # disk usage per log file
+df -h                            # disk free (human readable)
 
-# File system navigation
-ls -la                    # list files with permissions
-pwd                       # print working directory
-find /data -name "*.parquet" -type f  # find Parquet files
+# ── PERMISSIONS ──────────────────────────────────────────
+chmod 755 pipeline.sh            # rwxr-xr-x
+chmod -R 644 /data/configs/      # recursive: rw-r--r--
+chown databricks:databricks /mnt/data  # change owner
 
-# Process management
-ps aux | grep spark       # show Spark processes
-top -u databricks         # resource usage by user
-kill -9 <pid>             # force kill a process
+# ── PROCESS MANAGEMENT ───────────────────────────────────
+ps aux | grep spark              # find Spark processes
+top -b -n1 | head -20            # snapshot of top processes
+htop                             # interactive process viewer
+kill -9 <pid>                    # force kill
+nice -n 10 python slow_job.py   # run at lower CPU priority
+nohup python job.py &            # run in background, immune to hangup
 
-# File operations
-cat file.csv | head -5    # preview first 5 lines
-wc -l data.csv            # count lines
-df -h                     # disk usage (human readable)
-du -sh /tmp/*             # size of each item in /tmp
+# ── TEXT PROCESSING (the data engineer's toolkit) ────────
+cat data.csv | head -5           # first 5 lines
+wc -l data.csv                   # count lines (rows)
+cut -d',' -f1,3 data.csv         # extract columns 1 and 3
+sort -t',' -k2 data.csv          # sort by column 2
+sort data.csv | uniq -c | sort -rn  # count unique values, sorted
+grep -E "ERROR|WARN" app.log     # filter log lines
+grep -c "ERROR" app.log          # count error lines
+awk -F',' '{sum+=$3} END{print sum}' data.csv  # sum column 3
+sed 's/old_value/new_value/g' data.csv  # find and replace
+xargs -I{} echo "Processing {}"  # apply command to each input line
+tee output.log                   # write to stdout AND file simultaneously
 
-# Permissions (critical for ADLS mounts)
-chmod 755 script.sh       # rwxr-xr-x
-chown user:group file     # change owner
+# ── NETWORKING ───────────────────────────────────────────
+curl -sI https://api.example.com     # check HTTP headers
+wget -q -O data.json https://api.example.com/data
+ss -tlnp                             # show listening TCP ports
+netstat -i                           # network interface stats
 
-# Networking
-curl -s https://api.example.com/data | python3 -m json.tool
-wget https://files.example.com/dataset.csv
-netstat -tlnp             # show listening ports
-ss -s                     # socket statistics`}</CodeBlock>
+# ── SYSTEMD / CRON ───────────────────────────────────────
+systemctl status spark               # check service status
+systemctl start|stop|restart spark   # manage service
+journalctl -u spark -n 100           # last 100 log lines for service
+crontab -e                           # edit cron jobs
+# 0 2 * * * /opt/pipelines/daily.sh  # run at 2am every day`}</CodeBlock>
 
-          <Quiz topicId="os" questions={[
-            { question: "What does chmod 755 set on a file?", options: ["Read-only for all", "rwxr-xr-x (owner can execute, others can read/execute)", "Full permissions for all users", "No permissions"], correct: 1 },
-            { question: "In Linux, what is the difference between a process and a thread?", options: ["No difference", "Processes have separate memory space; threads share the parent process memory", "Threads are faster processes", "Processes are for I/O, threads for CPU"], correct: 1 },
-            { question: "How do you count the number of lines in a CSV file on Linux?", options: ["ls -l file.csv", "wc -l file.csv", "cat -n file.csv", "head file.csv"], correct: 1 },
+          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Shell Scripting Best Practices</h3>
+          <CodeBlock lang="bash">{`#!/usr/bin/env bash
+set -euo pipefail   # exit on error, unset variable = error, pipe fails propagate
+IFS=$'\n\t'         # safer word splitting
+
+# Variables
+DATA_DIR="/mnt/adls/raw"
+DATE=$(date +%Y-%m-%d)
+LOGFILE="/var/log/pipeline_${DATE}.log"
+
+# Functions
+log() { echo "[$(date +%T)] $*" | tee -a "$LOGFILE"; }
+die() { log "ERROR: $*"; exit 1; }
+
+# Check dependencies
+command -v python3 &>/dev/null || die "python3 not found"
+
+# Process files
+log "Starting pipeline for $DATE"
+for file in "${DATA_DIR}"/*.csv; do
+    [[ -f "$file" ]] || continue
+    log "Processing: $file"
+    python3 process.py "$file" || die "Failed on $file"
+done
+log "Pipeline complete"`}</CodeBlock>
+
+          <Quiz topicId="linux" questions={[
+            { question: "What does 'set -euo pipefail' do in a bash script?", options: ["Sets environment variables", "Makes the script exit on errors, treat unset variables as errors, and propagate pipe failures", "Enables verbose mode", "Sets file permissions"], correct: 1 },
+            { question: "Which command counts the number of occurrences of each unique line in a sorted file?", options: ["wc -l file", "sort file | uniq -c", "grep -c file", "awk '{count[$0]++}' file"], correct: 1 },
+            { question: "What is stored in /proc/meminfo?", options: ["Memory configuration files", "Virtual filesystem showing live kernel memory statistics", "RAM hardware specs", "Swap file configuration"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('os'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('linux'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -224,69 +1010,276 @@ ss -s                     # socket statistics`}</CodeBlock>
         <section id="networking" ref={el => { if (el) sectionRefs.current['networking'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
-            <h1 className="topic-title">Networking Basics</h1>
-            <p className="topic-desc">Data engineers work with networks constantly - reading from APIs, configuring VNets, setting up private endpoints, and troubleshooting connectivity issues.</p>
+            <h1 className="topic-title">Networking</h1>
+            <p className="topic-desc">Data engineers work with networks constantly — ingesting from APIs, configuring VNets, setting up private endpoints, and troubleshooting latency. Understanding the full networking stack helps you diagnose issues and design secure architectures.</p>
           </div>
 
           <NetworkAnimation />
 
-          <h3 style={{ marginBottom: 12, marginTop: 24 }}>TCP/IP Stack</h3>
+          <h3 style={{ marginBottom: 12, marginTop: 16 }}>OSI Model — All 7 Layers</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 24 }}>
             {[
-              { layer: 'Application (L7)', proto: 'HTTP, HTTPS, DNS, SFTP', color: '#8b5cf6' },
-              { layer: 'Transport (L4)', proto: 'TCP (reliable), UDP (fast)', color: '#3b82f6' },
-              { layer: 'Network (L3)', proto: 'IP, ICMP, routing', color: '#22c55e' },
-              { layer: 'Data Link (L2)', proto: 'Ethernet, MAC addresses', color: '#f59e0b' },
-              { layer: 'Physical (L1)', proto: 'Cables, fiber, WiFi signals', color: '#94a3b8' },
+              { layer: '7 - Application', proto: 'HTTP, HTTPS, DNS, FTP, SMTP, Kafka', color: '#8b5cf6', use: 'Your data pipelines, APIs, Kafka consumers live here' },
+              { layer: '6 - Presentation', proto: 'TLS/SSL, JSON, Parquet encoding', color: '#a78bfa', use: 'Encryption, serialization, compression happen here' },
+              { layer: '5 - Session', proto: 'RPC, NetBIOS, PPTP', color: '#6366f1', use: 'Manages sessions between applications' },
+              { layer: '4 - Transport', proto: 'TCP (reliable), UDP (fast)', color: '#3b82f6', use: 'TCP: guaranteed delivery, ordering, retransmit. UDP: fast, lossy.' },
+              { layer: '3 - Network', proto: 'IP, ICMP, BGP, OSPF', color: '#22c55e', use: 'IP addressing, routing between networks, CIDR subnets' },
+              { layer: '2 - Data Link', proto: 'Ethernet, MAC, ARP, VLANs', color: '#f59e0b', use: 'Frames between devices on same network segment' },
+              { layer: '1 - Physical', proto: 'Copper, Fiber, WiFi, 5G', color: '#94a3b8', use: 'Actual bits on wire — bandwidth is physical layer capacity' },
             ].map(l => (
-              <div key={l.layer} style={{ display: 'flex', gap: 16, padding: '10px 16px', background: 'white', border: '1px solid var(--border)', borderLeft: `3px solid ${l.color}`, borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontWeight: 700, fontSize: '.88rem', minWidth: 160 }}>{l.layer}</div>
-                <div style={{ fontSize: '.84rem', color: 'var(--text-3)' }}>{l.proto}</div>
+              <div key={l.layer} style={{ display: 'flex', gap: 12, padding: '10px 14px', background: 'white', border: '1px solid var(--border)', borderLeft: `3px solid ${l.color}`, borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontWeight: 700, fontSize: '.85rem', minWidth: 180, color: l.color }}>{l.layer}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: 'var(--text-secondary)', minWidth: 200 }}>{l.proto}</div>
+                <div style={{ fontSize: '.8rem', color: 'var(--text-secondary)' }}>{l.use}</div>
               </div>
             ))}
           </div>
 
-          <div className="callout callout-tip">
-            <span className="callout-icon">💡</span>
-            <div className="callout-body"><strong>Azure VNet for Data Engineers:</strong> Use Private Endpoints to connect ADLS Gen2, Azure SQL, Key Vault without traffic going over the public internet. This is a security requirement in enterprise environments.</div>
+          <h3 style={{ marginBottom: 12 }}>TCP vs UDP</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 700, color: '#1d4ed8', marginBottom: 8 }}>TCP — Transmission Control Protocol</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.9, margin: 0, paddingLeft: 18 }}>
+                <li>Three-way handshake (SYN → SYN-ACK → ACK)</li>
+                <li>Guaranteed delivery and ordering</li>
+                <li>Congestion control and flow control</li>
+                <li>Higher overhead — each packet acknowledged</li>
+                <li>Use for: HTTP, Kafka, database connections</li>
+              </ul>
+            </div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8 }}>UDP — User Datagram Protocol</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.9, margin: 0, paddingLeft: 18 }}>
+                <li>No handshake — fire and forget</li>
+                <li>No delivery guarantee or ordering</li>
+                <li>Lower overhead, lower latency</li>
+                <li>Application handles reliability if needed</li>
+                <li>Use for: DNS, video streaming, IoT telemetry</li>
+              </ul>
+            </div>
           </div>
 
-          <CodeBlock lang="python">{`# REST API calls - how data engineers ingest from APIs
+          <h3 style={{ marginBottom: 12 }}>IP Addressing and CIDR</h3>
+          <CodeBlock lang="bash">{`# CIDR Notation: IP_address/prefix_length
+10.0.0.0/8      # 16,777,216 addresses (class A, private)
+172.16.0.0/12   # 1,048,576 addresses (class B, private)
+192.168.0.0/16  # 65,536 addresses (class C, private)
+10.0.1.0/24     # 256 addresses (typical VNet subnet)
+10.0.1.0/28     # 16 addresses (small subnet)
+
+# Azure VNet example
+# VNet: 10.0.0.0/16 (65536 addresses)
+#   Subnet-DataEngineering: 10.0.1.0/24  (256 addresses)
+#   Subnet-Databricks-Public: 10.0.2.0/24
+#   Subnet-Databricks-Private: 10.0.3.0/24
+#   Subnet-AzureSQL: 10.0.4.0/28  (16 addresses, small = secure)
+
+# DNS resolution flow:
+# 1. Browser checks local cache
+# 2. OS checks /etc/hosts
+# 3. Recursive resolver (ISP or 8.8.8.8)
+# 4. Root nameserver → TLD nameserver → Authoritative nameserver
+# 5. Returns IP address, cached with TTL`}</CodeBlock>
+
+          <h3 style={{ marginBottom: 12, marginTop: 24 }}>HTTP/HTTPS, TLS, HTTP/2, HTTP/3</h3>
+          <CodeBlock lang="python">{`# TLS Handshake (simplified):
+# 1. Client Hello — supported TLS versions, cipher suites, random
+# 2. Server Hello — chosen cipher, certificate, random
+# 3. Key Exchange — client verifies cert, derives session keys
+# 4. Finished — both sides send encrypted Finished message
+# ~2 round trips before first byte of data. HTTP/2 reduces this.
+
+# HTTP/2 improvements over HTTP/1.1:
+# - Multiplexing: multiple requests on one TCP connection (no head-of-line blocking)
+# - Header compression (HPACK)
+# - Server push
+# - Binary framing instead of text
+
+# HTTP/3 (QUIC):
+# - Built on UDP instead of TCP
+# - Connection migration (WiFi → LTE without reconnect)
+# - 0-RTT reconnection
+# - Built-in TLS 1.3
+
 import requests
 
-# GET request with auth
-response = requests.get(
-    "https://api.example.com/v1/data",
-    headers={"Authorization": "Bearer your_token"},
-    params={"date": "2024-01-01", "limit": 1000},
-    timeout=30
-)
-response.raise_for_status()  # raises on 4xx/5xx
-data = response.json()
+# REST API patterns for data ingestion
+session = requests.Session()
+session.headers.update({"Authorization": "Bearer token", "Content-Type": "application/json"})
 
-# POST request to trigger a pipeline
-response = requests.post(
-    "https://adf.azure.com/triggers/run",
-    json={"parameter": "value"},
-    headers={"Authorization": f"Bearer {token}"}
-)
+# Retry with backoff
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
+session.mount("https://", HTTPAdapter(max_retries=retry))
 
-# Pagination pattern (most APIs)
-all_records = []
-page = 1
-while True:
-    r = requests.get(f"https://api.example.com/data?page={page}").json()
-    all_records.extend(r["data"])
-    if not r.get("has_more"):
-        break
-    page += 1`}</CodeBlock>
+# Pagination
+def paginate(url):
+    all_data = []
+    while url:
+        r = session.get(url).json()
+        all_data.extend(r["data"])
+        url = r.get("next_page_url")  # None when done
+    return all_data`}</CodeBlock>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body"><strong>Bandwidth vs Throughput vs Latency:</strong><br/>
+              <strong>Bandwidth</strong> — maximum capacity of the link (e.g., 10 Gbps NIC).<br/>
+              <strong>Throughput</strong> — actual data transferred per second (always ≤ bandwidth, reduced by overhead).<br/>
+              <strong>Latency</strong> — time for one packet to travel from source to destination. High latency kills small I/O — even a fast network feels slow with many round trips.
+            </div>
+          </div>
 
           <Quiz topicId="networking" questions={[
-            { question: "What is the purpose of a Private Endpoint in Azure?", options: ["Speed up network traffic", "Connect Azure services without traffic going over the public internet", "Reduce cost", "Enable public access"], correct: 1 },
-            { question: "Which protocol guarantees delivery order and error checking?", options: ["UDP", "TCP", "HTTP", "ICMP"], correct: 1 },
-            { question: "In REST APIs, which HTTP method is used to retrieve data?", options: ["POST", "PUT", "GET", "PATCH"], correct: 2 },
+            { question: "What happens during the TCP three-way handshake?", options: ["Data is compressed and sent", "SYN → SYN-ACK → ACK establishes connection before data is sent", "TLS certificates are exchanged", "DNS resolves the IP address"], correct: 1 },
+            { question: "What is CIDR notation 10.0.1.0/24?", options: ["An IP address with 24 bits of host portion", "A subnet with 256 addresses where the first 24 bits are the network prefix", "A VLAN tag", "An IPv6 prefix"], correct: 1 },
+            { question: "What is the key difference between bandwidth and throughput?", options: ["They are the same thing", "Bandwidth is theoretical maximum capacity; throughput is actual data transferred per second (always ≤ bandwidth)", "Throughput measures latency, bandwidth measures speed", "Bandwidth is for downloads, throughput for uploads"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('networking'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* DOCKER */}
+        <section id="docker" ref={el => { if (el) sectionRefs.current['docker'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 1 - Computer Fundamentals</div>
+            <h1 className="topic-title">Docker and Containers</h1>
+            <p className="topic-desc">Docker packages your code, dependencies, and runtime into a portable container. Every modern data pipeline runs in containers — Airflow workers, dbt runs, Spark executors on Kubernetes. Containers are lightweight VMs without the overhead.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Images vs Containers</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 700, color: '#1d4ed8', marginBottom: 8 }}>Image (Blueprint)</div>
+              <p style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
+                Read-only template built from a Dockerfile. Consists of immutable layers stacked on a base image. Stored in a registry (Docker Hub, Azure Container Registry). Images are versioned with tags (myapp:1.2.3).
+              </p>
+            </div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8 }}>Container (Running Instance)</div>
+              <p style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
+                A running instance of an image with a writable layer on top. Ephemeral — data written inside is lost when the container stops (unless using a volume). Multiple containers can run from the same image simultaneously.
+              </p>
+            </div>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Dockerfile</h3>
+          <CodeBlock lang="dockerfile">{`# Multi-stage build — keeps final image small
+# Stage 1: Build dependencies
+FROM python:3.11-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Stage 2: Final image (no build tools, no cache)
+FROM python:3.11-slim
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Add non-root user (security best practice)
+RUN useradd --create-home appuser
+USER appuser
+
+# Copy application code
+COPY --chown=appuser:appuser src/ ./src/
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    LOG_LEVEL=INFO
+
+# ENTRYPOINT = always runs (not overrideable easily)
+# CMD = default args (can be overridden at docker run)
+ENTRYPOINT ["python", "-m", "src.pipeline"]
+CMD ["--date", "today"]
+
+# docker build -t my-pipeline:1.0 .
+# docker run -e DB_CONN="..." my-pipeline:1.0 --date 2024-01-15`}</CodeBlock>
+
+          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Docker Compose</h3>
+          <CodeBlock lang="yaml">{`# docker-compose.yml — local development environment
+version: "3.9"
+services:
+  airflow-webserver:
+    image: apache/airflow:2.8.0
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags        # mount local dags folder
+      - ./logs:/opt/airflow/logs
+    networks:
+      - airflow-net
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data  # named volume = persists
+    networks:
+      - airflow-net
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - airflow-net
+
+volumes:
+  postgres-data:   # persists between container restarts
+
+networks:
+  airflow-net:
+    driver: bridge`}</CodeBlock>
+
+          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Container Networking and Volumes</h3>
+          <CodeBlock lang="bash">{`# Container networking modes
+docker run --network host myapp      # share host network (fastest, less isolated)
+docker run --network bridge myapp    # default: isolated network, NAT to host
+docker run --network none myapp      # completely isolated, no network
+
+# Volumes — persistent data outside containers
+docker volume create my-data
+docker run -v my-data:/data myapp          # named volume (managed by Docker)
+docker run -v /host/path:/container/path myapp  # bind mount (maps host dir)
+docker run --tmpfs /tmp myapp              # in-memory tmpfs
+
+# Environment variables (never hardcode secrets in images)
+docker run -e DB_PASSWORD=secret myapp     # inline (avoid in prod)
+docker run --env-file .env myapp           # from file (add .env to .gitignore!)
+
+# Resource limits
+docker run --memory 4g --cpus 2.0 myapp
+
+# Inspect and debug
+docker logs -f myapp          # follow container logs
+docker exec -it myapp bash    # get a shell inside container
+docker inspect myapp          # full container config as JSON
+docker stats                  # live CPU/memory usage
+docker system prune -af       # clean up stopped containers, images, volumes`}</CodeBlock>
+
+          <Quiz topicId="docker" questions={[
+            { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical", "ENTRYPOINT defines the executable that always runs; CMD provides default arguments that can be overridden at runtime", "CMD is for environment variables, ENTRYPOINT is for ports", "ENTRYPOINT is deprecated, use CMD instead"], correct: 1 },
+            { question: "What happens to data written inside a container when it stops?", options: ["It is saved to the image", "It persists in the container layer forever", "It is lost unless stored in a volume or bind mount", "It is synced to Docker Hub"], correct: 2 },
+            { question: "What is a multi-stage Docker build used for?", options: ["Running multiple services in one container", "Keeping the final image small by separating build dependencies from runtime", "Building on multiple architectures simultaneously", "Caching build layers"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('docker'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -296,38 +1289,98 @@ while True:
           <div className="topic-header">
             <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
             <h1 className="topic-title">Data Types and Schemas</h1>
-            <p className="topic-desc">Choosing the right data type directly impacts storage size, query performance, and correctness. A poorly typed schema can corrupt billions of rows.</p>
+            <p className="topic-desc">Choosing the right data type directly impacts storage size, query performance, and correctness. A poorly typed schema can silently corrupt billions of rows — decimal precision errors in financial data, timezone bugs in timestamps, integer overflow in large IDs.</p>
           </div>
 
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Primitive Data Types</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-50)' }}>
+                  {['Type', 'Bytes', 'Range / Notes', 'Spark Type', 'When to Use'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', fontWeight: 700, fontSize: '.78rem', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['TINYINT', '1', '-128 to 127', 'ByteType', 'Flags, small status codes'],
+                  ['SMALLINT', '2', '-32,768 to 32,767', 'ShortType', 'Age, year'],
+                  ['INT', '4', '-2.1B to 2.1B', 'IntegerType', 'Most integer IDs'],
+                  ['BIGINT', '8', '-9.2 quintillion', 'LongType', 'Event IDs, epoch ms timestamps'],
+                  ['FLOAT', '4', '~7 decimal digits', 'FloatType', 'ML features (not money!)'],
+                  ['DOUBLE', '8', '~15 decimal digits', 'DoubleType', 'Coordinates (not money!)'],
+                  ['DECIMAL(p,s)', 'variable', 'Exact precision p, scale s', 'DecimalType(18,2)', 'Financial amounts — always'],
+                  ['STRING', 'variable', 'UTF-8 unicode', 'StringType', 'Text, names, codes'],
+                  ['BOOLEAN', '1 bit', 'true / false', 'BooleanType', 'Flags, is_active'],
+                  ['DATE', '4', 'Year-month-day', 'DateType', 'Partition key, business date'],
+                  ['TIMESTAMP', '8', 'Microseconds since epoch', 'TimestampType', 'Event times — store UTC'],
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'white' : 'var(--gray-50)' }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '8px 12px', fontFamily: j < 2 ? 'monospace' : 'inherit', color: j === 0 ? 'var(--blue-700)' : 'var(--text-secondary)', fontWeight: j === 0 ? 600 : 400 }}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Complex Types</h3>
           <CodeBlock lang="python">{`from pyspark.sql.types import *
 
-# Explicit schema definition (always preferred over inferSchema=True)
+# Complex types for nested data
 schema = StructType([
-    StructField("event_id",    LongType(),      nullable=False),
-    StructField("user_id",     IntegerType(),   nullable=False),
-    StructField("event_time",  TimestampType(), nullable=False),
-    StructField("amount",      DecimalType(18,2),nullable=True),  # financial: use Decimal not Double!
-    StructField("event_type",  StringType(),    nullable=False),
-    StructField("metadata",    MapType(StringType(), StringType()), nullable=True),
-    StructField("tags",        ArrayType(StringType()),             nullable=True),
+    StructField("order_id",   LongType(),      nullable=False),
+    StructField("customer",   StructType([     # nested struct
+        StructField("id",   IntegerType()),
+        StructField("name", StringType()),
+        StructField("tier", StringType()),
+    ]),                                        nullable=False),
+    StructField("items",      ArrayType(       # array of structs
+        StructType([
+            StructField("sku",      StringType()),
+            StructField("quantity", IntegerType()),
+            StructField("price",    DecimalType(10, 2)),
+        ])
+    ),                                         nullable=True),
+    StructField("metadata",   MapType(StringType(), StringType()), nullable=True),
 ])
 
-df = spark.read.schema(schema).parquet("/data/events")
+# Type widening vs narrowing
+# Widening (safe): INT → BIGINT → DOUBLE  (no data loss)
+# Narrowing (unsafe): DOUBLE → INT  (truncates decimals, possible overflow)
+df = df.withColumn("amount", col("amount").cast(DecimalType(18, 2)))  # explicit cast`}</CodeBlock>
 
-# Type casting
-from pyspark.sql.functions import col, cast, to_timestamp
-df = df.withColumn("amount", col("amount").cast(DecimalType(18, 2)))
-df = df.withColumn("event_time", to_timestamp("event_time_str", "yyyy-MM-dd HH:mm:ss"))`}</CodeBlock>
-
+          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Timezone Handling for Timestamps</h3>
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
-            <div className="callout-body"><strong>Never use Double for financial data.</strong> Floating point imprecision: <code>0.1 + 0.2 = 0.30000000000000004</code>. Always use <code>DecimalType(precision, scale)</code> for money.</div>
+            <div className="callout-body"><strong>Always store timestamps in UTC.</strong> Convert to local timezone only at display time. Spark's <code>TimestampType</code> is in UTC internally. Use <code>from_utc_timestamp()</code> to convert for reporting, never store local times in your lakehouse.</div>
           </div>
+          <CodeBlock lang="python">{`from pyspark.sql.functions import *
+
+# Epoch time → timestamp
+df = df.withColumn("ts", to_timestamp(col("epoch_ms") / 1000))
+
+# Parse string timestamps with format
+df = df.withColumn("ts", to_timestamp("ts_str", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+
+# Convert UTC → local for reporting only
+df = df.withColumn("ts_london", from_utc_timestamp("ts", "Europe/London"))
+df = df.withColumn("ts_ny",     from_utc_timestamp("ts", "America/New_York"))
+
+# Date arithmetic
+df = df.withColumn("date",        to_date("ts"))
+df = df.withColumn("year",        year("ts"))
+df = df.withColumn("month",       month("ts"))
+df = df.withColumn("week",        weekofyear("ts"))
+df = df.withColumn("7d_ago",      date_sub("date", 7))
+df = df.withColumn("days_since",  datediff(current_date(), "date"))`}</CodeBlock>
 
           <Quiz topicId="data-types" questions={[
-            { question: "Why should you use DecimalType instead of DoubleType for financial amounts?", options: ["Decimal is faster", "Double has floating point imprecision errors", "Decimal uses less storage", "Double doesn't support negative numbers"], correct: 1 },
-            { question: "What does nullable=False mean in a Spark schema?", options: ["The field can contain null", "The field cannot contain null values", "The field is optional", "The field type is inferred"], correct: 1 },
-            { question: "Which Spark type would you use for a list of strings within a column?", options: ["StringType", "MapType", "ArrayType", "StructType"], correct: 2 },
+            { question: "Why should you use DecimalType(18,2) instead of DoubleType for financial amounts?", options: ["Decimal is faster to compute", "DoubleType uses IEEE 754 floating point which cannot represent all decimal fractions exactly — 0.1 + 0.2 ≠ 0.3", "Decimal uses less storage", "DoubleType doesn't support negative numbers"], correct: 1 },
+            { question: "What is type widening vs narrowing?", options: ["Widening adds columns, narrowing removes them", "Widening converts to a larger type (safe, no data loss); narrowing converts to a smaller type (unsafe, may truncate)", "Widening is for strings, narrowing for numbers", "They refer to schema evolution in Parquet"], correct: 1 },
+            { question: "What is the best practice for storing timestamps in a data lakehouse?", options: ["Store in local timezone of the source system", "Store in UTC always; convert to local only at display time", "Store as Unix epoch strings", "Store in the timezone of the data warehouse region"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('data-types'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
@@ -338,59 +1391,513 @@ df = df.withColumn("event_time", to_timestamp("event_time_str", "yyyy-MM-dd HH:m
         <section id="file-formats" ref={el => { if (el) sectionRefs.current['file-formats'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
-            <h1 className="topic-title">File Formats: CSV, JSON, Parquet, Avro</h1>
-            <p className="topic-desc">File format choice is one of the most impactful decisions in data engineering. The wrong format can make a query 100x slower.</p>
+            <h1 className="topic-title">File Formats Deep Dive</h1>
+            <p className="topic-desc">File format choice is one of the highest-leverage decisions in data engineering. The wrong format can make a query 100x slower or double your storage costs. Understanding the internals of Parquet — the dominant analytical format — is essential.</p>
           </div>
 
           <FileFormatAnimation />
+          <ParquetInternalsAnimation />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16, margin: '24px 0' }}>
+          <h3 style={{ marginBottom: 12, marginTop: 16 }}>Format Comparison</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.8rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-50)' }}>
+                  {['Format', 'Storage', 'Splittable', 'Schema Evo', 'Compression', 'Best For'].map(h => (
+                    <th key={h} style={{ padding: '9px 11px', textAlign: 'left', borderBottom: '2px solid var(--border)', fontWeight: 700, fontSize: '.75rem', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['CSV', 'Row', 'Yes (by line)', 'None', 'Gzip/bz2', 'Source files, Excel exports, interchange'],
+                  ['JSON', 'Row', 'Newline-delimited only', 'Flexible', 'Gzip', 'APIs, semi-structured, configs'],
+                  ['Parquet', 'Columnar', 'Yes (row groups)', 'Add/remove cols', 'Snappy/Zstd/Gzip', 'Analytics, Delta Lake, Spark'],
+                  ['Avro', 'Row', 'Yes (blocks)', 'Full (w/ registry)', 'Snappy/Deflate', 'Kafka streaming, schema registry'],
+                  ['ORC', 'Columnar', 'Yes (stripes)', 'Add/remove cols', 'Zlib/Snappy/Zstd', 'Hive, legacy Hadoop'],
+                  ['Delta Lake', 'Columnar + TXN log', 'Yes', 'Full ACID', 'Snappy/Zstd', 'Lakehouse ACID tables, CDC'],
+                  ['Iceberg', 'Columnar + metadata', 'Yes', 'Full ACID', 'Snappy/Zstd', 'Multi-engine lakehouse'],
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'white' : 'var(--gray-50)' }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '8px 11px', fontWeight: j === 0 ? 700 : 400, color: j === 0 ? 'var(--blue-700)' : 'var(--text-secondary)' }}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Parquet Internals</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 16 }}>
+            Parquet is a columnar format with a hierarchical structure: <strong>File → Row Groups → Column Chunks → Pages</strong>. A row group is typically 128MB–1GB. Within each row group, data for each column is stored together (column chunk), then split into pages (1MB default) for fine-grained compression and encoding.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
             {[
-              { name: 'CSV', storage: 'Row', compress: 'None/Gzip', read: 'Slow', write: 'Fast', use: 'Source data, Excel exports', color: '#94a3b8' },
-              { name: 'JSON', storage: 'Row', compress: 'None/Gzip', read: 'Slow', write: 'Fast', use: 'APIs, semi-structured', color: '#f59e0b' },
-              { name: 'Parquet', storage: 'Columnar', compress: 'Snappy/Zstd', read: 'Very Fast', write: 'Medium', use: 'Analytics, Delta Lake', color: '#4f8ef7' },
-              { name: 'Avro', storage: 'Row', compress: 'Snappy', read: 'Fast (streaming)', write: 'Fast', use: 'Event streaming, Kafka', color: '#8b5cf6' },
-              { name: 'ORC', storage: 'Columnar', compress: 'Zlib/Snappy', read: 'Very Fast', write: 'Medium', use: 'Hive, legacy Hadoop', color: '#22c55e' },
-              { name: 'Delta', storage: 'Columnar', compress: 'Snappy/Zstd', read: 'Very Fast', write: 'Fast', use: 'Lakehouse ACID tables', color: '#ef4444' },
-            ].map(f => (
-              <div key={f.name} style={{ background: 'white', border: '1px solid var(--border)', borderTop: `3px solid ${f.color}`, borderRadius: 'var(--radius-lg)', padding: 16 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, marginBottom: 8 }}>{f.name}</div>
-                <div style={{ fontSize: '.78rem', color: 'var(--text-3)', lineHeight: 1.8 }}>
-                  <div><strong>Storage:</strong> {f.storage}</div>
-                  <div><strong>Compression:</strong> {f.compress}</div>
-                  <div><strong>Read:</strong> {f.read}</div>
-                  <div><strong>Best for:</strong> {f.use}</div>
-                </div>
+              { name: 'Dictionary Encoding', desc: 'Low-cardinality columns (country, status): store unique values once, use integer index. 10x smaller for repeated strings.' },
+              { name: 'Run-Length Encoding (RLE)', desc: 'Repeated values stored as (value, count). 1,1,1,1,1 → (1, 5). Great for sorted data or boolean flags.' },
+              { name: 'Delta Encoding', desc: 'Store differences instead of absolute values. Timestamps: store first value, then deltas. Reduces bits per value.' },
+              { name: 'Bit-Packing', desc: 'Values that fit in fewer bits are packed. If max value is 100, use 7 bits instead of 32. Parquet chooses encoding per page.' },
+            ].map(enc => (
+              <div key={enc.name} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: '.85rem', marginBottom: 6 }}>{enc.name}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{enc.desc}</div>
               </div>
             ))}
           </div>
 
-          <CodeBlock lang="python">{`# Reading different formats in Spark
-df_csv     = spark.read.option("header", True).option("inferSchema", True).csv("/data/sales.csv")
-df_json    = spark.read.json("/data/events/*.json")
-df_parquet = spark.read.parquet("/data/warehouse/customers")
-df_avro    = spark.read.format("avro").load("/data/events/kafka-topic")
-df_delta   = spark.read.format("delta").load("/data/delta/orders")
+          <CodeBlock lang="python">{`# Reading and writing Parquet optimally
+from pyspark.sql.functions import col
 
-# Writing with optimal settings
-df.write \\
-  .format("parquet") \\
-  .option("compression", "snappy") \\
-  .partitionBy("year", "month") \\
-  .mode("overwrite") \\
-  .save("/output/parquet")
+# Write with optimal settings for analytics
+df.write \
+  .format("parquet") \
+  .option("compression", "snappy")    \  # fast compression, good ratio
+  .option("parquet.block.size", str(128 * 1024 * 1024))  # 128MB row groups
+  .partitionBy("year", "month")       \  # partition pruning on queries
+  .sortBy("customer_id")              \  # data skipping within row groups
+  .mode("overwrite") \
+  .save("/mnt/data/sales")
 
-# Why Parquet wins for analytics:
-# SELECT SUM(amount) FROM sales WHERE year=2024
-# Parquet: reads only 'amount' and 'year' columns = 2 columns
-# CSV: reads ALL columns = 50 columns   -> 25x more I/O`}</CodeBlock>
+# Reading with column pruning and predicate pushdown
+df = spark.read.parquet("/mnt/data/sales") \
+    .select("customer_id", "amount", "date") \  # only reads 3 columns
+    .filter(col("year") == 2024)               # pushed down to file scan
+
+# Check Parquet metadata
+import pyarrow.parquet as pq
+pf = pq.read_metadata("/path/to/file.parquet")
+print(pf.num_rows, pf.num_row_groups, pf.serialized_size)
+for i in range(pf.num_row_groups):
+    rg = pf.row_group(i)
+    print(f"Row group {i}: {rg.num_rows} rows, {rg.total_byte_size} bytes")`}</CodeBlock>
 
           <Quiz topicId="file-formats" questions={[
-            { question: "Why is Parquet preferred over CSV for analytical queries?", options: ["Parquet is human readable", "Parquet stores data in columns - analytical queries only read needed columns", "Parquet has no schema", "Parquet is compressed by default"], correct: 1 },
-            { question: "Which format is best for Kafka event streaming?", options: ["CSV", "Parquet", "Avro", "JSON"], correct: 2 },
-            { question: "What is the main advantage of columnar storage for aggregations?", options: ["Faster inserts", "Only the relevant columns are read from disk, reducing I/O", "Better compression for strings", "Simpler schema evolution"], correct: 1 },
+            { question: "Why is Parquet significantly faster than CSV for analytical queries that touch only 3 of 50 columns?", options: ["Parquet is compressed, CSV is not", "Parquet stores data column-by-column — the query reads only the 3 needed columns, skipping 94% of the file's I/O", "Parquet has a better index", "Parquet files are cached automatically"], correct: 1 },
+            { question: "What is dictionary encoding in Parquet and when does it help most?", options: ["It compresses column names", "It stores unique values once and replaces repeated values with integer indexes — most effective for low-cardinality columns like country, status, category", "It encodes the schema in a dictionary", "It deduplicates row groups"], correct: 1 },
+            { question: "Why is Avro preferred over Parquet for Kafka streaming?", options: ["Avro is a columnar format", "Avro is row-oriented making it efficient for writing individual events, and supports schema evolution via registry", "Avro has better compression", "Parquet doesn't support streaming"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('file-formats'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* COMPRESSION */}
+        <section id="compression" ref={el => { if (el) sectionRefs.current['compression'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
+            <h1 className="topic-title">Compression Algorithms</h1>
+            <p className="topic-desc">Compression reduces storage costs and speeds up I/O — especially important when reading from object storage like ADLS or S3. Understanding the speed vs ratio tradeoffs helps you choose the right codec for each layer of the medallion architecture.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Codec Comparison</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-50)' }}>
+                  {['Codec', 'Speed', 'Ratio', 'CPU', 'Splittable', 'Best Use Case'].map(h => (
+                    <th key={h} style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', fontWeight: 700, fontSize: '.75rem', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Snappy', '⚡⚡⚡ Very fast', '~2x', 'Low', 'No (block)', 'Parquet/ORC in Spark — default choice, fast decompression'],
+                  ['LZ4', '⚡⚡⚡ Fastest', '~2x', 'Very low', 'No', 'Real-time streaming, Kafka compression'],
+                  ['Zstd', '⚡⚡ Fast', '~3x', 'Medium', 'No', 'Parquet Gold layer — better ratio than Snappy, still fast'],
+                  ['Gzip', '⚡ Slow', '~4x', 'High', 'No', 'CSV/JSON cold archive, HTTP response compression'],
+                  ['Bzip2', '🐌 Very slow', '~5x', 'Very high', 'Yes!', 'HDFS splits — only splittable codec for text files'],
+                  ['Deflate', '⚡ Slow', '~3.5x', 'High', 'No', 'Avro default, ZIP files'],
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'white' : 'var(--gray-50)' }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '8px 12px', fontWeight: j === 0 ? 700 : 400, color: j === 0 ? 'var(--blue-700)' : 'var(--text-secondary)' }}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Splittability matters for HDFS/Spark:</strong> Snappy and Gzip files cannot be split — Spark reads the whole file with one task. Use Parquet/ORC (internally splittable by row group) or Bzip2 for splittable text files. For Delta Lake, use Snappy or Zstd — row groups handle splitting.</div>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 24 }}>Parquet Encoding Algorithms (Column-Level)</h3>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 16 }}>
+            Parquet applies encoding <em>before</em> block compression. Encoding exploits data patterns; compression removes remaining redundancy. The combination is powerful.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { name: 'Run-Length Encoding (RLE)', example: '[A,A,A,B,B] → [(A,3),(B,2)]', use: 'Boolean columns, sorted/partitioned data, low-cardinality after sort' },
+              { name: 'Dictionary Encoding', example: '[UK,US,UK,DE] → dict:{UK:0,US:1,DE:2}, data:[0,1,0,2]', use: 'String columns with < ~10K unique values (status, country, category)' },
+              { name: 'Delta Encoding', example: '[1000, 1001, 1003, 1006] → [1000, +1, +2, +3]', use: 'Monotonically increasing IDs, sorted timestamps — very compact deltas' },
+              { name: 'Bit-Packing', example: 'Values 0-7 use 3 bits instead of 32 bits', use: 'Integer columns with small range — auto-applied when beneficial' },
+            ].map(enc => (
+              <div key={enc.name} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontWeight: 700, fontSize: '.85rem', marginBottom: 6 }}>{enc.name}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.75rem', background: 'var(--gray-50)', borderRadius: 4, padding: '4px 8px', marginBottom: 8, wordBreak: 'break-all' }}>{enc.example}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{enc.use}</div>
+              </div>
+            ))}
+          </div>
+
+          <CodeBlock lang="python">{`# Compression in Spark
+df.write.format("parquet").option("compression", "snappy").save(path)   # default, fast
+df.write.format("parquet").option("compression", "zstd").save(path)    # better ratio
+df.write.format("parquet").option("compression", "gzip").save(path)    # slowest, best ratio
+df.write.format("parquet").option("compression", "none").save(path)    # no compression
+
+# Zstd with compression level (1=fastest, 22=best ratio, default=3)
+spark.conf.set("spark.sql.parquet.compression.codec", "zstd")
+spark.conf.set("parquet.zstd.compression.level", "6")
+
+# For Kafka (LZ4 is fastest for streaming)
+# producer config: compression.type=lz4
+# Snappy is also common: compression.type=snappy
+
+# Comparing compression ratios empirically
+import os
+path_snappy = "/tmp/test_snappy"
+path_zstd   = "/tmp/test_zstd"
+df.write.format("parquet").option("compression","snappy").mode("overwrite").save(path_snappy)
+df.write.format("parquet").option("compression","zstd").mode("overwrite").save(path_zstd)
+
+def folder_size(path):
+    total = 0
+    for f in os.listdir(path):
+        total += os.path.getsize(os.path.join(path, f))
+    return total / (1024**2)  # MB
+
+print(f"Snappy: {folder_size(path_snappy):.1f} MB")
+print(f"Zstd:   {folder_size(path_zstd):.1f} MB")`}</CodeBlock>
+
+          <Quiz topicId="compression" questions={[
+            { question: "Why is Snappy the most common compression codec for Parquet in Spark?", options: ["It has the highest compression ratio", "It balances fast compression/decompression speed with reasonable ratio — minimises CPU overhead during queries", "It is the only splittable codec", "It is the only codec supported by Delta Lake"], correct: 1 },
+            { question: "What does 'splittable' mean for a compressed file and why does it matter?", options: ["The file can be decompressed in parallel blocks, allowing multiple Spark tasks to read different parts simultaneously", "The file can be split across multiple disks", "The file supports partial writes", "It means the file has multiple compression levels"], correct: 0 },
+            { question: "When would you choose Zstd over Snappy for Parquet files?", options: ["For real-time streaming where decompression speed is critical", "For Gold/archive layers where storage cost matters and you can afford slightly more CPU", "For CSV files on HDFS", "When Snappy is not available"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('compression'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* SERIALIZATION */}
+        <section id="serialization" ref={el => { if (el) sectionRefs.current['serialization'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
+            <h1 className="topic-title">Serialization Formats</h1>
+            <p className="topic-desc">Serialization converts in-memory objects to bytes for transmission or storage. The format you choose affects schema evolution flexibility, performance, and compatibility between producers and consumers — critical for event streaming and microservice integration.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Format Comparison</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-50)' }}>
+                  {['Format', 'Type', 'Schema', 'Size', 'Speed', 'Schema Evolution', 'Best For'].map(h => (
+                    <th key={h} style={{ padding: '9px 11px', textAlign: 'left', borderBottom: '2px solid var(--border)', fontWeight: 700, fontSize: '.73rem', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['JSON', 'Text', 'None', 'Large', 'Slow', 'Very flexible (no checks)', 'REST APIs, configs, human-readable data'],
+                  ['Avro', 'Binary', 'Required (.avsc)', 'Small', 'Fast', 'Full (backward/forward)', 'Kafka events, schema registry'],
+                  ['Protobuf', 'Binary', 'Required (.proto)', 'Smallest', 'Fastest', 'Forward/backward w/ rules', 'gRPC, microservices, mobile'],
+                  ['Thrift', 'Binary', 'Required (.thrift)', 'Small', 'Fast', 'Forward/backward', 'Internal services (Facebook origin)'],
+                  ['MessagePack', 'Binary', 'None', 'Small', 'Fast', 'None', 'JSON replacement when size matters'],
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'white' : 'var(--gray-50)' }}>
+                    {row.map((cell, j) => (
+                      <td key={j} style={{ padding: '8px 11px', fontWeight: j === 0 ? 700 : 400, color: j === 0 ? 'var(--blue-700)' : 'var(--text-secondary)' }}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Schema Evolution Compatibility</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { name: 'Backward Compatible', color: '#22c55e', bg: '#f0fdf4', desc: 'New schema can read data written with old schema. Safe to upgrade consumers first. Old fields deleted are given defaults.' },
+              { name: 'Forward Compatible', color: '#3b82f6', bg: '#eff6ff', desc: 'Old schema can read data written with new schema. Unknown fields are ignored. Safe to upgrade producers first.' },
+              { name: 'Full Compatible', color: '#8b5cf6', bg: '#faf5ff', desc: 'Both backward AND forward compatible. Most restrictive — only add optional fields, never remove or rename. Best for Kafka topics.' },
+              { name: 'Breaking Change', color: '#ef4444', bg: '#fef2f2', desc: 'Renaming or removing required fields, changing type. Requires coordinating all producers and consumers simultaneously.' },
+            ].map(c => (
+              <div key={c.name} style={{ background: c.bg, border: `1px solid ${c.color}40`, borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontWeight: 700, color: c.color, marginBottom: 8, fontSize: '.88rem' }}>{c.name}</div>
+                <div style={{ fontSize: '.8rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{c.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Avro with Schema Registry (Kafka / Event Hub)</h3>
+          <CodeBlock lang="python">{`# Avro schema definition (.avsc)
+schema_str = """
+{
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.company.events",
+  "fields": [
+    {"name": "order_id",    "type": "long"},
+    {"name": "customer_id", "type": "int"},
+    {"name": "amount",      "type": {"type": "bytes", "logicalType": "decimal", "precision": 18, "scale": 2}},
+    {"name": "status",      "type": "string"},
+    {"name": "created_at",  "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {"name": "metadata",    "type": ["null", {"type": "map", "values": "string"}], "default": null}
+  ]
+}
+"""
+
+# Confluent Schema Registry with Kafka
+from confluent_kafka import Producer
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+
+schema_registry_conf = {'url': 'https://schema-registry:8081'}
+schema_registry_client = SchemaRegistryClient(schema_registry_conf)
+avro_serializer = AvroSerializer(schema_registry_client, schema_str)
+
+producer = Producer({'bootstrap.servers': 'kafka:9092'})
+producer.produce(
+    topic='orders',
+    key=str(order_id),
+    value=avro_serializer({'order_id': 123, 'amount': 99.99, ...}, SerializationContext('orders', MessageField.VALUE))
+)
+
+# Schema evolution rule: only ADD optional fields with defaults
+# Bad (breaking): rename "amount" → "total_amount"
+# Good (backward): add {"name": "discount", "type": ["null", "double"], "default": null}`}</CodeBlock>
+
+          <Quiz topicId="serialization" questions={[
+            { question: "What does 'backward compatible' schema evolution mean in Avro?", options: ["Old consumers can read new data", "New consumers can read old data written with the previous schema", "The schema can be changed without any constraints", "Consumers and producers must be upgraded together"], correct: 1 },
+            { question: "Why is Avro preferred over JSON for Kafka events in enterprise systems?", options: ["Avro is human-readable like JSON", "Avro is binary (smaller, faster), enforces a schema via registry, and supports full schema evolution compatibility checks", "Avro supports more data types", "JSON doesn't support nested objects"], correct: 1 },
+            { question: "What is the safest schema evolution change you can make to a 'full compatible' Avro schema?", options: ["Rename an existing field", "Remove a required field", "Add a new optional field with a default value", "Change a field's type from int to string"], correct: 2 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('serialization'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* DATABASES */}
+        <section id="databases" ref={el => { if (el) sectionRefs.current['databases'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
+            <h1 className="topic-title">Database Types</h1>
+            <p className="topic-desc">There is no single best database — each type is optimised for different access patterns. Knowing which database to use for which problem is a core data engineering skill. Using the wrong database type is one of the most expensive architectural mistakes.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>OLTP vs OLAP</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 800, color: '#1d4ed8', marginBottom: 10, fontSize: '1rem' }}>OLTP — Online Transactional Processing</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 2, margin: 0, paddingLeft: 18 }}>
+                <li>Row-oriented storage (fast single-row reads/writes)</li>
+                <li>Optimised for INSERT/UPDATE/DELETE on single rows</li>
+                <li>High concurrency, many short transactions</li>
+                <li>Normalised schema (3NF) to avoid update anomalies</li>
+                <li>Examples: Azure SQL DB, PostgreSQL, MySQL, Cosmos DB</li>
+                <li>Use for: operational apps, order management, user profiles</li>
+              </ul>
+            </div>
+            <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 800, color: '#7c3aed', marginBottom: 10, fontSize: '1rem' }}>OLAP — Online Analytical Processing</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 2, margin: 0, paddingLeft: 18 }}>
+                <li>Column-oriented storage (fast aggregate scans)</li>
+                <li>Optimised for SELECT with GROUP BY, aggregations</li>
+                <li>Few concurrent queries but very large scans</li>
+                <li>Denormalised star/snowflake schema for read performance</li>
+                <li>Examples: Databricks, Synapse Analytics, BigQuery, Redshift</li>
+                <li>Use for: BI reports, KPI dashboards, ad-hoc analytics</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>NoSQL Database Types</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { type: 'Document DB', icon: '📄', example: 'MongoDB, Cosmos DB (NoSQL API)', desc: 'Stores JSON-like documents. Flexible schema. Great for semi-structured data, user profiles, product catalogs. Query by any field.' },
+              { type: 'Key-Value Store', icon: '🔑', example: 'Redis, Azure Cache, DynamoDB', desc: 'Simplest: key → value. Extremely fast lookups. Ideal for caching, session state, feature flags, rate limiting.' },
+              { type: 'Column-Family', icon: '📊', example: 'Apache Cassandra, HBase', desc: 'Wide-column. Each row can have different columns. Optimised for time-series writes and reads by partition key. Scales to PBs.' },
+              { type: 'Graph DB', icon: '🕸️', example: 'Neo4j, Amazon Neptune', desc: 'Nodes and edges with properties. Traversal queries (shortest path, friend-of-friend). Ideal for fraud detection, recommendation engines.' },
+              { type: 'Time-Series DB', icon: '📈', example: 'InfluxDB, TimescaleDB, Azure Data Explorer', desc: 'Optimised for time-indexed data. Built-in downsampling, retention policies. IoT sensor data, metrics, logs.' },
+              { type: 'Vector DB', icon: '🧠', example: 'Pinecone, Weaviate, pgvector', desc: 'Stores high-dimensional embeddings. ANN (Approximate Nearest Neighbour) search. Semantic search, RAG for LLMs, recommendation.' },
+            ].map(db => (
+              <div key={db.type} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>{db.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: '.88rem', marginBottom: 4 }}>{db.type}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.73rem', color: 'var(--blue-600)', marginBottom: 8 }}>{db.example}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{db.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <CodeBlock lang="python">{`# OLTP: single row operations (Azure SQL / PostgreSQL)
+import pyodbc
+conn = pyodbc.connect("DRIVER={ODBC Driver 17 for SQL Server};SERVER=...")
+cursor = conn.cursor()
+cursor.execute("UPDATE orders SET status='shipped' WHERE order_id=?", (12345,))
+conn.commit()
+
+# OLAP: aggregation query (Databricks / Synapse)
+df = spark.sql("""
+    SELECT
+        date_trunc('month', order_date) AS month,
+        product_category,
+        SUM(revenue)          AS total_revenue,
+        COUNT(DISTINCT customer_id) AS unique_customers
+    FROM gold.fact_orders
+    WHERE order_date >= '2024-01-01'
+    GROUP BY 1, 2
+    ORDER BY 1, 3 DESC
+""")
+
+# Key-Value (Redis) - caching API responses
+import redis
+r = redis.Redis(host='localhost')
+cached = r.get(f"customer:{customer_id}")
+if not cached:
+    data = fetch_from_db(customer_id)
+    r.setex(f"customer:{customer_id}", 300, json.dumps(data))  # TTL 5 min
+
+# Vector DB (semantic search for RAG)
+import pinecone
+index = pinecone.Index("product-embeddings")
+results = index.query(vector=query_embedding, top_k=10, include_metadata=True)`}</CodeBlock>
+
+          <Quiz topicId="databases" questions={[
+            { question: "Why is a column-oriented database faster for analytical queries like SUM(revenue)?", options: ["It stores less data overall", "All values for a column are stored contiguously — the query reads only the revenue column, skipping all other columns", "It uses better compression", "Analytical queries run in parallel automatically"], correct: 1 },
+            { question: "Which database type is best suited for storing ML embeddings and performing semantic similarity search?", options: ["OLTP relational database", "Key-value store like Redis", "Vector database like Pinecone or pgvector", "Column-family database like Cassandra"], correct: 2 },
+            { question: "What is the main tradeoff of NoSQL databases compared to relational OLTP databases?", options: ["NoSQL is always faster", "NoSQL sacrifices ACID transactions and complex joins for horizontal scalability and schema flexibility", "NoSQL stores less data", "NoSQL requires more storage"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('databases'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* DATA WAREHOUSE */}
+        <section id="data-warehouse" ref={el => { if (el) sectionRefs.current['data-warehouse'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
+            <h1 className="topic-title">Data Warehouse Concepts</h1>
+            <p className="topic-desc">Data warehouse modelling is about organising historical business data for fast analytical queries. Star schemas, SCDs, and surrogate keys are the vocabulary of every enterprise data warehouse and lakehouse Gold layer.</p>
+          </div>
+
+          <StarSchemaAnimation />
+
+          <h3 style={{ marginBottom: 12, marginTop: 16 }}>Star vs Snowflake Schema</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 700, color: '#d97706', marginBottom: 8 }}>Star Schema</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.9, margin: 0, paddingLeft: 18 }}>
+                <li>One central fact table surrounded by denormalised dimension tables</li>
+                <li>Dimensions are flat — no further joins needed</li>
+                <li>Faster queries (fewer joins)</li>
+                <li>More storage (repeated dimension data)</li>
+                <li>Best for: BI tools, ad-hoc analytics, Power BI</li>
+              </ul>
+            </div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-lg)', padding: 16 }}>
+              <div style={{ fontWeight: 700, color: '#15803d', marginBottom: 8 }}>Snowflake Schema</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.9, margin: 0, paddingLeft: 18 }}>
+                <li>Dimension tables further normalised into sub-dimensions</li>
+                <li>e.g., dim_product → dim_category → dim_department</li>
+                <li>Slower queries (more joins)</li>
+                <li>Less storage (no repeated data)</li>
+                <li>Best for: DWH with strict data governance</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Slowly Changing Dimensions (SCD) Types</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+            {[
+              { type: 'SCD Type 0', color: '#94a3b8', title: 'Fixed — No Change', desc: 'Original value kept forever. Example: birth date. The attribute never changes.' },
+              { type: 'SCD Type 1', color: '#f59e0b', title: 'Overwrite — No History', desc: 'New value overwrites old. No history kept. Example: correcting a typo in a name. Simple but destroys history.' },
+              { type: 'SCD Type 2', color: '#22c55e', title: 'New Row — Full History', desc: 'New row inserted for each change with effective_start, effective_end dates and is_current flag. Most common. Example: customer address changes. Enables point-in-time reporting.' },
+              { type: 'SCD Type 3', color: '#3b82f6', title: 'Add Column — Limited History', desc: 'Add "previous_value" column. Only keeps one historical value. Example: current_region + previous_region. Simple but limited.' },
+              { type: 'SCD Type 4', color: '#8b5cf6', title: 'History Table — Separate', desc: 'Keep current in main table, full history in a separate history table. Fast current reads, full history available.' },
+              { type: 'SCD Type 6', color: '#ef4444', title: 'Hybrid (1+2+3)', desc: 'Combines Type 1 (overwrite), Type 2 (new row), Type 3 (add column). Has is_current flag, effective dates, AND current_value column updated on all rows for that key.' },
+            ].map(scd => (
+              <div key={scd.type} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'white', border: '1px solid var(--border)', borderLeft: `3px solid ${scd.color}`, borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontWeight: 700, fontSize: '.85rem', minWidth: 120, color: scd.color }}>{scd.type}</div>
+                <div style={{ fontWeight: 600, fontSize: '.85rem', minWidth: 220 }}>{scd.title}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)' }}>{scd.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <CodeBlock lang="sql">{`-- Star Schema: Fact and Dimension tables
+-- FACT TABLE: one row per business event, foreign keys to dimensions
+CREATE TABLE gold.fact_sales (
+    sale_sk          BIGINT NOT NULL,       -- surrogate key (auto-generated)
+    date_sk          INT NOT NULL,          -- FK to dim_date
+    customer_sk      BIGINT NOT NULL,       -- FK to dim_customer
+    product_sk       INT NOT NULL,          -- FK to dim_product
+    store_sk         INT NOT NULL,          -- FK to dim_store
+    -- Measures (additive)
+    quantity         INT,
+    unit_price       DECIMAL(10,2),
+    discount_amount  DECIMAL(10,2),
+    net_revenue      DECIMAL(18,2),         -- calculated = quantity * unit_price - discount
+    -- Degenerate dimensions (no separate table needed)
+    invoice_number   VARCHAR(20),
+    PRIMARY KEY (sale_sk)
+);
+
+-- DIMENSION TABLE with SCD Type 2
+CREATE TABLE gold.dim_customer (
+    customer_sk      BIGINT NOT NULL,       -- surrogate key (use IDENTITY/SEQUENCE)
+    customer_nk      VARCHAR(50) NOT NULL,  -- natural key (source system ID)
+    customer_name    VARCHAR(200),
+    email            VARCHAR(200),
+    city             VARCHAR(100),
+    country          VARCHAR(100),
+    tier             VARCHAR(20),           -- 'Gold', 'Silver', 'Bronze'
+    -- SCD Type 2 metadata
+    effective_start  DATE NOT NULL,
+    effective_end    DATE,                  -- NULL means current
+    is_current       BOOLEAN DEFAULT TRUE,
+    PRIMARY KEY (customer_sk)
+);
+
+-- Conformed date dimension (reused across all fact tables)
+CREATE TABLE gold.dim_date (
+    date_sk       INT PRIMARY KEY,          -- YYYYMMDD as integer
+    full_date     DATE,
+    year          SMALLINT,
+    quarter       TINYINT,
+    month         TINYINT,
+    month_name    VARCHAR(10),
+    week          TINYINT,
+    day_of_week   TINYINT,
+    is_weekend    BOOLEAN,
+    is_holiday    BOOLEAN
+);
+
+-- Typical star schema query
+SELECT
+    d.year, d.month_name,
+    c.country, c.tier,
+    SUM(f.net_revenue)  AS total_revenue,
+    COUNT(*)            AS transaction_count
+FROM gold.fact_sales f
+JOIN gold.dim_date     d ON f.date_sk = d.date_sk
+JOIN gold.dim_customer c ON f.customer_sk = c.customer_sk AND c.is_current = TRUE
+JOIN gold.dim_product  p ON f.product_sk = p.product_sk
+WHERE d.year = 2024
+GROUP BY 1,2,3,4
+ORDER BY 1,2,5 DESC;`}</CodeBlock>
+
+          <Quiz topicId="data-warehouse" questions={[
+            { question: "What is the difference between a surrogate key and a natural key?", options: ["They are the same thing", "A surrogate key is system-generated (e.g., IDENTITY/SEQUENCE); a natural key is the business identifier from the source system (e.g., customer_id='CUST001')", "Natural keys are always integers", "Surrogate keys come from the source system"], correct: 1 },
+            { question: "In SCD Type 2, how do you identify the current record for a customer?", options: ["The record with the highest surrogate key", "Using is_current = TRUE or WHERE effective_end IS NULL", "The record with the most recent effective_start date", "All records are current in SCD Type 2"], correct: 1 },
+            { question: "Why is a star schema preferred over a snowflake schema for Power BI / BI tools?", options: ["Star schemas use less storage", "Star schemas require fewer joins — BI tools generate SQL with one level of joins, which is faster and easier to optimise", "Snowflake schemas don't support date dimensions", "Star schemas have better compression"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('data-warehouse'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -400,126 +1907,423 @@ df.write \\
           <div className="topic-header">
             <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
             <h1 className="topic-title">Medallion Architecture</h1>
-            <p className="topic-desc">The Medallion (Bronze/Silver/Gold) architecture is the standard pattern for modern data lakehouses. Every major cloud data platform uses this pattern.</p>
+            <p className="topic-desc">The Medallion (Bronze/Silver/Gold) architecture is the standard pattern for modern data lakehouses. It organises data into quality tiers, each with clear responsibilities. Understanding what belongs in each layer — and why — is a daily decision for data engineers.</p>
           </div>
 
           <MedallionAnimation />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 20, marginTop: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20, marginTop: 20, marginBottom: 24 }}>
             {[
-              { tier: 'Bronze', icon: '🥉', color: '#cd7f32', bg: '#fff7ed', desc: 'Raw ingested data, no transformations. Append-only. Source of truth for replay. Keep forever.', formats: 'Parquet, Delta, JSON as-is', latency: 'Seconds to minutes' },
-              { tier: 'Silver', icon: '🥈', color: '#94a3b8', bg: '#f8fafc', desc: 'Cleaned, validated, deduplicated data. Joins applied, types cast, nulls handled. Business entities.', formats: 'Delta tables', latency: 'Minutes to hours' },
-              { tier: 'Gold', icon: '🥇', color: '#f59e0b', bg: '#fffbeb', desc: 'Business-ready aggregations and KPIs. Optimized for BI tools and ML features. Never modify upstream.', formats: 'Delta / Parquet', latency: 'Hours (batch) or minutes (streaming)' },
+              { tier: 'Bronze', icon: '🥉', color: '#cd7f32', bg: '#fff7ed',
+                responsibilities: ['Raw ingested data — no transformations', 'Append-only (never delete or update)', 'Source of truth for replaying pipelines', 'Keep forever — cheapest storage tier', 'Capture schema and ingestion metadata', 'Auto Loader / Event Hub streaming'],
+                formats: 'Parquet, Delta, JSON as-is', latency: 'Seconds to minutes' },
+              { tier: 'Silver', icon: '🥈', color: '#64748b', bg: '#f8fafc',
+                responsibilities: ['Cleaned and validated data', 'Deduplication (drop duplicate events)', 'Type casting and null handling', 'Joins to reference/lookup tables', 'SCD Type 2 for slowly changing entities', 'Consistent naming conventions applied'],
+                formats: 'Delta tables', latency: 'Minutes to hours' },
+              { tier: 'Gold', icon: '🥇', color: '#f59e0b', bg: '#fffbeb',
+                responsibilities: ['Business-ready aggregations and KPIs', 'Optimised for BI tools and dashboards', 'ML feature tables', 'One table per business question', 'Never modify Silver/Bronze from here', 'Materialised or views depending on SLA'],
+                formats: 'Delta / Parquet', latency: 'Hours (batch) or minutes (streaming)' },
             ].map(t => (
               <div key={t.tier} style={{ background: t.bg, border: `1.5px solid ${t.color}40`, borderRadius: 'var(--radius-xl)', padding: 20 }}>
                 <div style={{ fontSize: '2rem', marginBottom: 8 }}>{t.icon}</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', color: t.color, marginBottom: 8 }}>{t.tier}</div>
-                <div style={{ fontSize: '.84rem', color: 'var(--text-2)', lineHeight: 1.7, marginBottom: 12 }}>{t.desc}</div>
-                <div style={{ fontSize: '.78rem', color: 'var(--text-4)' }}><strong>Formats:</strong> {t.formats}</div>
-                <div style={{ fontSize: '.78rem', color: 'var(--text-4)' }}><strong>Latency:</strong> {t.latency}</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem', color: t.color, marginBottom: 10 }}>{t.tier}</div>
+                <ul style={{ fontSize: '.8rem', color: 'var(--text-secondary)', lineHeight: 1.8, margin: '0 0 12px 0', paddingLeft: 16 }}>
+                  {t.responsibilities.map(r => <li key={r}>{r}</li>)}
+                </ul>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-muted)' }}><strong>Formats:</strong> {t.formats}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-muted)' }}><strong>Latency:</strong> {t.latency}</div>
               </div>
             ))}
           </div>
 
-          <CodeBlock lang="python">{`# Medallion Architecture in PySpark/Delta
+          <h3 style={{ marginBottom: 12 }}>Views vs Materialised Tables</h3>
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Views</strong> — no physical storage, query executed on every read. Use for Gold when data changes frequently and freshness &lt; latency matters, or when the underlying Silver is fast enough.<br/><br/>
+              <strong>Materialised tables / CTAS</strong> — physical storage, pre-computed. Use when: (1) queries are slow and many users hit the same aggregation, (2) you need sub-second BI response times, (3) complex joins that are expensive to recompute.
+            </div>
+          </div>
 
-# BRONZE - Raw ingestion with Auto Loader (keeps original schema)
-spark.readStream \\
-  .format("cloudFiles") \\
-  .option("cloudFiles.format", "json") \\
-  .option("cloudFiles.schemaLocation", "/checkpoints/bronze/schema") \\
-  .load("abfss://raw@storage.dfs.core.windows.net/events/") \\
-  .writeStream \\
-  .format("delta") \\
-  .option("checkpointLocation", "/checkpoints/bronze") \\
-  .outputMode("append") \\
-  .table("bronze.events_raw")
+          <CodeBlock lang="python">{`# ─── BRONZE: Auto Loader streaming ingestion ─────────────────────────────────
+(spark.readStream
+    .format("cloudFiles")
+    .option("cloudFiles.format", "json")
+    .option("cloudFiles.schemaLocation", "/checkpoints/bronze/schema")
+    .option("cloudFiles.inferColumnTypes", "true")
+    .load("abfss://raw@storage.dfs.core.windows.net/orders/")
+    .withColumn("_ingested_at", current_timestamp())
+    .withColumn("_source_file", input_file_name())
+    .writeStream
+    .format("delta")
+    .option("checkpointLocation", "/checkpoints/bronze/orders")
+    .outputMode("append")
+    .trigger(availableNow=True)   # process all available, then stop
+    .table("bronze.orders_raw"))
 
-# SILVER - Clean and validate
-from pyspark.sql.functions import col, to_timestamp, when
+# ─── SILVER: Clean, deduplicate, type-cast ────────────────────────────────────
+from delta.tables import DeltaTable
 
-df_silver = spark.readStream.table("bronze.events_raw") \\
-  .filter(col("event_id").isNotNull()) \\
-  .withColumn("event_time", to_timestamp("event_time_str")) \\
-  .withColumn("amount", col("amount").cast("decimal(18,2)")) \\
-  .dropDuplicates(["event_id"])
+df_silver = (spark.readStream.table("bronze.orders_raw")
+    .filter(col("order_id").isNotNull())
+    .filter(col("amount") > 0)
+    .withColumn("order_time", to_timestamp("order_time_str"))
+    .withColumn("amount", col("amount").cast(DecimalType(18, 2)))
+    .dropDuplicates(["order_id"]))
 
-df_silver.writeStream \\
-  .format("delta") \\
-  .option("checkpointLocation", "/checkpoints/silver") \\
-  .outputMode("append") \\
-  .table("silver.events")
+# MERGE for idempotent upsert (handle late-arriving bronze duplicates)
+def upsert_to_silver(microBatchDF, batchId):
+    DeltaTable.forName(spark, "silver.orders").alias("target").merge(
+        microBatchDF.alias("source"),
+        "target.order_id = source.order_id"
+    ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
 
-# GOLD - Business aggregations
+df_silver.writeStream.foreachBatch(upsert_to_silver).option("checkpointLocation", "/checkpoints/silver/orders").start()
+
+# ─── GOLD: Business aggregation ──────────────────────────────────────────────
 spark.sql("""
-  CREATE OR REPLACE TABLE gold.daily_revenue AS
-  SELECT
-    date_trunc('day', event_time) AS date,
-    product_id,
-    SUM(amount) AS total_revenue,
-    COUNT(*) AS transaction_count
-  FROM silver.events
-  GROUP BY 1, 2
+    CREATE OR REPLACE TABLE gold.daily_revenue AS
+    SELECT
+        to_date(order_time) AS order_date,
+        customer_tier,
+        country,
+        SUM(amount)         AS total_revenue,
+        COUNT(*)            AS order_count,
+        COUNT(DISTINCT customer_id) AS unique_customers,
+        AVG(amount)         AS avg_order_value
+    FROM silver.orders o
+    JOIN silver.dim_customer c ON o.customer_id = c.customer_id AND c.is_current
+    GROUP BY 1, 2, 3
 """)`}</CodeBlock>
 
           <Quiz topicId="medallion" questions={[
-            { question: "In Medallion architecture, what should Bronze layer contain?", options: ["Cleaned and validated data", "Raw ingested data with no transformations", "Business-ready aggregations", "Only the latest snapshot"], correct: 1 },
-            { question: "Why should you keep Bronze layer data forever?", options: ["It's the cheapest storage tier", "It's the source of truth for reprocessing if Silver/Gold logic is wrong", "It contains PII data", "Bronze is the fastest to query"], correct: 1 },
-            { question: "What transformation happens at the Silver layer?", options: ["Aggregations and KPIs", "Raw ingestion only", "Cleaning, deduplication, type casting, joins", "ML feature engineering"], correct: 2 },
+            { question: "Why is Bronze append-only and kept forever?", options: ["Bronze is the cheapest storage layer", "Bronze is the source of truth — if Silver/Gold transformation logic has bugs, you can replay/reprocess from Bronze without re-ingesting from source systems", "Bronze tables are too large to delete", "Bronze data is never read after ingestion"], correct: 1 },
+            { question: "What type of data transformation should NOT happen in Bronze?", options: ["Adding ingestion metadata columns", "Recording the source file name", "Type casting, deduplication, and joins to lookup tables", "Appending new records as they arrive"], correct: 2 },
+            { question: "When should you use a materialised Gold table instead of a view?", options: ["Always — views are never used in Gold", "When the aggregation is expensive and many BI users query the same data — pre-computation saves repeated compute costs", "Only when using Parquet instead of Delta", "When the source data changes every second"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('medallion'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
 
-        {/* DATABASES */}
-        <section id="databases" ref={el => { if (el) sectionRefs.current['databases'] = el }} className="topic-section">
+        {/* DATA QUALITY */}
+        <section id="data-quality" ref={el => { if (el) sectionRefs.current['data-quality'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
-            <h1 className="topic-title">Databases vs Data Warehouses vs Data Lakes</h1>
-            <p className="topic-desc">These are fundamentally different systems optimized for different workloads. Knowing when to use each is a core data engineering skill.</p>
+            <h1 className="topic-title">Data Quality</h1>
+            <p className="topic-desc">Bad data is worse than no data — it silently corrupts decisions. Data quality is not a one-time fix; it is an ongoing operational discipline. Every production pipeline should have DQ checks at every layer boundary.</p>
           </div>
 
-          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.84rem' }}>
-              <thead>
-                <tr style={{ background: 'var(--gray-50)' }}>
-                  {['Feature', 'OLTP Database', 'Data Warehouse', 'Data Lake', 'Lakehouse'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', borderBottom: '2px solid var(--border)', fontWeight: 700, fontSize: '.78rem', textTransform: 'uppercase' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ['Purpose', 'Transactional', 'Analytics', 'Storage', 'Analytics + ACID'],
-                  ['Schema', 'Schema-on-write', 'Schema-on-write', 'Schema-on-read', 'Both'],
-                  ['Data type', 'Structured', 'Structured', 'All types', 'All types'],
-                  ['Scale', 'GBs-TBs', 'TBs-PBs', 'Unlimited', 'PBs'],
-                  ['Azure example', 'Azure SQL DB', 'Synapse SQL', 'ADLS Gen2', 'Databricks/Delta'],
-                  ['Query engine', 'SQL', 'SQL', 'Spark/Hive', 'Spark SQL'],
-                  ['ACID', 'Yes', 'Partial', 'No', 'Yes (Delta)'],
-                ].map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                    {row.map((cell, j) => (
-                      <td key={j} style={{ padding: '10px 14px', fontWeight: j === 0 ? 600 : 400, color: j === 0 ? 'var(--text-2)' : 'var(--text-3)' }}>{cell}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Six Dimensions of Data Quality</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { dim: 'Completeness', icon: '✅', color: '#22c55e', desc: 'Are all required fields populated? No unexpected NULLs. Example: order_id must never be null.' },
+              { dim: 'Accuracy', icon: '🎯', color: '#3b82f6', desc: 'Does the data correctly reflect reality? Amount is positive, email contains @, date is valid.' },
+              { dim: 'Consistency', icon: '🔗', color: '#8b5cf6', desc: 'Does data agree across systems? Customer count in CRM matches the DWH. No conflicting values.' },
+              { dim: 'Timeliness', icon: '⏱️', color: '#f59e0b', desc: 'Is data available when needed? SLA: Bronze within 5 min of event, Gold by 7am daily.' },
+              { dim: 'Uniqueness', icon: '🔑', color: '#ef4444', desc: 'No duplicate records. One customer per customer_id. Deduplication needed in Silver layer.' },
+              { dim: 'Validity', icon: '📋', color: '#06b6d4', desc: 'Does data conform to defined rules? Country is ISO 3166 code, status in allowed set, amount ≥ 0.' },
+            ].map(d => (
+              <div key={d.dim} style={{ background: 'white', border: '1px solid var(--border)', borderLeft: `3px solid ${d.color}`, borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontSize: '1.3rem', marginBottom: 6 }}>{d.icon}</div>
+                <div style={{ fontWeight: 700, color: d.color, marginBottom: 6, fontSize: '.9rem' }}>{d.dim}</div>
+                <div style={{ fontSize: '.8rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{d.desc}</div>
+              </div>
+            ))}
           </div>
 
-          <div className="callout callout-tip">
-            <span className="callout-icon">✨</span>
-            <div className="callout-body"><strong>The Lakehouse pattern (Delta Lake + Databricks)</strong> combines the best of data warehouses (ACID, SQL, performance) with data lakes (cheap storage, all data types, Spark). This is the dominant enterprise pattern in 2024-2025.</div>
+          <h3 style={{ marginBottom: 12 }}>DQ Frameworks</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+            {[
+              { name: 'Great Expectations', lang: 'Python', desc: 'Open-source. Define "expectations" (assertions about data). Generates HTML data docs. Integrates with Airflow, dbt, Spark.' },
+              { name: 'Deequ (AWS)', lang: 'Scala/Python', desc: 'Built on Spark. Designed for very large datasets. Constraint verification, anomaly detection, column profiles. Open-sourced by Amazon.' },
+              { name: 'Soda Core', lang: 'Python', desc: 'YAML-based DQ checks. Soda Cloud for monitoring. Integrates with dbt and Airflow. Simple to configure for non-engineers.' },
+              { name: 'dbt Tests', lang: 'SQL', desc: 'Built into dbt. not_null, unique, accepted_values, relationships checks. Runs as part of dbt build. Simple but powerful.' },
+            ].map(fw => (
+              <div key={fw.name} style={{ display: 'flex', gap: 14, padding: '12px 16px', background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontWeight: 700, minWidth: 180, fontSize: '.88rem' }}>{fw.name}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: 'var(--blue-600)', minWidth: 100 }}>{fw.lang}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)' }}>{fw.desc}</div>
+              </div>
+            ))}
           </div>
 
-          <Quiz topicId="databases" questions={[
-            { question: "What does OLTP stand for and what is it used for?", options: ["Online Transactional Processing - for operational systems like apps", "Online Text Processing - for NLP", "Output Layer Transaction Protocol - for ETL", "Online Table Partitioning - for warehouses"], correct: 0 },
-            { question: "What is 'schema-on-read' in a data lake?", options: ["Schema is validated when writing", "Schema is applied when querying, not when storing data", "The schema is read from a catalog", "No schema is ever applied"], correct: 1 },
-            { question: "What makes a Lakehouse different from a plain Data Lake?", options: ["Lakehouse is cheaper", "Lakehouse adds ACID transactions and schema enforcement on top of object storage", "Lakehouse only supports structured data", "Lakehouse is managed by cloud providers"], correct: 1 },
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body"><strong>Quarantine pattern:</strong> Failed records should NOT be silently dropped. Send them to a dead letter queue (DLQ) or quarantine table for investigation and reprocessing. Silently dropping bad data hides systematic upstream problems.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# Great Expectations — define and run DQ checks
+import great_expectations as ge
+
+df_ge = ge.from_pandas(df.toPandas())  # or use Spark connector
+
+# Define expectations
+df_ge.expect_column_values_to_not_be_null("order_id")
+df_ge.expect_column_values_to_be_between("amount", min_value=0, max_value=1_000_000)
+df_ge.expect_column_values_to_be_in_set("status", ["pending","processing","shipped","delivered","cancelled"])
+df_ge.expect_column_values_to_match_regex("email", r"^[^@]+@[^@]+\.[^@]+$")
+df_ge.expect_column_to_exist("customer_id")
+df_ge.expect_column_values_to_be_unique("order_id")
+
+results = df_ge.validate()
+if not results["success"]:
+    raise ValueError(f"DQ checks failed: {results}")
+
+# Deequ — Spark-native DQ at scale
+from pydeequ.checks import Check, CheckLevel
+from pydeequ.verification import VerificationSuite, VerificationResult
+
+check = (Check(spark, CheckLevel.Error, "Silver DQ")
+    .isComplete("order_id")
+    .isUnique("order_id")
+    .isNonNegative("amount")
+    .isContainedIn("status", ["pending","shipped","delivered"])
+    .hasCompleteness("customer_id", lambda c: c >= 0.99)  # 99% non-null
+    .hasApproxCountDistinct("customer_id", lambda n: n > 1000))
+
+result = VerificationSuite(spark).onData(df).addCheck(check).run()
+df_result = VerificationResult.checkResultsAsDataFrame(spark, result)
+
+# Quarantine pattern: split good and bad records
+good = df.filter(col("order_id").isNotNull() & (col("amount") >= 0))
+bad  = df.filter(col("order_id").isNull()  | (col("amount") < 0))
+bad.withColumn("quarantine_reason", lit("null order_id or negative amount")) \
+   .write.format("delta").mode("append").saveAsTable("quarantine.orders")
+good.write.format("delta").mode("append").saveAsTable("silver.orders")`}</CodeBlock>
+
+          <Quiz topicId="data-quality" questions={[
+            { question: "What is the 'quarantine pattern' in data quality?", options: ["Deleting bad records immediately", "Routing failed DQ records to a separate table/queue for investigation and reprocessing rather than silently dropping them", "Encrypting PII data at rest", "Running DQ checks in a separate environment"], correct: 1 },
+            { question: "Which data quality dimension checks that data is available when it should be?", options: ["Accuracy", "Uniqueness", "Timeliness", "Validity"], correct: 2 },
+            { question: "What is a key advantage of Deequ over Great Expectations for large-scale data engineering?", options: ["Deequ generates better HTML reports", "Deequ is built natively on Spark so DQ checks run distributed across the cluster without converting to Pandas", "Deequ supports more check types", "Deequ integrates with more orchestrators"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('databases'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+          <button onClick={async () => { await markTopicComplete('data-quality'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* DATA GOVERNANCE */}
+        <section id="data-governance" ref={el => { if (el) sectionRefs.current['data-governance'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
+            <h1 className="topic-title">Data Governance</h1>
+            <p className="topic-desc">Data governance is the framework of policies, roles, and processes that ensure data is trustworthy, secure, and compliant. As a data engineer, you implement governance — cataloguing assets, enforcing lineage, masking PII, and building the infrastructure for regulatory compliance.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Core Components</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+            {[
+              { name: 'Data Catalog', icon: '📚', desc: 'Searchable inventory of all data assets — tables, columns, owners, descriptions, tags. Azure Purview / Unity Catalog / Apache Atlas. Enables data discovery.' },
+              { name: 'Data Lineage', icon: '🔀', desc: 'Tracks the origin and transformation of data. Which pipeline created this table? Which source fed it? Essential for impact analysis and debugging.' },
+              { name: 'Data Stewardship', icon: '👤', desc: 'Human accountability for data quality and governance. Data owners define policies; stewards enforce them. Critical for compliance.' },
+              { name: 'Metadata Management', icon: '🏷️', desc: 'Technical metadata (schema, size, stats) + business metadata (description, owner, sensitivity level). Unity Catalog centralises this in Databricks.' },
+              { name: 'PII Classification', icon: '🔒', desc: 'Identify columns containing PII: name, email, SSN, DOB, IP address, location. Tag in catalog, restrict access, apply masking.' },
+              { name: 'Access Control', icon: '🛡️', desc: 'Column-level and row-level security. Unity Catalog grants/revokes. Role-based access control (RBAC). Principle of least privilege.' },
+            ].map(c => (
+              <div key={c.name} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                <div style={{ fontSize: '1.4rem', marginBottom: 6 }}>{c.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: '.88rem', marginBottom: 6 }}>{c.name}</div>
+                <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{c.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>GDPR and CCPA Implications for Data Engineers</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+            {[
+              { rule: 'Right to Erasure (GDPR Art. 17)', impl: 'Must delete all PII for a user on request. In Delta Lake: use DELETE + VACUUM. In append-only Bronze: use Delta\'s GDPR delete pattern with tombstone records.' },
+              { rule: 'Data Minimisation', impl: 'Only collect/store data needed for declared purpose. Don\'t ingest unnecessary columns. Enforce at ingestion layer.' },
+              { rule: 'Purpose Limitation', impl: 'Tag each dataset with processing purpose in catalog. Prevent use for undeclared purposes via access controls.' },
+              { rule: 'Data Retention', impl: 'Define retention policies per dataset. Automate deletion after retention period. Log all retention actions for audit trail.' },
+              { rule: 'Cross-Border Transfers', impl: 'Ensure EU citizen data stays in EU regions (Azure West Europe / North Europe). Use data residency configs in Azure Purview.' },
+            ].map(r => (
+              <div key={r.rule} style={{ display: 'flex', gap: 14, padding: '12px 16px', background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--blue-700)', minWidth: 260, flexShrink: 0 }}>{r.rule}</div>
+                <div style={{ fontSize: '.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{r.impl}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Data Masking Strategies</h3>
+          <CodeBlock lang="python">{`from pyspark.sql.functions import *
+
+# 1. NULLIFICATION — replace with NULL (most aggressive)
+df = df.withColumn("ssn", lit(None).cast("string"))
+
+# 2. PSEUDONYMISATION — replace with consistent hash (re-linkable with key)
+df = df.withColumn("customer_id_masked", sha2(concat(col("customer_id"), lit("SECRET_SALT")), 256))
+
+# 3. TOKENISATION — replace with random token, store mapping in separate secure vault
+# Real value: john.doe@example.com → Token: TKN-8f4a2b91
+
+# 4. DATA MASKING — partial visibility
+df = df.withColumn("email_masked",
+    concat(substring("email", 1, 3), lit("***@***"), substring_index("email", ".", -1)))
+# john.doe@example.com → joh***@***.com
+
+# 5. GENERALISATION — reduce precision
+df = df.withColumn("age_range",
+    when(col("age") < 18, "<18")
+    .when(col("age") < 30, "18-29")
+    .when(col("age") < 50, "30-49")
+    .otherwise("50+"))
+df = df.withColumn("city", lit(None))  # replace exact location with NULL
+df = df.withColumn("country", col("country"))  # keep country only
+
+# Unity Catalog — column masking policy (Databricks)
+spark.sql("""
+    CREATE OR REPLACE FUNCTION mask_email(email STRING)
+    RETURNS STRING
+    RETURN CASE WHEN is_account_group_member('pii_readers') THEN email
+                ELSE concat(left(email, 3), '***@***.', split(email, '\\.')[size(split(email, '\\.'))-1])
+           END;
+
+    ALTER TABLE silver.customers
+    ALTER COLUMN email SET MASK mask_email;
+""")`}</CodeBlock>
+
+          <Quiz topicId="data-governance" questions={[
+            { question: "What is data lineage and why is it important?", options: ["A list of all databases in the organisation", "A record of where data came from and how it was transformed — essential for debugging data issues and assessing impact of schema changes", "The history of schema changes to a table", "A graph of all data consumers"], correct: 1 },
+            { question: "Under GDPR's Right to Erasure, what must a data engineer implement?", options: ["Delete the user's account from the operational database only", "Delete all PII for a user across all systems (Bronze, Silver, Gold, backups) when requested, with audit trail", "Anonymise the data by removing the name field", "Archive the data to cold storage"], correct: 1 },
+            { question: "What is the difference between pseudonymisation and anonymisation?", options: ["They are the same thing", "Pseudonymisation replaces identifiers with tokens while retaining re-linkability via a key; anonymisation is irreversible — re-identification is impossible", "Anonymisation uses hashing, pseudonymisation uses encryption", "Pseudonymisation is stronger than anonymisation"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('data-governance'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
+            Mark Complete ✓
+          </button>
+        </section>
+
+        {/* BATCH VS STREAMING */}
+        <section id="batch-vs-streaming" ref={el => { if (el) sectionRefs.current['batch-vs-streaming'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 2 - Data Fundamentals</div>
+            <h1 className="topic-title">Batch vs Streaming</h1>
+            <p className="topic-desc">Batch and streaming are two fundamentally different processing paradigms, each with distinct tradeoffs. Most enterprise data platforms use both. Knowing when to choose each — and how they combine — is essential architectural knowledge.</p>
+          </div>
+
+          <h3 style={{ marginBottom: 12, marginTop: 0 }}>Side-by-Side Comparison</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', padding: 18 }}>
+              <div style={{ fontWeight: 800, color: '#1d4ed8', marginBottom: 10, fontSize: '1rem' }}>Batch Processing</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 2, margin: 0, paddingLeft: 18 }}>
+                <li>Processes a bounded dataset at scheduled intervals</li>
+                <li>Latency: minutes to hours (typically nightly)</li>
+                <li>High throughput — optimised for large volumes</li>
+                <li>Simple to reason about — no partial state</li>
+                <li>Easy to rerun / reprocess on failure</li>
+                <li>Tools: Spark, dbt, ADF Copy Activity, SQL jobs</li>
+                <li>Use for: daily reports, DWH loads, ML training</li>
+              </ul>
+            </div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-lg)', padding: 18 }}>
+              <div style={{ fontWeight: 800, color: '#15803d', marginBottom: 10, fontSize: '1rem' }}>Streaming Processing</div>
+              <ul style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 2, margin: 0, paddingLeft: 18 }}>
+                <li>Processes unbounded data as it arrives</li>
+                <li>Latency: milliseconds to seconds</li>
+                <li>Lower throughput per unit time (smaller batches)</li>
+                <li>More complex — handles late data, ordering, state</li>
+                <li>Checkpoints enable fault tolerance</li>
+                <li>Tools: Spark Structured Streaming, Flink, Kafka Streams</li>
+                <li>Use for: fraud detection, real-time dashboards, alerts</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 style={{ marginBottom: 12 }}>Architectural Patterns</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+            <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 18 }}>
+              <div style={{ fontWeight: 700, fontSize: '.95rem', marginBottom: 8 }}>Lambda Architecture</div>
+              <p style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 10 }}>
+                Two parallel processing paths: <strong>Batch layer</strong> (reprocesses all historical data, high accuracy) + <strong>Speed layer</strong> (processes recent data with low latency). A <strong>serving layer</strong> merges both. Downside: you maintain two codebases for the same logic. Now largely superseded.
+              </p>
+              <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: 'var(--text-muted)', background: 'var(--gray-50)', borderRadius: 6, padding: '8px 12px' }}>
+                Source → [Batch: Spark → DWH] + [Speed: Kafka → Redis] → Serving Layer merges both
+              </div>
+            </div>
+            <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 18 }}>
+              <div style={{ fontWeight: 700, fontSize: '.95rem', marginBottom: 8 }}>Kappa Architecture</div>
+              <p style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 10 }}>
+                Single processing path — streaming only. Reprocessing is done by replaying the event log (Kafka retention). Same code for real-time and historical. Simpler to maintain. Requires durable, replayable event store.
+              </p>
+              <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: 'var(--text-muted)', background: 'var(--gray-50)', borderRadius: 6, padding: '8px 12px' }}>
+                Source → Kafka (durable, replayable) → Spark Structured Streaming → Delta Lake (Medallion)
+              </div>
+            </div>
+            <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 18 }}>
+              <div style={{ fontWeight: 700, fontSize: '.95rem', marginBottom: 8 }}>Micro-Batch (Spark Structured Streaming default)</div>
+              <p style={{ fontSize: '.83rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 10 }}>
+                Processes data in small batches every few seconds to minutes. Not true streaming (not record-by-record) but achieves near-real-time latency with batch semantics. Simpler exactly-once guarantees. Databricks Auto Loader uses this pattern.
+              </p>
+              <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: 'var(--text-muted)', background: 'var(--gray-50)', borderRadius: 6, padding: '8px 12px' }}>
+                trigger(processingTime='30 seconds') — process every 30s micro-batch
+              </div>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Latency vs Throughput tradeoff:</strong> Streaming achieves low latency by processing small amounts of data frequently — but each processing cycle has fixed overhead (checkpoint, shuffle). Batch amortises this overhead over millions of rows — far higher throughput per CPU cycle. The right choice depends on your SLA: if you need data in &lt;60 seconds, stream. If hourly is fine, batch is simpler and cheaper.
+            </div>
+          </div>
+
+          <CodeBlock lang="python">{`# ─── BATCH: Spark job (runs once, processes bounded dataset) ─────────────────
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+
+spark = SparkSession.builder.appName("DailyRevenue").getOrCreate()
+
+df = (spark.read.format("delta").table("silver.orders")
+      .filter(col("order_date") == current_date() - 1)   # yesterday
+      .groupBy("customer_tier", "country")
+      .agg(sum("amount").alias("revenue"), count("*").alias("orders"))
+      .withColumn("processed_at", current_timestamp()))
+
+df.write.format("delta").mode("overwrite") \
+    .option("replaceWhere", f"order_date = '{yesterday}'") \
+    .saveAsTable("gold.daily_revenue")
+
+# ─── STREAMING: Spark Structured Streaming (runs continuously) ───────────────
+from pyspark.sql.functions import window
+
+stream_df = (spark.readStream
+    .format("kafka")
+    .option("kafka.bootstrap.servers", "kafka:9092")
+    .option("subscribe", "orders")
+    .option("startingOffsets", "latest")
+    .load()
+    .select(from_json(col("value").cast("string"), order_schema).alias("data"))
+    .select("data.*")
+    .withColumn("event_time", to_timestamp("event_time_str")))
+
+# Windowed aggregation with watermark (handles late data up to 10 minutes late)
+windowed = (stream_df
+    .withWatermark("event_time", "10 minutes")   # drop data > 10 min late
+    .groupBy(
+        window("event_time", "5 minutes"),        # 5-minute tumbling windows
+        "country"
+    )
+    .agg(sum("amount").alias("revenue_5min"), count("*").alias("order_count")))
+
+(windowed.writeStream
+    .format("delta")
+    .outputMode("append")                         # only emit completed windows
+    .option("checkpointLocation", "/checkpoints/streaming/revenue")
+    .trigger(processingTime="30 seconds")         # micro-batch every 30s
+    .table("gold.revenue_realtime"))
+
+# ─── availableNow=True: process all backlog then stop (batch-mode streaming) ──
+(spark.readStream.table("bronze.orders")
+    .writeStream.format("delta")
+    .option("checkpointLocation", "/checkpoints/silver/orders")
+    .trigger(availableNow=True)   # idiomatic replacement for batch jobs in Databricks
+    .table("silver.orders"))`}</CodeBlock>
+
+          <Quiz topicId="batch-vs-streaming" questions={[
+            { question: "What is the main disadvantage of Lambda Architecture compared to Kappa Architecture?", options: ["Lambda is more expensive", "Lambda requires maintaining two separate codebases (batch and streaming) implementing the same business logic", "Lambda doesn't support real-time processing", "Lambda uses more storage"], correct: 1 },
+            { question: "What is a watermark in Spark Structured Streaming?", options: ["A data quality check", "A threshold that defines how long to wait for late-arriving data before closing a time window", "A checkpoint for fault tolerance", "A trigger interval"], correct: 1 },
+            { question: "When is batch processing the better choice over streaming?", options: ["Always — streaming is too complex", "When latency requirements are hourly or daily, data volumes are large, and simplicity/reprocessability are valued over low latency", "When the data source is Kafka", "When you need exactly-once semantics"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('batch-vs-streaming'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>
             Mark Complete ✓
           </button>
         </section>
@@ -529,117 +2333,237 @@ spark.sql("""
   )
 }
 
-/* ---- ANIMATIONS ---- */
+// ─────────────────────────────────────────────────────── ANIMATION COMPONENTS
+
 function BinaryAnimation() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const hello = 'Hello'
+    const bits: string[] = []
+    for (const ch of hello) {
+      bits.push(ch.charCodeAt(0).toString(2).padStart(8, '0'))
+    }
+    const bitsFlat = bits.join(' ')
+
+    const chars: { x: number; y: number; val: string; opacity: number; speed: number }[] = []
+    for (let i = 0; i < 80; i++) {
+      chars.push({
+        x: Math.random() * 600,
+        y: Math.random() * 120,
+        val: Math.random() > 0.5 ? '1' : '0',
+        opacity: Math.random() * 0.5 + 0.15,
+        speed: Math.random() * 0.4 + 0.1,
+      })
+    }
+
+    let frame = 0
+    let raf: number
+
+    const draw = () => {
+      ctx.clearRect(0, 0, 600, 120)
+      ctx.fillStyle = '#0d0d0d'
+      ctx.fillRect(0, 0, 600, 120)
+
+      ctx.font = '13px monospace'
+      chars.forEach(c => {
+        c.y += c.speed
+        if (c.y > 120) { c.y = 0; c.x = Math.random() * 600; c.val = Math.random() > 0.5 ? '1' : '0' }
+        ctx.fillStyle = `rgba(0,200,100,${c.opacity})`
+        ctx.fillText(c.val, c.x, c.y)
+      })
+
+      // Draw "Hello" in ASCII binary in the centre
+      ctx.fillStyle = 'rgba(0,200,100,0.18)'
+      ctx.fillRect(0, 38, 600, 44)
+      ctx.font = 'bold 15px monospace'
+      ctx.fillStyle = '#00e87a'
+      const textW = ctx.measureText(bitsFlat).width
+      ctx.fillText(bitsFlat, (600 - textW) / 2, 66)
+
+      ctx.font = '11px monospace'
+      ctx.fillStyle = 'rgba(255,255,255,0.5)'
+      ctx.fillText(`"Hello" in ASCII binary`, 10, 108)
+
+      frame++
+      raf = requestAnimationFrame(draw)
+    }
+
+    draw()
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
   return (
-    <div style={{ background: 'var(--gray-900)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24, overflow: 'hidden', position: 'relative' }}>
-      <div style={{ color: '#4ade80', fontFamily: 'var(--font-mono)', fontSize: '.8rem', lineHeight: 2, opacity: .7 }}>
-        {Array.from({ length: 4 }).map((_, row) => (
-          <div key={row} style={{ animation: `fadeIn ${row * 0.3 + 0.3}s ease backwards` }}>
-            {Array.from({ length: 40 }).map((_, i) => (
-              <span key={i} style={{ marginRight: 2, color: Math.random() > 0.5 ? '#4ade80' : '#166534', opacity: Math.random() * 0.5 + 0.5 }}>
-                {Math.random() > 0.5 ? '1' : '0'}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'rgba(0,0,0,.8)', padding: '12px 24px', borderRadius: 'var(--radius-lg)', border: '1px solid #4ade8040' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', color: '#4ade80', fontSize: '1.1rem', fontWeight: 700 }}>01001000 01100101 01101100 01101100 01101111</span>
-          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '.75rem', marginTop: 4 }}>= "Hello" in ASCII binary</div>
-        </div>
-      </div>
+    <div style={{ margin: '20px 0', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)' }}>
+      <canvas ref={canvasRef} width={600} height={120} style={{ display: 'block', width: '100%', height: 120 }} />
     </div>
   )
 }
 
 function CpuAnimation() {
   return (
-    <svg viewBox="0 0 600 200" style={{ width: '100%', maxHeight: 200, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 24 }}>
-      {/* CPU */}
-      <rect x="220" y="60" width="160" height="80" rx="8" fill="#1e293b" stroke="#4f8ef7" strokeWidth="2"/>
-      <text x="300" y="96" textAnchor="middle" fill="#60a5fa" fontSize="12" fontWeight="700">CPU</text>
-      <text x="300" y="112" textAnchor="middle" fill="#94a3b8" fontSize="10">4 cores</text>
+    <div style={{ margin: '20px 0', background: '#0d1117', borderRadius: 'var(--radius-lg)', padding: 20, border: '1px solid var(--border)', overflowX: 'auto' }}>
+      <svg viewBox="0 0 640 260" style={{ width: '100%', maxWidth: 640, display: 'block' }}>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#00e87a" />
+          </marker>
+          <style>{`
+            @keyframes dash { to { stroke-dashoffset: -20; } }
+            .flow { stroke-dasharray: 6 4; animation: dash 1s linear infinite; }
+            .flow2 { stroke-dasharray: 6 4; animation: dash 1.5s linear infinite; }
+            .flow3 { stroke-dasharray: 6 4; animation: dash 2s linear infinite; }
+          `}</style>
+        </defs>
 
-      {/* L1 Cache */}
-      <rect x="240" y="72" width="30" height="18" rx="3" fill="#ef4444" opacity=".8"/>
-      <text x="255" y="85" textAnchor="middle" fill="white" fontSize="8">L1</text>
+        {/* CPU die */}
+        <rect x="200" y="80" width="240" height="120" rx="10" fill="#1a2a1a" stroke="#00e87a" strokeWidth="2" />
+        <text x="320" y="100" textAnchor="middle" fill="#00e87a" fontSize="11" fontWeight="700">CPU</text>
 
-      {/* L2 Cache */}
-      <rect x="278" y="72" width="30" height="18" rx="3" fill="#f97316" opacity=".8"/>
-      <text x="293" y="85" textAnchor="middle" fill="white" fontSize="8">L2</text>
+        {/* L1 cache */}
+        <rect x="215" y="108" width="60" height="28" rx="4" fill="#0d2d0d" stroke="#00cc66" strokeWidth="1.5" />
+        <text x="245" y="124" textAnchor="middle" fill="#00cc66" fontSize="9" fontWeight="600">L1 ~1ns</text>
+        <text x="245" y="134" textAnchor="middle" fill="#009944" fontSize="8">32 KB</text>
 
-      {/* L3 Cache */}
-      <rect x="316" y="72" width="30" height="18" rx="3" fill="#f59e0b" opacity=".8"/>
-      <text x="331" y="85" textAnchor="middle" fill="white" fontSize="8">L3</text>
+        {/* L2 cache */}
+        <rect x="290" y="108" width="60" height="28" rx="4" fill="#0d2d0d" stroke="#22c55e" strokeWidth="1.5" />
+        <text x="320" y="124" textAnchor="middle" fill="#22c55e" fontSize="9" fontWeight="600">L2 ~4ns</text>
+        <text x="320" y="134" textAnchor="middle" fill="#16a34a" fontSize="8">256 KB</text>
 
-      {/* RAM */}
-      <rect x="80" y="80" width="80" height="40" rx="6" fill="#3b82f6" opacity=".15" stroke="#3b82f6" strokeWidth="1.5"/>
-      <text x="120" y="97" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="700">RAM</text>
-      <text x="120" y="111" textAnchor="middle" fill="#94a3b8" fontSize="9">16 GB</text>
+        {/* L3 cache */}
+        <rect x="365" y="108" width="60" height="28" rx="4" fill="#0d2d0d" stroke="#4ade80" strokeWidth="1.5" />
+        <text x="395" y="124" textAnchor="middle" fill="#4ade80" fontSize="9" fontWeight="600">L3 ~10ns</text>
+        <text x="395" y="134" textAnchor="middle" fill="#22c55e" fontSize="8">8–32 MB</text>
 
-      {/* SSD */}
-      <rect x="440" y="80" width="80" height="40" rx="6" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.5"/>
-      <text x="480" y="97" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="700">NVMe SSD</text>
-      <text x="480" y="111" textAnchor="middle" fill="#94a3b8" fontSize="9">1 TB</text>
+        {/* ALU */}
+        <rect x="215" y="150" width="80" height="34" rx="4" fill="#1a1a2d" stroke="#6366f1" strokeWidth="1.5" />
+        <text x="255" y="168" textAnchor="middle" fill="#a5b4fc" fontSize="9" fontWeight="600">ALU</text>
+        <text x="255" y="178" textAnchor="middle" fill="#6366f1" fontSize="8">Arithmetic</text>
 
-      {/* Arrows */}
-      <line x1="160" y1="100" x2="220" y2="100" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4 2">
-        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="1s" repeatCount="indefinite"/>
-      </line>
-      <line x1="380" y1="100" x2="440" y2="100" stroke="#22c55e" strokeWidth="2" strokeDasharray="4 2">
-        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="1.5s" repeatCount="indefinite"/>
-      </line>
+        {/* CU */}
+        <rect x="310" y="150" width="80" height="34" rx="4" fill="#1a1a2d" stroke="#f59e0b" strokeWidth="1.5" />
+        <text x="350" y="168" textAnchor="middle" fill="#fcd34d" fontSize="9" fontWeight="600">Control Unit</text>
+        <text x="350" y="178" textAnchor="middle" fill="#f59e0b" fontSize="8">Fetch/Decode</text>
 
-      {/* Labels */}
-      <text x="190" y="90" textAnchor="middle" fill="#94a3b8" fontSize="9">60-100ns</text>
-      <text x="410" y="90" textAnchor="middle" fill="#94a3b8" fontSize="9">50-100μs</text>
-    </svg>
+        {/* RAM */}
+        <rect x="30" y="100" width="100" height="50" rx="6" fill="#1a1a2a" stroke="#818cf8" strokeWidth="1.5" />
+        <text x="80" y="123" textAnchor="middle" fill="#a5b4fc" fontSize="10" fontWeight="700">RAM</text>
+        <text x="80" y="136" textAnchor="middle" fill="#818cf8" fontSize="8">16–64 GB • ~60ns</text>
+
+        {/* SSD */}
+        <rect x="510" y="80" width="110" height="40" rx="6" fill="#1a1a1a" stroke="#f59e0b" strokeWidth="1.5" />
+        <text x="565" y="98" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="700">NVMe SSD</text>
+        <text x="565" y="110" textAnchor="middle" fill="#f59e0b" fontSize="8">~7 GB/s • ~20µs</text>
+
+        {/* HDD */}
+        <rect x="510" y="140" width="110" height="40" rx="6" fill="#1a1a1a" stroke="#ef4444" strokeWidth="1.5" />
+        <text x="565" y="158" textAnchor="middle" fill="#fca5a5" fontSize="10" fontWeight="700">HDD</text>
+        <text x="565" y="170" textAnchor="middle" fill="#ef4444" fontSize="8">~150 MB/s • ~5ms</text>
+
+        {/* Arrows: RAM ↔ CPU */}
+        <line x1="130" y1="120" x2="198" y2="150" stroke="#00e87a" strokeWidth="1.5" markerEnd="url(#arrow)" className="flow" />
+        <line x1="198" y1="145" x2="130" y2="118" stroke="#00e87a" strokeWidth="1.5" markerEnd="url(#arrow)" className="flow" />
+
+        {/* Arrows: CPU → SSD */}
+        <line x1="442" y1="120" x2="508" y2="100" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arrow)" className="flow2" />
+
+        {/* Arrows: CPU → HDD */}
+        <line x1="442" y1="165" x2="508" y2="160" stroke="#ef4444" strokeWidth="1.5" markerEnd="url(#arrow)" className="flow3" />
+
+        {/* Labels */}
+        <text x="320" y="248" textAnchor="middle" fill="#666" fontSize="9">Arrows show data flow — animated dashes indicate active transfers</text>
+      </svg>
+    </div>
+  )
+}
+
+function MemoryHierarchyAnimation() {
+  const levels = [
+    { name: 'L1 Cache', speed: '~1 ns', size: '32 KB', barPct: 3, color: '#00e87a' },
+    { name: 'L2 Cache', speed: '~4 ns', size: '256 KB', barPct: 6, color: '#22c55e' },
+    { name: 'L3 Cache', speed: '~10 ns', size: '8–32 MB', barPct: 11, color: '#4ade80' },
+    { name: 'RAM (DRAM)', speed: '~60 ns', size: '16–64 GB', barPct: 30, color: '#818cf8' },
+    { name: 'NVMe SSD', speed: '~20 µs', size: '1–4 TB', barPct: 58, color: '#f59e0b' },
+    { name: 'SATA SSD', speed: '~100 µs', size: '1–4 TB', barPct: 72, color: '#fb923c' },
+    { name: 'HDD', speed: '~5 ms', size: '1–20 TB', barPct: 100, color: '#ef4444' },
+  ]
+
+  return (
+    <div style={{ margin: '20px 0', background: 'var(--surface-2)', borderRadius: 'var(--radius-lg)', padding: '20px 24px', border: '1px solid var(--border)' }}>
+      <div style={{ fontWeight: 700, marginBottom: 16, fontSize: '.95rem' }}>Memory Hierarchy — Relative Latency (log scale visualised)</div>
+      {levels.map(l => (
+        <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <div style={{ width: 90, fontSize: '.8rem', color: 'var(--text-secondary)', textAlign: 'right', flexShrink: 0 }}>{l.name}</div>
+          <div style={{ flex: 1, background: 'var(--surface-3)', borderRadius: 4, height: 18, overflow: 'hidden' }}>
+            <div style={{
+              width: `${l.barPct}%`,
+              height: '100%',
+              background: l.color,
+              borderRadius: 4,
+              transition: 'width 0.5s ease',
+              opacity: 0.85,
+            }} />
+          </div>
+          <div style={{ width: 70, fontSize: '.78rem', fontFamily: 'monospace', color: l.color, flexShrink: 0 }}>{l.speed}</div>
+          <div style={{ width: 60, fontSize: '.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>{l.size}</div>
+        </div>
+      ))}
+      <div style={{ marginTop: 10, fontSize: '.75rem', color: 'var(--text-muted)' }}>
+        Bars are proportional on a compressed scale — actual latency span is 5,000,000× from L1 to HDD.
+        Fast = short bar, green. Slow = long bar, red.
+      </div>
+    </div>
   )
 }
 
 function NetworkAnimation() {
   return (
-    <svg viewBox="0 0 600 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 8 }}>
+    <svg viewBox="0 0 640 160" style={{ width: '100%', maxHeight: 160, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 16 }}>
       {[
-        { x: 60, label: 'Client', color: '#4f8ef7' },
-        { x: 200, label: 'API Gateway', color: '#8b5cf6' },
-        { x: 340, label: 'App Server', color: '#22c55e' },
-        { x: 480, label: 'Database', color: '#f59e0b' },
+        { x: 60,  label: 'Client',     color: '#4f8ef7' },
+        { x: 200, label: 'DNS',        color: '#8b5cf6' },
+        { x: 340, label: 'API GW',     color: '#22c55e' },
+        { x: 480, label: 'App Server', color: '#f59e0b' },
+        { x: 590, label: 'DB',         color: '#ef4444' },
       ].map((n, i) => (
         <g key={i}>
-          <circle cx={n.x} cy="80" r="28" fill="white" stroke={n.color} strokeWidth="2"/>
-          <text x={n.x} y="84" textAnchor="middle" fill={n.color} fontSize="10" fontWeight="700">{n.label}</text>
+          <circle cx={n.x} cy="80" r="26" fill="white" stroke={n.color} strokeWidth="2"/>
+          <text x={n.x} y="84" textAnchor="middle" fill={n.color} fontSize="9" fontWeight="700">{n.label}</text>
         </g>
       ))}
-      {[[60, 200], [200, 340], [340, 480]].map(([x1, x2], i) => (
+      {([[60,200],[200,340],[340,480],[480,590]] as [number,number][]).map(([x1,x2], i) => (
         <g key={i}>
-          <line x1={x1 + 28} y1="80" x2={x2 - 28} y2="80" stroke="#e2e8f0" strokeWidth="2"/>
-          <circle r="5" fill="#4f8ef7">
-            <animateMotion path={`M${x1 + 28},80 L${x2 - 28},80`} dur={`${1 + i * 0.3}s`} repeatCount="indefinite"/>
+          <line x1={x1+26} y1="80" x2={x2-26} y2="80" stroke="#e2e8f0" strokeWidth="2"/>
+          <circle r="5" fill="#4f8ef7" opacity="0.8">
+            <animateMotion path={`M${x1+26},80 L${x2-26},80`} dur={`${0.8 + i*0.2}s`} repeatCount="indefinite"/>
           </circle>
         </g>
       ))}
+      <text x="320" y="148" textAnchor="middle" fill="#94a3b8" fontSize="9">TCP/IP packet flow through OSI layers 1–7</text>
     </svg>
   )
 }
 
 function FileFormatAnimation() {
   const [active, setActive] = useState(0)
-  const formats = ['CSV (Row)', 'Parquet (Column)']
+  const formats = ['CSV (Row-oriented)', 'Parquet (Columnar)']
   const rows = [
-    ['id', 'name', 'amount', 'date', 'country'],
-    ['1', 'Alice', '100', '2024-01', 'US'],
-    ['2', 'Bob', '200', '2024-01', 'UK'],
-    ['3', 'Carol', '150', '2024-02', 'US'],
+    ['id', 'name', 'country', 'amount', 'category'],
+    ['1', 'Alice', 'US', '100.00', 'Electronics'],
+    ['2', 'Bob', 'UK', '200.00', 'Clothing'],
+    ['3', 'Carol', 'DE', '150.00', 'Electronics'],
+    ['4', 'Dave', 'US', '300.00', 'Food'],
   ]
-
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {formats.map((f, i) => (
-          <button key={f} onClick={() => setActive(i)} style={{ padding: '6px 16px', borderRadius: 'var(--radius-full)', border: '1.5px solid var(--border)', background: active === i ? 'var(--blue-500)' : 'white', color: active === i ? 'white' : 'var(--text-2)', fontWeight: 600, fontSize: '.83rem', cursor: 'pointer' }}>{f}</button>
+          <button key={f} onClick={() => setActive(i)} style={{ padding: '6px 16px', borderRadius: 'var(--radius-full)', border: '1.5px solid var(--border)', background: active === i ? 'var(--blue-500)' : 'white', color: active === i ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '.83rem', cursor: 'pointer' }}>{f}</button>
         ))}
       </div>
       <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
@@ -647,24 +2571,65 @@ function FileFormatAnimation() {
           <tbody>
             {rows.map((row, r) => (
               <tr key={r} style={{ borderBottom: '1px solid var(--border)' }}>
-                {row.map((cell, c) => (
-                  <td key={c} style={{
-                    padding: '8px 12px',
-                    background: active === 0
-                      ? (r === 0 ? 'var(--gray-50)' : 'white')
-                      : (c === 2 ? '#eff6ff' : c === 0 ? 'var(--gray-50)' : 'white'),
-                    fontWeight: (active === 0 && r === 0) || (active === 1 && c === 0) ? 700 : 400,
-                    color: active === 1 && c === 2 ? 'var(--blue-700)' : 'var(--text-1)',
-                    transition: 'background .3s',
-                  }}>{cell}</td>
-                ))}
+                {row.map((cell, c) => {
+                  const isHighlighted = active === 0 ? r > 0 : c === 3
+                  const isHeader = r === 0
+                  return (
+                    <td key={c} style={{
+                      padding: '8px 12px',
+                      background: isHighlighted ? '#dbeafe' : isHeader ? 'var(--gray-50)' : 'white',
+                      fontWeight: isHeader || (active === 1 && c === 3) ? 700 : 400,
+                      color: isHighlighted && active === 1 ? '#1d4ed8' : 'var(--text-primary)',
+                      transition: 'background .3s',
+                    }}>{cell}</td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div style={{ marginTop: 8, fontSize: '.8rem', color: 'var(--text-3)' }}>
-        {active === 0 ? 'Row storage: SELECT amount reads all columns (all cells)' : 'Columnar: SELECT amount reads only the blue column (3x less I/O)'}
+      <div style={{ marginTop: 8, fontSize: '.8rem', color: 'var(--text-secondary)' }}>
+        {active === 0
+          ? 'Row storage: SELECT SUM(amount) must read all 5 columns (highlighted rows = full row scan)'
+          : 'Columnar: SELECT SUM(amount) reads only the amount column (highlighted) — 80% less I/O'}
+      </div>
+    </div>
+  )
+}
+
+function ParquetInternalsAnimation() {
+  return (
+    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 16 }}>
+      <div style={{ fontWeight: 700, marginBottom: 16, fontSize: '.9rem' }}>Parquet File Structure</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* File level */}
+        <div style={{ background: '#1e293b', color: '#94a3b8', borderRadius: 8, padding: '8px 14px', fontSize: '.8rem', fontFamily: 'monospace' }}>
+          📄 orders.parquet (file header + footer with metadata)
+        </div>
+        {/* Row groups */}
+        {[
+          { label: 'Row Group 0 (rows 0–131072, ~128MB)', cols: ['id: INT64', 'name: BINARY (dict)', 'amount: DOUBLE', 'ts: INT64 (delta)'] },
+          { label: 'Row Group 1 (rows 131073–262144, ~128MB)', cols: ['id: INT64', 'name: BINARY (dict)', 'amount: DOUBLE', 'ts: INT64 (delta)'] },
+        ].map((rg, i) => (
+          <div key={i} style={{ marginLeft: 20, background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: '#6366f1', fontWeight: 700, marginBottom: 8 }}>📦 {rg.label}</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {rg.cols.map(col => (
+                <div key={col} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '4px 10px', fontSize: '.74rem', fontFamily: 'monospace', color: '#1d4ed8' }}>
+                  🗂 {col}
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 8, fontSize: '.72rem', color: 'var(--text-muted)' }}>Each column chunk → Pages (1MB) → encoded + compressed independently</div>
+          </div>
+        ))}
+        <div style={{ marginLeft: 20, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 14px', fontSize: '.75rem', color: '#15803d', fontFamily: 'monospace' }}>
+          📋 Footer: schema, row group offsets, column stats (min/max), bloom filters
+        </div>
+      </div>
+      <div style={{ marginTop: 12, fontSize: '.75rem', color: 'var(--text-muted)' }}>
+        Column stats in footer enable <strong>predicate pushdown</strong>: if WHERE amount &gt; 1000 and max(amount) in row group = 500, the entire row group is skipped.
       </div>
     </div>
   )
@@ -672,27 +2637,54 @@ function FileFormatAnimation() {
 
 function MedallionAnimation() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
       {[
-        { label: 'Source', icon: '🔌', color: '#94a3b8', bg: '#f8fafc' },
+        { label: 'Source\nSystem', icon: '🔌', color: '#94a3b8', bg: '#f8fafc' },
         { label: 'Bronze\nRaw', icon: '🥉', color: '#cd7f32', bg: '#fff7ed' },
         { label: 'Silver\nClean', icon: '🥈', color: '#64748b', bg: '#f8fafc' },
         { label: 'Gold\nBiz Ready', icon: '🥇', color: '#f59e0b', bg: '#fffbeb' },
-        { label: 'BI / ML', icon: '📊', color: '#8b5cf6', bg: '#faf5ff' },
+        { label: 'BI / ML\nConsumers', icon: '📊', color: '#8b5cf6', bg: '#faf5ff' },
       ].map((n, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="animate-popin" style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-            padding: '14px 18px', background: n.bg, border: `1.5px solid ${n.color}60`,
-            borderRadius: 'var(--radius-xl)', minWidth: 90, textAlign: 'center',
-            animationDelay: `${i * 0.1}s`,
-          }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '14px 18px', background: n.bg, border: `1.5px solid ${n.color}60`, borderRadius: 'var(--radius-xl)', minWidth: 90, textAlign: 'center' }}>
             <div style={{ fontSize: '1.6rem' }}>{n.icon}</div>
             <div style={{ fontSize: '.72rem', fontWeight: 700, color: n.color, whiteSpace: 'pre-line', lineHeight: 1.3 }}>{n.label}</div>
           </div>
-          {i < 4 && <div style={{ fontSize: '1.4rem', color: '#94a3b8', padding: '0 4px', animation: 'pulse 2s ease-in-out infinite' }}>→</div>}
+          {i < 4 && <div style={{ fontSize: '1.4rem', color: '#94a3b8', padding: '0 4px' }}>→</div>}
         </div>
       ))}
     </div>
+  )
+}
+
+function StarSchemaAnimation() {
+  const cx = 300, cy = 120
+  const dims = [
+    { label: 'dim_date', x: 300, y: 20, color: '#3b82f6' },
+    { label: 'dim_customer', x: 500, y: 100, color: '#8b5cf6' },
+    { label: 'dim_product', x: 460, y: 220, color: '#22c55e' },
+    { label: 'dim_store', x: 140, y: 220, color: '#f59e0b' },
+    { label: 'dim_promo', x: 100, y: 100, color: '#ef4444' },
+  ]
+  return (
+    <svg viewBox="0 0 600 280" style={{ width: '100%', maxHeight: 260, borderRadius: 'var(--radius-xl)', background: 'var(--gray-50)', border: '1px solid var(--border)', marginBottom: 16 }}>
+      {/* Lines from fact to dims */}
+      {dims.map((d, i) => (
+        <line key={i} x1={cx} y1={cy} x2={d.x} y2={d.y} stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="4 2"/>
+      ))}
+      {/* Fact table */}
+      <rect x={cx-60} y={cy-30} width={120} height={60} rx="8" fill="#1e293b" stroke="#4f8ef7" strokeWidth="2"/>
+      <text x={cx} y={cy-8} textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="700">fact_sales</text>
+      <text x={cx} y={cy+8} textAnchor="middle" fill="#94a3b8" fontSize="8">quantity, revenue</text>
+      <text x={cx} y={cy+20} textAnchor="middle" fill="#94a3b8" fontSize="8">date_sk, customer_sk...</text>
+      {/* Dim tables */}
+      {dims.map((d, i) => (
+        <g key={i}>
+          <rect x={d.x-50} y={d.y-18} width={100} height={36} rx="6" fill="white" stroke={d.color} strokeWidth="1.5"/>
+          <text x={d.x} y={d.y+5} textAnchor="middle" fill={d.color} fontSize="10" fontWeight="700">{d.label}</text>
+        </g>
+      ))}
+      <text x={300} y={270} textAnchor="middle" fill="#94a3b8" fontSize="9">Star Schema: fact_sales surrounded by 5 dimension tables</text>
+    </svg>
   )
 }
