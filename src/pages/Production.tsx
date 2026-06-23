@@ -87,6 +87,472 @@ function ObservabilityAnimation() {
   )
 }
 
+function SystemDesignAnimation() {
+  const [scenario, setScenario] = useState<'batch'|'stream'|'hybrid'>('batch')
+  const designs: Record<string,{flow:string[],latency:string,use:string,color:string}> = {
+    batch:{flow:['Source DB → Blob landing zone','ADF/Airflow triggers at 02:00','Spark reads + transforms','Writes to Delta Gold','BI refreshes at 06:00'],latency:'Hours',use:'Daily reporting, historical analysis',color:'#4f8ef7'},
+    stream:{flow:['App events → Kafka topic','Spark Structured Streaming','Aggregations every 30s','Write to Delta (streaming)','Dashboard auto-refreshes'],latency:'Seconds',use:'Real-time dashboards, fraud detection',color:'#22c55e'},
+    hybrid:{flow:['Batch backfill → Delta Gold','Streaming layer patches latest partition','Lambda pattern: merge at serving time','Cache layer for sub-second reads'],latency:'Mixed',use:'Near-real-time + historical blend',color:'#8b5cf6'},
+  }
+  const sel = designs[scenario]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>System Design — Batch vs Stream vs Hybrid</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['batch','stream','hybrid'] as const).map(k=>(
+          <button key={k} onClick={()=>setScenario(k)} style={{flex:1,padding:'7px 0',borderRadius:8,border:`2px solid ${scenario===k?designs[k].color:'var(--border)'}`,background:scenario===k?`${designs[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:scenario===k?designs[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:8}}>
+        {sel.flow.map((s,i)=>(
+          <div key={s} style={{display:'flex',gap:8,alignItems:'center',fontSize:'.78rem',color:'#1e293b'}}>
+            <span style={{width:18,height:18,borderRadius:'50%',background:sel.color,color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.62rem',fontWeight:800,flexShrink:0}}>{i+1}</span>
+            {s}
+          </div>
+        ))}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        {[['Latency',sel.latency],['Best for',sel.use]].map(([k,v])=>(
+          <div key={k} style={{flex:1,padding:'7px 10px',borderRadius:8,background:'white',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:'.68rem',color:'#64748b'}}>{k}</div>
+            <div style={{fontWeight:700,fontSize:'.78rem',color:'#1e293b'}}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PipelinePatternsAnimation() {
+  const [pat, setPat] = useState<'medallion'|'event'|'cqrs'>('medallion')
+  const patterns: Record<string,{desc:string,stages:string[],pro:string,con:string,color:string}> = {
+    medallion:{desc:'Bronze → Silver → Gold layered quality zones',stages:['Bronze: raw ingestion, immutable','Silver: cleaned, joined, deduplicated','Gold: business aggregations, ML features'],pro:'Simple, auditable, widely adopted',con:'Latency through each layer',color:'#f59e0b'},
+    event:{desc:'Event-driven pipeline triggered by data arrival',stages:['File lands → S3 Event → Lambda','Lambda triggers Glue/ADF job','Job writes to next stage'],pro:'No polling, near-real-time, cost-efficient',con:'Error handling complexity',color:'#4f8ef7'},
+    cqrs:{desc:'Command/Query Responsibility Segregation',stages:['Write model: optimized for ingestion (MoR)','Read model: optimized for queries (CoW)','Sync via compaction or materialized view'],pro:'Independent read/write scaling',con:'Eventual consistency between models',color:'#8b5cf6'},
+  }
+  const sel = patterns[pat]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Pipeline Patterns</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['medallion','event','cqrs'] as const).map(k=>(
+          <button key={k} onClick={()=>setPat(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${pat===k?patterns[k].color:'var(--border)'}`,background:pat===k?`${patterns[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.78rem',color:pat===k?patterns[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{fontSize:'.78rem',color:'#1e293b',marginBottom:8}}>{sel.desc}</div>
+      {sel.stages.map(s=><div key={s} style={{padding:'5px 10px',marginBottom:4,borderRadius:6,background:'white',border:'1px solid var(--border)',fontSize:'.75rem',color:'#475569'}}>→ {s}</div>)}
+      <div style={{display:'flex',gap:8,marginTop:8}}>
+        <div style={{flex:1,padding:'6px 10px',borderRadius:7,background:'#f0fdf4',border:'1px solid #4ade80',fontSize:'.72rem',color:'#166534'}}>✓ {sel.pro}</div>
+        <div style={{flex:1,padding:'6px 10px',borderRadius:7,background:'#fef2f2',border:'1px solid #f87171',fontSize:'.72rem',color:'#991b1b'}}>✗ {sel.con}</div>
+      </div>
+    </div>
+  )
+}
+
+function SCDTypesAnimation() {
+  const [type, setType] = useState<1|2|3>(2)
+  const rows: Record<number,{headers:string[],data:string[][]}>= {
+    1:{headers:['customer_id','name','city'],data:[['101','Alice','New York'],['→ UPDATE city',' ',' '],['101','Alice','Boston']]},
+    2:{headers:['sk','customer_id','name','city','valid_from','valid_to','is_current'],data:[['1','101','Alice','New York','2023-01-01','2024-03-15','false'],['2','101','Alice','Boston','2024-03-15','9999-12-31','true']]},
+    3:{headers:['customer_id','name','city_current','city_prev'],data:[['101','Alice','Boston','New York']]},
+  }
+  const notes: Record<number,string> = {
+    1:'Overwrites old value — no history retained',
+    2:'New row per change — full history, most common in DE',
+    3:'One extra column for previous value — limited to one prior state',
+  }
+  const sel = rows[type]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>SCD Types — Live Table</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {([1,2,3] as const).map(t=>(
+          <button key={t} onClick={()=>setType(t)} style={{flex:1,padding:'7px 0',borderRadius:8,border:`2px solid ${type===t?'#4f8ef7':'var(--border)'}`,background:type===t?'#eff6ff':'white',cursor:'pointer',fontWeight:800,fontSize:'.9rem',color:type===t?'#3b82f6':'#94a3b8'}}>Type {t}</button>
+        ))}
+      </div>
+      <div style={{overflowX:'auto',marginBottom:8}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'.72rem',fontFamily:'monospace'}}>
+          <thead><tr>{sel.headers.map(h=><th key={h} style={{padding:'5px 8px',background:'#1e293b',color:'white',textAlign:'left',fontWeight:700,whiteSpace:'nowrap'}}>{h}</th>)}</tr></thead>
+          <tbody>{sel.data.map((row,i)=><tr key={i} style={{background:i===sel.data.length-1?'#eff6ff':i%2===0?'white':'#f8fafc'}}>{row.map((cell,j)=><td key={j} style={{padding:'4px 8px',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{cell}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+      <div style={{fontSize:'.75rem',color:'#64748b'}}>{notes[type]}</div>
+    </div>
+  )
+}
+
+function TestingAnimation() {
+  const [layer, setLayer] = useState<'unit'|'integration'|'e2e'>('unit')
+  const layers: Record<string,{tools:string[],what:string,speed:string,color:string}> = {
+    unit:{tools:['pytest','pyspark local mode','pandas assert','dbt test'],what:'Individual functions, SQL logic, schema checks',speed:'Fast (<1 min)',color:'#22c55e'},
+    integration:{tools:['docker-compose','testcontainers','Delta local','Airflow dag.test()'],what:'End-to-end data flow through component boundaries',speed:'Medium (1–10 min)',color:'#4f8ef7'},
+    e2e:{tools:['Databricks Jobs','ADF pipeline runs','dbt build --profiles-dir'],what:'Full pipeline on production-like data',speed:'Slow (10 min–hours)',color:'#8b5cf6'},
+  }
+  const sel = layers[layer]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Testing Pyramid for DE</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['unit','integration','e2e'] as const).map(k=>(
+          <button key={k} onClick={()=>setLayer(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${layer===k?layers[k].color:'var(--border)'}`,background:layer===k?`${layers[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:layer===k?layers[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {[['Tools',sel.tools.join(', ')],['What',sel.what],['Speed',sel.speed]].map(([k,v])=>(
+          <div key={k} style={{padding:'7px 12px',borderRadius:8,background:'white',border:'1px solid var(--border)',display:'flex',gap:8}}>
+            <span style={{minWidth:60,fontSize:'.72rem',color:'#64748b'}}>{k}</span>
+            <span style={{fontSize:'.78rem',color:'#1e293b'}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DBTAnimation() {
+  const [node, setNode] = useState<'source'|'staging'|'intermediate'|'mart'>('staging')
+  const nodes: Record<string,{layer:string,materializ:string,tests:string[],color:string}> = {
+    source:{layer:'Raw schema',materializ:'External (no build)',tests:['not_null','unique','relationships'],color:'#94a3b8'},
+    staging:{layer:'stg_*: renamed + typed',materializ:'view (default)',tests:['not_null','unique'],color:'#4f8ef7'},
+    intermediate:{layer:'int_*: joins + business logic',materializ:'ephemeral or table',tests:['accepted_values','expression_is_true'],color:'#8b5cf6'},
+    mart:{layer:'dim_* / fct_*: final models',materializ:'table or incremental',tests:['not_null','unique','relationships'],color:'#f59e0b'},
+  }
+  const sel = nodes[node]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>dbt — Layer Explorer</div>
+      <div style={{display:'flex',gap:4,marginBottom:12}}>
+        {(['source','staging','intermediate','mart'] as const).map(k=>(
+          <button key={k} onClick={()=>setNode(k)} style={{flex:1,padding:'5px 0',borderRadius:8,border:`2px solid ${node===k?nodes[k].color:'var(--border)'}`,background:node===k?`${nodes[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:node===k?nodes[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {[['Layer',sel.layer],['Materialization',sel.materializ],['Tests',sel.tests.join(', ')]].map(([k,v])=>(
+          <div key={k} style={{padding:'7px 12px',borderRadius:8,background:'white',border:'1px solid var(--border)',display:'flex',gap:8}}>
+            <span style={{minWidth:80,fontSize:'.72rem',color:'#64748b'}}>{k}</span>
+            <span style={{fontSize:'.78rem',color:'#1e293b',fontFamily:k==='Materialization'?'monospace':undefined}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TerraformAnimation() {
+  const [cmd, setCmd] = useState<'plan'|'apply'|'destroy'|'import'>('plan')
+  const cmds: Record<string,{desc:string,safe:boolean,output:string,color:string}> = {
+    plan:{desc:'Preview changes without applying — dry run',safe:true,output:'Plan: 3 to add, 1 to change, 0 to destroy',color:'#4f8ef7'},
+    apply:{desc:'Apply planned changes to real infrastructure',safe:true,output:'Apply complete! Resources: 3 added, 1 changed',color:'#22c55e'},
+    destroy:{desc:'Tear down all managed infrastructure',safe:false,output:'Destroy complete! Resources: 4 destroyed',color:'#ef4444'},
+    import:{desc:'Bring existing resource under Terraform state',safe:true,output:'Import successful! Resource state written.',color:'#8b5cf6'},
+  }
+  const sel = cmds[cmd]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Terraform Commands</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['plan','apply','destroy','import'] as const).map(k=>(
+          <button key={k} onClick={()=>setCmd(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${cmd===k?cmds[k].color:'var(--border)'}`,background:cmd===k?`${cmds[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.78rem',color:cmd===k?cmds[k].color:'#94a3b8'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{marginBottom:8,fontSize:'.8rem',color:'#1e293b'}}>{sel.desc}</div>
+      <code style={{display:'block',padding:'8px 12px',borderRadius:8,background:'#1e293b',color:sel.safe?'#86efac':'#f87171',fontSize:'.78rem',marginBottom:8}}>$ terraform {cmd} → {sel.output}</code>
+      {!sel.safe&&<div style={{padding:'6px 12px',borderRadius:6,background:'#fef2f2',border:'1px solid #f87171',fontSize:'.75rem',color:'#991b1b'}}>⚠️ Destructive — always run plan first and confirm state matches expectations</div>}
+    </div>
+  )
+}
+
+function SecurityAnimation() {
+  const [domain, setDomain] = useState<'authn'|'authz'|'encrypt'|'audit'>('authz')
+  const domains: Record<string,{title:string,controls:string[],color:string}> = {
+    authn:{title:'Authentication',controls:['Azure AD / Entra ID — SSO for all Databricks/ADF/ADLS','Service principals for pipeline-to-service auth','Managed Identity — no secret rotation needed','MFA enforced for human users'],color:'#4f8ef7'},
+    authz:{title:'Authorization',controls:['Unity Catalog RBAC — object-level grants','ADLS POSIX ACLs on container/folder level','Databricks workspace permissions (Can Use / Can Manage)','ADF linked service + Key Vault for credential isolation'],color:'#8b5cf6'},
+    encrypt:{title:'Encryption',controls:['ADLS: AES-256 at rest (default), CMK for compliance','TLS 1.2+ in transit — all Azure services','Column-level encryption for PII in Delta tables','Azure Key Vault — rotate keys without app changes'],color:'#22c55e'},
+    audit:{title:'Audit & Compliance',controls:['Azure Monitor + Log Analytics — all control plane ops','Databricks audit logs — who ran what query when','Unity Catalog: table access audit trail','Data classification tags (PII, Confidential) via Purview'],color:'#f59e0b'},
+  }
+  const sel = domains[domain]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Security — Control Domains</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['authn','authz','encrypt','audit'] as const).map(k=>(
+          <button key={k} onClick={()=>setDomain(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${domain===k?domains[k].color:'var(--border)'}`,background:domain===k?`${domains[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:domain===k?domains[k].color:'#94a3b8'}}>{domains[k].title}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {sel.controls.map(c=><div key={c} style={{padding:'6px 12px',borderRadius:8,border:`1px solid ${sel.color}33`,background:`${sel.color}0d`,fontSize:'.78rem',color:'#1e293b'}}>• {c}</div>)}
+      </div>
+    </div>
+  )
+}
+
+function MonitoringProdAnimation() {
+  const [tab, setTab] = useState<'sla'|'alert'|'dashboard'>('sla')
+  const content: Record<string,string[]> = {
+    sla:['Define SLA: "Gold table refreshed by 07:00 daily"','Track: pipeline_run_end_time < 07:00','Alert: page on-call if 06:45 and still running','Escalate: data consumers notified if SLA missed'],
+    alert:['Data freshness > 2h → WARN','Row count deviation > 20% → CRITICAL','Schema change detected → BLOCK downstream','Null rate > 5% on key columns → WARN'],
+    dashboard:['Pipeline health: last run status + duration trend','Data freshness per table: time since last update','Cost dashboard: compute spend by pipeline/team','Backfill tracker: which tables need re-runs'],
+  }
+  const color: Record<string,string> = {sla:'#f59e0b',alert:'#ef4444',dashboard:'#4f8ef7'}
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Monitoring — Production Data Platform</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['sla','alert','dashboard'] as const).map(k=>(
+          <button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${tab===k?color[k]:'var(--border)'}`,background:tab===k?`${color[k]}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:tab===k?color[k]:'#94a3b8',textTransform:'capitalize'}}>{k==='sla'?'SLA':k==='alert'?'Alerts':'Dashboards'}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {content[tab].map(c=><div key={c} style={{padding:'7px 12px',borderRadius:8,border:`1px solid ${color[tab]}33`,background:`${color[tab]}0d`,fontSize:'.78rem',color:'#1e293b'}}>→ {c}</div>)}
+      </div>
+    </div>
+  )
+}
+
+function DisasterRecoveryAnimation() {
+  const [strategy, setStrategy] = useState<'backup'|'geo'|'rpo'>('rpo')
+  const strats: Record<string,{desc:string,detail:string,color:string}> = {
+    rpo:{desc:'RPO / RTO targets drive your DR design',detail:'RPO 0 → geo-replication active-active (expensive)\nRPO 1h → ADLS cross-region replication\nRPO 24h → daily Delta table backups to secondary region',color:'#4f8ef7'},
+    backup:{desc:'Delta table backup strategies',detail:'Option 1: DEEP CLONE to secondary storage account\nOption 2: COPY INTO from bronze → cold tier\nOption 3: Delta Sharing to isolated read replica\nAlways test restore — a backup you have not restored is not a backup',color:'#8b5cf6'},
+    geo:{desc:'Geo-redundant setup on Azure',detail:'ADLS RA-GRS: async replication to secondary region\nDatabricks: replicate workspace + cluster policies\nKey Vault: soft-delete + purge protection\nAirflow: active/passive setup with shared metadata DB',color:'#22c55e'},
+  }
+  const sel = strats[strategy]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Disaster Recovery</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['rpo','backup','geo'] as const).map(k=>(
+          <button key={k} onClick={()=>setStrategy(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${strategy===k?strats[k].color:'var(--border)'}`,background:strategy===k?`${strats[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:strategy===k?strats[k].color:'#94a3b8',textTransform:'uppercase'}}>{k==='rpo'?'RPO/RTO':k==='geo'?'Geo-HA':'Backup'}</button>
+        ))}
+      </div>
+      <div style={{fontWeight:700,color:sel.color,marginBottom:6,fontSize:'.82rem'}}>{sel.desc}</div>
+      {sel.detail.split('\n').map(line=><div key={line} style={{padding:'5px 10px',marginBottom:3,borderRadius:6,background:'white',border:'1px solid var(--border)',fontSize:'.76rem',color:'#475569'}}>→ {line}</div>)}
+    </div>
+  )
+}
+
+function CostAnimation() {
+  const [resource, setResource] = useState<'compute'|'storage'|'network'>('compute')
+  const tips: Record<string,{items:string[],color:string}> = {
+    compute:{color:'#4f8ef7',items:['Use spot/preemptible instances for batch (60–80% cheaper)','Auto-terminate clusters after 30 min idle','Right-size: start with 4-8 workers, scale with data','Photon: fewer DBUs per query on large tables','SQL Warehouses: serverless stops billing immediately']},
+    storage:{color:'#22c55e',items:['Tier cold data to cool/archive (80% cheaper than hot)','VACUUM regularly: orphan files cost real money','Use Delta OPTIMIZE: fewer files = fewer list API calls','Compress well: Parquet+Zstd ~3-10x smaller than CSV','Delete dev/test tables regularly']},
+    network:{color:'#f59e0b',items:['Same-region traffic is free; cross-region costs ~$0.02/GB','Use Private Endpoints to avoid internet egress','Collocate compute and storage in same region','Batch small writes: many small PUT calls vs few large ones','Monitor egress in Azure Cost Management']},
+  }
+  const sel = tips[resource]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Cost Optimization Tips</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['compute','storage','network'] as const).map(k=>(
+          <button key={k} onClick={()=>setResource(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${resource===k?tips[k].color:'var(--border)'}`,background:resource===k?`${tips[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:resource===k?tips[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {sel.items.map(item=><div key={item} style={{padding:'6px 12px',borderRadius:8,border:`1px solid ${sel.color}33`,background:`${sel.color}0d`,fontSize:'.76rem',color:'#1e293b'}}>💡 {item}</div>)}
+      </div>
+    </div>
+  )
+}
+
+function PerformanceAnimation() {
+  const [area, setArea] = useState<'read'|'write'|'query'>('query')
+  const areas: Record<string,{tips:string[],color:string}> = {
+    read:{color:'#4f8ef7',tips:['Partition pruning: filter on partition column → skip entire folders','Predicate pushdown: push filters to Parquet row-group level','Column pruning: SELECT only needed columns','Z-ORDER by common filter columns','Broadcast small lookup tables (<10MB)']},
+    write:{color:'#22c55e',tips:['Target 128–256MB files: fewer files = faster metadata','replaceWhere instead of full overwrite','Enable Deletion Vectors for fast UPDATE/DELETE','Auto Optimize (Databricks): auto-compacts on write','Tune spark.sql.shuffle.partitions to data size']},
+    query:{color:'#8b5cf6',tips:['AQE: enable spark.sql.adaptive.enabled=true (default in DBR)','CBO: ANALYZE TABLE for better join ordering','Avoid explode() on large arrays without filtering first','Use approx_count_distinct instead of count(distinct)','Cache DataFrames accessed multiple times in same job']},
+  }
+  const sel = areas[area]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Performance — Tuning Tips</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['read','write','query'] as const).map(k=>(
+          <button key={k} onClick={()=>setArea(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${area===k?areas[k].color:'var(--border)'}`,background:area===k?`${areas[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:area===k?areas[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {sel.tips.map(t=><div key={t} style={{padding:'6px 12px',borderRadius:8,border:`1px solid ${sel.color}33`,background:`${sel.color}0d`,fontSize:'.76rem',color:'#1e293b'}}>• {t}</div>)}
+      </div>
+    </div>
+  )
+}
+
+function AdvancedPatternsAnimation() {
+  const [pat2, setPat2] = useState<'idempotent'|'exactly_once'|'late_data'>('idempotent')
+  const pats: Record<string,{desc:string,impl:string,color:string}> = {
+    idempotent:{desc:'Running a pipeline N times produces the same result as running it once',impl:'Use replaceWhere to overwrite the same partition\nDELETE + INSERT in a transaction\nMERGE with upsert on natural key',color:'#4f8ef7'},
+    exactly_once:{desc:'Each event processed exactly once — no duplicates, no loss',impl:'Kafka consumer: commit offset only after write success\nDelta MERGE with dedup on message_id\nCheckpoint dir in Structured Streaming',color:'#22c55e'},
+    late_data:{desc:'Events arrive after their event_time window has closed',impl:'Watermark: drop events older than threshold\nLate window: accumulate for N minutes extra\nReprocessing: daily late-data catch-up job',color:'#8b5cf6'},
+  }
+  const sel = pats[pat2]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Advanced Production Patterns</div>
+      <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:12}}>
+        {(['idempotent','exactly_once','late_data'] as const).map(k=>(
+          <button key={k} onClick={()=>setPat2(k)} style={{padding:'5px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.78rem',background:pat2===k?pats[k].color:'var(--surface-3)',color:pat2===k?'white':'var(--text-secondary)'}}>{k.replace('_',' ')}</button>
+        ))}
+      </div>
+      <div style={{fontWeight:600,fontSize:'.82rem',color:'#1e293b',marginBottom:8}}>{sel.desc}</div>
+      {sel.impl.split('\n').map(line=><div key={line} style={{padding:'5px 10px',marginBottom:3,borderRadius:6,background:'white',border:`1px solid ${sel.color}33`,fontSize:'.75rem',color:'#475569'}}>→ {line}</div>)}
+    </div>
+  )
+}
+
+function InterviewProjectAnimation() {
+  const [phase, setPhase] = useState(0)
+  const phases = [
+    {name:'Ingest',desc:'Land raw data in Bronze (ADLS) via ADF/Autoloader. Schema-on-read, immutable.'},
+    {name:'Transform',desc:'Spark/dbt: clean, deduplicate, join in Silver. Enforce schema, add row hashes.'},
+    {name:'Model',desc:'Gold: star schema or Delta tables. dbt models with tests and documentation.'},
+    {name:'Orchestrate',desc:'Airflow or Databricks Workflows DAG. Handle failures with retries + alerts.'},
+    {name:'Quality',desc:'Great Expectations or dbt tests. Block pipeline if DQ checks fail.'},
+    {name:'Observe',desc:'Azure Monitor dashboards. SLA tracking. Cost alerts.'},
+  ]
+  const colors = ['#4f8ef7','#8b5cf6','#f59e0b','#22c55e','#ec4899','#ef4444']
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>End-to-End Project Blueprint</div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:12}}>
+        {phases.map((p,i)=>(
+          <button key={p.name} onClick={()=>setPhase(i)} style={{padding:'5px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.78rem',background:phase===i?colors[i]:'var(--surface-3)',color:phase===i?'white':'var(--text-secondary)'}}>{i+1}. {p.name}</button>
+        ))}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:`2px solid ${colors[phase]}44`,background:`${colors[phase]}0d`}}>
+        <div style={{fontWeight:700,color:colors[phase],marginBottom:6,fontSize:'.9rem'}}>{phases[phase].name}</div>
+        <div style={{fontSize:'.82rem',color:'#1e293b'}}>{phases[phase].desc}</div>
+      </div>
+    </div>
+  )
+}
+
+function StarSchemaAnimation() {
+  const [sel4, setSel4] = useState<string|null>(null)
+  const tables = [
+    {name:'fct_sales',type:'Fact',cols:['sale_sk (PK)','date_fk','product_fk','customer_fk','amount','quantity'],color:'#4f8ef7'},
+    {name:'dim_date',type:'Dim',cols:['date_sk (PK)','date','year','month','quarter','is_weekend'],color:'#22c55e'},
+    {name:'dim_product',type:'Dim',cols:['product_sk (PK)','product_id','name','category','subcategory'],color:'#f59e0b'},
+    {name:'dim_customer',type:'Dim',cols:['customer_sk (PK)','customer_id','name','region','segment'],color:'#8b5cf6'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Star Schema — Click a Table</div>
+      <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap'}}>
+        {tables.map(t=>(
+          <button key={t.name} onClick={()=>setSel4(sel4===t.name?null:t.name)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${sel4===t.name?t.color:'var(--border)'}`,background:sel4===t.name?`${t.color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.75rem',color:sel4===t.name?t.color:'#94a3b8'}}>{t.name}</button>
+        ))}
+      </div>
+      {sel4&&(() => {
+        const t = tables.find(x=>x.name===sel4)!
+        return (
+          <div style={{padding:12,borderRadius:8,border:`2px solid ${t.color}44`,background:`${t.color}0d`}}>
+            <div style={{fontWeight:700,color:t.color,marginBottom:6,fontSize:'.85rem'}}>{t.name} ({t.type} table)</div>
+            {t.cols.map(c=><div key={c} style={{fontSize:'.76rem',color:'#1e293b',padding:'2px 0',fontFamily:'monospace'}}>• {c}</div>)}
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
+
+function SnowflakeSchemaAnimation() {
+  const [view2, setView2] = useState<'star'|'snowflake'>('snowflake')
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>Snowflake vs Star Schema</div>
+        <div style={{display:'flex',gap:6}}>
+          {(['star','snowflake'] as const).map(v=>(
+            <button key={v} onClick={()=>setView2(v)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:view2===v?'#4f8ef7':'var(--surface-3)',color:view2===v?'white':'var(--text-secondary)'}}>{v}</button>
+          ))}
+        </div>
+      </div>
+      {view2==='star' ? (
+        <div>
+          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+            {['fct_orders → dim_customer (denormalized: region, country in same table)','fct_orders → dim_product (denormalized: category, subcategory, brand in same table)','Fewer joins → simpler queries → faster BI tools','More storage → redundant data → harder to maintain'].map(l=><div key={l} style={{fontSize:'.76rem',color:'#1e293b',padding:'5px 10px',borderRadius:6,background:'white',border:'1px solid var(--border)'}}>→ {l}</div>)}
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+            {['fct_orders → dim_customer → dim_region → dim_country (normalized)','fct_orders → dim_product → dim_category → dim_brand (3 hops)','More joins → complex queries → slower ad-hoc BI','Less storage → easier attribute updates → stricter normalization'].map(l=><div key={l} style={{fontSize:'.76rem',color:'#1e293b',padding:'5px 10px',borderRadius:6,background:'white',border:'1px solid var(--border)'}}>→ {l}</div>)}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DataVaultAnimation() {
+  const [entity, setEntity] = useState<'hub'|'link'|'satellite'>('hub')
+  const entities: Record<string,{desc:string,cols:string[],use:string,color:string}> = {
+    hub:{desc:'Unique business keys — the "nouns" of your business',cols:['hub_sk (hash PK)','business_key','load_date','record_source'],use:'hub_customer, hub_product, hub_order',color:'#4f8ef7'},
+    link:{desc:'Relationships between hubs — the "verbs"',cols:['link_sk (hash PK)','hub_a_fk','hub_b_fk','load_date','record_source'],use:'link_customer_order, link_order_product',color:'#8b5cf6'},
+    satellite:{desc:'Descriptive attributes that change over time',cols:['hub_fk or link_fk','load_date','load_end_date','record_source','attribute_1..N'],use:'sat_customer_details, sat_product_desc',color:'#22c55e'},
+  }
+  const sel = entities[entity]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Data Vault 2.0 — Building Blocks</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['hub','link','satellite'] as const).map(k=>(
+          <button key={k} onClick={()=>setEntity(k)} style={{flex:1,padding:'7px 0',borderRadius:8,border:`2px solid ${entity===k?entities[k].color:'var(--border)'}`,background:entity===k?`${entities[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:entity===k?entities[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:12,borderRadius:8,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`}}>
+        <div style={{fontWeight:700,color:sel.color,marginBottom:6,fontSize:'.82rem'}}>{sel.desc}</div>
+        <div style={{display:'flex',flexDirection:'column',gap:3,marginBottom:6}}>
+          {sel.cols.map(c=><div key={c} style={{fontSize:'.74rem',fontFamily:'monospace',color:'#1e293b'}}>• {c}</div>)}
+        </div>
+        <div style={{fontSize:'.72rem',color:'#64748b',fontStyle:'italic'}}>Examples: {sel.use}</div>
+      </div>
+    </div>
+  )
+}
+
+function SCDCodeAnimation() {
+  const [impl, setImpl] = useState<'merge'|'scd2_delta'>('merge')
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>SCD Implementation</div>
+        <div style={{display:'flex',gap:6}}>
+          {(['merge','scd2_delta'] as const).map(v=>(
+            <button key={v} onClick={()=>setImpl(v)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:impl===v?'#4f8ef7':'var(--surface-3)',color:impl===v?'white':'var(--text-secondary)'}}>{v==='merge'?'Type 1 (MERGE)':'Type 2 (Delta)'}</button>
+          ))}
+        </div>
+      </div>
+      {impl==='merge' ? (
+        <pre style={{background:'#1e293b',color:'#a5f3fc',padding:12,borderRadius:8,fontSize:'.7rem',overflow:'auto',margin:0}}>{`-- SCD Type 1: overwrite current value
+MERGE INTO dim_customer t
+USING staging_customer s
+  ON t.customer_id = s.customer_id
+WHEN MATCHED THEN
+  UPDATE SET t.city = s.city,
+             t.updated_at = current_timestamp()
+WHEN NOT MATCHED THEN
+  INSERT (customer_id, name, city, updated_at)
+  VALUES (s.customer_id, s.name, s.city, now())`}</pre>
+      ) : (
+        <pre style={{background:'#1e293b',color:'#86efac',padding:12,borderRadius:8,fontSize:'.7rem',overflow:'auto',margin:0}}>{`-- SCD Type 2: new row per change
+MERGE INTO dim_customer t
+USING (
+  SELECT s.*, current_timestamp() AS valid_from,
+         '9999-12-31' AS valid_to, true AS is_current
+  FROM staging s
+) s ON t.customer_id = s.customer_id
+     AND t.is_current = true
+WHEN MATCHED AND t.city != s.city THEN
+  UPDATE SET t.valid_to = s.valid_from,
+             t.is_current = false
+WHEN NOT MATCHED THEN
+  INSERT *`}</pre>
+      )}
+    </div>
+  )
+}
+
 // ── SECTIONS ──────────────────────────────────────────────────────────────────
 
 const SECTIONS = [
@@ -208,6 +674,7 @@ Data Fabric
             <h1 className="topic-title">System Design for Data Platforms</h1>
             <p className="topic-desc">Capacity planning, scalability, fault tolerance, CAP theorem applied to data systems, eventual consistency, backpressure handling, and rate limiting  -  the building blocks of resilient data platforms.</p>
           </div>
+          <SystemDesignAnimation />
           <CodeBlock lang="text">{`CAP THEOREM FOR DATA SYSTEMS
 ═══════════════════════════════════════════════════════════════
 Pick 2 of 3: Consistency · Availability · Partition Tolerance
@@ -306,6 +773,7 @@ spark.sparkContext.setCheckpointDir("/checkpoints")  # RDD checkpointing
             <h1 className="topic-title">Pipeline Design Patterns</h1>
             <p className="topic-desc">Medallion architecture, idempotency, exactly-once semantics, fan-out/fan-in, and event-driven triggers  -  patterns that separate amateur pipelines from production-grade ones.</p>
           </div>
+          <PipelinePatternsAnimation />
           <CodeBlock lang="text">{`MEDALLION ARCHITECTURE (Bronze → Silver → Gold)
 ═══════════════════════════════════════════════════════════════
 Bronze (Raw): Exact copy of source data, immutable, append-only
@@ -407,6 +875,7 @@ def silver_upsert(bronze_df, target_table: str, key_cols: list[str]):
             <h1 className="topic-title">Slowly Changing Dimensions</h1>
             <p className="topic-desc">SCD Types 1 - 6, implementation patterns in Delta Lake, and how to choose the right type based on business requirements for historical tracking.</p>
           </div>
+          <SCDTypesAnimation />
           <CodeBlock lang="text">{`SLOWLY CHANGING DIMENSIONS (SCD)  -  DECISION GUIDE
 ═══════════════════════════════════════════════════════════════
 SCD Type 0  -  Retain Original
@@ -671,6 +1140,7 @@ def process_orders(df):
             <h1 className="topic-title">Testing Strategy</h1>
             <p className="topic-desc">Unit tests with PySpark, data quality validation with Great Expectations, contract testing, and the testing pyramid for data pipelines  -  how to ship with confidence.</p>
           </div>
+          <TestingAnimation />
           <CodeBlock lang="text">{`TESTING PYRAMID FOR DATA PIPELINES
 ═══════════════════════════════════════════════════════════════
           [E2E Tests]         ← few, slow, expensive
@@ -773,6 +1243,7 @@ if not results.success:
             <h1 className="topic-title">dbt (data build tool)</h1>
             <p className="topic-desc">dbt transforms raw data in your warehouse using SQL. It handles dependency resolution, testing, documentation, and lineage  -  the backbone of the modern data stack's transformation layer.</p>
           </div>
+          <DBTAnimation />
           <CodeBlock lang="yaml">{`# dbt project structure
 my_project/
   dbt_project.yml          # project config
@@ -893,6 +1364,7 @@ models:
             <h1 className="topic-title">Infrastructure as Code (Terraform)</h1>
             <p className="topic-desc">Provisioning Azure data platform resources with Terraform  -  ADLS Gen2, Databricks workspaces, ADF, Key Vault, and networking. State management, modules, and workspace patterns.</p>
           </div>
+          <TerraformAnimation />
           <CodeBlock lang="hcl">{`# terraform/main.tf  -  Azure Data Platform
 terraform {
   required_providers {
@@ -1021,6 +1493,7 @@ module "silver_orders_job" {
             <h1 className="topic-title">Security for Data Platforms</h1>
             <p className="topic-desc">RBAC, column-level security, row-level security, encryption at rest and in transit, PII handling, managed identities, Key Vault integration, and Unity Catalog permissions.</p>
           </div>
+          <SecurityAnimation />
           <CodeBlock lang="text">{`SECURITY LAYERS FOR AZURE DATA PLATFORMS
 ═══════════════════════════════════════════════════════════════
 Network Security
@@ -1235,6 +1708,7 @@ WHERE r.last_run IS NULL
             <h1 className="topic-title">Pipeline Monitoring</h1>
             <p className="topic-desc">SLA management, alerting strategies, Kafka consumer lag monitoring, ADF activity monitoring, data freshness checks, and on-call runbook patterns for data engineers.</p>
           </div>
+          <MonitoringProdAnimation />
           <CodeBlock lang="python">{`# SLA MONITORING  -  alert if pipeline is late
 from datetime import datetime, timedelta
 import pytz
@@ -1353,6 +1827,7 @@ def check_data_freshness(table: str, ts_col: str, max_age_hours: int):
             <h1 className="topic-title">Disaster Recovery</h1>
             <p className="topic-desc">RTO/RPO targets, backup strategies for Delta Lake, cross-region replication, ADF pipeline export, geo-redundant storage, and tested failover procedures.</p>
           </div>
+          <DisasterRecoveryAnimation />
           <CodeBlock lang="text">{`DISASTER RECOVERY CONCEPTS
 ═══════════════════════════════════════════════════════════════
 RTO (Recovery Time Objective)
@@ -1454,6 +1929,7 @@ def restore_from_backup(backup_path: str, restore_table: str):
             <h1 className="topic-title">Cost Optimization</h1>
             <p className="topic-desc">Databricks DBU optimization, Delta OPTIMIZE/VACUUM, storage lifecycle policies, spot instances, cluster auto-termination, and cost tagging strategies for Azure data platforms.</p>
           </div>
+          <CostAnimation />
           <CodeBlock lang="text">{`COST LEVERS FOR AZURE DATA PLATFORMS
 ═══════════════════════════════════════════════════════════════
 Databricks Compute (typically 60-70% of total cost)
@@ -1561,6 +2037,7 @@ spark.sql("""
             <h1 className="topic-title">Performance Engineering</h1>
             <p className="topic-desc">Spark query optimization, partition tuning, broadcast joins, Z-ordering, bloom filters, caching strategies, and reading the Spark UI to diagnose bottlenecks.</p>
           </div>
+          <PerformanceAnimation />
           <CodeBlock lang="text">{`SPARK PERFORMANCE MENTAL MODEL
 ═══════════════════════════════════════════════════════════════
 The goal: minimize data movement (shuffles) and data scanned (predicate pushdown)
@@ -1788,6 +2265,7 @@ def read_with_contract_validation(topic: str, contract_path: str, spark):
             <h1 className="topic-title">Enterprise Patterns</h1>
             <p className="topic-desc">Data catalog integration, master data management, data lineage, governance frameworks, data product thinking, and operating a data platform at enterprise scale.</p>
           </div>
+          <AdvancedPatternsAnimation />
           <CodeBlock lang="text">{`ENTERPRISE DATA PLATFORM OPERATING MODEL
 ═══════════════════════════════════════════════════════════════
 Data Platform Team (central, enabling)
@@ -1895,6 +2373,7 @@ downstream_query = spark.sql("""
             <h1 className="topic-title">End-to-End Capstone Project</h1>
             <p className="topic-desc">Design and implement a production-grade data platform for a fictional e-commerce company. This project ties together every concept from Level 9 into a cohesive system design and working implementation.</p>
           </div>
+          <InterviewProjectAnimation />
           <CodeBlock lang="text">{`CAPSTONE: E-COMMERCE DATA PLATFORM
 ═══════════════════════════════════════════════════════════════
 Company: ShopFast  -  50M orders/month, 8M customers, 200 analysts
@@ -2033,6 +2512,7 @@ def erase_customer(customer_id: str):
             <h1 className="topic-title">Star Schema Deep Dive</h1>
             <p className="topic-desc">The star schema is the foundation of dimensional modeling in data warehousing. Its center is the grain  -  the single most important design decision, defining exactly what one row in your fact table represents. Everything else flows from the grain.</p>
           </div>
+          <StarSchemaAnimation />
           <CodeBlock lang="text">{`THE GRAIN  -  MOST IMPORTANT DECISION IN DATA MODELING
 ═══════════════════════════════════════════════════════════════
 The grain = "what does one row in the fact table represent?"
@@ -2214,6 +2694,7 @@ ORDER BY total_net_revenue DESC;`}</CodeBlock>
             <h1 className="topic-title">Snowflake Schema vs Star Schema</h1>
             <p className="topic-desc">The snowflake schema normalizes dimension tables into sub-dimensions. Understanding when to use star, snowflake, or galaxy (fact constellation) schemas  -  and the foundational Kimball vs Inmon debate  -  is essential for senior data modeling interviews.</p>
           </div>
+          <SnowflakeSchemaAnimation />
           <CodeBlock lang="text">{`SNOWFLAKE SCHEMA  -  NORMALIZED DIMENSIONS
 ═══════════════════════════════════════════════════════════════
 Snowflake: dimension tables are further normalized into sub-dimension tables.
@@ -2371,6 +2852,7 @@ WHERE s.order_date >= (SELECT MAX(order_date) FROM {{ this }}) - INTERVAL 3 DAYS
             <h1 className="topic-title">Data Vault 2.0</h1>
             <p className="topic-desc">Data Vault 2.0 is a modeling methodology built for enterprise data warehouse agility and auditability. Unlike star schemas, it handles multiple source systems naturally and provides a full, immutable audit trail  -  every row ever loaded is preserved forever.</p>
           </div>
+          <DataVaultAnimation />
           <CodeBlock lang="text">{`DATA VAULT 2.0  -  THREE ENTITY TYPES
 ═══════════════════════════════════════════════════════════════
 Hubs  -  Business Keys
@@ -2604,6 +3086,7 @@ def load_satellite(source_df, sat_table: str, parent_hash_key_col: str,
             <h1 className="topic-title">SCD Implementation Code (All Types)</h1>
             <p className="topic-desc">Full implementation of all SCD types using Delta Lake and PySpark. SCD Type 2 is the most common in production  -  mastering the MERGE pattern for slowly changing history is a core senior data engineering skill.</p>
           </div>
+          <SCDCodeAnimation />
           <CodeBlock lang="text">{`SCD TYPE DECISION TABLE
 ═══════════════════════════════════════════════════════════════
 Type  History?  Storage  Complexity  Best For
