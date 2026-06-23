@@ -155,14 +155,14 @@ function DevSignature() {
 
   return (
     <div
-      style={{ perspective: 900, display:'inline-block' }}
+      className="dev-sig-wrap"
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
     >
-      <div style={{
+      <div className="dev-sig-card" style={{
         position:'relative',
-        display:'inline-flex', alignItems:'center', gap:16,
-        padding:'14px 28px',
+        display:'flex', alignItems:'center', gap:14,
+        padding:'14px 22px',
         borderRadius:20,
         background: hovered
           ? 'linear-gradient(135deg,rgba(79,142,247,.18),rgba(139,92,246,.22),rgba(236,72,153,.14))'
@@ -356,7 +356,7 @@ export default function Home({ completed }: Props) {
           </h1>
 
           {/* Creator byline */}
-          <div style={{
+          <div className="hero-byline" style={{
             display:'inline-flex', alignItems:'center', gap:10,
             marginBottom:28, marginTop:4,
           }}>
@@ -393,7 +393,7 @@ export default function Home({ completed }: Props) {
           </div>
 
           {/* Hero punch quote */}
-          <div style={{
+          <div className="hero-quote" style={{
             maxWidth:620, margin:'0 auto 40px',
             padding:'22px 32px',
             borderRadius:18,
@@ -474,7 +474,7 @@ export default function Home({ completed }: Props) {
           <PipelineDemo />
 
           {/* Stats row */}
-          <div style={{ display:'flex',gap:24,justifyContent:'center',flexWrap:'wrap',marginTop:52 }}>
+          <div className="hero-stats" style={{ display:'flex',gap:24,justifyContent:'center',flexWrap:'wrap',marginTop:52 }}>
             {STATS.map((s, i) => (
               <div key={s.l} className="animate-popin" style={{
                 textAlign:'center',padding:'14px 24px',
@@ -555,8 +555,8 @@ export default function Home({ completed }: Props) {
           </p>
         </div>
 
-        <div style={{
-          display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',
+        <div className="features-grid" style={{
+          display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',
           gap:18,maxWidth:1100,margin:'0 auto',
         }}>
           {FEATURES.map(([icon, title, desc, bg, border], i) => (
@@ -741,7 +741,7 @@ function LevelCard({ lv, i, completed }: {
         }}>✓ Done</div>
       )}
 
-      <div style={{ padding:'24px 24px 20px',position:'relative',zIndex:1 }}>
+      <div className="level-card-body" style={{ padding:'24px 24px 20px',position:'relative',zIndex:1 }}>
         {/* Level badge — 44x44, checkmark if done */}
         <div style={{
           display:'inline-flex',alignItems:'center',justifyContent:'center',
