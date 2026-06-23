@@ -175,7 +175,7 @@ spark.sql("DESCRIBE DETAIL delta.\`/mnt/datalake/bronze/users\`").show(vertical=
             { question: "Delta Lake writes a Parquet checkpoint file after how many JSON commit files by default?", options: ["Every 5 commits", "Every 10 commits", "Every 100 commits", "Only on explicit OPTIMIZE"], correct: 1 },
             { question: "What key advantage does Delta Lake provide over raw Parquet on a data lake?", options: ["Columnar compression", "ACID transactions and a transaction log enabling rollback and time travel", "Automatic schema inference", "Faster Parquet encoding"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-intro')) { await unmarkTopicComplete('delta-intro'); onUnmark('delta-intro') } else { await markTopicComplete('delta-intro'); onComplete('delta-intro') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-intro')) { await unmarkTopicComplete('delta-intro'); onUnmark('delta-intro') } else { await markTopicComplete('delta-intro'); onComplete('delta-intro') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-intro') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 2. DELTA ACID ──────────────────────────────────────────────── */}
@@ -282,7 +282,7 @@ spark.sql("""
             { question: "What concurrency control mechanism does Delta Lake use?", options: ["Pessimistic locking (writers acquire exclusive locks)", "Multi-version concurrency control (MVCC) with row-level locks", "Optimistic concurrency control (writers proceed, then validate at commit time)", "Serializable snapshot isolation with row-level locking"], correct: 2 },
             { question: "Two concurrent append-only writers target the same Delta table. What happens?", options: ["Both fail and must retry", "The second writer overwrites the first", "Both succeed because blind appends do not conflict", "Delta serializes them so only one runs at a time"], correct: 2 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-acid')) { await unmarkTopicComplete('delta-acid'); onUnmark('delta-acid') } else { await markTopicComplete('delta-acid'); onComplete('delta-acid') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-acid')) { await unmarkTopicComplete('delta-acid'); onUnmark('delta-acid') } else { await markTopicComplete('delta-acid'); onComplete('delta-acid') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-acid') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 3. DELTA WRITE MODES ──────────────────────────────────────── */}
@@ -437,7 +437,7 @@ new_events.write \
             { question: "What is the key difference between insertInto() and append mode write()?", options: ["insertInto() uses name-based column binding; append uses positional", "insertInto() uses positional column binding and targets a catalog table by name", "insertInto() can overwrite data; append cannot", "They are functionally identical"], correct: 1 },
             { question: "CREATE OR REPLACE TABLE differs from DROP TABLE + CREATE TABLE because:", options: ["CREATE OR REPLACE is faster", "CREATE OR REPLACE is atomic  -  concurrent readers get a consistent view throughout", "DROP + CREATE preserves the transaction log; CREATE OR REPLACE does not", "They are equivalent in Delta Lake"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-write-modes')) { await unmarkTopicComplete('delta-write-modes'); onUnmark('delta-write-modes') } else { await markTopicComplete('delta-write-modes'); onComplete('delta-write-modes') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-write-modes')) { await unmarkTopicComplete('delta-write-modes'); onUnmark('delta-write-modes') } else { await markTopicComplete('delta-write-modes'); onComplete('delta-write-modes') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-write-modes') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 4. DELTA MERGE ────────────────────────────────────────────── */}
@@ -616,7 +616,7 @@ spark.sql("""
             { question: "What is the most important performance tip when writing a MERGE against a large partitioned Delta table?", options: ["Always use broadcast joins on the target", "Include a partition column in the ON join predicate to enable partition pruning", "Set parallelism to 1 to avoid conflicts", "Use mode('overwrite') instead of MERGE for tables over 1 TB"], correct: 1 },
             { question: "In a SCD Type 2 MERGE pattern, what happens to the existing current row when a changed record arrives?", options: ["It is deleted from the table", "It is updated to close the effective_end_date and set is_current = false", "It is left unchanged; only a new row is inserted", "It is moved to an archive table"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-merge')) { await unmarkTopicComplete('delta-merge'); onUnmark('delta-merge') } else { await markTopicComplete('delta-merge'); onComplete('delta-merge') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-merge')) { await unmarkTopicComplete('delta-merge'); onUnmark('delta-merge') } else { await markTopicComplete('delta-merge'); onComplete('delta-merge') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-merge') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 5. DELTA SCHEMA ───────────────────────────────────────────── */}
@@ -746,7 +746,7 @@ print(dt.toDF().schema.simpleString())`}</CodeBlock>
             { question: "What must you enable on a Delta table before you can perform a metadata-only column rename (without rewriting Parquet files)?", options: ["delta.enableChangeDataFeed = true", "delta.columnMapping.mode = 'name'", "spark.sql.sources.partitionOverwriteMode = dynamic", "delta.autoOptimize.optimizeWrite = true"], correct: 1 },
             { question: "Schema enforcement in Delta Lake fires at which point?", options: ["When the table is queried (read time)", "When data is written  -  before any files are committed to storage", "Only during OPTIMIZE operations", "Only when explicitly invoked with ANALYZE TABLE"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-schema')) { await unmarkTopicComplete('delta-schema'); onUnmark('delta-schema') } else { await markTopicComplete('delta-schema'); onComplete('delta-schema') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-schema')) { await unmarkTopicComplete('delta-schema'); onUnmark('delta-schema') } else { await markTopicComplete('delta-schema'); onComplete('delta-schema') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-schema') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 6. DELTA TIME TRAVEL ──────────────────────────────────────── */}
@@ -888,7 +888,7 @@ spark.sql("""
             { question: "After running RESTORE TABLE silver.orders TO VERSION AS OF 3, what happens to the table history?", options: ["All versions after 3 are permanently deleted", "A new commit is created that reflects version 3 state; prior history is preserved", "The transaction log is rewritten to remove versions 4 and above", "The table is locked until the next OPTIMIZE run"], correct: 1 },
             { question: "Time travel to version 2 fails with 'No file found'. What is the most likely cause?", options: ["VERSION AS OF syntax is incorrect", "VACUUM was run and removed the Parquet files for that version", "The table was not partitioned", "DESCRIBE HISTORY was not run first"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-time-travel')) { await unmarkTopicComplete('delta-time-travel'); onUnmark('delta-time-travel') } else { await markTopicComplete('delta-time-travel'); onComplete('delta-time-travel') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-time-travel')) { await unmarkTopicComplete('delta-time-travel'); onUnmark('delta-time-travel') } else { await markTopicComplete('delta-time-travel'); onComplete('delta-time-travel') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-time-travel') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 7. DELTA CDF ──────────────────────────────────────────────── */}
@@ -1050,7 +1050,7 @@ query.awaitTermination()`}</CodeBlock>
             { question: "You enable CDF on a Delta table at version 15. What is the earliest version you can read changes from?", options: ["Version 0  -  CDF retroactively covers all history", "Version 14  -  one version before enabling", "Version 15  -  CDF data is only available from when it was enabled", "Version 16  -  the first commit after enabling"], correct: 2 },
             { question: "Which read option starts reading CDF changes from a specific transaction log version?", options: [".option('versionAsOf', N)", ".option('startingVersion', N)", ".option('startFrom', N)", ".option('changeVersion', N)"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-cdf')) { await unmarkTopicComplete('delta-cdf'); onUnmark('delta-cdf') } else { await markTopicComplete('delta-cdf'); onComplete('delta-cdf') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-cdf')) { await unmarkTopicComplete('delta-cdf'); onUnmark('delta-cdf') } else { await markTopicComplete('delta-cdf'); onComplete('delta-cdf') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-cdf') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 8. DELTA OPTIMIZE ─────────────────────────────────────────── */}
@@ -1164,7 +1164,7 @@ print("OPTIMIZE is safe to run in production on live tables.")`}</CodeBlock>
             { question: "You have a partitioned table with 500 partitions. You only want to OPTIMIZE last month's data. Which syntax achieves this?", options: ["OPTIMIZE silver.orders LIMIT PARTITION order_date = '2024-01'", "OPTIMIZE silver.orders WHERE order_date BETWEEN '2024-01-01' AND '2024-01-31'", "OPTIMIZE silver.orders PARTITION (order_date = '2024-01')", "REBUILD INDEX ON silver.orders WHERE order_date = '2024-01'"], correct: 1 },
             { question: "What does delta.autoOptimize.optimizeWrite do?", options: ["Runs a full OPTIMIZE after every write", "Coalesces output files during the write phase to produce fewer, larger files", "Automatically tunes the targetFileSize based on cluster size", "Replaces VACUUM with automatic file deletion"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-optimize')) { await unmarkTopicComplete('delta-optimize'); onUnmark('delta-optimize') } else { await markTopicComplete('delta-optimize'); onComplete('delta-optimize') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-optimize')) { await unmarkTopicComplete('delta-optimize'); onUnmark('delta-optimize') } else { await markTopicComplete('delta-optimize'); onComplete('delta-optimize') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-optimize') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 9. DELTA ZORDER ───────────────────────────────────────────── */}
@@ -1304,7 +1304,7 @@ spark.sql("""
             { question: "You have a table partitioned by event_date (365 partitions/year) and need to optimize queries filtering by user_id (50 million distinct users). What should you do?", options: ["Partition by user_id instead of event_date", "Z-ORDER by user_id within each date partition", "Create a separate index table keyed by user_id", "Increase the number of Parquet row groups"], correct: 1 },
             { question: "Z-ORDER clustering is applied during which operation?", options: ["Automatically on every write", "During OPTIMIZE (must be explicitly triggered)", "During VACUUM", "During the first read after a write"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-zorder')) { await unmarkTopicComplete('delta-zorder'); onUnmark('delta-zorder') } else { await markTopicComplete('delta-zorder'); onComplete('delta-zorder') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-zorder')) { await unmarkTopicComplete('delta-zorder'); onUnmark('delta-zorder') } else { await markTopicComplete('delta-zorder'); onComplete('delta-zorder') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-zorder') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── 10. DELTA VACUUM ──────────────────────────────────────────── */}
@@ -1428,7 +1428,7 @@ except Exception as e:
             { question: "You run VACUUM silver.orders DRY RUN. What happens?", options: ["Files are deleted and a report is returned", "A list of files that WOULD be deleted is returned, but nothing is deleted", "OPTIMIZE is run first, then files are listed", "The transaction log is compacted"], correct: 1 },
             { question: "Which Spark configuration must you disable to allow VACUUM with a retention period shorter than 7 days?", options: ["spark.databricks.delta.timeTravel.enabled", "spark.databricks.delta.retentionDurationCheck.enabled", "spark.sql.delta.vacuumProtection.enabled", "delta.deletedFileRetentionDuration"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-vacuum')) { await unmarkTopicComplete('delta-vacuum'); onUnmark('delta-vacuum') } else { await markTopicComplete('delta-vacuum'); onComplete('delta-vacuum') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-vacuum')) { await unmarkTopicComplete('delta-vacuum'); onUnmark('delta-vacuum') } else { await markTopicComplete('delta-vacuum'); onComplete('delta-vacuum') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-vacuum') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="delta-liquid" ref={el => { if (el) sectionRefs.current['delta-liquid'] = el }} className="topic-section">
@@ -1485,7 +1485,7 @@ dt.optimize().executeCompaction()  # incremental clustering
             { question: "How do you change the clustering columns in a Liquid Clustered table?", options: ["Drop and recreate the table", "ALTER TABLE ... CLUSTER BY (...)  -  it is a metadata-only operation", "Run OPTIMIZE with new columns", "Use REORG TABLE"], correct: 1 },
             { question: "When should you choose partitioning over Liquid Clustering?", options: ["Always  -  partitioning is faster", "For very low-cardinality columns like date (hundreds of distinct values), where partition pruning eliminates entire directories", "For string columns", "When using Auto Loader"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-liquid')) { await unmarkTopicComplete('delta-liquid'); onUnmark('delta-liquid') } else { await markTopicComplete('delta-liquid'); onComplete('delta-liquid') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-liquid')) { await unmarkTopicComplete('delta-liquid'); onUnmark('delta-liquid') } else { await markTopicComplete('delta-liquid'); onComplete('delta-liquid') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-liquid') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="delta-constraints" ref={el => { if (el) sectionRefs.current['delta-constraints'] = el }} className="topic-section">
@@ -1535,7 +1535,7 @@ ALTER TABLE production.silver.orders
             { question: "What happens to existing data when you ADD CONSTRAINT to a Delta table?", options: ["Existing rows that violate the constraint are deleted", "Existing rows are NOT validated  -  the constraint applies only to future writes", "The operation fails if any existing row violates the constraint", "A warning is logged for violating rows"], correct: 1 },
             { question: "Where are Delta Lake constraints stored?", options: ["In a separate constraints catalog", "As table properties in the transaction log (_delta_log/)", "In the Hive metastore", "In a separate schema registry"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-constraints')) { await unmarkTopicComplete('delta-constraints'); onUnmark('delta-constraints') } else { await markTopicComplete('delta-constraints'); onComplete('delta-constraints') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-constraints')) { await unmarkTopicComplete('delta-constraints'); onUnmark('delta-constraints') } else { await markTopicComplete('delta-constraints'); onComplete('delta-constraints') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-constraints') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="delta-props" ref={el => { if (el) sectionRefs.current['delta-props'] = el }} className="topic-section">
@@ -1585,7 +1585,7 @@ UNSET TBLPROPERTIES ('delta.autoOptimize.autoCompact');`}</CodeBlock>
             { question: "What must you enable before you can rename or drop a column in a Delta table?", options: ["delta.enableSchemaEvolution = true", "delta.columnMapping.mode = 'name'", "delta.schemaEvolution.dropColumns = true", "mergeSchema = true"], correct: 1 },
             { question: "What is the difference between logRetentionDuration and deletedFileRetentionDuration?", options: ["They are the same setting", "logRetentionDuration controls how long JSON commit files are kept; deletedFileRetentionDuration controls how long deleted Parquet data files are kept before VACUUM removes them", "logRetentionDuration is for VACUUM; deletedFileRetentionDuration is for time travel", "Both control VACUUM behavior"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-props')) { await unmarkTopicComplete('delta-props'); onUnmark('delta-props') } else { await markTopicComplete('delta-props'); onComplete('delta-props') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-props')) { await unmarkTopicComplete('delta-props'); onUnmark('delta-props') } else { await markTopicComplete('delta-props'); onComplete('delta-props') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-props') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="delta-partitioning" ref={el => { if (el) sectionRefs.current['delta-partitioning'] = el }} className="topic-section">
@@ -1665,7 +1665,7 @@ spark.sql("ALTER TABLE production.silver.events CLUSTER BY (event_date, region)"
             { question: "Which column is a BAD choice for partitioning?", options: ["event_date (daily, ~365/year)", "region (5 distinct values)", "user_id (millions of distinct values  -  extreme over-partitioning)", "year_month (12/year)"], correct: 2 },
             { question: "What does partition pruning do at query time?", options: ["Compresses partitions before reading", "Skips entire partition directories that do not match the WHERE clause filter, reducing I/O", "Merges small partitions automatically", "Sorts data within each partition"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-partitioning')) { await unmarkTopicComplete('delta-partitioning'); onUnmark('delta-partitioning') } else { await markTopicComplete('delta-partitioning'); onComplete('delta-partitioning') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-partitioning')) { await unmarkTopicComplete('delta-partitioning'); onUnmark('delta-partitioning') } else { await markTopicComplete('delta-partitioning'); onComplete('delta-partitioning') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-partitioning') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="delta-performance" ref={el => { if (el) sectionRefs.current['delta-performance'] = el }} className="topic-section">
@@ -1730,7 +1730,7 @@ spark.sql("ANALYZE TABLE production.silver.events COMPUTE STATISTICS FOR ALL COL
             { question: "Where are Delta Lake column statistics (min/max/null counts) stored?", options: ["In a separate stats table", "Inside the transaction log JSON commit files  -  read without scanning data files", "In the Hive metastore", "In a Bloom filter index"], correct: 1 },
             { question: "What is the Photon engine in Databricks?", options: ["A streaming protocol", "A vectorized query engine written in C++ that accelerates Spark SQL and DataFrame operations on Databricks clusters", "A file compression algorithm", "A cluster auto-scaling feature"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('delta-performance')) { await unmarkTopicComplete('delta-performance'); onUnmark('delta-performance') } else { await markTopicComplete('delta-performance'); onComplete('delta-performance') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('delta-performance')) { await unmarkTopicComplete('delta-performance'); onUnmark('delta-performance') } else { await markTopicComplete('delta-performance'); onComplete('delta-performance') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('delta-performance') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-platform" ref={el => { if (el) sectionRefs.current['databricks-platform'] = el }} className="topic-section">
@@ -1786,7 +1786,7 @@ policy_example = {
             { question: "What is the purpose of Instance Pools in Databricks?", options: ["To share data between clusters", "To maintain pre-warmed VMs so clusters start faster (seconds instead of minutes)", "To reduce storage costs", "To enable cross-workspace access"], correct: 1 },
             { question: "Which DBR version should you use for production workloads?", options: ["Always the latest version", "An LTS (Long Term Support) version like DBR 14.3 LTS  -  stable, 2-year support window", "The lowest version for compatibility", "ML edition only"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-platform')) { await unmarkTopicComplete('databricks-platform'); onUnmark('databricks-platform') } else { await markTopicComplete('databricks-platform'); onComplete('databricks-platform') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-platform')) { await unmarkTopicComplete('databricks-platform'); onUnmark('databricks-platform') } else { await markTopicComplete('databricks-platform'); onComplete('databricks-platform') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-platform') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-uc" ref={el => { if (el) sectionRefs.current['databricks-uc'] = el }} className="topic-section">
@@ -1846,7 +1846,7 @@ WHERE target_table_full_name = 'production.silver.customers';`}</CodeBlock>
             { question: "What are Unity Catalog Volumes used for?", options: ["Storing Delta tables only", "Accessing non-tabular files (CSV, JSON, images, ML models) under UC governance via /Volumes/ path", "Replacing schemas", "Storing cluster logs"], correct: 1 },
             { question: "How many Unity Catalog metastores exist per cloud region in Databricks?", options: ["One per workspace", "One per region  -  shared across all workspaces in that region", "One per catalog", "One per account"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-uc')) { await unmarkTopicComplete('databricks-uc'); onUnmark('databricks-uc') } else { await markTopicComplete('databricks-uc'); onComplete('databricks-uc') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-uc')) { await unmarkTopicComplete('databricks-uc'); onUnmark('databricks-uc') } else { await markTopicComplete('databricks-uc'); onComplete('databricks-uc') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-uc') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-uc-permissions" ref={el => { if (el) sectionRefs.current['databricks-uc-permissions'] = el }} className="topic-section">
@@ -1906,7 +1906,7 @@ GRANT SELECT  ON TABLE production.silver.events  TO \`job-sp-app-id-12345\`;
             { question: "In Unity Catalog, what happens if a user is in Group A (has SELECT) and Group B (no SELECT on a table)?", options: ["The user cannot access the table  -  most restrictive wins", "The user CAN access the table  -  UC is additive only, there is no DENY", "An error is thrown due to conflicting permissions", "The user must explicitly be granted access"], correct: 1 },
             { question: "What privilege is required for a job service principal to INSERT data into a Delta table?", options: ["SELECT", "CREATE TABLE", "MODIFY  -  covers INSERT, UPDATE, DELETE, and MERGE", "WRITE VOLUME"], correct: 2 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-uc-permissions')) { await unmarkTopicComplete('databricks-uc-permissions'); onUnmark('databricks-uc-permissions') } else { await markTopicComplete('databricks-uc-permissions'); onComplete('databricks-uc-permissions') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-uc-permissions')) { await unmarkTopicComplete('databricks-uc-permissions'); onUnmark('databricks-uc-permissions') } else { await markTopicComplete('databricks-uc-permissions'); onComplete('databricks-uc-permissions') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-uc-permissions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-uc-rowcol" ref={el => { if (el) sectionRefs.current['databricks-uc-rowcol'] = el }} className="topic-section">
@@ -1964,7 +1964,7 @@ DESCRIBE TABLE EXTENDED production.silver.customers;
             { question: "How does a column mask differ from a row filter?", options: ["Column masks delete columns; row filters delete rows", "Column masks transform the VALUE of a column for unauthorized users; row filters control which ROWS are visible", "They are the same concept", "Column masks are enforced client-side"], correct: 1 },
             { question: "Which built-in function checks if the current user belongs to a Databricks group inside a mask/filter function?", options: ["current_user_group()", "is_account_group_member()", "user_in_role()", "has_permission()"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-uc-rowcol')) { await unmarkTopicComplete('databricks-uc-rowcol'); onUnmark('databricks-uc-rowcol') } else { await markTopicComplete('databricks-uc-rowcol'); onComplete('databricks-uc-rowcol') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-uc-rowcol')) { await unmarkTopicComplete('databricks-uc-rowcol'); onUnmark('databricks-uc-rowcol') } else { await markTopicComplete('databricks-uc-rowcol'); onComplete('databricks-uc-rowcol') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-uc-rowcol') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-dlt" ref={el => { if (el) sectionRefs.current['databricks-dlt'] = el }} className="topic-section">
@@ -2071,7 +2071,7 @@ def cancelled_orders_view():
             { question: "When should you use dlt.read() vs dlt.read_stream()?", options: ["They are interchangeable", "dlt.read_stream() for incremental/streaming sources (Bronze→Silver); dlt.read() for batch aggregations where you want to reprocess all data (Silver→Gold)", "dlt.read() is deprecated", "dlt.read_stream() only works with Auto Loader"], correct: 1 },
             { question: "What is the DLT Event Log used for?", options: ["Storing raw data files", "Monitoring pipeline health  -  query it to see row counts, expectation failures, data quality metrics, and pipeline status per update", "Replacing the Delta transaction log", "Storing cluster logs"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-dlt')) { await unmarkTopicComplete('databricks-dlt'); onUnmark('databricks-dlt') } else { await markTopicComplete('databricks-dlt'); onComplete('databricks-dlt') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-dlt')) { await unmarkTopicComplete('databricks-dlt'); onUnmark('databricks-dlt') } else { await markTopicComplete('databricks-dlt'); onComplete('databricks-dlt') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-dlt') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-autoloader" ref={el => { if (el) sectionRefs.current['databricks-autoloader'] = el }} className="topic-section">
@@ -2146,7 +2146,7 @@ query.awaitTermination()
             { question: "What is the difference between maxFilesPerTrigger and cloudFiles.backfillInterval?", options: ["They control the same thing", "maxFilesPerTrigger limits files per micro-batch (rate control); backfillInterval triggers periodic full directory re-scans to catch any files missed by event notifications", "maxFilesPerTrigger is for batch; backfillInterval is for streaming", "backfillInterval replaces the checkpoint"], correct: 1 },
             { question: "What does trigger(availableNow=True) do in Auto Loader?", options: ["Runs continuously until stopped", "Processes all files currently in the landing zone in one or more micro-batches, then terminates the stream  -  useful for scheduled batch ingestion", "Triggers on file count exceeding a threshold", "Runs only on the most recently added file"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-autoloader')) { await unmarkTopicComplete('databricks-autoloader'); onUnmark('databricks-autoloader') } else { await markTopicComplete('databricks-autoloader'); onComplete('databricks-autoloader') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-autoloader')) { await unmarkTopicComplete('databricks-autoloader'); onUnmark('databricks-autoloader') } else { await markTopicComplete('databricks-autoloader'); onComplete('databricks-autoloader') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-autoloader') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-workflows" ref={el => { if (el) sectionRefs.current['databricks-workflows'] = el }} className="topic-section">
@@ -2266,7 +2266,7 @@ query.awaitTermination()
             { question: "When two tasks both depend on compute_silver and have no dependency between each other, how does Databricks execute them?", options: ["Sequentially in alphabetical order", "In parallel  -  Databricks executes tasks as soon as all their dependencies succeed", "The first task defined in JSON runs first", "User must manually trigger each task"], correct: 1 },
             { question: "What is a Repair Run in Databricks Workflows?", options: ["Re-runs the entire job from scratch", "Re-runs only the failed tasks (and their downstream dependents) without re-running successful tasks", "Fixes syntax errors in notebooks", "Restores Delta tables to a previous version"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-workflows')) { await unmarkTopicComplete('databricks-workflows'); onUnmark('databricks-workflows') } else { await markTopicComplete('databricks-workflows'); onComplete('databricks-workflows') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-workflows')) { await unmarkTopicComplete('databricks-workflows'); onUnmark('databricks-workflows') } else { await markTopicComplete('databricks-workflows'); onComplete('databricks-workflows') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-workflows') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-dab" ref={el => { if (el) sectionRefs.current['databricks-dab'] = el }} className="topic-section">
@@ -2396,7 +2396,7 @@ databricks bundle destroy --target dev
             { question: "What does databricks bundle deploy do?", options: ["Runs the job immediately", "Creates or updates all Databricks resources (jobs, pipelines, clusters) defined in bundle.yml in the target workspace", "Only validates the YAML syntax", "Destroys and recreates all resources"], correct: 1 },
             { question: "How does DAB enable CI/CD for Databricks pipelines?", options: ["By integrating with Databricks notebooks only", "Bundle YAML is version-controlled in git; CI/CD pipelines run databricks bundle deploy to promote changes across dev/staging/prod environments", "By exporting notebooks to Python files", "By using Databricks Repos only"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-dab')) { await unmarkTopicComplete('databricks-dab'); onUnmark('databricks-dab') } else { await markTopicComplete('databricks-dab'); onComplete('databricks-dab') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-dab')) { await unmarkTopicComplete('databricks-dab'); onUnmark('databricks-dab') } else { await markTopicComplete('databricks-dab'); onComplete('databricks-dab') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-dab') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-sql" ref={el => { if (el) sectionRefs.current['databricks-sql'] = el }} className="topic-section">
@@ -2470,7 +2470,7 @@ AS SELECT * FROM STREAM(production.bronze.events_landing);
             { question: "What does the Query Profile in Databricks SQL show?", options: ["The user who ran the query", "A detailed operator tree showing execution phases, bottlenecks, spill-to-disk, and row counts per operator  -  like Spark's physical plan UI for SQL", "Query cost estimates only", "The SQL warehouse configuration"], correct: 1 },
             { question: "What is a Materialized View in Databricks SQL?", options: ["A view that materializes once and never updates", "A precomputed query result stored as a Delta table, automatically refreshed when upstream tables change", "A view stored in the client browser cache", "A synonym for a regular CREATE VIEW"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-sql')) { await unmarkTopicComplete('databricks-sql'); onUnmark('databricks-sql') } else { await markTopicComplete('databricks-sql'); onComplete('databricks-sql') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-sql')) { await unmarkTopicComplete('databricks-sql'); onUnmark('databricks-sql') } else { await markTopicComplete('databricks-sql'); onComplete('databricks-sql') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-sql') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="databricks-sharing" ref={el => { if (el) sectionRefs.current['databricks-sharing'] = el }} className="topic-section">
@@ -2546,7 +2546,7 @@ ORDER BY event_time DESC;`}</CodeBlock>
             { question: "What is the difference between a Share and a Recipient in Delta Sharing?", options: ["They are the same concept", "A Share is a named collection of tables/schemas being offered; a Recipient is an identity (organization/team) that is granted access to one or more Shares", "A Recipient can modify the Share definition", "A Share belongs to a single workspace only"], correct: 1 },
             { question: "Can a non-Databricks organization receive shared Delta data?", options: ["No  -  Delta Sharing requires both sides to be Databricks", "Yes  -  via the open sharing protocol using a credential file, recipients can query shared data from Spark, pandas, Power BI, or any Delta Sharing client", "Only if they use Apache Spark", "Only via REST API"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('databricks-sharing')) { await unmarkTopicComplete('databricks-sharing'); onUnmark('databricks-sharing') } else { await markTopicComplete('databricks-sharing'); onComplete('databricks-sharing') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('databricks-sharing')) { await unmarkTopicComplete('databricks-sharing'); onUnmark('databricks-sharing') } else { await markTopicComplete('databricks-sharing'); onComplete('databricks-sharing') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('databricks-sharing') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
 
@@ -2669,7 +2669,7 @@ spark.sql("""
             { question: "What was added in Iceberg spec version 2 that spec v1 lacked?", options: ["Snapshot isolation", "Hidden partitioning", "Row-level deletes via position delete files and equality delete files", "Schema evolution"], correct: 2 },
             { question: "In the Iceberg metadata hierarchy, what is the correct order from outermost to innermost?", options: ["Manifest file → Manifest list → Table metadata JSON", "Data files → Manifest files → Manifest list → Table metadata JSON", "Table metadata JSON → Manifest list → Manifest files → Data files", "Catalog → Table metadata JSON → Snapshot → Manifest list → Manifest files"], correct: 3 },
           ]} />
-          <button onClick={async () => { if (completed.has('iceberg-intro')) { await unmarkTopicComplete('iceberg-intro'); onUnmark('iceberg-intro') } else { await markTopicComplete('iceberg-intro'); onComplete('iceberg-intro') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('iceberg-intro')) { await unmarkTopicComplete('iceberg-intro'); onUnmark('iceberg-intro') } else { await markTopicComplete('iceberg-intro'); onComplete('iceberg-intro') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('iceberg-intro') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── ICEBERG FEATURES ──────────────────────────────────────────── */}
@@ -2808,7 +2808,7 @@ spark.read.option("tag", "monthly_snapshot_jan_2024").table("glue_catalog.db.eve
             { question: "You change a table's partition spec from days(event_ts) to hours(event_ts). What happens to existing data files?", options: ["All existing files are rewritten with the new hourly partition structure", "The operation fails  -  partition specs cannot be changed in Iceberg", "Existing files retain their day-based partitioning; only new files use the hour-based spec  -  both coexist transparently", "Existing files are moved to an archive location"], correct: 2 },
             { question: "Iceberg branching allows you to:", options: ["Create read replicas of a table for performance", "Isolate writes to a named branch (snapshot lineage) so you can validate changes before merging to main  -  similar to Git branches for table data", "Partition a table across multiple storage accounts", "Create materialized view snapshots"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('iceberg-features')) { await unmarkTopicComplete('iceberg-features'); onUnmark('iceberg-features') } else { await markTopicComplete('iceberg-features'); onComplete('iceberg-features') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('iceberg-features')) { await unmarkTopicComplete('iceberg-features'); onUnmark('iceberg-features') } else { await markTopicComplete('iceberg-features'); onComplete('iceberg-features') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('iceberg-features') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── HUDI INTRO ────────────────────────────────────────────────── */}
@@ -2939,7 +2939,7 @@ delete_df.write \
             { question: "What is hoodie.datasource.write.precombine.field used for?", options: ["It defines the partition column for the table", "When multiple records share the same record key in a batch, the precombine field is used to pick the winner  -  the record with the higher value is kept", "It sets the sort order for Parquet files", "It controls the compaction trigger interval"], correct: 1 },
             { question: "What does an Incremental Query in Hudi return?", options: ["A snapshot of the table at a historical timestamp", "Only the records that changed (inserted/updated/deleted) since a specified commit time  -  useful for propagating changes downstream", "All records sorted by commit time", "Records that failed validation"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('hudi-intro')) { await unmarkTopicComplete('hudi-intro'); onUnmark('hudi-intro') } else { await markTopicComplete('hudi-intro'); onComplete('hudi-intro') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('hudi-intro')) { await unmarkTopicComplete('hudi-intro'); onUnmark('hudi-intro') } else { await markTopicComplete('hudi-intro'); onComplete('hudi-intro') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('hudi-intro') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ── FORMAT COMPARISON ─────────────────────────────────────────── */}
@@ -3079,7 +3079,7 @@ hudi_df_incr = spark.read.format("hudi") \
             { question: "You are building a data platform on AWS that must be queryable from Spark, Trino, Flink, and Snowflake without vendor lock-in. Which format is the best fit?", options: ["Delta Lake  -  best multi-engine support overall", "Apache Hudi  -  native AWS support via EMR", "Apache Iceberg  -  excellent multi-engine support on AWS (Glue, Athena, EMR) with first-class Trino and Snowflake integration", "All three are equally suited for this scenario"], correct: 2 },
             { question: "What is the key architectural reason Apache Hudi MOR has faster write performance than Delta Lake or Iceberg for high-frequency upserts?", options: ["Hudi uses in-memory storage for recent writes", "MOR appends only a small delta log file per write batch without rewriting existing Parquet files  -  the merge cost is deferred to read time or periodic compaction", "Hudi skips ACID validation for speed", "Hudi uses columnar compression that is faster to write"], correct: 1 },
           ]} />
-          <button onClick={async () => { if (completed.has('format-comparison')) { await unmarkTopicComplete('format-comparison'); onUnmark('format-comparison') } else { await markTopicComplete('format-comparison'); onComplete('format-comparison') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete ✓</button>
+          <button onClick={async () => { if (completed.has('format-comparison')) { await unmarkTopicComplete('format-comparison'); onUnmark('format-comparison') } else { await markTopicComplete('format-comparison'); onComplete('format-comparison') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>{completed.has('format-comparison') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
       </main>
