@@ -6,15 +6,108 @@ import { markTopicComplete } from '../lib/firebase'
 
 interface Props { completed: Set<string>; onComplete: () => void }
 
+// ── Animation Components ──────────────────────────────────────────────────────
+
+function ArchitectureAnimation() {
+  const archs = [
+    { name: 'Lambda', color: '#4f8ef7', layers: ['Batch Layer (Spark)', 'Speed Layer (Kafka)', 'Serving Layer (Redis)'], note: 'Two codebases to maintain' },
+    { name: 'Kappa', color: '#8b5cf6', layers: ['Stream Layer (Kafka+Flink)', 'Serving Layer (Delta)'], note: 'One unified codebase' },
+    { name: 'Lakehouse', color: '#f59e0b', layers: ['ADLS Gen2 (storage)', 'Delta Lake (format)', 'Databricks (compute)'], note: 'Current best practice' },
+  ]
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 24, padding: 20, background: 'var(--surface-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+      {archs.map(a => (
+        <div key={a.name} style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 700, color: a.color, marginBottom: 8, fontSize: '.9rem' }}>{a.name}</div>
+          {a.layers.map((l, i) => (
+            <div key={i} style={{ background: a.color + '18', border: `1px solid ${a.color}40`, borderRadius: 6, padding: '6px 8px', fontSize: '.75rem', marginBottom: 4, color: 'var(--text-2)' }}>{l}</div>
+          ))}
+          <div style={{ fontSize: '.72rem', color: 'var(--text-3)', marginTop: 6, fontStyle: 'italic' }}>{a.note}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CiCdAnimation() {
+  const steps = ['PR Opened', 'CI Tests', 'Staging Deploy', 'Smoke Tests', 'Prod Deploy']
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 24, padding: 20, background: 'var(--surface-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflowX: 'auto' }}>
+      {steps.map((s, i) => (
+        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <div style={{ background: '#22c55e18', border: '1px solid #22c55e40', borderRadius: 6, padding: '8px 12px', fontSize: '.78rem', fontWeight: 600, color: '#16a34a', textAlign: 'center', minWidth: 90 }}>{s}</div>
+          {i < steps.length - 1 && <div style={{ color: 'var(--text-3)', fontSize: '1.2rem' }}>→</div>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function DataContractAnimation() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center', marginBottom: 24, padding: 20, background: 'var(--surface-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+      <div style={{ background: '#4f8ef718', border: '1px solid #4f8ef740', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+        <div style={{ fontWeight: 700, color: '#4f8ef7', marginBottom: 8 }}>Producer</div>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-2)' }}>orders_events topic</div>
+        <div style={{ fontSize: '.72rem', color: 'var(--text-3)', marginTop: 4 }}>Owns schema definition</div>
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ background: '#f59e0b18', border: '1px solid #f59e0b', borderRadius: 8, padding: '8px 12px', fontSize: '.75rem', fontWeight: 700, color: '#d97706', marginBottom: 4 }}>Data Contract</div>
+        <div style={{ fontSize: '.7rem', color: 'var(--text-3)' }}>Avro Schema v2.1</div>
+        <div style={{ fontSize: '.7rem', color: 'var(--text-3)' }}>SLA: 99.9% uptime</div>
+      </div>
+      <div style={{ background: '#8b5cf618', border: '1px solid #8b5cf640', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+        <div style={{ fontWeight: 700, color: '#8b5cf6', marginBottom: 8 }}>Consumer</div>
+        <div style={{ fontSize: '.78rem', color: 'var(--text-2)' }}>analytics pipeline</div>
+        <div style={{ fontSize: '.72rem', color: 'var(--text-3)', marginTop: 4 }}>Subscribes to contract</div>
+      </div>
+    </div>
+  )
+}
+
+function ObservabilityAnimation() {
+  const pillars = [
+    { name: 'Metrics', color: '#4f8ef7', items: ['row_count', 'latency_p99', 'error_rate'] },
+    { name: 'Logs', color: '#22c55e', items: ['batch_started', 'batch_complete', 'batch_failed'] },
+    { name: 'Traces', color: '#f59e0b', items: ['ingest→transform', 'transform→write', 'end-to-end'] },
+  ]
+  return (
+    <div style={{ marginBottom: 24, padding: 20, background: 'var(--surface-1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 12 }}>
+        {pillars.map(p => (
+          <div key={p.name} style={{ background: p.color + '12', border: `1px solid ${p.color}40`, borderRadius: 8, padding: 12 }}>
+            <div style={{ fontWeight: 700, color: p.color, marginBottom: 8, fontSize: '.85rem' }}>{p.name}</div>
+            {p.items.map(item => <div key={item} style={{ fontSize: '.75rem', color: 'var(--text-2)', marginBottom: 3 }}>• {item}</div>)}
+          </div>
+        ))}
+      </div>
+      <div style={{ textAlign: 'center', fontSize: '.8rem', color: 'var(--text-3)' }}>↓ all signals flow to →</div>
+      <div style={{ background: '#ef444418', border: '1px solid #ef444440', borderRadius: 8, padding: 10, textAlign: 'center', marginTop: 8, fontSize: '.82rem', fontWeight: 600, color: '#dc2626' }}>Azure Monitor Dashboard + PagerDuty Alerts</div>
+    </div>
+  )
+}
+
+// ── SECTIONS ──────────────────────────────────────────────────────────────────
+
 const SECTIONS = [
   { title: 'Level 9 - Production DE', items: [
     { id: 'prod-architecture', label: 'Data Architecture Patterns' },
+    { id: 'prod-system-design', label: 'System Design for Data Platforms' },
+    { id: 'prod-pipeline-patterns', label: 'Pipeline Design Patterns' },
+    { id: 'prod-scd', label: 'Slowly Changing Dimensions' },
     { id: 'prod-cicd', label: 'CI/CD for Data Pipelines' },
+    { id: 'prod-testing', label: 'Testing Strategy' },
+    { id: 'prod-dbt', label: 'dbt (data build tool)' },
     { id: 'prod-terraform', label: 'Infrastructure as Code (Terraform)' },
-    { id: 'prod-testing', label: 'Testing Data Pipelines' },
-    { id: 'prod-observability', label: 'Observability and Monitoring' },
+    { id: 'prod-security', label: 'Security for Data Platforms' },
+    { id: 'prod-observability', label: 'Observability' },
+    { id: 'prod-monitoring', label: 'Pipeline Monitoring' },
+    { id: 'prod-disaster-recovery', label: 'Disaster Recovery' },
     { id: 'prod-cost', label: 'Cost Optimization' },
+    { id: 'prod-performance', label: 'Performance Engineering' },
+    { id: 'prod-data-contracts', label: 'Data Contracts' },
     { id: 'prod-patterns', label: 'Enterprise Patterns' },
+    { id: 'prod-interview-project', label: 'End-to-End Capstone Project' },
   ]},
 ]
 
@@ -28,324 +121,1892 @@ export default function Production({ completed, onComplete }: Props) {
     return () => observer.disconnect()
   }, [])
   const totalTopics = SECTIONS.flatMap(s => s.items).length
+  const completeBtn = (id: string) => (
+    <button onClick={async () => { await markTopicComplete(id); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+  )
 
   return (
     <div className="page-with-sidebar">
       <Sidebar sections={SECTIONS} activeId={activeId} completed={completed} totalTopics={totalTopics} onItemClick={scrollTo} />
       <main className="main-content">
 
+        {/* ── prod-architecture ── */}
         <section id="prod-architecture" ref={el => { if (el) sectionRefs.current['prod-architecture'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Data Architecture Patterns</h1>
-            <p className="topic-desc">Choosing the right architecture pattern depends on scale, latency requirements, team size, and organizational structure.</p>
+            <p className="topic-desc">Lambda, Kappa, Data Mesh, Lakehouse, and Data Fabric — knowing when to choose each architecture is one of the most important senior DE skills. Each solves a different problem at a different cost.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 16, marginBottom: 24 }}>
-            {[
-              { name: 'Lambda Architecture', desc: 'Batch layer (historical) + Speed layer (real-time) + Serving layer. Complex to maintain two codebases.', pro: 'Low latency + history', con: 'Duplicate logic', color: '#4f8ef7' },
-              { name: 'Kappa Architecture', desc: 'Everything is a stream. Replay historical data through streaming pipeline. Simpler - one codebase.', pro: 'Unified codebase', con: 'Streaming cost', color: '#8b5cf6' },
-              { name: 'Data Mesh', desc: 'Decentralized - domain teams own their data products. Central governance via Unity Catalog.', pro: 'Scales with org', con: 'Coordination overhead', color: '#22c55e' },
-              { name: 'Lakehouse (preferred)', desc: 'ADLS Gen2 + Delta Lake + Databricks. Combines data lake economics with warehouse performance. Current best practice.', pro: 'Best of both worlds', con: 'Databricks costs', color: '#f59e0b' },
-            ].map(p => (
-              <div key={p.name} style={{ background: 'white', border: `1.5px solid ${p.color}30`, borderTop: `3px solid ${p.color}`, borderRadius: 'var(--radius-lg)', padding: 16 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: p.color, marginBottom: 8 }}>{p.name}</div>
-                <div style={{ fontSize: '.82rem', color: 'var(--text-3)', lineHeight: 1.6, marginBottom: 10 }}>{p.desc}</div>
-                <div style={{ fontSize: '.75rem' }}>
-                  <span style={{ color: 'var(--green-600)', fontWeight: 600 }}>+ {p.pro}</span><br/>
-                  <span style={{ color: 'var(--red-500)', fontWeight: 600 }}>- {p.con}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ArchitectureAnimation />
+          <CodeBlock lang="text">{`ARCHITECTURE COMPARISON
+
+Lambda Architecture
+  Batch layer:  Spark jobs on HDFS/ADLS — full historical reprocessing
+  Speed layer:  Kafka Streams / Flink — low-latency recent data
+  Serving layer: Merged view (Redis + HBase / Cassandra)
+  Pro: Handles late data naturally; historical accuracy guaranteed
+  Con: Two codebases (batch + stream) that must produce identical results
+  When to use: Legacy systems; teams already invested in separate batch+stream
+
+Kappa Architecture (Jay Kreps, 2014)
+  Everything is a stream. Replay historical data by rewinding Kafka offset.
+  Single processing engine (Flink or Spark Structured Streaming) for all data.
+  Pro: One codebase, simpler operations, unified semantics
+  Con: Replay of years of data is expensive; stream processing harder to debug
+  When to use: New greenfield; event-sourced systems; Kafka-first orgs
+
+Data Mesh (Zhamak Dehghani, 2019)
+  Domain-oriented: each business domain owns its data products
+  Self-serve platform: central team provides infrastructure (Unity Catalog)
+  Federated governance: global policies + domain autonomy
+  Pro: Scales with org size; domain teams have context to build quality data
+  Con: Requires org maturity; data product quality varies; coordination overhead
+  When to use: Large orgs (500+ engineers); multiple domains with different needs
+
+Lakehouse (Databricks, 2020) ← Current best practice
+  ADLS Gen2 (cheap storage) + Delta Lake (ACID/MVCC) + Databricks (compute)
+  Combines data lake economics with data warehouse performance + governance
+  Pro: One copy of data; SQL + ML + streaming; Unity Catalog governance
+  Con: Vendor lock-in risk; Databricks DBU costs; not truly real-time (<5min)
+  When to use: Almost all new Azure data platform builds
+
+Data Fabric
+  Metadata-driven; AI/ML discovers and connects data across heterogeneous sources
+  Not a storage pattern — it's a management layer on top of existing systems
+  Pro: Works with existing investments; AI-assisted discovery
+  Con: Still maturing; vendor-heavy; complex to implement
+  When to use: Enterprise with many legacy systems needing unified discovery`}</CodeBlock>
           <Quiz topicId="prod-architecture" questions={[
-            { question: "What is the main advantage of Kappa over Lambda architecture?", options: ["Better performance", "Single unified codebase - no duplicate batch/streaming logic to maintain", "Lower cost", "Better data quality"], correct: 1 },
-            { question: "What is Data Mesh's core principle?", options: ["Centralized data team owns everything", "Domain teams own their data products; governance is federated", "One big data warehouse", "Real-time only processing"], correct: 1 },
+            { question: "What is the main advantage of Kappa over Lambda architecture?", options: ["Better performance for batch jobs", "Single unified codebase — no duplicate batch/streaming logic to maintain", "Lower storage costs", "Better handling of late-arriving data"], correct: 1 },
+            { question: "In a Data Mesh, who owns the data products?", options: ["The central data platform team", "Domain teams who have business context for that data", "The data governance committee", "The infrastructure team"], correct: 1 },
+            { question: "What makes the Lakehouse architecture different from a traditional data warehouse?", options: ["It uses SQL instead of Python", "Open file format (Delta/Parquet) on cheap object storage — supports BI, ML, and streaming from one copy of data", "It requires no schema definition", "It only works with real-time data"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('prod-architecture'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          {completeBtn('prod-architecture')}
         </section>
 
+        {/* ── prod-system-design ── */}
+        <section id="prod-system-design" ref={el => { if (el) sectionRefs.current['prod-system-design'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">System Design for Data Platforms</h1>
+            <p className="topic-desc">Capacity planning, scalability, fault tolerance, CAP theorem applied to data systems, eventual consistency, backpressure handling, and rate limiting — the building blocks of resilient data platforms.</p>
+          </div>
+          <CodeBlock lang="text">{`CAP THEOREM FOR DATA SYSTEMS
+═══════════════════════════════════════════════════════════════
+Pick 2 of 3: Consistency · Availability · Partition Tolerance
+
+Network partitions ALWAYS happen in distributed systems → you choose C or A.
+
+CP (Consistency + Partition Tolerance) — data is always correct, may be unavailable
+  Examples: HBase, Zookeeper, etcd
+  Data use case: Financial ledgers, inventory counts, user balances
+  Trade-off: Writes blocked during partition; replica lag unacceptable
+
+AP (Availability + Partition Tolerance) — always responds, may return stale data
+  Examples: Cassandra (tunable), DynamoDB, Kafka consumer offsets
+  Data use case: User activity feeds, event streams, recommendation counts
+  Trade-off: Eventual consistency; reads may return old values
+
+PACELC Extension: Even without partition, choose between Latency and Consistency
+  Delta Lake with OPTIMIZE: PA/EL — available + low latency
+  Delta Lake with strong isolation: PC/EC — consistent + higher latency
+
+EVENTUAL CONSISTENCY PATTERNS
+═══════════════════════════════════════════════════════════════
+Read-your-writes: after a write, the same user always reads their own write
+  Implementation: route user reads to same shard or add version check
+
+Monotonic reads: user never sees older data after seeing newer
+  Implementation: sticky sessions or version vectors
+
+Causal consistency: causally related operations seen in order
+  Implementation: vector clocks or Kafka partition ordering`}</CodeBlock>
+          <CodeBlock lang="python">{`# BACKPRESSURE HANDLING in Spark Structured Streaming
+# Without backpressure: Kafka lag grows → OOM on executors
+
+spark.conf.set("spark.streaming.kafka.maxRatePerPartition", "1000")  # Spark Streaming
+# For Structured Streaming — use maxOffsetsPerTrigger:
+query = (
+    df.readStream
+    .format("kafka")
+    .option("kafka.bootstrap.servers", "broker:9092")
+    .option("subscribe", "orders")
+    .option("maxOffsetsPerTrigger", 50_000)      # backpressure: cap batch size
+    .option("startingOffsets", "latest")
+    .load()
+    .writeStream
+    .trigger(processingTime="30 seconds")         # micro-batch every 30s
+    .option("checkpointLocation", "/checkpoints/orders")
+    .toTable("silver.orders_stream")
+)
+
+# RATE LIMITING for REST API ingestion
+import time
+from functools import wraps
+
+class RateLimiter:
+    def __init__(self, calls_per_second: float):
+        self.min_interval = 1.0 / calls_per_second
+        self.last_call = 0.0
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            elapsed = time.monotonic() - self.last_call
+            if elapsed < self.min_interval:
+                time.sleep(self.min_interval - elapsed)
+            self.last_call = time.monotonic()
+            return func(*args, **kwargs)
+        return wrapper
+
+@RateLimiter(calls_per_second=10)   # max 10 API calls/sec
+def fetch_page(url: str, session) -> dict:
+    resp = session.get(url, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
+
+# CAPACITY PLANNING — cluster sizing formula
+# Required cores = (daily_records / seconds_in_day) * processing_time_per_record * safety_factor
+# Example: 10M records/day, 0.1ms/record, 2x safety
+cores_needed = (10_000_000 / 86_400) * 0.0001 * 2   # ≈ 23 cores
+# Round up to next instance size: 4 x Standard_DS4_v2 (8 cores each) = 32 cores
+
+# FAULT TOLERANCE: idempotent writes + checkpointing
+spark.sparkContext.setCheckpointDir("/checkpoints")  # RDD checkpointing
+# Delta Lake: use foreachBatch with idempotent MERGE for exactly-once semantics`}</CodeBlock>
+          <Quiz topicId="prod-system-design" questions={[
+            { question: "In CAP theorem, why can't you have all three — Consistency, Availability, and Partition Tolerance?", options: ["It's a hardware limitation", "Network partitions always occur in distributed systems, so you must choose between consistency and availability when a partition happens", "You need a license for all three", "CAP only applies to databases, not data pipelines"], correct: 1 },
+            { question: "What does setting maxOffsetsPerTrigger in Spark Structured Streaming accomplish?", options: ["It sets the maximum number of partitions", "It implements backpressure — caps how many Kafka messages are processed per micro-batch, preventing executor OOM", "It limits the number of concurrent queries", "It controls the checkpoint frequency"], correct: 1 },
+            { question: "What is the key formula for cluster capacity planning?", options: ["Cores = RAM / 4", "Required cores = (records/second) × (processing_time_per_record) × safety_factor", "Cores = number of partitions", "Cores = daily_records / 1,000,000"], correct: 1 },
+          ]} />
+          {completeBtn('prod-system-design')}
+        </section>
+
+        {/* ── prod-pipeline-patterns ── */}
+        <section id="prod-pipeline-patterns" ref={el => { if (el) sectionRefs.current['prod-pipeline-patterns'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Pipeline Design Patterns</h1>
+            <p className="topic-desc">Medallion architecture, idempotency, exactly-once semantics, fan-out/fan-in, and event-driven triggers — patterns that separate amateur pipelines from production-grade ones.</p>
+          </div>
+          <CodeBlock lang="text">{`MEDALLION ARCHITECTURE (Bronze → Silver → Gold)
+═══════════════════════════════════════════════════════════════
+Bronze (Raw): Exact copy of source data, immutable, append-only
+  - No transformations; preserve all source columns including bad data
+  - Partition by ingest_date; retain forever (cheap ADLS storage)
+  - Schema: source columns + _ingest_ts, _source_file, _batch_id
+
+Silver (Cleaned): Validated, deduplicated, typed, enriched
+  - Apply data quality rules; reject/quarantine bad records
+  - Join lookup tables; standardize enums; cast data types
+  - Deduplicate using window functions or MERGE INTO
+  - Schema: clean business columns + _silver_ts, _is_valid, _dq_flags
+
+Gold (Aggregated): Business-ready aggregates and dimensional models
+  - Fact tables, dimension tables, wide denormalized tables for BI
+  - Optimized for query performance (Z-ORDER, bloom filters)
+  - Updated on business schedule (daily/hourly); SLA-governed
+
+IDEMPOTENCY PATTERNS
+═══════════════════════════════════════════════════════════════
+A pipeline is idempotent if running it N times = running it once (same result).
+Critical for safe retries — ADF retries failed activities automatically.
+
+Pattern 1: Overwrite by partition
+  spark.write.mode("overwrite").option("partitionOverwriteMode","dynamic").save(path)
+  Replaces only the partitions being written; safe to re-run for same date.
+
+Pattern 2: MERGE INTO (upsert)
+  Match on natural key; update if changed; insert if new.
+  Guarantees no duplicates even if pipeline runs twice.
+
+Pattern 3: Truncate + reload (for small dimensions)
+  DELETE FROM gold.dim_product; INSERT INTO gold.dim_product SELECT ...
+  Simple, predictable, works well for tables < 10M rows.
+
+FAN-OUT / FAN-IN
+═══════════════════════════════════════════════════════════════
+Fan-out: one upstream table → multiple downstream pipelines in parallel
+  ADF: ForEach activity with parallel execution
+  Use case: daily order snapshot → feed 5 different business unit reports
+
+Fan-in: multiple upstream sources → one downstream aggregate
+  ADF: Wait activity after parallel branches
+  Use case: sales + returns + adjustments → net revenue fact table
+  Risk: slowest upstream blocks all; add timeout + partial-load logic`}</CodeBlock>
+          <CodeBlock lang="python">{`# IDEMPOTENT BRONZE LOAD — safe to re-run for same batch
+from delta.tables import DeltaTable
+from pyspark.sql import functions as F
+
+def load_bronze_idempotent(source_path: str, batch_id: str, target_table: str):
+    df = (spark.read.format("json").load(source_path)
+          .withColumn("_ingest_ts", F.current_timestamp())
+          .withColumn("_batch_id", F.lit(batch_id))
+          .withColumn("_source_file", F.input_file_name()))
+
+    # Delete existing records for this batch_id first (idempotent)
+    if DeltaTable.isDeltaTable(spark, target_table):
+        spark.sql(f"DELETE FROM {target_table} WHERE _batch_id = '{batch_id}'")
+
+    df.write.format("delta").mode("append").saveAsTable(target_table)
+
+# SILVER DEDUP + QUALITY — MERGE pattern
+def silver_upsert(bronze_df, target_table: str, key_cols: list[str]):
+    # Quality check
+    valid = bronze_df.filter(F.col("order_id").isNotNull() & (F.col("amount") > 0))
+    invalid = bronze_df.subtract(valid).withColumn("_dq_flag", F.lit("null_key_or_negative_amount"))
+
+    # Write quarantine
+    invalid.write.format("delta").mode("append").saveAsTable(f"{target_table}_quarantine")
+
+    # Upsert valid records
+    if DeltaTable.isDeltaTable(spark, target_table):
+        target = DeltaTable.forName(spark, target_table)
+        merge_cond = " AND ".join([f"t.{c} = s.{c}" for c in key_cols])
+        (target.alias("t")
+         .merge(valid.alias("s"), merge_cond)
+         .whenMatchedUpdateAll()
+         .whenNotMatchedInsertAll()
+         .execute())
+    else:
+        valid.write.format("delta").saveAsTable(target_table)
+
+# EVENT-DRIVEN TRIGGER using Azure Event Grid + ADF
+# Storage account fires event when new file lands in Bronze container
+# Event Grid routes to ADF webhook trigger → pipeline starts automatically
+# No polling; near-zero latency; pay per execution only`}</CodeBlock>
+          <Quiz topicId="prod-pipeline-patterns" questions={[
+            { question: "Why is idempotency critical for production data pipelines?", options: ["It makes pipelines faster", "It ensures pipelines can be safely retried without creating duplicate or incorrect data", "It reduces storage costs", "It enables parallel execution"], correct: 1 },
+            { question: "What is the key difference between Bronze and Silver layers in the Medallion architecture?", options: ["Bronze uses Parquet, Silver uses Delta", "Bronze is raw/immutable source data; Silver is validated, deduplicated, and typed", "Bronze is for batch data, Silver is for streaming", "Bronze is compressed, Silver is uncompressed"], correct: 1 },
+            { question: "In a fan-in pattern, what is the main risk?", options: ["Data duplication", "The slowest upstream source blocks the entire downstream pipeline", "Too many parallel connections", "Schema conflicts"], correct: 1 },
+          ]} />
+          {completeBtn('prod-pipeline-patterns')}
+        </section>
+
+        {/* ── prod-scd ── */}
+        <section id="prod-scd" ref={el => { if (el) sectionRefs.current['prod-scd'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Slowly Changing Dimensions</h1>
+            <p className="topic-desc">SCD Types 1–6, implementation patterns in Delta Lake, and how to choose the right type based on business requirements for historical tracking.</p>
+          </div>
+          <CodeBlock lang="text">{`SLOWLY CHANGING DIMENSIONS (SCD) — DECISION GUIDE
+═══════════════════════════════════════════════════════════════
+SCD Type 0 — Retain Original
+  Never update; keep the original value forever.
+  Use: date of birth, original signup source
+
+SCD Type 1 — Overwrite (no history)
+  Update in place; old value is lost.
+  Use: fixing typos, correcting obvious errors, current-state-only reporting
+  Implementation: MERGE INTO ... WHEN MATCHED THEN UPDATE SET ...
+
+SCD Type 2 — Add New Row (full history) ← most common
+  Add new row with new values; mark old row as expired.
+  Columns needed: is_current BOOLEAN, effective_from DATE, effective_to DATE
+  Surrogate key links fact table to correct dimension version at event time.
+  Use: customer address, product category, employee department
+
+SCD Type 3 — Add New Column (limited history)
+  Keep current AND previous value in separate columns.
+  Use: when you only ever need one previous value (current_region, prev_region)
+  Limitation: only 1 level of history; schema change for each tracked attribute
+
+SCD Type 4 — History Table
+  Current values in main table; all changes in separate history table.
+  Use: high-change-frequency dims where you rarely query history
+
+SCD Type 6 — Hybrid (1+2+3)
+  Combines: overwrite current cols (Type 1) + new row per change (Type 2)
+           + add current value column to historical rows (Type 3)
+  Allows: "what was customer's current address when they ordered?" +
+          "what is their address today?" — answered from same row
+  Use: customer dim in large enterprise DW`}</CodeBlock>
+          <CodeBlock lang="python">{`# SCD TYPE 2 IMPLEMENTATION WITH DELTA LAKE
+from delta.tables import DeltaTable
+from pyspark.sql import functions as F, Window
+
+def apply_scd2(updates_df, target_table: str, key_col: str, track_cols: list[str]):
+    """
+    updates_df: latest snapshot from source (one row per key)
+    target_table: Delta table with SCD2 structure
+    key_col: natural key (e.g. customer_id)
+    track_cols: columns that trigger a new version when changed
+    """
+    today = F.current_date()
+
+    if not DeltaTable.isDeltaTable(spark, target_table):
+        # Initial load
+        (updates_df
+         .withColumn("is_current", F.lit(True))
+         .withColumn("effective_from", today)
+         .withColumn("effective_to", F.lit("9999-12-31").cast("date"))
+         .withColumn("surrogate_key", F.monotonically_increasing_id())
+         .write.format("delta").saveAsTable(target_table))
+        return
+
+    target = DeltaTable.forName(spark, target_table)
+    target_df = target.toDF().filter("is_current = true")
+
+    # Find records that changed
+    join_cond = target_df[key_col] == updates_df[key_col]
+    change_filter = F.expr(" OR ".join([f"t.{c} != s.{c}" for c in track_cols]))
+
+    changed = (target_df.alias("t")
+               .join(updates_df.alias("s"), join_cond)
+               .filter(change_filter)
+               .select("t.*"))
+
+    new_records = (target_df.alias("t")
+                   .join(updates_df.alias("s"), join_cond, "right")
+                   .filter(F.col(f"t.{key_col}").isNull())
+                   .select("s.*"))
+
+    # Expire old rows
+    expired_keys = [row[key_col] for row in changed.select(key_col).collect()]
+    if expired_keys:
+        (target.update(
+            condition=f"{key_col} IN ({','.join(map(str, expired_keys))}) AND is_current = true",
+            set={"is_current": "false", "effective_to": str(today)}
+        ))
+
+    # Insert new versions for changed + new records
+    inserts = (updates_df
+               .filter(F.col(key_col).isin(expired_keys) | F.col(key_col).isin(
+                   [r[key_col] for r in new_records.select(key_col).collect()]))
+               .withColumn("is_current", F.lit(True))
+               .withColumn("effective_from", today)
+               .withColumn("effective_to", F.lit("9999-12-31").cast("date"))
+               .withColumn("surrogate_key", F.monotonically_increasing_id()))
+
+    inserts.write.format("delta").mode("append").saveAsTable(target_table)
+
+# QUERY: what was the customer's region when they placed order on 2024-03-15?
+spark.sql("""
+  SELECT o.order_id, c.region
+  FROM gold.fact_orders o
+  JOIN gold.dim_customer c
+    ON o.customer_surrogate_key = c.surrogate_key
+  -- OR with date range join (slower but natural-key-based):
+  -- ON o.customer_id = c.customer_id
+  -- AND o.order_date BETWEEN c.effective_from AND c.effective_to
+""")`}</CodeBlock>
+          <Quiz topicId="prod-scd" questions={[
+            { question: "Which SCD type should you use when you need to track the full history of customer address changes over time?", options: ["SCD Type 1 — overwrite in place", "SCD Type 2 — add a new row per change with effective dates", "SCD Type 3 — add a previous_address column", "SCD Type 0 — never update"], correct: 1 },
+            { question: "What columns are typically added to a dimension table to support SCD Type 2?", options: ["version_number only", "is_current, effective_from, effective_to, and a surrogate key", "created_at and updated_at", "delta_version and snapshot_date"], correct: 1 },
+            { question: "What is the trade-off of SCD Type 1 vs Type 2?", options: ["Type 1 is slower but more accurate", "Type 1 is simple but loses history; Type 2 preserves full history but doubles rows and requires surrogate key joins", "Type 1 requires more storage than Type 2", "They are equivalent — just different naming conventions"], correct: 1 },
+          ]} />
+          {completeBtn('prod-scd')}
+        </section>
+
+        {/* ── prod-cicd ── */}
         <section id="prod-cicd" ref={el => { if (el) sectionRefs.current['prod-cicd'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">CI/CD for Data Pipelines</h1>
+            <p className="topic-desc">Automating deployment of ADF pipelines, Databricks notebooks, and dbt models with Azure DevOps. Blue/green deployments, feature flags, and safe rollback strategies.</p>
           </div>
-          <CodeBlock lang="yaml">{`# .github/workflows/deploy-pipeline.yml
-name: Deploy Data Pipeline
+          <CiCdAnimation />
+          <CodeBlock lang="yaml">{`# azure-pipelines.yml — CI/CD for Databricks + ADF
+trigger:
+  branches:
+    include: [main, release/*]
+  paths:
+    include: [databricks/**, adf/**, dbt/**]
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+variables:
+  - group: data-platform-secrets   # Key Vault linked variable group
+  - name: databricksHost
+    value: "https://adb-xxx.azuredatabricks.net"
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install pyspark pytest great_expectations
-      - run: pytest tests/ -v --tb=short
-      - run: python -m py_compile src/**/*.py
+stages:
+  # ─── CI Stage ───────────────────────────────────────────────────
+  - stage: CI
+    jobs:
+      - job: UnitTests
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: UsePythonVersion@0
+            inputs: { versionSpec: '3.11' }
+          - script: pip install pytest pyspark delta-spark great-expectations
+          - script: pytest tests/unit/ -v --tb=short --junitxml=test-results.xml
+          - task: PublishTestResults@2
+            inputs: { testResultsFiles: test-results.xml }
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip install ruff mypy
-      - run: ruff check src/
-      - run: mypy src/ --ignore-missing-imports
+      - job: LintAndTypeCheck
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - script: pip install ruff mypy
+          - script: ruff check databricks/ dbt/
+          - script: mypy databricks/ --ignore-missing-imports
 
-  deploy-staging:
-    needs: [test, lint]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to Databricks Staging
-        run: |
-          pip install databricks-cli
-          databricks workspace import-dir notebooks/ /Pipelines/ --overwrite
-          databricks jobs reset --job-id $STAGING_JOB_ID --json @job_config.json
-        env:
-          DATABRICKS_HOST: \$\{\{ secrets.DATABRICKS_HOST_STAGING \}\}
-          DATABRICKS_TOKEN: \$\{\{ secrets.DATABRICKS_TOKEN_STAGING \}\}`}</CodeBlock>
+      - job: DbtCompile
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - script: pip install dbt-databricks
+          - script: dbt compile --profiles-dir .dbt --target ci
+
+  # ─── Deploy to Staging ──────────────────────────────────────────
+  - stage: Staging
+    dependsOn: CI
+    condition: succeeded()
+    jobs:
+      - deployment: DeployDatabricks
+        environment: staging
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    # Upload notebooks via Databricks CLI
+                    databricks workspace import_dir databricks/notebooks /Shared/pipelines \
+                      --host $(databricksHost) --token $(DATABRICKS_TOKEN) --overwrite
+                    # Deploy job definitions
+                    databricks jobs reset --job-id $(STAGING_JOB_ID) \
+                      --json @databricks/jobs/silver_orders.json
+
+      - deployment: DeployADF
+        environment: staging
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureResourceManagerTemplateDeployment@3
+                  inputs:
+                    deploymentScope: Resource Group
+                    azureResourceManagerConnection: svc-adf-staging
+                    resourceGroupName: rg-data-staging
+                    location: eastus
+                    templateLocation: Linked artifact
+                    csmFile: adf/ARMTemplateForFactory.json
+                    csmParametersFile: adf/ARMTemplateParametersForFactory.staging.json
+
+  # ─── Integration Tests ──────────────────────────────────────────
+  - stage: IntegrationTests
+    dependsOn: Staging
+    jobs:
+      - job: SmokeTest
+        steps:
+          - script: pytest tests/integration/ -v --env=staging
+
+  # ─── Deploy to Production ───────────────────────────────────────
+  - stage: Production
+    dependsOn: IntegrationTests
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProd
+        environment: production    # requires manual approval gate
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: databricks jobs reset --job-id $(PROD_JOB_ID) --json @databricks/jobs/silver_orders.json`}</CodeBlock>
+          <CodeBlock lang="python">{`# BLUE/GREEN DEPLOYMENT for Delta tables
+# Blue = current production; Green = new version being validated
+
+# Step 1: Write new version to green table
+spark.sql("""
+  CREATE OR REPLACE TABLE gold.fact_orders_green
+  AS SELECT * FROM silver.orders_cleaned
+  WHERE processing_version = 'v2'
+""")
+
+# Step 2: Run validation
+row_count_diff = spark.sql("""
+  SELECT
+    (SELECT COUNT(*) FROM gold.fact_orders_green) AS green,
+    (SELECT COUNT(*) FROM gold.fact_orders) AS blue
+""").collect()[0]
+
+if abs(row_count_diff.green - row_count_diff.blue) / row_count_diff.blue > 0.01:
+    raise ValueError("Row count divergence > 1% — aborting cutover")
+
+# Step 3: Atomic cutover using Delta table clone + rename
+spark.sql("ALTER TABLE gold.fact_orders RENAME TO gold.fact_orders_blue_backup")
+spark.sql("ALTER TABLE gold.fact_orders_green RENAME TO gold.fact_orders")
+# Rollback: ALTER TABLE gold.fact_orders RENAME TO gold.fact_orders_green_failed
+#           ALTER TABLE gold.fact_orders_blue_backup RENAME TO gold.fact_orders
+
+# FEATURE FLAGS for gradual rollout
+import os
+
+FEATURE_FLAGS = {
+    "use_v2_dedup_logic": os.getenv("FF_V2_DEDUP", "false").lower() == "true",
+    "enable_streaming_silver": os.getenv("FF_STREAMING_SILVER", "false").lower() == "true",
+}
+
+def process_orders(df):
+    if FEATURE_FLAGS["use_v2_dedup_logic"]:
+        return dedup_v2(df)   # new logic, tested on 10% of traffic
+    return dedup_v1(df)        # stable production logic`}</CodeBlock>
           <Quiz topicId="prod-cicd" questions={[
-            { question: "In a CI/CD pipeline, what should run on every Pull Request?", options: ["Deploy to production", "Tests, linting, and type checking to catch issues before merge", "Only documentation builds", "Performance benchmarks only"], correct: 1 },
-            { question: "Why should secrets like Databricks tokens not be in GitHub workflow files?", options: ["They make files too large", "They would be exposed in git history - use GitHub Secrets instead", "GitHub doesn't support tokens", "They slow down CI"], correct: 1 },
+            { question: "What is the purpose of a manual approval gate in a CI/CD pipeline?", options: ["To slow down deployments deliberately", "To require a human to explicitly approve before deploying to production, preventing accidental releases", "To run additional automated tests", "To notify stakeholders via email"], correct: 1 },
+            { question: "What is blue/green deployment in the context of data pipelines?", options: ["Using two different cloud providers", "Maintaining two versions of a table simultaneously — validating the new (green) before atomically switching production traffic to it", "Coloring code by environment", "Running batch and streaming in parallel"], correct: 1 },
+            { question: "Why should CI/CD pipelines for data include integration tests against staging, not just unit tests?", options: ["Unit tests are not useful for data pipelines", "Integration tests catch issues like schema mismatches, connectivity failures, and data quality problems that only appear with real infrastructure", "Staging tests are faster than unit tests", "Unit tests cannot test Python code"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('prod-cicd'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          {completeBtn('prod-cicd')}
         </section>
 
-        <section id="prod-terraform" ref={el => { if (el) sectionRefs.current['prod-terraform'] = el }} className="topic-section">
-          <div className="topic-header">
-            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
-            <h1 className="topic-title">Infrastructure as Code with Terraform</h1>
-          </div>
-          <CodeBlock lang="hcl">{`# main.tf - Azure Data Platform infrastructure
-terraform {
-  required_providers {
-    azurerm    = { source = "hashicorp/azurerm",    version = "~> 3.80" }
-    databricks = { source = "databricks/databricks", version = "~> 1.30" }
-  }
-  backend "azurerm" {
-    resource_group_name  = "tf-state-rg"
-    storage_account_name = "tfstateaccount"
-    container_name       = "tfstate"
-    key                  = "de-platform.tfstate"
-  }
-}
-
-# ADLS Gen2 Storage Account
-resource "azurerm_storage_account" "datalake" {
-  name                     = "dedatalake\${var.env}"
-  resource_group_name      = azurerm_resource_group.main.name
-  location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  is_hns_enabled           = true  # REQUIRED for ADLS Gen2
-
-  network_rules {
-    default_action = "Deny"
-    virtual_network_subnet_ids = [azurerm_subnet.databricks_private.id]
-  }
-}
-
-# Databricks Workspace
-resource "azurerm_databricks_workspace" "main" {
-  name                = "databricks-\${var.env}"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = var.location
-  sku                 = "premium"
-
-  custom_parameters {
-    virtual_network_id                                   = azurerm_virtual_network.main.id
-    public_subnet_name                                   = azurerm_subnet.databricks_public.name
-    private_subnet_name                                  = azurerm_subnet.databricks_private.name
-    no_public_ip                                         = true  # secure cluster connectivity
-  }
-}`}</CodeBlock>
-          <Quiz topicId="prod-terraform" questions={[
-            { question: "Why use Terraform remote state (backend) instead of local state?", options: ["It's faster", "Team members share state file; prevents concurrent modifications; survives local machine loss", "Required by Azure", "It enables plan mode"], correct: 1 },
-            { question: "What does is_hns_enabled = true do in an Azure storage account?", options: ["Enables HTTPS", "Enables Hierarchical Namespace (required for ADLS Gen2 features)", "Enables hot storage tier", "Enables network rules"], correct: 1 },
-          ]} />
-          <button onClick={async () => { await markTopicComplete('prod-terraform'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
-        </section>
-
+        {/* ── prod-testing ── */}
         <section id="prod-testing" ref={el => { if (el) sectionRefs.current['prod-testing'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
-            <h1 className="topic-title">Testing Data Pipelines</h1>
+            <h1 className="topic-title">Testing Strategy</h1>
+            <p className="topic-desc">Unit tests with PySpark, data quality validation with Great Expectations, contract testing, and the testing pyramid for data pipelines — how to ship with confidence.</p>
           </div>
-          <CodeBlock lang="python">{`import pytest
+          <CodeBlock lang="text">{`TESTING PYRAMID FOR DATA PIPELINES
+═══════════════════════════════════════════════════════════════
+          [E2E Tests]         ← few, slow, expensive
+         [Integration]        ← moderate, catch real env issues
+        [Unit Tests]          ← many, fast, cheap, run on every PR
+       [Data Quality]         ← continuous, run in production
+
+Unit Tests (pytest + PySpark local mode)
+  Test transformation logic in isolation
+  Use small DataFrames created in code; no external dependencies
+  Fast: < 30 seconds for full suite
+  Examples: dedup logic, null handling, column derivations, edge cases
+
+Integration Tests (pytest + real Databricks/staging)
+  Test full pipeline end-to-end against staging data
+  Verify: schema, row counts, referential integrity, SLA timing
+  Run on PR merge to main; gate production deployment
+
+Data Quality (Great Expectations / dbt tests)
+  Run after every pipeline execution in production
+  Alert on: null rates, range violations, referential integrity, freshness
+  Log results to Delta table for trend analysis
+
+Contract Tests
+  Verify producer schema hasn't broken consumer expectations
+  Automate with Schema Registry (Confluent) or custom checks
+  Fail CI if producer removes/renames columns consumers depend on`}</CodeBlock>
+          <CodeBlock lang="python">{`# UNIT TESTS with pytest + PySpark
+import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, LongType, StringType, DecimalType
-from decimal import Decimal
+from pyspark.sql import functions as F
+from your_pipeline.transforms import clean_orders, dedup_orders
 
 @pytest.fixture(scope="session")
 def spark():
-    return SparkSession.builder.master("local[2]").appName("test").getOrCreate()
+    return (SparkSession.builder
+            .master("local[2]")
+            .appName("unit-tests")
+            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+            .getOrCreate())
 
-def test_silver_deduplication(spark):
-    """Verify deduplication removes exact duplicates."""
-    schema = StructType([
-        StructField("event_id", LongType()),
-        StructField("user_id", LongType()),
-        StructField("amount", DecimalType(18, 2))
+def test_clean_orders_drops_null_order_id(spark):
+    raw = spark.createDataFrame([
+        {"order_id": "A1", "amount": 100.0},
+        {"order_id": None, "amount": 50.0},   # should be dropped
+        {"order_id": "A3", "amount": 0.0},    # zero amount — keep but flag
     ])
-    input_data = [(1, 100, Decimal("50.00")), (1, 100, Decimal("50.00")), (2, 101, Decimal("100.00"))]
-    df = spark.createDataFrame(input_data, schema)
+    result = clean_orders(raw)
+    assert result.filter(F.col("order_id").isNull()).count() == 0
+    assert result.count() == 2  # null row removed
 
-    result = deduplicate_events(df)
+def test_dedup_orders_keeps_latest(spark):
+    dupes = spark.createDataFrame([
+        {"order_id": "A1", "updated_at": "2024-01-01", "status": "pending"},
+        {"order_id": "A1", "updated_at": "2024-01-02", "status": "shipped"},  # latest
+        {"order_id": "A2", "updated_at": "2024-01-01", "status": "pending"},
+    ])
+    result = dedup_orders(dupes, key="order_id", ts_col="updated_at")
+    a1 = result.filter(F.col("order_id") == "A1").collect()[0]
+    assert a1["status"] == "shipped"
+    assert result.count() == 2
 
-    assert result.count() == 2, f"Expected 2 rows after dedup, got {result.count()}"
-    assert result.filter("event_id = 1").count() == 1
+def test_clean_orders_casts_amount_to_decimal(spark):
+    raw = spark.createDataFrame([{"order_id": "A1", "amount": "99.99"}])
+    result = clean_orders(raw)
+    assert dict(result.dtypes)["amount"] in ("decimal(18,2)", "double")
 
-def test_null_amount_rejected(spark):
-    """Verify null amounts fail the DQ expectation."""
-    data = [(1, 100, None), (2, 101, Decimal("50.00"))]
-    df = spark.createDataFrame(data, ["event_id", "user_id", "amount"])
-    result = apply_data_quality(df)
-    assert result.filter("amount IS NULL").count() == 0
-
-# Great Expectations for production DQ
+# DATA QUALITY with Great Expectations
 import great_expectations as gx
 
 context = gx.get_context()
 batch = context.sources.pandas_default.read_dataframe(df.toPandas())
-suite = context.add_expectation_suite("silver.events")
-suite.expect_column_values_to_not_be_null("event_id")
-suite.expect_column_values_to_be_between("amount", 0, 1_000_000)
-suite.expect_column_values_to_be_in_set("status", {"pending", "complete", "cancelled"})`}</CodeBlock>
+
+results = batch.validate(
+    expectation_suite=gx.ExpectationSuite(
+        expectations=[
+            gx.expectations.ExpectColumnValuesToNotBeNull(column="order_id"),
+            gx.expectations.ExpectColumnValuesToBeBetween(column="amount", min_value=0, max_value=1_000_000),
+            gx.expectations.ExpectColumnValuesToBeUnique(column="order_id"),
+            gx.expectations.ExpectTableRowCountToBeBetween(min_value=1000, max_value=10_000_000),
+        ]
+    )
+)
+
+if not results.success:
+    failed = [r for r in results.results if not r.success]
+    raise ValueError(f"Data quality check failed: {[r.expectation_config.type for r in failed]}")`}</CodeBlock>
           <Quiz topicId="prod-testing" questions={[
-            { question: "Why use scope='session' for the Spark fixture in pytest?", options: ["Required by PySpark", "Create one SparkSession shared across all tests, avoiding expensive startup per test", "Enables parallel tests", "For fixture cleanup"], correct: 1 },
-            { question: "What is Great Expectations used for?", options: ["Unit testing business logic", "Declarative data quality validation - define expectations, run against data, generate reports", "Load testing pipelines", "Schema migration"], correct: 1 },
+            { question: "Why should unit tests for Spark transformations use small DataFrames created in code rather than reading from files?", options: ["File reads are not supported in test environments", "In-memory DataFrames make tests fast, deterministic, and independent of external data sources", "Spark cannot read files in local mode", "Files are too large for unit tests"], correct: 1 },
+            { question: "What is the purpose of data quality tests that run in production (not just CI)?", options: ["To replace unit tests", "To continuously validate that production data meets business rules — catching upstream changes, schema drift, and data corruption that CI cannot simulate", "To test the CI pipeline itself", "To measure pipeline performance"], correct: 1 },
+            { question: "What does a contract test verify?", options: ["That the pipeline completes within SLA", "That a producer's schema changes haven't broken downstream consumers who depend on specific columns/types", "That unit tests pass", "That data is encrypted"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('prod-testing'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          {completeBtn('prod-testing')}
         </section>
 
+        {/* ── prod-dbt ── */}
+        <section id="prod-dbt" ref={el => { if (el) sectionRefs.current['prod-dbt'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">dbt (data build tool)</h1>
+            <p className="topic-desc">dbt transforms raw data in your warehouse using SQL. It handles dependency resolution, testing, documentation, and lineage — the backbone of the modern data stack's transformation layer.</p>
+          </div>
+          <CodeBlock lang="yaml">{`# dbt project structure
+my_project/
+  dbt_project.yml          # project config
+  profiles.yml             # connection config (gitignored)
+  models/
+    staging/               # 1:1 with source tables, light cleaning
+      stg_orders.sql
+      stg_customers.sql
+      schema.yml           # column descriptions + tests
+    intermediate/          # business logic, joins
+      int_orders_with_customer.sql
+    marts/                 # final business-ready tables
+      finance/
+        fct_revenue.sql
+        dim_customer.sql
+  tests/                   # custom data tests (singular tests)
+  macros/                  # reusable SQL functions
+  seeds/                   # static CSV data (lookup tables)
+  snapshots/               # SCD Type 2 via dbt snapshot
+
+# dbt_project.yml
+name: my_project
+version: '1.0.0'
+config-version: 2
+profile: databricks_prod
+
+models:
+  my_project:
+    staging:
+      +materialized: view          # staging = views (no storage cost)
+      +schema: staging
+    intermediate:
+      +materialized: ephemeral     # compiled inline, no table created
+    marts:
+      +materialized: table         # gold layer = physical tables
+      finance:
+        +materialized: incremental # large fact tables = incremental`}</CodeBlock>
+          <CodeBlock lang="sql">{`-- models/staging/stg_orders.sql
+-- Staging: rename, cast, add _loaded_at
+WITH source AS (
+    SELECT * FROM {{ source('raw', 'orders') }}   -- ref to source definition
+),
+renamed AS (
+    SELECT
+        order_id::VARCHAR       AS order_id,
+        customer_id::VARCHAR    AS customer_id,
+        order_date::DATE        AS order_date,
+        total_amount::DECIMAL(18,2) AS total_amount,
+        status::VARCHAR         AS status,
+        _ingest_ts              AS _loaded_at
+    FROM source
+)
+SELECT * FROM renamed
+
+-- models/marts/finance/fct_revenue.sql (incremental)
+{{
+  config(
+    materialized='incremental',
+    unique_key='order_id',
+    incremental_strategy='merge',
+    on_schema_change='append_new_columns'
+  )
+}}
+
+WITH orders AS (
+    SELECT * FROM {{ ref('stg_orders') }}
+    {% if is_incremental() %}
+        WHERE order_date >= (SELECT MAX(order_date) FROM {{ this }}) - INTERVAL 3 DAYS
+    {% endif %}
+),
+customers AS (SELECT * FROM {{ ref('dim_customer') }}),
+final AS (
+    SELECT
+        o.order_id,
+        o.order_date,
+        o.total_amount,
+        c.customer_segment,
+        c.region,
+        CURRENT_TIMESTAMP() AS _dbt_updated_at
+    FROM orders o
+    LEFT JOIN customers c ON o.customer_id = c.customer_id
+)
+SELECT * FROM final
+
+-- schema.yml — column documentation + built-in tests
+version: 2
+models:
+  - name: stg_orders
+    description: "Cleaned orders from the source OLTP system"
+    columns:
+      - name: order_id
+        description: "Unique order identifier"
+        tests:
+          - not_null
+          - unique
+      - name: total_amount
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1000000
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['pending', 'shipped', 'delivered', 'cancelled']`}</CodeBlock>
+          <Quiz topicId="prod-dbt" questions={[
+            { question: "What does the is_incremental() macro do in a dbt model?", options: ["It creates an index on the table", "It filters the query to only process new/changed records when the table already exists — enabling efficient incremental loads without full refreshes", "It enables parallel execution", "It partitions the output table"], correct: 1 },
+            { question: "What is the difference between dbt ref() and source()?", options: ["They are identical", "ref() points to another dbt model (creates DAG dependency); source() points to raw upstream tables outside dbt's control", "source() is for streaming data, ref() is for batch", "ref() is deprecated in favor of source()"], correct: 1 },
+            { question: "Why use materialized: view for staging models instead of table?", options: ["Views are faster than tables", "Staging models are simple transformations — views avoid duplicating storage and always reflect the latest source data without running a job", "Tables don't support staging data", "Views have better test coverage"], correct: 1 },
+          ]} />
+          {completeBtn('prod-dbt')}
+        </section>
+
+        {/* ── prod-terraform ── */}
+        <section id="prod-terraform" ref={el => { if (el) sectionRefs.current['prod-terraform'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Infrastructure as Code (Terraform)</h1>
+            <p className="topic-desc">Provisioning Azure data platform resources with Terraform — ADLS Gen2, Databricks workspaces, ADF, Key Vault, and networking. State management, modules, and workspace patterns.</p>
+          </div>
+          <CodeBlock lang="hcl">{`# terraform/main.tf — Azure Data Platform
+terraform {
+  required_providers {
+    azurerm = { source = "hashicorp/azurerm", version = "~> 3.90" }
+    databricks = { source = "databricks/databricks", version = "~> 1.40" }
+  }
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform-state"
+    storage_account_name = "sttfstatedataplatform"
+    container_name       = "tfstate"
+    key                  = "prod.terraform.tfstate"   # remote state — team safe
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+
+# ── Resource Group ───────────────────────────────────────────────
+resource "azurerm_resource_group" "data" {
+  name     = "rg-data-\${var.environment}"
+  location = var.location
+  tags     = local.common_tags
+}
+
+# ── ADLS Gen2 ────────────────────────────────────────────────────
+resource "azurerm_storage_account" "datalake" {
+  name                     = "adls\${var.environment}\${var.suffix}"
+  resource_group_name      = azurerm_resource_group.data.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "ZRS"        # zone-redundant
+  account_kind             = "StorageV2"
+  is_hns_enabled           = true         # hierarchical namespace = Gen2
+  min_tls_version          = "TLS1_2"
+  blob_properties {
+    delete_retention_policy { days = 30 }
+  }
+}
+
+resource "azurerm_storage_container" "layers" {
+  for_each             = toset(["bronze", "silver", "gold", "checkpoints"])
+  name                 = each.value
+  storage_account_name = azurerm_storage_account.datalake.name
+}
+
+# ── Databricks Workspace ─────────────────────────────────────────
+resource "azurerm_databricks_workspace" "main" {
+  name                = "dbw-data-\${var.environment}"
+  resource_group_name = azurerm_resource_group.data.name
+  location            = var.location
+  sku                 = "premium"          # required for Unity Catalog
+  managed_resource_group_name = "rg-databricks-managed-\${var.environment}"
+}
+
+resource "databricks_cluster" "shared" {
+  cluster_name            = "shared-\${var.environment}"
+  spark_version           = "14.3.x-scala2.12"
+  node_type_id            = "Standard_DS4_v2"
+  autotermination_minutes = 30
+  autoscale {
+    min_workers = 2
+    max_workers = 8
+  }
+  spark_conf = {
+    "spark.databricks.delta.preview.enabled" = "true"
+  }
+}
+
+# ── Key Vault ────────────────────────────────────────────────────
+resource "azurerm_key_vault" "main" {
+  name                = "kv-data-\${var.environment}-\${var.suffix}"
+  resource_group_name = azurerm_resource_group.data.name
+  location            = var.location
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+  purge_protection_enabled = true
+}
+
+locals {
+  common_tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    team        = "data-platform"
+    cost_center = var.cost_center
+  }
+}`}</CodeBlock>
+          <CodeBlock lang="bash">{`# Terraform workflow with workspaces for environment isolation
+terraform workspace new staging
+terraform workspace new production
+
+# Plan — see what will change before applying
+terraform plan -var-file=environments/staging.tfvars -out=staging.plan
+
+# Apply — provision infrastructure
+terraform apply staging.plan
+
+# Destroy (careful — use workspace isolation!)
+terraform workspace select staging
+terraform destroy -var-file=environments/staging.tfvars
+
+# Module pattern — reuse across environments
+# modules/databricks-job/main.tf defines a parameterized Databricks job
+# Call it from root:
+module "silver_orders_job" {
+  source         = "./modules/databricks-job"
+  job_name       = "silver-orders-\${var.environment}"
+  notebook_path  = "/Shared/pipelines/silver_orders"
+  cluster_id     = databricks_cluster.shared.id
+  schedule_cron  = "0 0 * * * ?"  # every hour
+  environment    = var.environment
+}`}</CodeBlock>
+          <Quiz topicId="prod-terraform" questions={[
+            { question: "Why store Terraform state in Azure Blob Storage (remote backend) instead of locally?", options: ["Local state files are too large", "Remote state enables team collaboration — multiple engineers can run Terraform safely with state locking to prevent concurrent conflicts", "Local state doesn't support variables", "Azure requires remote state for compliance"], correct: 1 },
+            { question: "What does terraform plan do and why is it important before applying?", options: ["It runs unit tests", "It shows exactly what resources will be created, modified, or destroyed — lets you verify changes before touching production infrastructure", "It validates HCL syntax only", "It deploys to staging automatically"], correct: 1 },
+            { question: "What is the purpose of Terraform workspaces?", options: ["They store secret variables", "They allow isolated state per environment (dev/staging/prod) from a single configuration, preventing accidental cross-environment changes", "They replace modules", "They enable parallel resource creation"], correct: 1 },
+          ]} />
+          {completeBtn('prod-terraform')}
+        </section>
+
+        {/* ── prod-security ── */}
+        <section id="prod-security" ref={el => { if (el) sectionRefs.current['prod-security'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Security for Data Platforms</h1>
+            <p className="topic-desc">RBAC, column-level security, row-level security, encryption at rest and in transit, PII handling, managed identities, Key Vault integration, and Unity Catalog permissions.</p>
+          </div>
+          <CodeBlock lang="text">{`SECURITY LAYERS FOR AZURE DATA PLATFORMS
+═══════════════════════════════════════════════════════════════
+Network Security
+  Private endpoints: ADLS, Databricks, ADF — no public internet exposure
+  VNet injection: Databricks clusters in your VNet
+  NSG rules: deny all inbound; allow only required outbound
+  Private DNS zones: resolve storage/databricks privately
+
+Identity & Access (use Managed Identities — never store secrets!)
+  System-assigned MI: ADF instance → ADLS RBAC (Storage Blob Data Contributor)
+  User-assigned MI: shared across multiple services; easier rotation
+  Service Principal: for CI/CD pipelines; rotate secrets every 90 days
+  Never: connection strings in notebooks, passwords in config files
+
+Data Access Control (Unity Catalog)
+  Catalog → Schema → Table → Column hierarchy
+  GRANT SELECT ON TABLE catalog.schema.table TO user@company.com
+  Row filters: automatically applied at query time based on user attributes
+  Column masks: PII columns return masked values for non-privileged users
+
+Encryption
+  At rest: Azure Storage Service Encryption (AES-256) — on by default
+  Customer-managed keys (CMK): bring your own key to Key Vault
+  In transit: TLS 1.2 minimum enforced on all endpoints
+  Column-level: encrypt before storing (application-level) for highest sensitivity
+
+PII Handling Strategy
+  Classify: tag PII columns in Unity Catalog (system tags or custom)
+  Minimize: collect only what's needed; delete on retention schedule
+  Pseudonymize: hash or tokenize PII at Bronze layer; keep mapping in secure table
+  Mask: dynamic data masking in Unity Catalog for analytics consumers
+  Audit: log all access to PII tables (Diagnostic Settings → Log Analytics)`}</CodeBlock>
+          <CodeBlock lang="python">{`# MANAGED IDENTITY — ADF reading from ADLS (no credentials)
+# In ADF linked service: Authentication = Managed Identity
+# In ADLS IAM: assign "Storage Blob Data Contributor" to ADF's MI
+# No passwords stored anywhere — MI token is auto-rotated by Azure
+
+# KEY VAULT INTEGRATION in Databricks
+# 1. Create Key Vault-backed secret scope in Databricks:
+#    databricks secrets create-scope --scope kv-scope --scope-backend-type AZURE_KEYVAULT
+#    --resource-id /subscriptions/.../resourceGroups/.../providers/Microsoft.KeyVault/vaults/kv-data-prod
+#    --dns-name https://kv-data-prod.vault.azure.net/
+
+# 2. Use in notebooks — secret never appears in logs or outputs
+db_password = dbutils.secrets.get(scope="kv-scope", key="sql-db-password")
+jdbc_url = f"jdbc:sqlserver://server.database.windows.net;password={db_password}"
+
+# UNITY CATALOG — ROW LEVEL SECURITY
+# Row filter: each user only sees their own region's data
+spark.sql("""
+  CREATE OR REPLACE ROW FILTER region_filter ON gold.fact_sales
+  USING (region = CURRENT_USER_ATTRIBUTE('region') OR IS_MEMBER('data-admins'))
+""")
+
+spark.sql("""
+  ALTER TABLE gold.fact_sales
+  SET ROW FILTER region_filter ON ()
+""")
+
+# COLUMN MASKING — PII fields masked for non-privileged users
+spark.sql("""
+  CREATE OR REPLACE FUNCTION mask_email(email STRING)
+  RETURNS STRING
+  RETURN CASE
+    WHEN IS_MEMBER('pii-access') THEN email
+    ELSE CONCAT(LEFT(email, 2), '***@***.com')
+  END
+""")
+
+spark.sql("""
+  ALTER TABLE gold.dim_customer
+  ALTER COLUMN email SET MASK mask_email
+""")
+
+# PII PSEUDONYMIZATION at Bronze layer
+import hashlib
+
+def pseudonymize(df, pii_cols: list[str], salt: str):
+    """Replace PII with deterministic hash — reversible only with mapping table"""
+    for col in pii_cols:
+        df = df.withColumn(col,
+            F.sha2(F.concat(F.col(col), F.lit(salt)), 256))
+    return df
+
+bronze_df = pseudonymize(raw_df, ["email", "phone", "ssn"], salt=dbutils.secrets.get("kv-scope", "pii-salt"))`}</CodeBlock>
+          <Quiz topicId="prod-security" questions={[
+            { question: "Why should you use Managed Identities instead of service principal client secrets for ADF to ADLS access?", options: ["Managed identities are faster", "Managed identities have no credentials to steal, rotate, or accidentally commit to Git — Azure handles the token lifecycle automatically", "Service principals don't work with ADLS", "Managed identities have more permissions"], correct: 1 },
+            { question: "What is the difference between column masking and column encryption?", options: ["They are the same thing", "Masking hides data at query time based on user role (data still stored in plain text); encryption stores data in encrypted form — requires key to read", "Masking is for strings, encryption is for numbers", "Column encryption is not supported in Databricks"], correct: 1 },
+            { question: "What is PII pseudonymization and when is it used?", options: ["Deleting PII columns entirely", "Replacing PII with a deterministic hash — data remains useful for analysis (same customer = same hash) but cannot be reversed without the mapping table", "Encrypting the entire Delta table", "Adding a watermark to data exports"], correct: 1 },
+          ]} />
+          {completeBtn('prod-security')}
+        </section>
+
+        {/* ── prod-observability ── */}
         <section id="prod-observability" ref={el => { if (el) sectionRefs.current['prod-observability'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
-            <h1 className="topic-title">Observability and Monitoring</h1>
+            <h1 className="topic-title">Observability</h1>
+            <p className="topic-desc">The three pillars of observability — metrics, logs, and traces — applied to data pipelines. OpenTelemetry, Azure Monitor, Log Analytics, and distributed tracing across ADF and Databricks.</p>
           </div>
-          <CodeBlock lang="python">{`# Three pillars of observability: Metrics, Logs, Traces
+          <ObservabilityAnimation />
+          <CodeBlock lang="python">{`# STRUCTURED LOGGING — machine-readable, queryable in Log Analytics
+import logging
+import json
+from datetime import datetime
 
-import logging, time
-from opentelemetry import trace, metrics
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+class PipelineLogger:
+    def __init__(self, pipeline_name: str, run_id: str):
+        self.pipeline_name = pipeline_name
+        self.run_id = run_id
+        self.logger = logging.getLogger(pipeline_name)
 
-# 1. STRUCTURED LOGGING
-logger = logging.getLogger("pipeline.silver")
+    def log(self, level: str, event: str, **kwargs):
+        record = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": level,
+            "pipeline": self.pipeline_name,
+            "run_id": self.run_id,
+            "event": event,
+            **kwargs
+        }
+        self.logger.info(json.dumps(record))
 
-def process_batch(batch_id: int, df):
-    start = time.perf_counter()
-    row_count = df.count()
-    logger.info("batch_started", extra={"batch_id": batch_id, "input_rows": row_count})
-    try:
-        result = transform(df)
-        duration = time.perf_counter() - start
-        logger.info("batch_complete", extra={
-            "batch_id": batch_id,
-            "input_rows": row_count,
-            "output_rows": result.count(),
-            "duration_seconds": round(duration, 2),
-        })
-        return result
-    except Exception as e:
-        logger.error("batch_failed", extra={"batch_id": batch_id, "error": str(e)}, exc_info=True)
-        raise
+# Usage
+log = PipelineLogger("silver_orders", run_id=dbutils.widgets.get("run_id"))
+log.log("INFO", "batch_started", source_path="/bronze/orders/2024-01-15/")
 
-# 2. DATA QUALITY METRICS (publish to Azure Monitor)
-from azure.monitor.opentelemetry import configure_azure_monitor
-configure_azure_monitor(connection_string="InstrumentationKey=...")
+df = spark.read.format("delta").load("/bronze/orders/2024-01-15/")
+row_count = df.count()
 
-meter = metrics.get_meter("pipeline.dq")
-null_counter  = meter.create_counter("dq.null_records")
-late_counter  = meter.create_counter("dq.late_arrivals")
-row_gauge     = meter.create_gauge("pipeline.row_count")
+log.log("INFO", "batch_complete",
+    input_rows=row_count,
+    output_rows=result_df.count(),
+    duration_seconds=42.3,
+    bad_records=quarantine_count)
 
-# 3. SLA ALERTS (KQL in Azure Monitor)
-# Alert: pipeline hasn't written in 2 hours
-# customEvents | where name == "batch_complete" | where timestamp > ago(2h) | count`}</CodeBlock>
+# METRICS — write to Delta table for dashboarding
+from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType, TimestampType
+
+metrics_schema = StructType([
+    StructField("pipeline_name", StringType()),
+    StructField("run_id", StringType()),
+    StructField("metric_name", StringType()),
+    StructField("metric_value", DoubleType()),
+    StructField("recorded_at", TimestampType()),
+])
+
+def emit_metric(pipeline: str, run_id: str, name: str, value: float):
+    metrics_df = spark.createDataFrame(
+        [(pipeline, run_id, name, float(value), datetime.utcnow())],
+        schema=metrics_schema
+    )
+    metrics_df.write.format("delta").mode("append").saveAsTable("ops.pipeline_metrics")
+
+emit_metric("silver_orders", run_id, "row_count", row_count)
+emit_metric("silver_orders", run_id, "bad_record_rate", quarantine_count / row_count)
+
+# AZURE MONITOR — send custom metrics via REST API
+import requests
+
+def send_azure_metric(metric_name: str, value: float, resource_id: str, token: str):
+    url = f"https://monitoring.azure.com{resource_id}/metrics"
+    payload = {
+        "time": datetime.utcnow().isoformat(),
+        "data": {"baseData": {"metric": metric_name, "namespace": "DataPipeline",
+                              "dimNames": [], "series": [{"dimValues": [], "min": value, "max": value, "sum": value, "count": 1}]}}
+    }
+    requests.post(url, json=payload, headers={"Authorization": f"Bearer {token}"})`}</CodeBlock>
+          <CodeBlock lang="sql">{`-- OBSERVABILITY DASHBOARD QUERIES (Log Analytics / Databricks SQL)
+
+-- Pipeline health trend — last 7 days
+SELECT
+    date(recorded_at)           AS run_date,
+    pipeline_name,
+    AVG(CASE WHEN metric_name = 'row_count' THEN metric_value END) AS avg_rows,
+    AVG(CASE WHEN metric_name = 'bad_record_rate' THEN metric_value END) AS avg_bad_rate,
+    COUNT(*) AS run_count
+FROM ops.pipeline_metrics
+WHERE recorded_at >= current_date() - INTERVAL 7 DAYS
+GROUP BY 1, 2
+ORDER BY 1 DESC, 2;
+
+-- Alert: bad record rate > 5% in last run
+SELECT pipeline_name, run_id, metric_value AS bad_record_rate, recorded_at
+FROM ops.pipeline_metrics
+WHERE metric_name = 'bad_record_rate'
+  AND metric_value > 0.05
+  AND recorded_at >= current_timestamp() - INTERVAL 1 HOUR
+ORDER BY recorded_at DESC;
+
+-- SLA breach: pipeline hasn't run in expected window
+SELECT p.pipeline_name
+FROM ops.pipeline_registry p
+LEFT JOIN (
+    SELECT pipeline_name, MAX(recorded_at) AS last_run
+    FROM ops.pipeline_metrics GROUP BY 1
+) r ON p.pipeline_name = r.pipeline_name
+WHERE r.last_run IS NULL
+   OR r.last_run < current_timestamp() - MAKE_INTERVAL(hours => p.expected_frequency_hours + 1);`}</CodeBlock>
           <Quiz topicId="prod-observability" questions={[
-            { question: "What are the three pillars of observability?", options: ["Input, Processing, Output", "Metrics, Logs, Traces", "CPU, Memory, Network", "Development, Staging, Production"], correct: 1 },
-            { question: "Why use structured logging (extra={...} dicts) instead of string interpolation?", options: ["It's faster", "Structured fields are queryable in log analytics tools (Azure Monitor, Splunk)", "It uses less storage", "Required by Python 3.10+"], correct: 1 },
+            { question: "What are the three pillars of observability and how do they differ?", options: ["CPU, Memory, Disk — hardware metrics", "Metrics (aggregated numbers over time), Logs (discrete events with context), Traces (request flow across services) — together they answer 'what, why, where'", "Input, Process, Output — pipeline stages", "Bronze, Silver, Gold — data quality layers"], correct: 1 },
+            { question: "Why use structured (JSON) logging instead of plain text messages?", options: ["JSON is smaller than plain text", "Structured logs are machine-parseable — Log Analytics, Splunk, and dashboards can query specific fields without regex parsing", "Plain text logging is deprecated", "JSON logs are automatically encrypted"], correct: 1 },
+            { question: "What is the value of writing pipeline metrics to a Delta table?", options: ["Delta tables compress metrics better", "It enables SQL-based trend analysis, anomaly detection, and SLA monitoring over historical runs — the same tools used for business data", "Metrics must be in Delta format for Azure Monitor", "Delta tables automatically alert on thresholds"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('prod-observability'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          {completeBtn('prod-observability')}
         </section>
 
+        {/* ── prod-monitoring ── */}
+        <section id="prod-monitoring" ref={el => { if (el) sectionRefs.current['prod-monitoring'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Pipeline Monitoring</h1>
+            <p className="topic-desc">SLA management, alerting strategies, Kafka consumer lag monitoring, ADF activity monitoring, data freshness checks, and on-call runbook patterns for data engineers.</p>
+          </div>
+          <CodeBlock lang="python">{`# SLA MONITORING — alert if pipeline is late
+from datetime import datetime, timedelta
+import pytz
+
+def check_pipeline_sla(pipeline_name: str, expected_completion_utc: str, tolerance_minutes: int = 15):
+    """
+    expected_completion_utc: "06:00" — pipeline should finish by 6am UTC daily
+    tolerance_minutes: grace period before alerting
+    """
+    now = datetime.utcnow()
+    expected = datetime.strptime(
+        f"{now.date()} {expected_completion_utc}", "%Y-%m-%d %H:%M"
+    ).replace(tzinfo=pytz.UTC)
+    deadline = expected + timedelta(minutes=tolerance_minutes)
+
+    last_success = spark.sql(f"""
+        SELECT MAX(recorded_at) as last_run
+        FROM ops.pipeline_metrics
+        WHERE pipeline_name = '{pipeline_name}'
+          AND metric_name = 'batch_complete'
+          AND DATE(recorded_at) = CURRENT_DATE()
+    """).collect()[0].last_run
+
+    if last_success is None or last_success < expected:
+        if now > deadline:
+            send_pagerduty_alert(
+                title=f"SLA BREACH: {pipeline_name} did not complete by {expected_completion_utc} UTC",
+                severity="critical",
+                details={"last_success": str(last_success), "deadline": str(deadline)}
+            )
+
+# KAFKA LAG MONITORING
+def get_consumer_lag(bootstrap_servers: str, group_id: str, topic: str) -> dict:
+    from kafka import KafkaAdminClient, KafkaConsumer
+    from kafka.structs import TopicPartition
+
+    consumer = KafkaConsumer(
+        bootstrap_servers=bootstrap_servers,
+        group_id=group_id,
+        enable_auto_commit=False
+    )
+    partitions = consumer.partitions_for_topic(topic)
+    tps = [TopicPartition(topic, p) for p in partitions]
+    end_offsets = consumer.end_offsets(tps)
+    committed = {tp: consumer.committed(tp) or 0 for tp in tps}
+    consumer.close()
+
+    lag_per_partition = {tp.partition: end_offsets[tp] - committed[tp] for tp in tps}
+    total_lag = sum(lag_per_partition.values())
+
+    if total_lag > 100_000:
+        send_pagerduty_alert(f"Kafka lag critical: {group_id}/{topic} lag={total_lag:,}", "warning")
+
+    return {"total_lag": total_lag, "per_partition": lag_per_partition}
+
+# DATA FRESHNESS CHECK
+def check_data_freshness(table: str, ts_col: str, max_age_hours: int):
+    result = spark.sql(f"""
+        SELECT MAX({ts_col}) AS latest_record,
+               TIMESTAMPDIFF(HOUR, MAX({ts_col}), CURRENT_TIMESTAMP()) AS age_hours
+        FROM {table}
+    """).collect()[0]
+
+    if result.age_hours > max_age_hours:
+        send_pagerduty_alert(
+            title=f"STALE DATA: {table}.{ts_col} is {result.age_hours}h old (max {max_age_hours}h)",
+            severity="warning",
+            details={"latest_record": str(result.latest_record)}
+        )`}</CodeBlock>
+          <CodeBlock lang="text">{`ON-CALL RUNBOOK — Pipeline Failure Response
+═══════════════════════════════════════════════════════════════
+1. TRIAGE (first 5 min)
+   - Check ADF Monitor: which activity failed? What is the error message?
+   - Check Databricks job run: driver logs → stderr for Python stack trace
+   - Check upstream: did source system have an outage? (check ops.pipeline_metrics)
+   - Classify: Data issue? Code bug? Infrastructure? Upstream failure?
+
+2. IMMEDIATE ACTIONS
+   Data issue (malformed records, schema change):
+     → Check bronze quarantine table; determine blast radius
+     → If < 1% bad records: allow to continue with quarantine; notify data owner
+     → If > 5% bad: halt pipeline; escalate to source system team
+
+   Code bug (NullPointerException, logic error):
+     → Identify last-good run via Delta DESCRIBE HISTORY
+     → Roll back gold table: RESTORE TABLE gold.fact_orders TO VERSION AS OF <n>
+     → Fix code in hotfix branch; deploy via fast-track CI/CD
+
+   Infrastructure failure (cluster OOM, network timeout):
+     → Check Databricks cluster events; scale up if OOM
+     → Re-trigger ADF pipeline from failed activity (not from scratch)
+     → If persistent: failover to backup cluster defined in job config
+
+3. RECOVERY
+   - Re-run pipeline for affected date range (idempotent by design)
+   - Verify row counts match expected range
+   - Confirm downstream gold tables refreshed correctly
+   - Update stakeholders via data ops Slack channel
+
+4. POST-MORTEM
+   - Document in ops.incident_log table
+   - Root cause + contributing factors + timeline
+   - Action items: add monitoring, improve error handling, alert earlier`}</CodeBlock>
+          <Quiz topicId="prod-monitoring" questions={[
+            { question: "What is SLA tolerance in pipeline monitoring and why does it matter?", options: ["The maximum data size the pipeline can handle", "A grace period after the expected completion time before firing an alert — prevents false alarms from minor delays while still catching real breaches", "The percentage of records that can be invalid", "The minimum uptime percentage"], correct: 1 },
+            { question: "What does Kafka consumer lag measure?", options: ["Network latency between brokers", "The number of unprocessed messages between what the producer has written and what the consumer has committed — high lag means the consumer is falling behind", "The size of Kafka partitions", "The time to serialize messages"], correct: 1 },
+            { question: "How do you safely recover a Delta table after a bad pipeline run?", options: ["Delete all data and reload from source", "Use RESTORE TABLE gold.fact TO VERSION AS OF <n> to roll back to the last-known-good version using Delta's transaction log", "Drop and recreate the table", "Manually delete bad partitions"], correct: 1 },
+          ]} />
+          {completeBtn('prod-monitoring')}
+        </section>
+
+        {/* ── prod-disaster-recovery ── */}
+        <section id="prod-disaster-recovery" ref={el => { if (el) sectionRefs.current['prod-disaster-recovery'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Disaster Recovery</h1>
+            <p className="topic-desc">RTO/RPO targets, backup strategies for Delta Lake, cross-region replication, ADF pipeline export, geo-redundant storage, and tested failover procedures.</p>
+          </div>
+          <CodeBlock lang="text">{`DISASTER RECOVERY CONCEPTS
+═══════════════════════════════════════════════════════════════
+RTO (Recovery Time Objective)
+  Maximum acceptable downtime after a disaster
+  Example: "The gold layer must be restored within 4 hours of an outage"
+  Drives: how fast your recovery procedure must execute
+
+RPO (Recovery Point Objective)
+  Maximum acceptable data loss (measured in time)
+  Example: "We can afford to lose at most 1 hour of data"
+  Drives: backup frequency — if RPO=1h, take snapshots at least hourly
+
+Tier examples for data platforms:
+  Critical (financial reporting): RTO 2h, RPO 15min
+  Standard (analytics dashboards): RTO 8h, RPO 1h
+  Non-critical (ML feature store): RTO 24h, RPO 4h
+
+AZURE STORAGE REDUNDANCY OPTIONS
+═══════════════════════════════════════════════════════════════
+LRS  (Locally Redundant):     3 copies, 1 datacenter — cheapest, no regional DR
+ZRS  (Zone Redundant):        3 copies, 3 zones — survives datacenter failure
+GRS  (Geo Redundant):         LRS + async copy to paired region — regional DR
+GZRS (Geo+Zone Redundant):    ZRS + async copy to paired region — highest durability
+RA-GZRS:                      GZRS + READ access to secondary — active-passive DR
+
+Recommendation for production data platforms:
+  Gold/Silver: GZRS (critical data, regional failover)
+  Bronze: ZRS (raw data, can re-ingest from source if needed)
+  Checkpoints: ZRS minimum (losing checkpoints = replay entire stream)
+
+DELTA LAKE BACKUP STRATEGIES
+═══════════════════════════════════════════════════════════════
+Strategy 1: DEEP CLONE to backup storage account
+  Daily: DEEP CLONE gold.fact_orders TO 'abfss://backup@adls-dr.dfs.core.windows.net/gold/fact_orders'
+  Copies data + transaction log; fully independent clone
+  Restore: point Databricks external location to backup path
+
+Strategy 2: azcopy scheduled sync (cheaper, metadata-level)
+  azcopy sync 'https://adls-prod.blob.core.windows.net/gold' 'https://adls-dr.blob.core.windows.net/gold' --recursive
+
+Strategy 3: Geo-replication (automatic, Azure-managed)
+  Enable GZRS on storage account; Azure continuously replicates
+  Failover: update ADLS endpoint in Key Vault → all services pick up new URL`}</CodeBlock>
+          <CodeBlock lang="python">{`# DEEP CLONE BACKUP — scheduled daily via Databricks Job
+from pyspark.sql import SparkSession
+from delta.tables import DeltaTable
+import logging
+
+BACKUP_STORAGE = "abfss://backup@adlsdatadr.dfs.core.windows.net"
+PROD_TABLES = [
+    ("gold.fact_orders", f"{BACKUP_STORAGE}/gold/fact_orders"),
+    ("gold.fact_revenue", f"{BACKUP_STORAGE}/gold/fact_revenue"),
+    ("gold.dim_customer", f"{BACKUP_STORAGE}/gold/dim_customer"),
+]
+
+def backup_table(source_table: str, backup_path: str):
+    logging.info(f"Starting backup: {source_table} → {backup_path}")
+    spark.sql(f"""
+        CREATE OR REPLACE TABLE delta.\`{backup_path}\`
+        DEEP CLONE {source_table}
+        TBLPROPERTIES ('backup_source' = '{source_table}', 'backup_ts' = '{datetime.utcnow().isoformat()}')
+    """)
+    # Verify
+    prod_count = spark.table(source_table).count()
+    backup_count = spark.read.format("delta").load(backup_path).count()
+    if prod_count != backup_count:
+        raise ValueError(f"Backup verification failed: {prod_count} vs {backup_count}")
+    logging.info(f"Backup verified: {backup_count:,} rows")
+
+for table, path in PROD_TABLES:
+    backup_table(table, path)
+
+# RESTORE PROCEDURE — run during DR event
+def restore_from_backup(backup_path: str, restore_table: str):
+    """Restore from backup — run when primary region is unavailable"""
+    spark.sql(f"""
+        CREATE OR REPLACE TABLE {restore_table}
+        DEEP CLONE delta.\`{backup_path}\`
+    """)
+    print(f"Restored {restore_table} from {backup_path}")
+    print(f"Row count: {spark.table(restore_table).count():,}")
+
+# ADF PIPELINE EXPORT for DR (ARM template backup)
+# az datafactory export --resource-group rg-data-prod --factory-name adf-data-prod \
+#   --output-folder ./adf-backup/$(date +%Y%m%d)
+# Store in Git repo — can redeploy entire ADF from ARM template in < 30 min`}</CodeBlock>
+          <Quiz topicId="prod-disaster-recovery" questions={[
+            { question: "What is the difference between RTO and RPO?", options: ["They are the same metric with different names", "RTO is the maximum acceptable downtime (how fast you recover); RPO is the maximum acceptable data loss (how much data can be lost)", "RTO applies to batch pipelines; RPO applies to streaming", "RTO is measured in rows; RPO is measured in hours"], correct: 1 },
+            { question: "Why use DEEP CLONE instead of azcopy for Delta table backups?", options: ["azcopy doesn't work with Azure", "DEEP CLONE copies both data files AND the Delta transaction log — the restored table is fully functional with history; azcopy copies raw files but may miss transaction log consistency", "DEEP CLONE is faster", "azcopy doesn't support scheduled runs"], correct: 1 },
+            { question: "For a production gold layer with RTO=4h and RPO=15min, which storage redundancy should you use?", options: ["LRS — cheapest and sufficient", "GZRS — zone-redundant with geo-replication, supports regional failover within the RTO window", "ZRS — zone redundant is sufficient", "LRS with manual backups every 15 minutes"], correct: 1 },
+          ]} />
+          {completeBtn('prod-disaster-recovery')}
+        </section>
+
+        {/* ── prod-cost ── */}
         <section id="prod-cost" ref={el => { if (el) sectionRefs.current['prod-cost'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Cost Optimization</h1>
+            <p className="topic-desc">Databricks DBU optimization, Delta OPTIMIZE/VACUUM, storage lifecycle policies, spot instances, cluster auto-termination, and cost tagging strategies for Azure data platforms.</p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-            {[
-              { area: 'Databricks Compute', tips: ['Use Spot instances for non-critical batch workloads (70-90% cheaper)', 'Right-size clusters - monitor CPU/memory utilization', 'Use Serverless compute for interactive workloads', 'Auto-terminate idle clusters (default 30-60 min)'], color: '#ef4444' },
-              { area: 'ADLS Gen2 Storage', tips: ['Lifecycle policies: hot -> cool (30d) -> archive (90d)', 'OPTIMIZE Delta tables to reduce file count (fewer API calls)', 'VACUUM regularly to remove unreferenced files', 'Use Parquet with Snappy compression (2-5x smaller than CSV)'], color: '#3b82f6' },
-              { area: 'Data Transfer', tips: ['Keep compute and storage in the same region', 'Use VNet peering instead of public internet routing', 'Batch small writes into larger partitions', 'Enable columnar compression to reduce network bytes'], color: '#8b5cf6' },
-            ].map(c => (
-              <div key={c.area} style={{ background: 'white', border: '1px solid var(--border)', borderLeft: `3px solid ${c.color}`, borderRadius: 'var(--radius-lg)', padding: 16 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: c.color, marginBottom: 8 }}>{c.area}</div>
-                <ul style={{ paddingLeft: 16, margin: 0 }}>
-                  {c.tips.map(t => <li key={t} style={{ fontSize: '.84rem', color: 'var(--text-2)', marginBottom: 4 }}>{t}</li>)}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <CodeBlock lang="text">{`COST LEVERS FOR AZURE DATA PLATFORMS
+═══════════════════════════════════════════════════════════════
+Databricks Compute (typically 60-70% of total cost)
+  ✓ Auto-termination: set 30min idle timeout on all interactive clusters
+  ✓ Spot/preemptible workers: 70-90% cheaper for non-critical batch jobs
+  ✓ Right-sizing: profile job memory/CPU; don't over-provision
+  ✓ Serverless SQL: for ad-hoc queries — pay per query, no idle cluster cost
+  ✓ Photon engine: faster = less runtime = fewer DBUs (break-even ~2x cost per DBU)
+  ✓ Job clusters vs all-purpose: jobs use cheaper job cluster DBU rates
+  ✗ Avoid: large all-purpose clusters left running overnight
+
+Azure Storage (typically 15-20% of cost)
+  ✓ Lifecycle policies: auto-tier Bronze > 90 days old to Cool storage (40% cheaper)
+  ✓ VACUUM Delta: remove old file versions (default = keep 7 days of history)
+  ✓ OPTIMIZE + Z-ORDER: fewer, larger files = less scan cost + faster queries
+  ✓ Compression: Delta auto-compresses Parquet; avoid uncompressed formats
+  ✗ Avoid: keeping unlimited retention on high-volume Bronze tables
+
+Data Transfer
+  ✓ Keep compute co-located with storage (same region)
+  ✗ Avoid: cross-region reads; ADLS in East US + Databricks in West US = $$$
+
+Cost Visibility
+  ✓ Tag every resource: team, environment, pipeline_name, cost_center
+  ✓ Azure Cost Management: set budget alerts at 80% and 100%
+  ✓ Databricks Cost Management: per-cluster cost attribution
+  ✓ Chargeback: query ops.pipeline_metrics to allocate DBU cost to teams`}</CodeBlock>
+          <CodeBlock lang="python">{`# DELTA MAINTENANCE — run weekly to control storage costs
+def optimize_and_vacuum(tables: list[str], vacuum_retain_hours: int = 168):
+    """
+    OPTIMIZE: compacts small files into target file size (1GB default)
+    Z-ORDER: co-locate related data for faster predicate pushdown
+    VACUUM: delete files older than retention period
+    """
+    for table in tables:
+        print(f"Optimizing {table}...")
+        # OPTIMIZE with Z-ORDER on most common filter columns
+        spark.sql(f"OPTIMIZE {table} ZORDER BY (order_date, customer_id)")
+        # VACUUM — removes orphaned and old version files
+        spark.sql(f"VACUUM {table} RETAIN {vacuum_retain_hours} HOURS")
+        print(f"  Done. Table size: {get_table_size_gb(table):.1f} GB")
+
+def get_table_size_gb(table: str) -> float:
+    details = spark.sql(f"DESCRIBE DETAIL {table}").collect()[0]
+    return details.sizeInBytes / (1024**3)
+
+# STORAGE LIFECYCLE — tier old Bronze to Cool storage
+# ARM template / Terraform
+lifecycle_policy = {
+    "rules": [{
+        "name": "bronze-to-cool",
+        "type": "Lifecycle",
+        "definition": {
+            "filters": {"blobTypes": ["blockBlob"], "prefixMatch": ["bronze/"]},
+            "actions": {
+                "baseBlob": {
+                    "tierToCool": {"daysAfterModificationGreaterThan": 90},
+                    "tierToArchive": {"daysAfterModificationGreaterThan": 365},
+                    "delete": {"daysAfterModificationGreaterThan": 2555}  # 7 years
+                }
+            }
+        }
+    }]
+}
+
+# SPOT INSTANCE JOB CLUSTER for batch pipelines
+# In Databricks job cluster config:
+spot_cluster_config = {
+    "spark_version": "14.3.x-scala2.12",
+    "node_type_id": "Standard_DS4_v2",
+    "num_workers": 4,
+    "azure_attributes": {
+        "availability": "SPOT_WITH_FALLBACK_AZURE",  # spot first, on-demand fallback
+        "spot_bid_max_price": 100,   # max % of on-demand price to bid
+        "first_on_demand": 1         # keep 1 on-demand driver; workers on spot
+    }
+}
+
+# COST ATTRIBUTION QUERY
+spark.sql("""
+  SELECT
+    p.pipeline_name,
+    p.team,
+    SUM(m.metric_value) AS total_dbus,
+    SUM(m.metric_value) * 0.55 AS estimated_cost_usd  -- $0.55/DBU jobs compute
+  FROM ops.pipeline_metrics m
+  JOIN ops.pipeline_registry p ON m.pipeline_name = p.pipeline_name
+  WHERE m.metric_name = 'dbu_consumed'
+    AND DATE(m.recorded_at) >= DATE_TRUNC('month', CURRENT_DATE())
+  GROUP BY 1, 2
+  ORDER BY 4 DESC
+""")`}</CodeBlock>
           <Quiz topicId="prod-cost" questions={[
-            { question: "What is the biggest cost driver for most Databricks deployments?", options: ["Storage", "Compute (DBUs) - especially when clusters are idle or over-provisioned", "Network egress", "License fees"], correct: 1 },
-            { question: "Why should you run OPTIMIZE regularly on Delta tables?", options: ["Improves data quality", "Compacts small files reducing API call costs and improving query performance", "Required for time travel", "Updates table statistics"], correct: 1 },
+            { question: "What is the primary purpose of running OPTIMIZE on a Delta table?", options: ["To improve data security", "To compact many small files into fewer large files — reducing storage overhead and improving query scan performance (less file listing overhead)", "To validate data quality", "To encrypt the table"], correct: 1 },
+            { question: "Why should batch Databricks jobs use job clusters instead of all-purpose clusters?", options: ["Job clusters support more workers", "Job clusters are billed at a lower DBU rate, auto-terminate when the job finishes, and don't accumulate idle time costs", "All-purpose clusters don't support batch jobs", "Job clusters have faster startup times"], correct: 1 },
+            { question: "What is the value of tagging Azure resources with team, pipeline_name, and cost_center?", options: ["Tags improve resource performance", "Tags enable cost attribution — you can query Azure Cost Management to see exactly which team or pipeline is driving costs, enabling chargeback and optimization", "Tags are required for Databricks to work", "Tags reduce storage costs automatically"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('prod-cost'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          {completeBtn('prod-cost')}
         </section>
 
+        {/* ── prod-performance ── */}
+        <section id="prod-performance" ref={el => { if (el) sectionRefs.current['prod-performance'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Performance Engineering</h1>
+            <p className="topic-desc">Spark query optimization, partition tuning, broadcast joins, Z-ordering, bloom filters, caching strategies, and reading the Spark UI to diagnose bottlenecks.</p>
+          </div>
+          <CodeBlock lang="text">{`SPARK PERFORMANCE MENTAL MODEL
+═══════════════════════════════════════════════════════════════
+The goal: minimize data movement (shuffles) and data scanned (predicate pushdown)
+
+SHUFFLE is the #1 performance killer
+  Every groupBy, join (except broadcast), distinct triggers a shuffle
+  Shuffle writes intermediate data to disk → expensive
+  Target: 200 shuffle partitions default; tune with spark.sql.shuffle.partitions
+
+PARTITION STRATEGY
+  Too few partitions: cores sit idle; memory pressure per task
+  Too many partitions: scheduling overhead; many tiny files
+  Rule of thumb: target 100-200MB per partition
+  Formula: partitions = max(numCores * 2, shuffleBytes / 200MB)
+
+PREDICATE PUSHDOWN — filter as early as possible
+  Delta: stats in transaction log → skip entire files before reading
+  Parquet: row group statistics → skip row groups
+  Must filter on partition columns AND Z-ORDER columns for max benefit
+
+FILE SIZE — aim for ~1GB Parquet files in Delta
+  Too small (<128MB): file listing overhead dominates read time
+  Too large (>2GB): spill to disk during reads; slow GC
+  Fix: OPTIMIZE compacts; auto-optimize in Databricks cluster config
+
+BROADCAST JOIN — avoid shuffle for small tables
+  If one side < spark.sql.autoBroadcastJoinThreshold (default 10MB)
+    → Spark auto-broadcasts; no shuffle
+  Force with hint: df.join(broadcast(dim_df), ...)
+  Rule: always broadcast dims < 100MB; never broadcast tables > 500MB`}</CodeBlock>
+          <CodeBlock lang="python">{`# READING THE SPARK UI — what to look for
+# Access at: https://<cluster-id>.azuredatabricks.net/spark-ui (or :4040 locally)
+
+# Red flags in Spark UI:
+# 1. Skewed tasks: one task takes 10x longer than others
+#    Fix: add salt to skewed key, or use AQE skew join hint
+# 2. GC time > 10% of task time: memory pressure
+#    Fix: increase executor memory, reduce partition size
+# 3. Spill to disk: tasks processing more than executor memory
+#    Fix: increase spark.executor.memory or reduce data per partition
+# 4. Input/Output ratio: small input producing massive shuffle output
+#    Fix: push filters earlier; use columnar pruning
+
+# ADAPTIVE QUERY EXECUTION (AQE) — enable in all production jobs
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")
+
+# PARTITION TUNING
+spark.conf.set("spark.sql.shuffle.partitions", "400")  # tune per job size
+# Or let AQE set it dynamically — preferred
+
+# BROADCAST JOIN — explicit hint for joins just over auto-threshold
+from pyspark.sql.functions import broadcast
+
+result = large_fact.join(
+    broadcast(small_dim),  # forces broadcast regardless of size threshold
+    "customer_id"
+)
+
+# SALTING — fix skewed joins (one key has 80% of data)
+import pyspark.sql.functions as F
+
+N_SALT = 20
+salted_fact = (large_df
+    .withColumn("salt", (F.rand() * N_SALT).cast("int"))
+    .withColumn("salted_key", F.concat("join_key", F.lit("_"), "salt")))
+
+exploded_dim = (small_dim
+    .withColumn("salt", F.explode(F.array([F.lit(i) for i in range(N_SALT)])))
+    .withColumn("salted_key", F.concat("join_key", F.lit("_"), "salt")))
+
+result = salted_fact.join(exploded_dim, "salted_key").drop("salt", "salted_key")
+
+# DELTA Z-ORDER — co-locate data for common query patterns
+# Run after OPTIMIZE; statistics guide file skipping
+spark.sql("""
+    OPTIMIZE gold.fact_orders
+    ZORDER BY (order_date, customer_id)
+    -- Now queries filtering by order_date AND/OR customer_id skip most files
+""")
+
+# BLOOM FILTER — probabilistic index for high-cardinality string columns
+spark.sql("""
+    CREATE BLOOMFILTER INDEX ON TABLE gold.fact_orders
+    FOR COLUMNS(transaction_id OPTIONS (fpr=0.01, numItems=10000000))
+    -- fpr: false positive rate (1%); trade-off: index size vs effectiveness
+""")`}</CodeBlock>
+          <Quiz topicId="prod-performance" questions={[
+            { question: "What causes data skew in Spark and how do you fix it?", options: ["Too many executors processing the same data", "One or a few keys (e.g., 'NULL' or a large customer) containing a disproportionate share of records — causes one task to run 10x longer; fix with salting (add random prefix to keys) or AQE skew join hint", "Using the wrong file format", "Having too many small files"], correct: 1 },
+            { question: "When should you use a broadcast join?", options: ["Always — broadcast joins are always faster", "When one side of the join is small (< ~100-200MB) — broadcasting it to all executors eliminates the shuffle, which is the most expensive operation", "Only for outer joins", "When both tables are large"], correct: 1 },
+            { question: "What does Z-ORDER do and what are its limitations?", options: ["It sorts the Delta table by row count", "It co-locates related rows in the same files so Delta can skip more files when filtering — only effective on columns you frequently filter on, and must be re-run after new data arrives (not automatic)", "It creates a B-tree index on specified columns", "It compresses Delta files more aggressively"], correct: 1 },
+          ]} />
+          {completeBtn('prod-performance')}
+        </section>
+
+        {/* ── prod-data-contracts ── */}
+        <section id="prod-data-contracts" ref={el => { if (el) sectionRefs.current['prod-data-contracts'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">Data Contracts</h1>
+            <p className="topic-desc">Formal agreements between data producers and consumers — defining schema, SLAs, quality expectations, and versioning. The tool that prevents silent data breakage at scale.</p>
+          </div>
+          <DataContractAnimation />
+          <CodeBlock lang="yaml">{`# data-contract.yaml — orders_events topic contract
+# Follows the Data Contract Specification (datacontract.com)
+dataContractSpecification: 0.9.3
+id: urn:datacontract:orders:events:v2
+info:
+  title: Orders Events
+  version: 2.1.0
+  status: active
+  owner: orders-team@company.com
+  description: "Real-time order lifecycle events from the order management system"
+  slaDuration: P1D          # data must be available within 1 day
+  slaIntervalOfChange: PT1H # updated at least every hour during business hours
+
+servers:
+  production:
+    type: kafka
+    host: kafka-prod.company.com:9092
+    topic: orders.events.v2
+    format: avro
+    schemaRegistry: https://schema-registry.company.com
+
+models:
+  OrderEvent:
+    description: "A single order lifecycle event"
+    fields:
+      order_id:
+        type: string
+        required: true
+        description: "Unique order identifier (UUID)"
+        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      event_type:
+        type: string
+        required: true
+        enum: [order_created, order_shipped, order_delivered, order_cancelled]
+      event_timestamp:
+        type: timestamp
+        required: true
+      customer_id:
+        type: string
+        required: true
+      total_amount:
+        type: number
+        minimum: 0
+        maximum: 1000000
+      currency:
+        type: string
+        enum: [USD, EUR, GBP, CAD]
+
+quality:
+  - type: text
+    specification: "order_id must be unique within a 1-hour window"
+  - type: text
+    specification: "event_timestamp must not be more than 5 minutes in the future"
+  - type: text
+    specification: "total_amount must be >= 0 for all event types"
+  - type: sql
+    query: "SELECT COUNT(*) FROM orders_events WHERE total_amount < 0"
+    mustBe: 0`}</CodeBlock>
+          <CodeBlock lang="python">{`# CONTRACT VALIDATION — run in producer CI/CD
+import yaml
+import json
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroDeserializer
+
+def validate_schema_compatibility(contract_path: str, schema_registry_url: str):
+    """Ensure new schema version doesn't break consumers"""
+    with open(contract_path) as f:
+        contract = yaml.safe_load(f)
+
+    sr_client = SchemaRegistryClient({"url": schema_registry_url})
+    subject = f"{contract['servers']['production']['topic']}-value"
+    current_schema = sr_client.get_latest_version(subject)
+
+    # Check compatibility — FULL_TRANSITIVE means backward + forward compatible
+    compatibility = sr_client.test_compatibility(
+        subject_name=subject,
+        schema=AvroSchema(json.dumps(contract_to_avro(contract)))
+    )
+    if not compatibility:
+        raise ValueError(f"Schema change breaks compatibility! Subject: {subject}")
+
+    print(f"Schema compatible. Current version: {current_schema.version}")
+
+def contract_to_avro(contract: dict) -> dict:
+    """Convert data contract YAML to Avro schema JSON"""
+    fields = []
+    for name, field in contract['models']['OrderEvent']['fields'].items():
+        avro_type = {"string": "string", "number": "double", "timestamp": "long"}.get(field['type'], "string")
+        if not field.get('required', False):
+            avro_type = ["null", avro_type]
+        fields.append({"name": name, "type": avro_type})
+    return {"type": "record", "name": "OrderEvent", "fields": fields}
+
+# CONSUMER-SIDE CONTRACT ENFORCEMENT
+def read_with_contract_validation(topic: str, contract_path: str, spark):
+    """Read Kafka topic and fail if schema doesn't match contract"""
+    with open(contract_path) as f:
+        contract = yaml.safe_load(f)
+
+    df = spark.readStream.format("kafka").option("subscribe", topic).load()
+    expected_fields = set(contract['models']['OrderEvent']['fields'].keys())
+    actual_fields = set(df.schema.fieldNames())
+
+    missing = expected_fields - actual_fields
+    if missing:
+        raise ValueError(f"Contract violation: missing fields {missing}")
+
+    return df`}</CodeBlock>
+          <Quiz topicId="prod-data-contracts" questions={[
+            { question: "What problem do data contracts solve in large data platforms?", options: ["They improve query performance", "They formalize the agreement between producers and consumers — preventing silent schema changes, SLA violations, and quality regressions from propagating to downstream analytics", "They replace unit tests", "They are a storage format"], correct: 1 },
+            { question: "What does FULL_TRANSITIVE schema compatibility mean in Confluent Schema Registry?", options: ["All schemas must be identical", "New schema versions must be both backward-compatible (old consumers can read new data) AND forward-compatible (new consumers can read old data)", "Only the latest version is kept", "Schemas are automatically generated"], correct: 1 },
+            { question: "At what stage of the pipeline should contract validation ideally run?", options: ["Only in production after data has been processed", "In the producer's CI/CD pipeline BEFORE deployment — catching contract violations before they reach production consumers", "Only when a consumer reports a problem", "During the nightly data quality batch"], correct: 1 },
+          ]} />
+          {completeBtn('prod-data-contracts')}
+        </section>
+
+        {/* ── prod-patterns ── */}
         <section id="prod-patterns" ref={el => { if (el) sectionRefs.current['prod-patterns'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
             <h1 className="topic-title">Enterprise Patterns</h1>
+            <p className="topic-desc">Data catalog integration, master data management, data lineage, governance frameworks, data product thinking, and operating a data platform at enterprise scale.</p>
           </div>
-          <CodeBlock lang="python">{`# Pattern 1: Idempotent pipelines (safe to re-run)
-# Use replaceWhere instead of overwrite (faster, safer)
-df.write.format("delta") \\
-    .option("replaceWhere", "date = '2024-01-15'") \\
-    .mode("overwrite") \\
-    .table("gold.revenue")
+          <CodeBlock lang="text">{`ENTERPRISE DATA PLATFORM OPERATING MODEL
+═══════════════════════════════════════════════════════════════
+Data Platform Team (central, enabling)
+  Provides: infrastructure, Unity Catalog, CI/CD tooling, standards
+  Does NOT own: business data products — that's domain teams' job
+  SLA to domains: <4h P1 incident response; 99.5% platform uptime
 
-# Pattern 2: Watermark-based incremental processing
-last_watermark = spark.sql(
-    "SELECT MAX(processed_at) FROM control.pipeline_watermarks WHERE pipeline = 'events'"
-).collect()[0][0] or "1970-01-01"
+Domain Data Teams (distributed, owning)
+  Own: data products for their domain (orders, customers, finance)
+  Accountable: freshness, quality, documentation, consumer SLAs
+  Consume: platform infrastructure + self-serve tooling
 
-new_data = spark.read.table("silver.events") \\
-    .filter(f"updated_at > '{last_watermark}'")
+DATA PRODUCT THINKING
+═══════════════════════════════════════════════════════════════
+A data product is a curated, governed, documented dataset that:
+  ✓ Has a clear owner (team + individual)
+  ✓ Publishes an SLA (freshness, uptime, quality)
+  ✓ Has a schema contract (data contract YAML)
+  ✓ Is discoverable (Unity Catalog tags + descriptions)
+  ✓ Is tested (dbt tests + Great Expectations)
+  ✓ Versioned (breaking changes increment major version)
 
-process_and_write(new_data)
+Anti-patterns to avoid:
+  ✗ Undocumented tables with no owner
+  ✗ "shadow" pipelines built by analysts directly on Bronze
+  ✗ Gold tables that only one dashboard uses and nobody maintains
+  ✗ Schema changes deployed without consumer notification
 
-spark.sql(f"""
-    MERGE INTO control.pipeline_watermarks t USING
-    (SELECT 'events' as pipeline, current_timestamp() as processed_at) s
-    ON t.pipeline = s.pipeline
-    WHENMATCHED THEN UPDATE SET t.processed_at = s.processed_at
-    WHENNOTMATCHED THEN INSERT *
+MASTER DATA MANAGEMENT (MDM)
+═══════════════════════════════════════════════════════════════
+Problem: "customer" means different things in CRM, ERP, and web analytics
+  CRM: customer = account; ERP: customer = billing entity; web: customer = cookie
+  Without MDM: 3 different customer counts in 3 different dashboards
+
+MDM Solution:
+  Golden record: authoritative master record per entity (customer, product, location)
+  Match & merge: probabilistic matching to link records across systems
+  Master ID: synthetic key that links all source system IDs
+  Implementation: Azure Purview (data catalog) + custom matching pipeline
+
+DATA LINEAGE
+  Track: where did this column come from? What's downstream of this table?
+  Unity Catalog: auto-captures SQL-based lineage at column level
+  ADF: pipeline-level lineage to Azure Purview
+  dbt: full DAG lineage built-in (dbt docs serve)
+  Value: impact analysis before breaking changes; root cause for bad data`}</CodeBlock>
+          <CodeBlock lang="python">{`# DATA CATALOG — Unity Catalog tagging for discoverability
+spark.sql("""
+  ALTER TABLE gold.fact_orders
+  SET TAGS (
+    'domain' = 'orders',
+    'owner' = 'orders-team@company.com',
+    'sla_freshness' = '1h',
+    'contains_pii' = 'false',
+    'data_product_version' = '3.2.0',
+    'consumer_count' = '14'
+  )
 """)
 
-# Pattern 3: Dead letter queue for bad records
-good_records, bad_records = df.filter("amount IS NOT NULL"), df.filter("amount IS NULL")
-bad_records.withColumn("error_reason", lit("null_amount")) \\
-    .withColumn("failed_at", current_timestamp()) \\
-    .write.format("delta").mode("append").table("bronze.dead_letter")
+# Column-level tags for PII governance
+spark.sql("""
+  ALTER TABLE silver.customer_profiles
+  ALTER COLUMN email SET TAGS ('pii_type' = 'email', 'gdpr_subject' = 'true')
+""")
 
-# Pattern 4: Schema evolution with backwards compatibility
-spark.sql("ALTER TABLE silver.events ADD COLUMNS (new_field STRING)")`}</CodeBlock>
+# DATA LINEAGE — track custom lineage for non-SQL pipelines
+from pyapacheatlas.auth import ServicePrincipalAuthentication
+from pyapacheatlas.core import PurviewClient
+
+# Register lineage when Bronze → Silver pipeline runs
+def register_pipeline_lineage(adf_run_id: str, source_table: str, target_table: str):
+    auth = ServicePrincipalAuthentication(
+        tenant_id=TENANT_ID, client_id=CLIENT_ID, client_secret=CLIENT_SECRET
+    )
+    client = PurviewClient(account_name=PURVIEW_ACCOUNT, authentication=auth)
+    client.upload_entities(entities=[{
+        "typeName": "Process",
+        "attributes": {
+            "name": f"silver_orders_{adf_run_id}",
+            "inputs": [{"typeName": "azure_datalake_gen2_path", "uniqueAttributes": {"qualifiedName": source_table}}],
+            "outputs": [{"typeName": "azure_datalake_gen2_path", "uniqueAttributes": {"qualifiedName": target_table}}],
+        }
+    }])
+
+# IMPACT ANALYSIS — find all downstream tables before changing a schema
+downstream_query = spark.sql("""
+  SELECT DISTINCT target_table, pipeline_name, team, owner_email
+  FROM ops.lineage_graph
+  WHERE source_table = 'silver.orders_cleaned'
+  ORDER BY team, target_table
+""")
+# Output: notify owners of all 14 downstream tables before schema change`}</CodeBlock>
           <Quiz topicId="prod-patterns" questions={[
-            { question: "Why use replaceWhere instead of mode('overwrite') for partition updates?", options: ["replaceWhere is atomic and only rewrites the matching partition, not the entire table", "replaceWhere is faster to type", "overwrite is deprecated", "replaceWhere supports multiple tables"], correct: 0 },
-            { question: "What is a Dead Letter Queue in data engineering?", options: ["A queue for low-priority messages", "A storage location for records that failed processing, for later inspection/reprocessing", "A performance optimization queue", "A backup storage tier"], correct: 1 },
+            { question: "What is the core principle of the Data Product thinking model?", options: ["Every table should be owned by the central data team", "Each dataset has a clear owner, published SLA, schema contract, and is treated with the same accountability as a software product — discoverable, tested, versioned", "Data products are only for Gold layer tables", "All data products must be in Parquet format"], correct: 1 },
+            { question: "What problem does Master Data Management (MDM) solve?", options: ["It compresses data for cheaper storage", "It resolves conflicting definitions of the same entity across source systems — creating a golden record so 'customer' means the same thing across CRM, ERP, and analytics", "It manages Terraform state", "It replaces dbt for SQL transformations"], correct: 1 },
+            { question: "Why is data lineage critical before making schema changes?", options: ["Lineage is required by GDPR", "Lineage shows all downstream tables and pipelines that depend on a column — enabling impact analysis so you can notify all affected teams before breaking their pipelines", "It improves query performance", "Lineage is only needed for compliance tables"], correct: 1 },
           ]} />
-          <button onClick={async () => { await markTopicComplete('prod-patterns'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+          {completeBtn('prod-patterns')}
+        </section>
+
+        {/* ── prod-interview-project ── */}
+        <section id="prod-interview-project" ref={el => { if (el) sectionRefs.current['prod-interview-project'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 9 - Production Data Engineering</div>
+            <h1 className="topic-title">End-to-End Capstone Project</h1>
+            <p className="topic-desc">Design and implement a production-grade data platform for a fictional e-commerce company. This project ties together every concept from Level 9 into a cohesive system design and working implementation.</p>
+          </div>
+          <CodeBlock lang="text">{`CAPSTONE: E-COMMERCE DATA PLATFORM
+═══════════════════════════════════════════════════════════════
+Company: ShopFast — 50M orders/month, 8M customers, 200 analysts
+Requirements:
+  - Daily financial reporting by 7am UTC (RTO 2h, RPO 15min)
+  - Near-real-time fraud detection feed (< 5min latency)
+  - Self-serve analytics for 200 analysts
+  - GDPR compliance (right-to-erasure, data minimization)
+  - 3-year data retention for financial data
+  - $50k/month infrastructure budget
+
+ARCHITECTURE DECISION
+═══════════════════════════════════════════════════════════════
+Chosen: Lakehouse (Azure) + Kappa for streaming
+Rationale:
+  - Lakehouse: single copy of data; SQL + ML; Unity Catalog governance
+  - Kappa: Kafka-first org; unify batch + stream in one Flink/Spark codebase
+  - Rejected Lambda: two codebases too expensive to maintain at this scale
+  - Rejected Data Mesh: team not large enough yet (15 DE team)
+
+INFRASTRUCTURE (Terraform)
+  - ADLS Gen2 GZRS: bronze/silver/gold containers
+  - Databricks Premium (Unity Catalog): shared + job clusters
+  - ADF: orchestration for batch pipelines
+  - Kafka (Event Hubs Premium): orders.events, fraud.signals
+  - Key Vault: all secrets; managed identities for service-to-service
+  - Azure Monitor + Log Analytics: observability
+  - Azure DevOps: CI/CD
+
+DATA ARCHITECTURE
+  Bronze:  Raw events + daily DB snapshots, append-only, 7-year retention
+  Silver:  Validated orders, deduplicated customers, SCD2 dimensions
+  Gold:    fct_orders, fct_revenue_daily, dim_customer (SCD2), agg_fraud_signals
+
+SLAs
+  Gold tables ready by: 06:30 UTC daily
+  Fraud signal lag: < 5 minutes
+  Bad record tolerance: < 0.1% before pipeline halt
+  Dashboard p95 query time: < 3 seconds`}</CodeBlock>
+          <CodeBlock lang="python">{`# CAPSTONE IMPLEMENTATION — key components
+
+# 1. BRONZE INGEST — idempotent, event-driven
+def ingest_orders_bronze(event: dict):
+    batch_id = event["batch_id"]
+    source_path = event["source_path"]
+
+    df = (spark.read.format("avro")
+          .load(source_path)
+          .withColumn("_batch_id", F.lit(batch_id))
+          .withColumn("_ingest_ts", F.current_timestamp())
+          .withColumn("_source", F.lit("orders_events_kafka")))
+
+    # Idempotent: delete + reinsert for this batch_id
+    spark.sql(f"DELETE FROM bronze.orders_events WHERE _batch_id = '{batch_id}'")
+    df.write.format("delta").mode("append").saveAsTable("bronze.orders_events")
+
+# 2. SILVER PROCESSING — quality + SCD2
+def process_silver_orders():
+    new_orders = spark.sql("""
+        SELECT * FROM bronze.orders_events
+        WHERE _ingest_ts >= (SELECT COALESCE(MAX(_silver_ts), '1900-01-01') FROM silver.orders)
+    """)
+
+    # Quality gates
+    valid = new_orders.filter(
+        F.col("order_id").isNotNull() &
+        F.col("amount").between(0, 1_000_000) &
+        F.col("event_type").isin("order_created","order_shipped","order_delivered","order_cancelled")
+    )
+    bad_rate = (new_orders.count() - valid.count()) / max(new_orders.count(), 1)
+    if bad_rate > 0.001:
+        raise ValueError(f"Bad record rate {bad_rate:.2%} exceeds 0.1% threshold — halting")
+
+    # Upsert to silver
+    silver_upsert(valid, "silver.orders", key_cols=["order_id"])
+
+# 3. GOLD — daily revenue fact table
+def build_gold_revenue():
+    spark.sql("""
+        CREATE OR REPLACE TABLE gold.fct_revenue_daily AS
+        SELECT
+            o.order_date,
+            c.customer_segment,
+            c.region,
+            p.category,
+            COUNT(DISTINCT o.order_id)  AS order_count,
+            SUM(o.amount)               AS gross_revenue,
+            SUM(o.amount * (1 - o.discount_rate)) AS net_revenue,
+            CURRENT_TIMESTAMP()         AS _gold_ts
+        FROM silver.orders o
+        JOIN gold.dim_customer c ON o.customer_surrogate_key = c.surrogate_key
+        JOIN gold.dim_product p  ON o.product_id = p.product_id
+        WHERE o.status = 'delivered'
+        GROUP BY 1, 2, 3, 4
+    """)
+
+# 4. FRAUD STREAMING — < 5min latency
+fraud_stream = (
+    spark.readStream
+    .format("kafka")
+    .option("subscribe", "orders.events.v2")
+    .option("maxOffsetsPerTrigger", 10_000)
+    .load()
+    .select(F.from_avro("value", orders_schema).alias("e"))
+    .select("e.*")
+    .filter("amount > 5000 OR (country != billing_country)")
+    .withColumn("fraud_score", F.expr("amount / 1000 + IF(country != billing_country, 50, 0)"))
+    .writeStream
+    .trigger(processingTime="1 minute")
+    .option("checkpointLocation", "/checkpoints/fraud")
+    .toTable("gold.agg_fraud_signals")
+)
+
+# 5. GDPR ERASURE
+def erase_customer(customer_id: str):
+    """Right-to-erasure: pseudonymize PII across all layers"""
+    tombstone = f"ERASED_{hashlib.sha256(customer_id.encode()).hexdigest()[:8]}"
+    for table in ["bronze.orders_events", "silver.orders", "gold.dim_customer"]:
+        spark.sql(f"""
+            UPDATE {table}
+            SET email = '{tombstone}', phone = '{tombstone}', name = '{tombstone}'
+            WHERE customer_id = '{customer_id}'
+        """)`}</CodeBlock>
+          <Quiz topicId="prod-interview-project" questions={[
+            { question: "In the capstone, why was Data Mesh rejected despite the company having 50M orders/month?", options: ["Data Mesh doesn't scale to that volume", "The engineering team size (15 DEs) is too small — Data Mesh requires domain teams mature enough to own data products independently; the overhead exceeds the benefit at this org size", "Data Mesh doesn't support GDPR", "Data Mesh requires a different cloud provider"], correct: 1 },
+            { question: "Why does the fraud pipeline use maxOffsetsPerTrigger=10,000 and a 1-minute trigger instead of continuous processing?", options: ["Continuous processing is not supported", "Micro-batch with bounded offsets implements backpressure — prevents executor OOM on traffic spikes while still meeting the 5-minute SLA; continuous processing provides no benefit here", "1-minute trigger is cheaper", "Kafka requires micro-batch mode"], correct: 1 },
+            { question: "What happens when the GDPR erasure function runs on a customer who made 3 years of purchases?", options: ["Their orders are deleted from all tables", "Their PII columns (email, phone, name) are replaced with a tombstone hash across bronze/silver/gold — order history is preserved for financial compliance but the customer is no longer identifiable", "Only the customer dimension table is updated", "The pipeline stops and waits for manual review"], correct: 1 },
+          ]} />
+          {completeBtn('prod-interview-project')}
         </section>
 
       </main>
