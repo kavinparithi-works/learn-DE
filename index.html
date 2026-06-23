@@ -5,6 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LearnWithMe - Data Engineering</title>
+    <script>
+      (function(){
+        var qs = window.location.search;
+        if (qs.indexOf('?p=') !== -1) {
+          var params = new URLSearchParams(qs.slice(1));
+          var p = params.get('p') || '/';
+          var q = params.get('q') ? '?' + decodeURIComponent(params.get('q')) : '';
+          window.history.replaceState(null, null, '/learn-DE' + decodeURIComponent(p) + q + window.location.hash);
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet"/>

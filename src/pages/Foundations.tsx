@@ -590,6 +590,8 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
             </p>
           </div>
 
+          <StorageAnimation />
+
           <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 10px' }}>HDD  -  Hard Disk Drives</h2>
           <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
             HDDs store data on <strong>spinning magnetic platters</strong>. A read/write head on an actuator arm must
@@ -791,6 +793,8 @@ du -sh /data/* # size of each item in /data`}</CodeBlock>
             <p className="topic-desc">The OS is the software layer between hardware and applications. Every Databricks cluster, Azure VM, and Docker container runs Linux. Understanding processes, scheduling, and IPC is essential for debugging distributed systems.</p>
           </div>
 
+          <OSAnimation />
+
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Kernel vs User Space</h3>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 16 }}>
             The OS is split into two protection rings. The <strong>kernel space</strong> runs privileged code that can access hardware directly (CPU, memory, disks, network). The <strong>user space</strong> is where your applications run. To access hardware, user programs make <strong>system calls</strong> (syscalls)  -  like read(), write(), fork(), socket()  -  which cross the kernel boundary. Context switching between user and kernel mode has overhead (~1-5μs).
@@ -888,6 +892,8 @@ asyncio.run(main())`}</CodeBlock>
             <h1 className="topic-title">Linux for Data Engineers</h1>
             <p className="topic-desc">Linux powers every cloud VM, container, and Databricks cluster. Being fluent in the terminal is a force-multiplier  -  you can diagnose issues, automate workflows, and understand system behaviour that GUIs hide.</p>
           </div>
+
+          <LinuxAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>File System Hierarchy</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 24 }}>
@@ -1140,6 +1146,8 @@ def paginate(url):
             <p className="topic-desc">Docker packages your code, dependencies, and runtime into a portable container. Every modern data pipeline runs in containers  -  Airflow workers, dbt runs, Spark executors on Kubernetes. Containers are lightweight VMs without the overhead.</p>
           </div>
 
+          <DockerAnimation />
+
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Images vs Containers</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
             <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 'var(--radius-lg)', padding: 16 }}>
@@ -1280,6 +1288,8 @@ docker system prune -af       # clean up stopped containers, images, volumes`}</
             <h1 className="topic-title">Data Types and Schemas</h1>
             <p className="topic-desc">Choosing the right data type directly impacts storage size, query performance, and correctness. A poorly typed schema can silently corrupt billions of rows  -  decimal precision errors in financial data, timezone bugs in timestamps, integer overflow in large IDs.</p>
           </div>
+
+          <DataTypesAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Primitive Data Types</h3>
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
@@ -1475,6 +1485,8 @@ for i in range(pf.num_row_groups):
             <p className="topic-desc">Compression reduces storage costs and speeds up I/O  -  especially important when reading from object storage like ADLS or S3. Understanding the speed vs ratio tradeoffs helps you choose the right codec for each layer of the medallion architecture.</p>
           </div>
 
+          <CompressionAnimation />
+
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Codec Comparison</h3>
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem' }}>
@@ -1574,6 +1586,8 @@ print(f"Zstd:   {folder_size(path_zstd):.1f} MB")`}</CodeBlock>
             <p className="topic-desc">Serialization converts in-memory objects to bytes for transmission or storage. The format you choose affects schema evolution flexibility, performance, and compatibility between producers and consumers  -  critical for event streaming and microservice integration.</p>
           </div>
 
+          <SerializationAnimation />
+
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Format Comparison</h3>
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem' }}>
@@ -1670,6 +1684,8 @@ producer.produce(
             <h1 className="topic-title">Database Types</h1>
             <p className="topic-desc">There is no single best database  -  each type is optimised for different access patterns. Knowing which database to use for which problem is a core data engineering skill. Using the wrong database type is one of the most expensive architectural mistakes.</p>
           </div>
+
+          <DatabasesAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>OLTP vs OLAP</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
@@ -1989,6 +2005,8 @@ spark.sql("""
             <p className="topic-desc">Bad data is worse than no data  -  it silently corrupts decisions. Data quality is not a one-time fix; it is an ongoing operational discipline. Every production pipeline should have DQ checks at every layer boundary.</p>
           </div>
 
+          <DataQualityAnimation />
+
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Six Dimensions of Data Quality</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
             {[
@@ -2083,6 +2101,8 @@ good.write.format("delta").mode("append").saveAsTable("silver.orders")`}</CodeBl
             <p className="topic-desc">Data governance is the framework of policies, roles, and processes that ensure data is trustworthy, secure, and compliant. As a data engineer, you implement governance  -  cataloguing assets, enforcing lineage, masking PII, and building the infrastructure for regulatory compliance.</p>
           </div>
 
+          <DataGovernanceAnimation />
+
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Core Components</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
             {[
@@ -2170,6 +2190,8 @@ spark.sql("""
             <h1 className="topic-title">Batch vs Streaming</h1>
             <p className="topic-desc">Batch and streaming are two fundamentally different processing paradigms, each with distinct tradeoffs. Most enterprise data platforms use both. Knowing when to choose each  -  and how they combine  -  is essential architectural knowledge.</p>
           </div>
+
+          <BatchStreamAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Side-by-Side Comparison</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
@@ -2622,6 +2644,460 @@ function MedallionAnimation() {
           {i < 4 && <div style={{ fontSize: '1.4rem', color: '#94a3b8', padding: '0 4px' }}>→</div>}
         </div>
       ))}
+    </div>
+  )
+}
+
+function StorageAnimation() {
+  const [active, setActive] = useState<'hdd'|'ssd'|'nvme'>('hdd')
+  const types = [
+    { key: 'hdd' as const, label: 'HDD', color: '#ef4444', latency: '5–10 ms', iops: '~200', bw: '150 MB/s' },
+    { key: 'ssd' as const, label: 'SATA SSD', color: '#f59e0b', latency: '~100 µs', iops: '~100K', bw: '550 MB/s' },
+    { key: 'nvme' as const, label: 'NVMe', color: '#22c55e', latency: '~20 µs', iops: '~500K', bw: '7 GB/s' },
+  ]
+  const t = types.find(x => x.key === active)!
+  const bars = { hdd: 8, ssd: 40, nvme: 100 }
+  return (
+    <div className="anim-wrap" style={{ background: '#0d1117', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {types.map(tp => (
+          <button key={tp.key} onClick={() => setActive(tp.key)} style={{ padding: '5px 14px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${tp.color}`, background: active === tp.key ? tp.color : 'transparent', color: active === tp.key ? '#fff' : tp.color, fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' }}>{tp.label}</button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
+        {[['Latency', t.latency], ['IOPS', t.iops], ['Bandwidth', t.bw]].map(([k, v]) => (
+          <div key={k} style={{ background: '#1a1a2d', borderRadius: 8, padding: '10px 14px', textAlign: 'center' }}>
+            <div style={{ fontSize: '.72rem', color: '#64748b', marginBottom: 4 }}>{k}</div>
+            <div style={{ fontFamily: 'monospace', fontWeight: 700, color: t.color, fontSize: '.95rem' }}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: '#111', borderRadius: 8, padding: '10px 14px' }}>
+        <div style={{ fontSize: '.72rem', color: '#64748b', marginBottom: 8 }}>Relative throughput</div>
+        <div style={{ background: '#1a1a1a', borderRadius: 4, height: 20, overflow: 'hidden' }}>
+          <div style={{ width: `${bars[active]}%`, height: '100%', background: `linear-gradient(90deg, ${t.color}88, ${t.color})`, borderRadius: 4, transition: 'width .5s ease' }} />
+        </div>
+        {active === 'hdd' && <div style={{ marginTop: 8, fontSize: '.75rem', color: '#64748b' }}>Mechanical: spinning platter + actuator arm seek = ms-level latency</div>}
+        {active === 'ssd' && <div style={{ marginTop: 8, fontSize: '.75rem', color: '#64748b' }}>NAND flash: no moving parts, but SATA bus caps at 600 MB/s</div>}
+        {active === 'nvme' && <div style={{ marginTop: 8, fontSize: '.75rem', color: '#64748b' }}>PCIe direct path to CPU: no SATA bottleneck, 7+ GB/s</div>}
+      </div>
+    </div>
+  )
+}
+
+function OSAnimation() {
+  const [step, setStep] = useState(0)
+  const steps = [
+    { label: 'User App', desc: 'Your Python/Spark process runs in user space', color: '#4f8ef7', y: 20 },
+    { label: 'System Call', desc: 'App calls read() → crosses kernel boundary (~1-5µs overhead)', color: '#8b5cf6', y: 80 },
+    { label: 'Kernel', desc: 'Kernel handles privileged operation: accesses hardware, manages memory', color: '#22c55e', y: 140 },
+    { label: 'Hardware', desc: 'Physical device (disk/network) performs the actual I/O', color: '#f59e0b', y: 200 },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>User Space → Kernel Space → Hardware</div>
+      <div style={{ position: 'relative' }}>
+        <svg viewBox="0 0 520 260" style={{ width: '100%', display: 'block' }}>
+          {steps.map((s, i) => (
+            <g key={i} onClick={() => setStep(i)} style={{ cursor: 'pointer' }}>
+              <rect x="30" y={s.y} width="200" height="40" rx="8" fill={step === i ? s.color : 'white'} stroke={s.color} strokeWidth={step === i ? 2.5 : 1.5} />
+              <text x="130" y={s.y + 24} textAnchor="middle" fill={step === i ? 'white' : s.color} fontSize="11" fontWeight="700">{s.label}</text>
+              {i < 3 && <path d="M130,0 L125,10 L135,10 Z" transform={`translate(0,${s.y+40})`} fill={s.color} opacity="0.7"/>}
+            </g>
+          ))}
+          <rect x="270" y="10" width="230" height="240" rx="12" fill="white" stroke="var(--border)" strokeWidth="1.5"/>
+          <text x="385" y="35" textAnchor="middle" fill="var(--text-secondary)" fontSize="11" fontWeight="700">{steps[step].label}</text>
+          <foreignObject x="280" y="45" width="210" height="180">
+            <div style={{ fontSize: '.78rem', color: '#475569', lineHeight: 1.6, padding: '0 4px' }}>{steps[step].desc}</div>
+          </foreignObject>
+        </svg>
+      </div>
+      <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginTop: 4 }}>Click each layer to see what happens there</div>
+    </div>
+  )
+}
+
+function LinuxAnimation() {
+  const [cmd, setCmd] = useState(0)
+  const cmds = [
+    { input: 'ps aux | grep spark', output: 'root  1234  45.2  12.1  SparkSubmit --master yarn\nroot  1235  32.1   8.4  CoarseGrainedExecutor', desc: 'List Spark processes with CPU/mem %' },
+    { input: 'df -h', output: 'Filesystem      Size  Used  Avail  Use%  Mounted\n/dev/nvme0n1p1  500G  340G  160G   68%  /\n/dev/sdb1       10T    2T    8T    20%  /data', desc: 'Show disk free space in human-readable format' },
+    { input: "awk -F',' '{sum+=$3} END{print sum}' sales.csv", output: '4782341.50\n\n# Summed column 3 across all rows without loading into memory', desc: 'Sum a CSV column with awk — no Python needed' },
+    { input: "grep -c 'ERROR' app.log", output: '247\n\n# Found 247 ERROR lines out of millions', desc: 'Count ERROR occurrences in a log file' },
+  ]
+  const c = cmds[cmd]
+  return (
+    <div className="anim-wrap" style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: 'var(--radius-xl)', padding: 16, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+        {cmds.map((_, i) => (
+          <button key={i} onClick={() => setCmd(i)} style={{ padding: '4px 12px', borderRadius: 'var(--radius-full)', border: '1px solid #30363d', background: cmd === i ? '#238636' : '#161b22', color: cmd === i ? '#fff' : '#8b949e', fontSize: '.75rem', cursor: 'pointer' }}>cmd {i+1}</button>
+        ))}
+      </div>
+      <div style={{ fontFamily: 'monospace', fontSize: '.82rem' }}>
+        <div style={{ color: '#7c3aed', marginBottom: 4 }}>$ {c.input}</div>
+        <div style={{ color: '#22c55e', marginBottom: 8, whiteSpace: 'pre-line' }}>{c.output}</div>
+        <div style={{ color: '#8b949e', fontSize: '.75rem', borderTop: '1px solid #30363d', paddingTop: 8 }}>▶ {c.desc}</div>
+      </div>
+    </div>
+  )
+}
+
+function DockerAnimation() {
+  const [view, setView] = useState<'layers'|'lifecycle'>('layers')
+  const layers = [
+    { label: 'Writable Container Layer', color: '#22c55e', bg: '#052e16', note: 'ephemeral — lost on stop' },
+    { label: 'COPY src/ ./src/', color: '#4f8ef7', bg: '#0f172a', note: 'your app code' },
+    { label: 'RUN pip install ...', color: '#8b5cf6', bg: '#1a0a2e', note: 'dependencies (cached)' },
+    { label: 'FROM python:3.11-slim', color: '#f59e0b', bg: '#1c1100', note: 'base image (shared across images)' },
+  ]
+  const lifecycle = [
+    { step: 'docker pull', color: '#4f8ef7', desc: 'Pull image from registry (Docker Hub / ACR)' },
+    { step: 'docker run', color: '#22c55e', desc: 'Create container from image + start process' },
+    { step: 'running', color: '#22c55e', desc: 'Container executing — writable layer active' },
+    { step: 'docker stop', color: '#f59e0b', desc: 'SIGTERM sent, process exits gracefully' },
+    { step: 'stopped', color: '#64748b', desc: 'Container stopped — writable layer preserved' },
+    { step: 'docker rm', color: '#ef4444', desc: 'Container removed — writable layer deleted' },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {(['layers', 'lifecycle'] as const).map(v => (
+          <button key={v} onClick={() => setView(v)} style={{ padding: '5px 16px', borderRadius: 'var(--radius-full)', border: '1.5px solid #30363d', background: view === v ? '#238636' : '#161b22', color: '#e6edf3', fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' }}>{v === 'layers' ? 'Image Layers' : 'Container Lifecycle'}</button>
+        ))}
+      </div>
+      {view === 'layers' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {layers.map((l, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: l.bg, border: `1px solid ${l.color}40`, borderRadius: 8 }}>
+              <div style={{ fontFamily: 'monospace', fontSize: '.82rem', color: l.color, flex: 1 }}>{l.label}</div>
+              <div style={{ fontSize: '.72rem', color: '#8b949e' }}>{l.note}</div>
+            </div>
+          ))}
+          <div style={{ fontSize: '.75rem', color: '#8b949e', marginTop: 8 }}>Each instruction = one cached layer. Only changed layers are rebuilt on re-build.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {lifecycle.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 100, fontFamily: 'monospace', fontSize: '.82rem', color: s.color, fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+              {i < lifecycle.length - 1 && <div style={{ fontSize: '.8rem', color: '#30363d' }}>▼</div>}
+              <div style={{ fontSize: '.78rem', color: '#8b949e' }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DataTypesAnimation() {
+  const [val, setVal] = useState(42)
+  const types = [
+    { name: 'TINYINT', bytes: 1, min: -128, max: 127, color: '#22c55e' },
+    { name: 'SMALLINT', bytes: 2, min: -32768, max: 32767, color: '#4f8ef7' },
+    { name: 'INT', bytes: 4, min: -2147483648, max: 2147483647, color: '#8b5cf6' },
+    { name: 'BIGINT', bytes: 8, min: Number.MIN_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER, color: '#f59e0b' },
+  ]
+  const fits = types.filter(t => val >= t.min && val <= t.max)
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>Integer Type Chooser</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <label style={{ fontSize: '.85rem', color: 'var(--text-secondary)' }}>Value:</label>
+        <input type="number" value={val} onChange={e => setVal(Number(e.target.value))} style={{ width: 140, padding: '6px 10px', borderRadius: 8, border: '1.5px solid var(--border)', fontFamily: 'monospace', fontSize: '.9rem' }} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px,1fr))', gap: 10 }}>
+        {types.map(t => {
+          const ok = val >= t.min && val <= t.max
+          return (
+            <div key={t.name} style={{ padding: '10px 14px', borderRadius: 8, background: ok ? `${t.color}15` : 'var(--surface-3)', border: `1.5px solid ${ok ? t.color : 'var(--border)'}`, opacity: ok ? 1 : 0.5 }}>
+              <div style={{ fontFamily: 'monospace', fontWeight: 700, color: ok ? t.color : 'var(--text-muted)', fontSize: '.88rem' }}>{t.name}</div>
+              <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 4 }}>{t.bytes} bytes</div>
+              <div style={{ fontSize: '.72rem', color: ok ? t.color : 'var(--text-muted)', marginTop: 2 }}>{ok ? '✓ fits' : '✗ overflow'}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ marginTop: 12, fontSize: '.78rem', color: 'var(--text-secondary)' }}>
+        {fits.length > 0 ? `Use ${fits[0].name} (${fits[0].bytes} bytes) — smallest type that fits saves storage.` : 'Value overflows all integer types — use DECIMAL or DOUBLE.'}
+      </div>
+    </div>
+  )
+}
+
+function CompressionAnimation() {
+  const [codec, setCodec] = useState<'snappy'|'zstd'|'gzip'>('snappy')
+  const codecs = {
+    snappy: { label: 'Snappy', ratio: 2.0, speed: 100, color: '#22c55e' },
+    zstd:   { label: 'Zstd',   ratio: 3.0, speed: 70,  color: '#4f8ef7' },
+    gzip:   { label: 'Gzip',   ratio: 4.0, speed: 30,  color: '#f59e0b' },
+  }
+  const original = 100
+  const c = codecs[codec]
+  const compressed = (original / c.ratio).toFixed(1)
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>Compression Codec Tradeoffs</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        {(Object.entries(codecs) as [keyof typeof codecs, typeof codecs.snappy][]).map(([k, v]) => (
+          <button key={k} onClick={() => setCodec(k)} style={{ padding: '5px 16px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${v.color}`, background: codec === k ? v.color : 'transparent', color: codec === k ? '#fff' : v.color, fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' }}>{v.label}</button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>Storage size (100 MB original)</div>
+          <div style={{ background: 'var(--surface-3)', borderRadius: 6, height: 20, overflow: 'hidden', marginBottom: 4 }}>
+            <div style={{ width: `${(Number(compressed)/original)*100}%`, height: '100%', background: c.color, borderRadius: 6, transition: 'width .4s ease' }} />
+          </div>
+          <div style={{ fontFamily: 'monospace', fontWeight: 700, color: c.color }}>{compressed} MB ({c.ratio}x ratio)</div>
+        </div>
+        <div>
+          <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>Decompression speed (relative)</div>
+          <div style={{ background: 'var(--surface-3)', borderRadius: 6, height: 20, overflow: 'hidden', marginBottom: 4 }}>
+            <div style={{ width: `${c.speed}%`, height: '100%', background: c.color, borderRadius: 6, transition: 'width .4s ease' }} />
+          </div>
+          <div style={{ fontFamily: 'monospace', fontWeight: 700, color: c.color }}>{c.speed}% of max speed</div>
+        </div>
+      </div>
+      <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+        {codec === 'snappy' && 'Best for: Parquet in Spark pipelines. Fast decompression keeps CPU free for actual computation.'}
+        {codec === 'zstd' && 'Best for: Gold layer archives. Better ratio than Snappy with acceptable CPU overhead.'}
+        {codec === 'gzip' && 'Best for: Cold archival CSV/JSON. Best ratio but slowest — not ideal for hot query paths.'}
+      </div>
+    </div>
+  )
+}
+
+function SerializationAnimation() {
+  const [fmt, setFmt] = useState<'json'|'avro'|'proto'>('json')
+  const formats = {
+    json:  { label: 'JSON',     color: '#f59e0b', size: 186, time: 100, schema: false },
+    avro:  { label: 'Avro',     color: '#4f8ef7', size:  42, time:  25, schema: true  },
+    proto: { label: 'Protobuf', color: '#22c55e', size:  28, time:  15, schema: true  },
+  }
+  const example = `{
+  "order_id": 12345,
+  "customer": "Alice",
+  "amount": 99.99,
+  "status": "shipped"
+}`
+  const f = formats[fmt]
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>Serialization Format Comparison</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {(Object.entries(formats) as [keyof typeof formats, typeof formats.json][]).map(([k, v]) => (
+          <button key={k} onClick={() => setFmt(k)} style={{ padding: '5px 16px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${v.color}`, background: fmt === k ? v.color : 'transparent', color: fmt === k ? '#fff' : v.color, fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' }}>{v.label}</button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>Message size (bytes)</div>
+          <div style={{ background: 'var(--surface-3)', borderRadius: 6, height: 20, overflow: 'hidden', marginBottom: 4 }}>
+            <div style={{ width: `${(f.size/186)*100}%`, height: '100%', background: f.color, borderRadius: 6, transition: 'width .4s ease' }} />
+          </div>
+          <div style={{ fontFamily: 'monospace', fontWeight: 700, color: f.color }}>{f.size} bytes</div>
+        </div>
+        <div>
+          <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>Serialization time (relative)</div>
+          <div style={{ background: 'var(--surface-3)', borderRadius: 6, height: 20, overflow: 'hidden', marginBottom: 4 }}>
+            <div style={{ width: `${f.time}%`, height: '100%', background: f.color, borderRadius: 6, transition: 'width .4s ease' }} />
+          </div>
+          <div style={{ fontFamily: 'monospace', fontWeight: 700, color: f.color }}>{f.time}% of JSON time</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px' }}>
+          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginBottom: 6 }}>Equivalent payload as JSON:</div>
+          <pre style={{ margin: 0, fontSize: '.72rem', color: '#1e293b', lineHeight: 1.5, overflowX: 'auto' }}>{example}</pre>
+        </div>
+        <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: 8, padding: '10px 12px' }}>
+          <div style={{ fontSize: '.72rem', color: '#8b949e', marginBottom: 6 }}>Stored as {fmt === 'json' ? 'human-readable text' : 'compact binary'}:</div>
+          <div style={{ fontFamily: 'monospace', fontSize: '.72rem', color: f.color, lineHeight: 1.6 }}>
+            {fmt === 'json' && '7b 22 6f 72 64 65 72 5f 69 64 22 3a 31 32 33 34 35 2c 22 63 75...'}
+            {fmt === 'avro' && '00 00 00 00 01 d2 0a 41 6c 69 63 65 71 47 ae 47 4e 53 c0 3f 00...'}
+            {fmt === 'proto' && '08 b9 60 12 05 41 6c 69 63 65 1d d7 a3 c6 42 2a 07 73 68 69 70...'}
+          </div>
+          <div style={{ marginTop: 8, fontSize: '.7rem', color: '#8b949e' }}>
+            {f.schema ? '✓ Schema required (registered separately)' : '✗ Schema embedded in every message'}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DatabasesAnimation() {
+  const [db, setDb] = useState<'oltp'|'olap'|'redis'|'vector'>('oltp')
+  const types = {
+    oltp:   { label: 'OLTP', color: '#4f8ef7', query: "UPDATE orders SET status='shipped'\nWHERE order_id = 12345;", time: '~2 ms', rows: '1 row', use: 'Transactional app: fast point reads/writes' },
+    olap:   { label: 'OLAP', color: '#8b5cf6', query: 'SELECT country, SUM(revenue)\nFROM fact_sales\nGROUP BY country\nORDER BY 2 DESC;', time: '~4 sec', rows: '50M rows scanned', use: 'Analytics: aggregate over billions of rows' },
+    redis:  { label: 'Cache', color: '#ef4444', query: 'GET customer:12345\n\n# Returns cached JSON\n# in ~0.1ms', time: '~0.1 ms', rows: 'in-memory', use: 'Key-value cache: sub-millisecond lookups' },
+    vector: { label: 'Vector', color: '#22c55e', query: 'index.query(\n  vector=embedding,\n  top_k=10\n)\n# ANN similarity search', time: '~10 ms', rows: 'embedding space', use: 'Semantic search / RAG: nearest neighbours' },
+  }
+  const t = types[db]
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>Database Types — Access Patterns</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        {(Object.entries(types) as [keyof typeof types, typeof types.oltp][]).map(([k, v]) => (
+          <button key={k} onClick={() => setDb(k)} style={{ padding: '5px 14px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${v.color}`, background: db === k ? v.color : 'transparent', color: db === k ? '#fff' : v.color, fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' }}>{v.label}</button>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ background: '#0d1117', borderRadius: 8, padding: '12px 14px' }}>
+          <div style={{ fontSize: '.72rem', color: '#8b949e', marginBottom: 8 }}>Example query:</div>
+          <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '.78rem', color: t.color, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{t.query}</pre>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px' }}>
+            <div style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>Typical response time</div>
+            <div style={{ fontFamily: 'monospace', fontWeight: 700, color: t.color, fontSize: '.95rem' }}>{t.time}</div>
+          </div>
+          <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px' }}>
+            <div style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>Data scanned</div>
+            <div style={{ fontFamily: 'monospace', fontWeight: 700, color: t.color, fontSize: '.95rem' }}>{t.rows}</div>
+          </div>
+          <div style={{ background: `${t.color}12`, border: `1px solid ${t.color}40`, borderRadius: 8, padding: '10px 14px', fontSize: '.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{t.use}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DataQualityAnimation() {
+  const [dim, setDim] = useState(0)
+  const dims = [
+    { name: 'Completeness', icon: '✅', color: '#22c55e', check: "df.filter(col('order_id').isNull()).count()", good: '0 nulls', bad: '12,847 nulls!', goodMsg: 'All order_ids populated', badMsg: 'Missing 12,847 order_ids → quarantine' },
+    { name: 'Uniqueness', icon: '🔑', color: '#ef4444', check: "df.groupBy('order_id').count().filter('count > 1')", good: '0 duplicates', bad: '3,241 dupes!', goodMsg: 'No duplicate order_ids', badMsg: '3,241 duplicate orders → dedup' },
+    { name: 'Validity', icon: '📋', color: '#4f8ef7', check: "df.filter(col('amount') < 0).count()", good: '0 negatives', bad: '891 negatives!', goodMsg: 'All amounts ≥ 0', badMsg: '891 negative amounts → investigate' },
+    { name: 'Timeliness', icon: '⏱️', color: '#f59e0b', check: "max_lag_minutes = (now - max(event_time)) / 60", good: 'lag: 3 min', bad: 'lag: 87 min!', goodMsg: 'Data arriving within SLA (5 min)', badMsg: 'Pipeline delayed — alert triggered' },
+  ]
+  const d = dims[dim]
+  const [show, setShow] = useState<'good'|'bad'>('good')
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>DQ Check Simulator</div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+        {dims.map((dd, i) => (
+          <button key={i} onClick={() => setDim(i)} style={{ padding: '4px 12px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${dd.color}`, background: dim === i ? dd.color : 'transparent', color: dim === i ? '#fff' : dd.color, fontSize: '.78rem', fontWeight: 600, cursor: 'pointer' }}>{dd.icon} {dd.name}</button>
+        ))}
+      </div>
+      <div style={{ background: '#0d1117', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontFamily: 'monospace', fontSize: '.8rem', color: '#4f8ef7' }}>
+        {d.check}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        {(['good', 'bad'] as const).map(s => (
+          <button key={s} onClick={() => setShow(s)} style={{ flex: 1, padding: '6px', borderRadius: 8, border: `1.5px solid ${s === 'good' ? '#22c55e' : '#ef4444'}`, background: show === s ? (s === 'good' ? '#22c55e' : '#ef4444') : 'transparent', color: show === s ? '#fff' : (s === 'good' ? '#22c55e' : '#ef4444'), fontWeight: 600, fontSize: '.8rem', cursor: 'pointer' }}>{s === 'good' ? '✓ Pass' : '✗ Fail'}</button>
+        ))}
+      </div>
+      <div style={{ padding: '12px 14px', borderRadius: 8, background: show === 'good' ? '#052e16' : '#450a0a', border: `1px solid ${show === 'good' ? '#22c55e' : '#ef4444'}40` }}>
+        <div style={{ fontFamily: 'monospace', fontWeight: 700, color: show === 'good' ? '#22c55e' : '#ef4444', fontSize: '.88rem', marginBottom: 4 }}>{show === 'good' ? d.good : d.bad}</div>
+        <div style={{ fontSize: '.78rem', color: '#94a3b8' }}>{show === 'good' ? d.goodMsg : d.badMsg}</div>
+      </div>
+    </div>
+  )
+}
+
+function DataGovernanceAnimation() {
+  const nodes = [
+    { id: 'source', label: 'CRM\nSource', x: 60,  y: 100, color: '#94a3b8' },
+    { id: 'bronze', label: 'Bronze\nRaw',   x: 200, y: 60,  color: '#cd7f32' },
+    { id: 'silver', label: 'Silver\nClean', x: 340, y: 60,  color: '#64748b' },
+    { id: 'gold',   label: 'Gold\nKPIs',   x: 480, y: 60,  color: '#f59e0b' },
+    { id: 'bi',     label: 'Power BI\nReport', x: 560, y: 160, color: '#8b5cf6' },
+    { id: 'mask',   label: 'PII\nMasked',  x: 340, y: 170, color: '#ef4444' },
+  ]
+  const edges = [
+    ['source','bronze'], ['bronze','silver'], ['silver','gold'], ['gold','bi'], ['silver','mask'],
+  ] as [string,string][]
+  const getNode = (id: string) => nodes.find(n => n.id === id)!
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 16, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>Data Lineage — where does data come from?</div>
+      <svg viewBox="0 0 640 240" style={{ width: '100%', maxWidth: 640, display: 'block' }}>
+        <defs>
+          <marker id="gov-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8" />
+          </marker>
+          <style>{`@keyframes gov-dash { to { stroke-dashoffset: -18; } } .gov-flow { stroke-dasharray: 5 3; animation: gov-dash 1.2s linear infinite; }`}</style>
+        </defs>
+        {edges.map(([a, b], i) => {
+          const na = getNode(a), nb = getNode(b)
+          return <line key={i} x1={na.x+40} y1={na.y} x2={nb.x-40} y2={nb.y} stroke="#94a3b8" strokeWidth="1.5" markerEnd="url(#gov-arrow)" className="gov-flow"/>
+        })}
+        {nodes.map((n, i) => (
+          <g key={i}>
+            <rect x={n.x-40} y={n.y-20} width={80} height={40} rx="8" fill="white" stroke={n.color} strokeWidth="1.5"/>
+            <text x={n.x} y={n.y+2} textAnchor="middle" fill={n.color} fontSize="9" fontWeight="700" style={{ whiteSpace: 'pre-line' }}>{n.label.split('\n')[0]}</text>
+            <text x={n.x} y={n.y+13} textAnchor="middle" fill={n.color} fontSize="8" opacity="0.8">{n.label.split('\n')[1]}</text>
+          </g>
+        ))}
+        <text x="320" y="228" textAnchor="middle" fill="#94a3b8" fontSize="9">Unity Catalog tracks every transformation — click any table to see its full lineage</text>
+      </svg>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 8, marginTop: 8 }}>
+        {[
+          { label: 'PII columns tagged', color: '#ef4444' },
+          { label: 'Access logged in Unity Catalog', color: '#4f8ef7' },
+          { label: 'GDPR delete propagates all layers', color: '#22c55e' },
+        ].map((b, i) => (
+          <div key={i} style={{ padding: '6px 10px', borderRadius: 6, background: `${b.color}12`, border: `1px solid ${b.color}40`, fontSize: '.75rem', color: 'var(--text-secondary)' }}>
+            <span style={{ color: b.color, fontWeight: 700 }}>■ </span>{b.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BatchStreamAnimation() {
+  const [mode, setMode] = useState<'batch'|'stream'>('batch')
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 800)
+    return () => clearInterval(id)
+  }, [])
+  const batchEvents = Array.from({ length: 12 }, (_, i) => i)
+  const streamEvents = Array.from({ length: 4 }, (_, i) => i)
+  const batchProcessed = mode === 'batch' ? Math.floor(tick / 6) % 3 : -1
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>Batch vs Streaming Data Flow</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {(['batch', 'stream'] as const).map(m => (
+          <button key={m} onClick={() => setMode(m)} style={{ padding: '5px 20px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${m === 'batch' ? '#4f8ef7' : '#22c55e'}`, background: mode === m ? (m === 'batch' ? '#4f8ef7' : '#22c55e') : 'transparent', color: mode === m ? '#fff' : (m === 'batch' ? '#4f8ef7' : '#22c55e'), fontWeight: 600, fontSize: '.85rem', cursor: 'pointer' }}>{m === 'batch' ? 'Batch (nightly)' : 'Streaming (real-time)'}</button>
+        ))}
+      </div>
+      {mode === 'batch' ? (
+        <div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+            {batchEvents.map(i => {
+              const group = Math.floor(i / 4)
+              const done = group < batchProcessed
+              return (
+                <div key={i} style={{ width: 36, height: 28, borderRadius: 6, background: done ? '#4f8ef7' : '#e2e8f0', border: `1px solid ${done ? '#3b82f6' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.7rem', fontFamily: 'monospace', color: done ? 'white' : '#64748b', transition: 'background .3s' }}>e{i}</div>
+              )
+            })}
+          </div>
+          <div style={{ fontSize: '.8rem', color: '#4f8ef7' }}>Processing {batchProcessed > 0 ? `${batchProcessed*4} events` : '...'} — waits to accumulate ALL events then processes in bulk</div>
+          <div style={{ marginTop: 6, fontSize: '.75rem', color: 'var(--text-secondary)' }}>Latency: hours | Throughput: very high | Simplicity: easy</div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'center' }}>
+            {streamEvents.map(i => {
+              const active = tick % 4 === i
+              return (
+                <div key={i} style={{ width: 40, height: 32, borderRadius: 6, background: active ? '#22c55e' : '#e2e8f0', border: `1px solid ${active ? '#16a34a' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.7rem', fontFamily: 'monospace', color: active ? 'white' : '#64748b', transition: 'background .1s' }}>e{(tick-streamEvents.length+i+1)%100}</div>
+              )
+            })}
+            <div style={{ marginLeft: 8, fontSize: '.7rem', color: '#22c55e', fontFamily: 'monospace' }}>→ Kafka → Spark</div>
+            <div style={{ background: '#052e16', border: '1px solid #22c55e', borderRadius: 6, padding: '4px 10px', fontSize: '.7rem', color: '#22c55e', fontFamily: 'monospace' }}>Delta Gold updated</div>
+          </div>
+          <div style={{ fontSize: '.8rem', color: '#22c55e' }}>Processing event-by-event as they arrive — millisecond latency</div>
+          <div style={{ marginTop: 6, fontSize: '.75rem', color: 'var(--text-secondary)' }}>Latency: ms–seconds | Throughput: lower | Complexity: higher</div>
+        </div>
+      )}
     </div>
   )
 }
