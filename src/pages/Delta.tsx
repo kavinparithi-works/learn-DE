@@ -185,6 +185,7 @@ spark.sql("DESCRIBE DETAIL delta.\`/mnt/datalake/bronze/users\`").show(vertical=
             <h1 className="topic-title">ACID Transactions</h1>
             <p className="topic-desc">Delta Lake provides full ACID guarantees on cloud object stores. Understanding how each property is implemented helps you reason about concurrent workloads, failure modes, and data consistency in production pipelines.</p>
           </div>
+          <ACIDAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -292,6 +293,7 @@ spark.sql("""
             <h1 className="topic-title">Write Operations</h1>
             <p className="topic-desc">Delta Lake supports a rich set of write patterns  -  from simple appends to selective partition overwrites. Choosing the right write mode avoids data duplication, minimises file churn, and keeps downstream consumers consistent.</p>
           </div>
+          <WriteModesAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -626,6 +628,7 @@ spark.sql("""
             <h1 className="topic-title">Schema Enforcement &amp; Evolution</h1>
             <p className="topic-desc">Delta Lake enforces schema on write by default  -  mismatched columns raise an error before any data lands. Schema evolution options let you safely add columns and adapt to upstream changes without rewriting the entire table.</p>
           </div>
+          <SchemaEvolutionAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -898,6 +901,7 @@ spark.sql("""
             <h1 className="topic-title">Change Data Feed</h1>
             <p className="topic-desc">Change Data Feed (CDF) lets you efficiently read only the rows that changed between two versions of a Delta table  -  inserts, updates, and deletes. This powers incremental propagation patterns from Bronze all the way to Gold without full table scans.</p>
           </div>
+          <CDFAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1060,6 +1064,7 @@ query.awaitTermination()`}</CodeBlock>
             <h1 className="topic-title">OPTIMIZE</h1>
             <p className="topic-desc">Frequent writes  -  especially streaming micro-batches  -  create many small Parquet files that degrade read performance. OPTIMIZE compacts them into larger files through bin-packing, dramatically reducing file-open overhead and improving query speed.</p>
           </div>
+          <OptimizeAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1174,6 +1179,7 @@ print("OPTIMIZE is safe to run in production on live tables.")`}</CodeBlock>
             <h1 className="topic-title">Z-ORDER Clustering</h1>
             <p className="topic-desc">Z-ORDER co-locates related rows in the same Parquet files based on the values of one or more columns. Combined with Delta's column statistics in the transaction log, this enables aggressive data skipping  -  reading only the files that could contain your query's rows.</p>
           </div>
+          <ZOrderAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1314,6 +1320,7 @@ spark.sql("""
             <h1 className="topic-title">VACUUM</h1>
             <p className="topic-desc">Delta Lake accumulates obsolete Parquet files over time  -  files removed by UPDATE, DELETE, MERGE, OPTIMIZE, or overwrites. VACUUM permanently deletes these unreferenced files to reclaim storage. It is safe for concurrent readers because Delta's snapshot isolation guarantees they always see a consistent version.</p>
           </div>
+          <VacuumAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1437,6 +1444,7 @@ except Exception as e:
             <h1 className="topic-title">Liquid Clustering</h1>
             <p className="topic-desc">Liquid Clustering is the next-generation replacement for Hive-style partitioning and Z-ORDER. It uses flexible, incremental clustering without rewriting the entire table. Available in Databricks Runtime 13.3+.</p>
           </div>
+          <LiquidClusteringAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -1494,6 +1502,7 @@ dt.optimize().executeCompaction()  # incremental clustering
             <h1 className="topic-title">Table Constraints</h1>
             <p className="topic-desc">Delta Lake supports NOT NULL and CHECK constraints that enforce data quality at write time. Any write that violates a constraint is rejected with an error before data lands in the table.</p>
           </div>
+          <ConstraintsAnimation />
           <CodeBlock lang="sql">{`-- NOT NULL constraint (defined at column level)
 CREATE TABLE production.silver.orders (
   order_id    BIGINT NOT NULL,
@@ -1544,6 +1553,7 @@ ALTER TABLE production.silver.orders
             <h1 className="topic-title">Table Properties</h1>
             <p className="topic-desc">Delta table properties control retention, automatic optimization, change data feed, and column mapping. They are stored in the transaction log and can be set at table creation or altered later.</p>
           </div>
+          <TablePropsAnimation />
           <CodeBlock lang="sql">{`-- Set properties at CREATE time
 CREATE TABLE production.silver.events
 USING DELTA
@@ -1594,6 +1604,7 @@ UNSET TBLPROPERTIES ('delta.autoOptimize.autoCompact');`}</CodeBlock>
             <h1 className="topic-title">Partitioning Strategy</h1>
             <p className="topic-desc">Partitioning physically organizes data into subdirectories by column value. Good partition design dramatically improves query performance by eliminating entire directory scans. Bad partition design creates thousands of tiny files and slows everything down.</p>
           </div>
+          <PartitioningDeltaAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -1674,6 +1685,7 @@ spark.sql("ALTER TABLE production.silver.events CLUSTER BY (event_date, region)"
             <h1 className="topic-title">Delta Performance Tuning</h1>
             <p className="topic-desc">Delta Lake has multiple performance levers beyond OPTIMIZE and Z-ORDER: column statistics for data skipping, Bloom filters for high-cardinality lookups, disk caching on Databricks, and the Photon vectorized engine.</p>
           </div>
+          <DeltaPerformanceAnimation />
           <CodeBlock lang="python">{`# 1. DATA SKIPPING with column statistics
 # Delta auto-collects min/max/null counts for the first 32 columns
 # These stats live in the transaction log JSON files  -  no extra scan needed
@@ -1739,6 +1751,7 @@ spark.sql("ANALYZE TABLE production.silver.events COMPUTE STATISTICS FOR ALL COL
             <h1 className="topic-title">Databricks Platform Overview</h1>
             <p className="topic-desc">Databricks is the lakehouse platform built on Apache Spark. It provides managed clusters, notebooks, workflows, SQL warehouses, and Unity Catalog  -  all on top of customer cloud storage (ADLS Gen2, S3, GCS).</p>
           </div>
+          <DatabricksPlatformAnimation />
           <CodeBlock lang="python">{`# Databricks Runtime (DBR) version controls Spark version + optimizations
 # DBR 14.3 LTS = Spark 3.5, Python 3.11, long-term support (recommended for production)
 # DBR 15.x = Spark 3.5 + latest Databricks features (cutting edge)
@@ -1855,6 +1868,7 @@ WHERE target_table_full_name = 'production.silver.customers';`}</CodeBlock>
             <h1 className="topic-title">Unity Catalog Permissions</h1>
             <p className="topic-desc">Unity Catalog uses an additive permission model  -  there is no DENY. Permissions cascade down the hierarchy (catalog → schema → table). Groups are the recommended way to manage access at scale.</p>
           </div>
+          <UCPermissionsAnimation />
           <CodeBlock lang="sql">{`-- GRANT syntax: GRANT <privilege> ON <securable_type> <name> TO <principal>
 -- Principals: user email, group name, service principal app ID
 
@@ -1915,6 +1929,7 @@ GRANT SELECT  ON TABLE production.silver.events  TO \`job-sp-app-id-12345\`;
             <h1 className="topic-title">Row Filters and Column Masking</h1>
             <p className="topic-desc">Unity Catalog row filters restrict which rows a user can see. Column masks dynamically transform column values (e.g., mask PII for non-privileged users). Both are implemented as SQL functions and attached to tables.</p>
           </div>
+          <RowColFilterAnimation />
           <CodeBlock lang="sql">{`-- ROW FILTERS: restrict rows visible to each user/group
 -- Step 1: Create the filter function
 CREATE FUNCTION production.silver.filter_by_region(region STRING)
@@ -2080,6 +2095,7 @@ def cancelled_orders_view():
             <h1 className="topic-title">Auto Loader (cloudFiles)</h1>
             <p className="topic-desc">Auto Loader incrementally and efficiently processes new files from cloud storage. It tracks which files have been processed using a checkpoint, supports two file discovery modes, and handles schema inference and evolution automatically.</p>
           </div>
+          <AutoloaderAnimation />
           <CodeBlock lang="python">{`# Auto Loader  -  production-ready configuration
 from pyspark.sql import functions as F
 
@@ -2155,6 +2171,7 @@ query.awaitTermination()
             <h1 className="topic-title">Databricks Workflows / Lakeflow</h1>
             <p className="topic-desc">Databricks Workflows (branded as Lakeflow Orchestration) is the native orchestration engine. It supports complex DAGs of tasks with dependencies, retry policies, alerting, and dynamic parameter passing.</p>
           </div>
+          <WorkflowsAnimation />
           <CodeBlock lang="json">{`{
   "name": "Production Gold Layer  -  Daily",
   "schedule": {
@@ -2275,6 +2292,7 @@ query.awaitTermination()
             <h1 className="topic-title">Databricks Asset Bundles (DAB)</h1>
             <p className="topic-desc">Databricks Asset Bundles (DAB) is the Infrastructure-as-Code solution for Databricks. Define jobs, pipelines, notebooks, and cluster configs in YAML, then deploy to dev/staging/prod with a single CLI command.</p>
           </div>
+          <DABAnimation />
           <CodeBlock lang="yaml">{`# bundle.yml  -  root configuration file
 bundle:
   name: gold-layer-pipeline
@@ -2405,6 +2423,7 @@ databricks bundle destroy --target dev
             <h1 className="topic-title">Databricks SQL</h1>
             <p className="topic-desc">Databricks SQL is the SQL analytics layer  -  SQL warehouses for BI tools, query history and profiling, alerts, and dashboards. Serverless warehouses start instantly and auto-scale with zero management.</p>
           </div>
+          <DatabricksSQLAnimation />
           <CodeBlock lang="sql">{`-- SQL WAREHOUSES: two types
 -- 1. Serverless: instant start (<5 sec), auto-scale, fully managed, higher cost/DBU
 -- 2. Classic (Pro/Standard): manual cluster management, slower start, lower cost/DBU
@@ -2479,6 +2498,7 @@ AS SELECT * FROM STREAM(production.bronze.events_landing);
             <h1 className="topic-title">Delta Sharing</h1>
             <p className="topic-desc">Delta Sharing is an open protocol for sharing live data securely across organizations without copying or moving data. Recipients can access shared tables using any supported platform (Databricks, Spark, pandas, Power BI, etc.).</p>
           </div>
+          <DeltaSharingAnimation />
           <CodeBlock lang="sql">{`-- Delta Sharing: provider side (you share data FROM this side)
 
 -- Step 1: Create a share (logical container for shared objects)
@@ -2557,6 +2577,7 @@ ORDER BY event_time DESC;`}</CodeBlock>
             <h1 className="topic-title">Apache Iceberg Architecture</h1>
             <p className="topic-desc">Apache Iceberg is an open table format for huge analytic datasets. Unlike Hive which tracks data at the partition directory level, Iceberg tracks files at the table level  -  enabling hidden partitioning, partition evolution, and snapshot isolation. The metadata layer (manifest files → manifest lists → table metadata JSON) is completely decoupled from the data files (Parquet/ORC/Avro), and a catalog (Hive/Glue/REST/Nessie) stores just a pointer to the current metadata file.</p>
           </div>
+          <IcebergIntroAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2679,6 +2700,7 @@ spark.sql("""
             <h1 className="topic-title">Iceberg: Hidden Partitioning + Time Travel</h1>
             <p className="topic-desc">Iceberg's hidden partitioning is one of its most powerful innovations  -  partition transforms (identity, bucket, truncate, year/month/day/hour) are applied automatically by the engine. Queries never need to know the physical partition layout. Combined with schema evolution, partition evolution, and time travel, Iceberg provides a full table management lifecycle without ever rewriting all your data.</p>
           </div>
+          <IcebergFeaturesAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2818,6 +2840,7 @@ spark.read.option("tag", "monthly_snapshot_jan_2024").table("glue_catalog.db.eve
             <h1 className="topic-title">Apache Hudi (COW vs MOR)</h1>
             <p className="topic-desc">Apache Hudi (Hadoop Upserts and Incremental Deletes) was built by Uber for record-level upserts on data lakes  -  a problem Delta and Iceberg solve differently. Hudi's defining architectural choice is its two table types: Copy-On-Write (COW) rewrites Parquet files on every write, while Merge-On-Read (MOR) appends delta log files and merges at read time. Every Hudi operation is recorded on the Hudi Timeline, providing a complete operational history.</p>
           </div>
+          <HudiAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2949,6 +2972,7 @@ delete_df.write \
             <h1 className="topic-title">Delta vs Iceberg vs Hudi Comparison</h1>
             <p className="topic-desc">Delta Lake, Apache Iceberg, and Apache Hudi all solve the same core problem  -  ACID transactions and reliable upserts on cloud data lakes  -  but with different architectural trade-offs, ecosystem alignments, and strengths. Understanding when to choose each format is critical for modern data platform design.</p>
           </div>
+          <FormatComparisonAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3090,6 +3114,686 @@ hudi_df_incr = spark.read.format("hudi") \
 // ============================================================
 // ANIMATION COMPONENTS
 // ============================================================
+
+function ACIDAnimation() {
+  const [prop, setProp] = useState<'A'|'C'|'I'|'D'>('A')
+  const props: Record<string,{name:string,desc:string,how:string,color:string}> = {
+    A:{name:'Atomicity',desc:'Write succeeds fully or fails completely — no partial files',how:'_delta_log commit: either all Parquet files are listed or none',color:'#4f8ef7'},
+    C:{name:'Consistency',desc:'Schema enforced at write time — bad data rejected',how:'Schema validation before commit; CAST errors abort the entire write',color:'#22c55e'},
+    I:{name:'Isolation',desc:'Concurrent readers never see partial writes',how:'Optimistic concurrency: readers read last committed snapshot version',color:'#8b5cf6'},
+    D:{name:'Durability',desc:'Committed data survives failures',how:'JSON commit entry in _delta_log/ + Parquet files in cloud object store',color:'#f59e0b'},
+  }
+  const sel = props[prop]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>ACID — Click Each Property</div>
+      <div style={{display:'flex',gap:8,marginBottom:12}}>
+        {(['A','C','I','D'] as const).map(k=>(
+          <button key={k} onClick={()=>setProp(k)} style={{flex:1,padding:'10px 0',borderRadius:8,border:`2px solid ${prop===k?props[k].color:'var(--border)'}`,background:prop===k?`${props[k].color}15`:'white',fontWeight:800,cursor:'pointer',fontSize:'1rem',color:prop===k?props[k].color:'#94a3b8'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`}}>
+        <div style={{fontWeight:700,fontSize:'.9rem',color:sel.color,marginBottom:6}}>{sel.name}</div>
+        <div style={{fontSize:'.82rem',color:'#1e293b',marginBottom:8}}>{sel.desc}</div>
+        <div style={{fontSize:'.75rem',color:'#475569',fontStyle:'italic'}}>How: {sel.how}</div>
+      </div>
+    </div>
+  )
+}
+
+function WriteModesAnimation() {
+  const [mode, setMode] = useState<'append'|'overwrite'|'overwriteWhere'|'merge'>('append')
+  const modes: Record<string,{icon:string,desc:string,useCase:string,color:string}> = {
+    append:{icon:'➕',desc:'Adds new files — existing data untouched',useCase:'Daily incremental loads, streaming writes',color:'#22c55e'},
+    overwrite:{icon:'♻️',desc:'Drops all existing data, writes fresh',useCase:'Full refresh tables, small dimension tables',color:'#ef4444'},
+    overwriteWhere:{icon:'🎯',desc:'Atomically replaces only matching partitions',useCase:'Re-processing one month, fixing a partition',color:'#f59e0b'},
+    merge:{icon:'🔀',desc:'Upsert: INSERT new + UPDATE/DELETE existing by key',useCase:'CDC, SCD Type 2, idempotent re-runs',color:'#8b5cf6'},
+  }
+  const sel = modes[mode]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Delta Write Modes</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['append','overwrite','overwriteWhere','merge'] as const).map(k=>(
+          <button key={k} onClick={()=>setMode(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${mode===k?modes[k].color:'var(--border)'}`,background:mode===k?`${modes[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:mode===k?modes[k].color:'#94a3b8'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`,textAlign:'center'}}>
+        <div style={{fontSize:'1.8rem',marginBottom:6}}>{sel.icon}</div>
+        <div style={{fontSize:'.82rem',color:'#1e293b',fontWeight:600,marginBottom:4}}>{sel.desc}</div>
+        <div style={{fontSize:'.75rem',color:'#475569'}}>Use case: {sel.useCase}</div>
+      </div>
+    </div>
+  )
+}
+
+function SchemaEvolutionAnimation() {
+  const [mode, setMode] = useState<'enforce'|'evolve'|'overwrite'>('enforce')
+  const modes: Record<string,{label:string,desc:string,config:string,allows:string,color:string}> = {
+    enforce:{label:'Schema Enforcement',desc:'Reject writes that do not match current schema (default)',config:'no config needed — always on',allows:'Exact match only',color:'#ef4444'},
+    evolve:{label:'Schema Evolution',desc:'Auto-add new columns from incoming data',config:'mergeSchema = true',allows:'Add columns, widen types',color:'#22c55e'},
+    overwrite:{label:'Schema Overwrite',desc:'Replace schema entirely on full overwrite',config:'overwriteSchema = true',allows:'Any schema change on full replace',color:'#f59e0b'},
+  }
+  const sel = modes[mode]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Schema Enforcement vs Evolution</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['enforce','evolve','overwrite'] as const).map(k=>(
+          <button key={k} onClick={()=>setMode(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${mode===k?modes[k].color:'var(--border)'}`,background:mode===k?`${modes[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.75rem',color:mode===k?modes[k].color:'#94a3b8'}}>{modes[k].label.split(' ')[1]}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {[['Behavior',sel.desc],['Config',sel.config],['Allows',sel.allows]].map(([k,v])=>(
+          <div key={k} style={{padding:'8px 12px',borderRadius:8,background:'white',border:'1px solid var(--border)',display:'flex',gap:10}}>
+            <span style={{minWidth:60,fontSize:'.72rem',color:'#64748b'}}>{k}</span>
+            <span style={{fontSize:'.8rem',color:'#1e293b',fontFamily:k==='Config'?'monospace':undefined,fontWeight:k==='Config'?700:400}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CDFAnimation() {
+  const [step, setStep] = useState(0)
+  const changes = [
+    {op:'INSERT',key:'user_1',before:null,after:{status:'active',amount:100},color:'#22c55e'},
+    {op:'UPDATE',key:'user_2',before:{status:'active',amount:200},after:{status:'inactive',amount:200},color:'#f59e0b'},
+    {op:'DELETE',key:'user_3',before:{status:'active',amount:300},after:null,color:'#ef4444'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Change Data Feed — Step Through</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {changes.map((c,i)=>(
+          <button key={c.key} onClick={()=>setStep(i)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${step===i?c.color:'var(--border)'}`,background:step===i?`${c.color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.75rem',color:step===i?c.color:'#94a3b8'}}>{c.op}</button>
+        ))}
+      </div>
+      {(() => {
+        const c = changes[step]
+        return (
+          <div style={{padding:14,borderRadius:10,border:`2px solid ${c.color}44`,background:`${c.color}0d`}}>
+            <div style={{fontWeight:700,color:c.color,marginBottom:8,fontSize:'.85rem'}}>{c.op} — {c.key}</div>
+            <div style={{display:'flex',gap:8}}>
+              {['Before','After'].map((label,j) => {
+                const data = j===0?c.before:c.after
+                return (
+                  <div key={label} style={{flex:1,padding:'8px 10px',borderRadius:8,background:'white',border:'1px solid var(--border)'}}>
+                    <div style={{fontSize:'.7rem',fontWeight:700,color:'#64748b',marginBottom:4}}>{label}</div>
+                    {data ? Object.entries(data).map(([dk,dv])=><div key={dk} style={{fontSize:'.75rem',color:'#1e293b'}}>{dk}: <strong>{String(dv)}</strong></div>) : <div style={{fontSize:'.75rem',color:'#94a3b8',fontStyle:'italic'}}>null</div>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+      <div style={{marginTop:8,fontSize:'.75rem',color:'#64748b'}}>CDF adds _change_type, _commit_version, _commit_timestamp columns</div>
+    </div>
+  )
+}
+
+function OptimizeAnimation() {
+  const [before, setBefore] = useState(true)
+  const smallFiles = [12,8,3,15,5,9,2,11,7,4,6,1,10,13,3,8]
+  const largedFiles = [128,128,128,64]
+  const files = before ? smallFiles : largedFiles
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>OPTIMIZE — Small File Compaction</div>
+        <div style={{display:'flex',gap:6}}>
+          {[['Before',true],['After',false]].map(([l,v])=>(
+            <button key={l as string} onClick={()=>setBefore(v as boolean)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:before===(v as boolean)?'#4f8ef7':'var(--surface-3)',color:before===(v as boolean)?'white':'var(--text-secondary)'}}>{l as string}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:10,minHeight:60,alignItems:'flex-end'}}>
+        {files.map((size,i)=>(
+          <div key={i} style={{width:before?24:60,height:Math.max(size/2,8),borderRadius:3,background:before?'#f87171':'#4f8ef7',transition:'all .4s',display:'flex',alignItems:'flex-end',justifyContent:'center',paddingBottom:1}}>
+            <span style={{fontSize:'.55rem',color:'white',fontWeight:700}}>{size}MB</span>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:'.78rem',color:before?'#ef4444':'#16a34a'}}>
+        {before?`⚠️ ${files.length} small files → high metadata overhead, slow scans`:`✓ ${files.length} optimized files → faster reads, better compression`}
+      </div>
+    </div>
+  )
+}
+
+function ZOrderAnimation() {
+  const [zoomed, setZoomed] = useState<number|null>(null)
+  const blocks = Array.from({length:16},(_,i)=>({x:i%4,y:Math.floor(i/4),val:i}))
+  const zCurve = [0,1,4,5,2,3,6,7,8,9,12,13,10,11,14,15]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:8,fontSize:'.9rem'}}>Z-Order — Data Co-location</div>
+      <div style={{fontSize:'.78rem',color:'var(--text-secondary)',marginBottom:10}}>Files sorted by multi-dimensional Z-curve. Click a block to see Z-order index.</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:3,marginBottom:10}}>
+        {blocks.map(b=>(
+          <div key={b.val} onClick={()=>setZoomed(zoomed===b.val?null:b.val)} style={{aspectRatio:'1',borderRadius:4,background:zoomed===b.val?'#4f8ef7':'#bfdbfe',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:'.72rem',fontWeight:700,color:zoomed===b.val?'white':'#1e40af',transition:'all .2s'}}>
+            {zCurve.indexOf(b.val)}
+          </div>
+        ))}
+      </div>
+      {zoomed!==null&&<div style={{fontSize:'.78rem',color:'#3b82f6',textAlign:'center'}}>Block {zoomed}: Z-order position {zCurve.indexOf(zoomed)} — nearby positions share overlapping column ranges</div>}
+      <div style={{fontSize:'.75rem',color:'#64748b'}}>ZORDER BY (event_date, region) co-locates correlated values → Spark skips more row groups</div>
+    </div>
+  )
+}
+
+function VacuumAnimation() {
+  const [hours, setHours] = useState(168)
+  const files = [
+    {name:'v0.parquet',age:200,live:false},{name:'v1.parquet',age:150,live:false},{name:'v2.parquet',age:48,live:false},
+    {name:'v3.parquet',age:24,live:true},{name:'v4.parquet',age:2,live:true},{name:'v5.parquet',age:0,live:true},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>VACUUM — Retention Threshold</div>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+        <span style={{fontSize:'.82rem',fontWeight:700,minWidth:120}}>Retain {hours}h ({Math.round(hours/24)}d)</span>
+        <input type="range" min={1} max={336} value={hours} onChange={e=>setHours(+e.target.value)} style={{flex:1,accentColor:'#4f8ef7'}}/>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:4}}>
+        {files.map(f=>{
+          const deleted = !f.live && f.age>hours
+          return (
+            <div key={f.name} style={{display:'flex',gap:8,padding:'7px 12px',borderRadius:8,border:`1px solid ${deleted?'#f87171':f.live?'#4ade80':'var(--border)'}`,background:deleted?'#fef2f2':f.live?'#f0fdf4':'white',alignItems:'center',transition:'all .3s'}}>
+              <span style={{fontSize:'.8rem',fontFamily:'monospace',flex:1,color:deleted?'#ef4444':'#1e293b',textDecoration:deleted?'line-through':undefined}}>{f.name}</span>
+              <span style={{fontSize:'.72rem',color:'#64748b'}}>{f.age}h ago</span>
+              <span style={{fontSize:'.72rem',fontWeight:700,color:deleted?'#ef4444':f.live?'#16a34a':'#94a3b8'}}>{deleted?'🗑 deleted':f.live?'✓ live':'kept'}</span>
+            </div>
+          )
+        })}
+      </div>
+      {hours<168&&<div style={{marginTop:8,padding:'6px 10px',borderRadius:6,background:'#fef3c7',border:'1px solid #fcd34d',fontSize:'.75rem',color:'#92400e'}}>⚠️ Below 7-day default — time travel queries for deleted versions will fail</div>}
+    </div>
+  )
+}
+
+function LiquidClusteringAnimation() {
+  const [mode, setMode] = useState<'partition'|'liquid'>('liquid')
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Liquid Clustering vs Traditional Partitioning</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['partition','liquid'] as const).map(m=>(
+          <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'7px 0',borderRadius:8,border:`2px solid ${mode===m?'#4f8ef7':'var(--border)'}`,background:mode===m?'#eff6ff':'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:mode===m?'#3b82f6':'#94a3b8'}}>{m==='partition'?'Hive Partitioning':'Liquid Clustering'}</button>
+        ))}
+      </div>
+      {mode==='partition' ? (
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {['Requires choosing partition column at CREATE time','Tiny files on high-cardinality columns (e.g. user_id)','Partition skew if data not evenly distributed','Changing partition column = full table rewrite','Poor on multi-column filter predicates'].map(p=><div key={p} style={{padding:'6px 12px',borderRadius:8,background:'#fef2f2',border:'1px solid #f87171',fontSize:'.78rem',color:'#991b1b'}}>✗ {p}</div>)}
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {['No partitions — files contain ranges of cluster key values','Change cluster key anytime without rewriting data','Incremental clustering: OPTIMIZE only rewrites changed files','Works with multi-column keys (up to 4)','Replaces both partitioning AND Z-ordering'].map(p=><div key={p} style={{padding:'6px 12px',borderRadius:8,background:'#f0fdf4',border:'1px solid #4ade80',fontSize:'.78rem',color:'#166534'}}>✓ {p}</div>)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ConstraintsAnimation() {
+  const [type, setType] = useState<'not_null'|'check'>('not_null')
+  const [testVal, setTestVal] = useState('')
+  const notNullPass = testVal.trim().length > 0
+  const checkPass = !isNaN(Number(testVal)) && Number(testVal) >= 0 && Number(testVal) <= 1
+  const pass = type==='not_null' ? notNullPass : (testVal==='' ? true : checkPass)
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Delta Constraints — Live Validator</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['not_null','check'] as const).map(k=>(
+          <button key={k} onClick={()=>{setType(k);setTestVal('')}} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${type===k?'#4f8ef7':'var(--border)'}`,background:type===k?'#eff6ff':'white',cursor:'pointer',fontWeight:700,fontSize:'.8rem',color:type===k?'#3b82f6':'#94a3b8'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{marginBottom:8,fontSize:'.78rem',color:'#64748b',fontFamily:'monospace'}}>
+        {type==='not_null'?'NOT NULL constraint on column "user_id"':'CHECK constraint: amount BETWEEN 0 AND 1'}
+      </div>
+      <input value={testVal} onChange={e=>setTestVal(e.target.value)} placeholder={type==='not_null'?'Enter a value (empty = null)':'Enter a number 0–1'} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:`2px solid ${testVal===''?'var(--border)':pass?'#4ade80':'#f87171'}`,fontSize:'.85rem',outline:'none',boxSizing:'border-box'}}/>
+      {testVal!==''&&<div style={{marginTop:8,fontSize:'.8rem',fontWeight:700,color:pass?'#16a34a':'#ef4444'}}>{pass?'✓ Row accepted':'✗ AnalysisException: constraint violated — write aborted'}</div>}
+    </div>
+  )
+}
+
+function TablePropsAnimation() {
+  const [sel, setSel] = useState<string|null>(null)
+  const props2 = [
+    {k:'delta.appendOnly',v:'= true → no UPDATE/DELETE allowed',use:'Immutable audit tables'},
+    {k:'delta.dataSkippingNumIndexedCols',v:'= 4 (default)',use:'Tune stats collection for Z-order'},
+    {k:'delta.minWriterVersion',v:'= 7 (Deletion Vectors)',use:'Ensure protocol compatibility'},
+    {k:'delta.enableDeletionVectors',v:'= true',use:'Soft deletes — faster MERGE/DELETE'},
+    {k:'delta.logRetentionDuration',v:'= "interval 30 days"',use:'Time travel window length'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Delta Table Properties — Click to Inspect</div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {props2.map(p=>(
+          <div key={p.k} onClick={()=>setSel(sel===p.k?null:p.k)} style={{padding:'8px 12px',borderRadius:8,border:`1.5px solid ${sel===p.k?'#4f8ef7':'var(--border)'}`,background:sel===p.k?'#eff6ff':'white',cursor:'pointer',transition:'all .2s'}}>
+            <code style={{fontSize:'.8rem',color:'#4f8ef7'}}>{p.k}</code> <span style={{fontSize:'.78rem',color:'#64748b'}}>{p.v}</span>
+            {sel===p.k&&<div style={{marginTop:4,fontSize:'.75rem',color:'#475569'}}>Use case: {p.use}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PartitioningDeltaAnimation() {
+  const [col, setCol] = useState<'date'|'region'|'user_id'|'status'>('date')
+  const info: Record<string,{cardinality:string,fileCount:string,good:boolean,reason:string}> = {
+    date:{cardinality:'~365/yr',fileCount:'365 files/yr — good',good:true,reason:'Low cardinality, even distribution, common filter'},
+    region:{cardinality:'~10–50',fileCount:'10–50 files — good',good:true,reason:'Low cardinality, business-meaningful filter'},
+    user_id:{cardinality:'millions',fileCount:'Millions of tiny files!',good:false,reason:'Too many partitions → metadata explosion, slow listing'},
+    status:{cardinality:'2–5 values',fileCount:'2–5 files/partition',good:false,reason:'Too few values → massive files per partition, skew'},
+  }
+  const sel = info[col]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Partition Column Selection</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['date','region','user_id','status'] as const).map(k=>(
+          <button key={k} onClick={()=>setCol(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${col===k?(sel.good?'#22c55e':'#ef4444'):'var(--border)'}`,background:col===k?(sel.good?'#f0fdf4':'#fef2f2'):'white',cursor:'pointer',fontWeight:700,fontSize:'.78rem',color:col===k?(sel.good?'#16a34a':'#ef4444'):'#94a3b8'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:12,borderRadius:8,border:`2px solid ${sel.good?'#4ade80':'#f87171'}`,background:sel.good?'#f0fdf4':'#fef2f2'}}>
+        <div style={{fontWeight:700,color:sel.good?'#16a34a':'#ef4444',marginBottom:4}}>{sel.good?'✓ Good partition column':'✗ Poor partition column'}</div>
+        <div style={{fontSize:'.8rem',color:'#1e293b',marginBottom:4}}>Cardinality: {sel.cardinality} → {sel.fileCount}</div>
+        <div style={{fontSize:'.75rem',color:'#475569'}}>{sel.reason}</div>
+      </div>
+    </div>
+  )
+}
+
+function DeltaPerformanceAnimation() {
+  const [tip, setTip] = useState(0)
+  const tips = [
+    {title:'OPTIMIZE + ZORDER weekly',cmd:'OPTIMIZE table ZORDER BY (event_date, region)',impact:'10-100x faster point queries'},
+    {title:'Enable Deletion Vectors',cmd:"ALTER TABLE t SET TBLPROPERTIES ('delta.enableDeletionVectors'='true')",impact:'5-10x faster MERGE/DELETE — soft deletes'},
+    {title:'Tune shuffle partitions',cmd:'spark.conf.set("spark.sql.shuffle.partitions", "200")',impact:'Avoid tiny tasks on small tables'},
+    {title:'Predictive I/O (Photon)',cmd:'spark.conf.set("spark.databricks.photon.enabled","true")',impact:'2-4x faster on vectorized ops'},
+    {title:'Column statistics',cmd:'ANALYZE TABLE t COMPUTE STATISTICS FOR COLUMNS col1, col2',impact:'Better CBO join order decisions'},
+  ]
+  const t = tips[tip]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Delta Performance Tips</div>
+      <div style={{display:'flex',gap:4,marginBottom:12,flexWrap:'wrap'}}>
+        {tips.map((_,i)=><button key={i} onClick={()=>setTip(i)} style={{padding:'4px 10px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.75rem',background:tip===i?'#4f8ef7':'var(--surface-3)',color:tip===i?'white':'var(--text-secondary)'}}>{i+1}</button>)}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:'1px solid var(--border)',background:'white'}}>
+        <div style={{fontWeight:700,fontSize:'.85rem',color:'#1e293b',marginBottom:8}}>{t.title}</div>
+        <code style={{display:'block',padding:'8px 10px',borderRadius:6,background:'#1e293b',color:'#a5f3fc',fontSize:'.75rem',marginBottom:8,overflowX:'auto',whiteSpace:'pre'}}>{t.cmd}</code>
+        <div style={{padding:'5px 10px',borderRadius:6,background:'#f0fdf4',border:'1px solid #4ade80',fontSize:'.78rem',color:'#16a34a',fontWeight:700}}>📈 {t.impact}</div>
+      </div>
+    </div>
+  )
+}
+
+function DatabricksPlatformAnimation() {
+  const [layer, setLayer] = useState<'storage'|'processing'|'governance'|'delivery'>('storage')
+  const layers: Record<string,{items:string[],color:string,desc:string}> = {
+    storage:{items:['Delta Lake','ADLS Gen2 / S3 / GCS','Parquet + Transaction Log'],color:'#64748b',desc:'Open storage layer — no vendor lock-in on the data format'},
+    processing:{items:['Databricks Runtime (DBR)','Photon Engine','Auto-scaling clusters'],color:'#4f8ef7',desc:'Optimized Spark + vectorized Photon for 2-4x faster queries'},
+    governance:{items:['Unity Catalog','Row/Column filters','Audit logs'],color:'#8b5cf6',desc:'Fine-grained access control across all data assets'},
+    delivery:{items:['Databricks SQL','Notebooks','Delta Live Tables'],color:'#22c55e',desc:'Consumption layer: BI dashboards, notebooks, DLT pipelines'},
+  }
+  const sel = layers[layer]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Databricks Platform — Lakehouse Layers</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['delivery','governance','processing','storage'] as const).map(k=>(
+          <button key={k} onClick={()=>setLayer(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${layer===k?layers[k].color:'var(--border)'}`,background:layer===k?`${layers[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:layer===k?layers[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:12,borderRadius:8,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`}}>
+        <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:8}}>
+          {sel.items.map(item=><span key={item} style={{fontSize:'.8rem',color:'#1e293b'}}>• {item}</span>)}
+        </div>
+        <div style={{fontSize:'.75rem',color:'#475569',fontStyle:'italic'}}>{sel.desc}</div>
+      </div>
+    </div>
+  )
+}
+
+function UCPermissionsAnimation() {
+  const [role, setRole] = useState<'admin'|'data_engineer'|'analyst'|'external'>('analyst')
+  const perms: Record<string,{grants:string[],denies:string[],color:string}> = {
+    admin:{grants:['CREATE CATALOG','USE CATALOG','CREATE SCHEMA','CREATE TABLE','SELECT','MODIFY','CREATE FUNCTION','MANAGE'],denies:[],color:'#ef4444'},
+    data_engineer:{grants:['USE CATALOG','CREATE SCHEMA','CREATE TABLE','SELECT','MODIFY','CREATE FUNCTION'],denies:['MANAGE — cannot grant to others'],color:'#4f8ef7'},
+    analyst:{grants:['USE CATALOG','USE SCHEMA','SELECT on specific tables'],denies:['CREATE TABLE','MODIFY','MANAGE'],color:'#22c55e'},
+    external:{grants:['SELECT on shared tables via Delta Sharing'],denies:['Direct cluster access','Unity Catalog metadata'],color:'#f59e0b'},
+  }
+  const sel = perms[role]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Unity Catalog — Role-Based Permissions</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['admin','data_engineer','analyst','external'] as const).map(k=>(
+          <button key={k} onClick={()=>setRole(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${role===k?perms[k].color:'var(--border)'}`,background:role===k?`${perms[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:role===k?perms[k].color:'#94a3b8'}}>{k.replace('_',' ')}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:'.72rem',fontWeight:700,color:'#16a34a',marginBottom:5}}>Granted</div>
+          {sel.grants.map(g=><div key={g} style={{padding:'4px 8px',marginBottom:3,borderRadius:5,background:'#f0fdf4',border:'1px solid #4ade80',fontSize:'.72rem',color:'#166534'}}>✓ {g}</div>)}
+        </div>
+        {sel.denies.length>0&&<div style={{flex:1}}>
+          <div style={{fontSize:'.72rem',fontWeight:700,color:'#ef4444',marginBottom:5}}>Denied</div>
+          {sel.denies.map(d=><div key={d} style={{padding:'4px 8px',marginBottom:3,borderRadius:5,background:'#fef2f2',border:'1px solid #f87171',fontSize:'.72rem',color:'#991b1b'}}>✗ {d}</div>)}
+        </div>}
+      </div>
+    </div>
+  )
+}
+
+function RowColFilterAnimation() {
+  const [filter, setFilter] = useState<'none'|'row'|'col'>('none')
+  const rows2 = [
+    {region:'US',user:'alice',salary:120000,ssn:'123-45-6789'},
+    {region:'EU',user:'bob',salary:95000,ssn:'987-65-4321'},
+    {region:'US',user:'carol',salary:145000,ssn:'555-12-3456'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Row & Column Filters — Unity Catalog</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['none','row','col'] as const).map(k=>(
+          <button key={k} onClick={()=>setFilter(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${filter===k?'#4f8ef7':'var(--border)'}`,background:filter===k?'#eff6ff':'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:filter===k?'#3b82f6':'#94a3b8'}}>{k==='none'?'No filter':k==='row'?'Row filter':'Col mask'}</button>
+        ))}
+      </div>
+      <div style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'.76rem',fontFamily:'monospace'}}>
+          <thead><tr>{['region','user','salary','ssn'].map(h=><th key={h} style={{padding:'5px 8px',background:'#1e293b',color:'white',textAlign:'left'}}>{h}</th>)}</tr></thead>
+          <tbody>{rows2.filter(r=>filter==='row'?r.region==='US':true).map((r,i)=>(
+            <tr key={i} style={{background:i%2===0?'white':'#f8fafc'}}>
+              <td style={{padding:'4px 8px',borderBottom:'1px solid var(--border)'}}>{r.region}</td>
+              <td style={{padding:'4px 8px',borderBottom:'1px solid var(--border)'}}>{r.user}</td>
+              <td style={{padding:'4px 8px',borderBottom:'1px solid var(--border)'}}>{filter==='col'?'*****':r.salary}</td>
+              <td style={{padding:'4px 8px',borderBottom:'1px solid var(--border)'}}>{filter==='col'?'***-**-****':r.ssn}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <div style={{marginTop:8,fontSize:'.75rem',color:'#64748b'}}>{filter==='none'?'Full access — admin view':filter==='row'?'Row filter: WHERE region = current_user_region()':'Column mask: PII masked for non-privileged users'}</div>
+    </div>
+  )
+}
+
+function AutoloaderAnimation() {
+  const [step, setStep] = useState(0)
+  const steps = [
+    {icon:'📁',label:'New files land in ADLS',desc:'Files arrive in cloud storage — could be CSV, JSON, Parquet'},
+    {icon:'🔔',label:'File notification',desc:'Azure Event Grid / S3 SQS notification triggers Auto Loader'},
+    {icon:'📋',label:'Checkpoint tracking',desc:'Auto Loader records processed files in checkpoint dir — never re-processes'},
+    {icon:'⚙️',label:'Schema inference',desc:'First run infers schema and stores in schema location'},
+    {icon:'🚀',label:'Stream to Delta',desc:'Micro-batch writes new rows to target Delta table with writeStream'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Auto Loader — Step-by-Step</div>
+      <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
+        {steps.slice(0,step+1).map((s,i)=>(
+          <div key={s.label} style={{display:'flex',gap:10,padding:'8px 12px',borderRadius:8,border:'1px solid #4f8ef744',background:'#eff6ff',alignItems:'center'}}>
+            <span style={{fontSize:'1.2rem'}}>{s.icon}</span>
+            <div>
+              <div style={{fontWeight:700,fontSize:'.78rem',color:'#3b82f6'}}>{i+1}. {s.label}</div>
+              <div style={{fontSize:'.72rem',color:'#475569'}}>{s.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button onClick={()=>setStep(s=>Math.min(s+1,steps.length-1))} disabled={step>=steps.length-1} style={{flex:1,padding:'7px 0',borderRadius:8,border:'none',background:step>=steps.length-1?'#e2e8f0':'#4f8ef7',color:step>=steps.length-1?'#94a3b8':'white',cursor:step>=steps.length-1?'default':'pointer',fontWeight:700,fontSize:'.82rem'}}>Next</button>
+        <button onClick={()=>setStep(0)} style={{padding:'7px 14px',borderRadius:8,border:'1px solid var(--border)',background:'white',cursor:'pointer',fontSize:'.82rem'}}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function WorkflowsAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(()=>{const t=setInterval(()=>setTick(n=>(n+1)%8),600);return()=>clearInterval(t)},[])
+  const tasks = [
+    {name:'ingest_bronze',deps:[],type:'notebook'},
+    {name:'transform_silver',deps:['ingest_bronze'],type:'notebook'},
+    {name:'load_gold_sales',deps:['transform_silver'],type:'python'},
+    {name:'load_gold_users',deps:['transform_silver'],type:'python'},
+    {name:'dq_checks',deps:['load_gold_sales','load_gold_users'],type:'python'},
+    {name:'notify_success',deps:['dq_checks'],type:'webhook'},
+  ]
+  const order = [0,1,2,3,4,5]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:10,fontSize:'.9rem'}}>Databricks Workflows — DAG</div>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {order.map(i=>{
+          const task = tasks[i]
+          const done = i < tick
+          const active = i === tick
+          return (
+            <div key={task.name} style={{display:'flex',gap:8,alignItems:'center',padding:'7px 12px',borderRadius:8,border:`1px solid ${active?'#4f8ef7':done?'#4ade80':'var(--border)'}`,background:active?'#eff6ff':done?'#f0fdf4':'white',transition:'all .3s'}}>
+              <span style={{fontSize:'.65rem',color:'#94a3b8',minWidth:24}}>T{i+1}</span>
+              <code style={{flex:1,fontSize:'.76rem',color:active?'#3b82f6':done?'#16a34a':'#475569'}}>{task.name}</code>
+              <span style={{fontSize:'.65rem',color:'#94a3b8'}}>{task.type}</span>
+              <span style={{fontSize:'.7rem',fontWeight:700,color:active?'#4f8ef7':done?'#16a34a':'#94a3b8'}}>{done?'✓':active?'▶':'…'}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function DABAnimation() {
+  const [view, setView] = useState<'structure'|'deploy'>('structure')
+  const files = ['databricks.yml','resources/job_pipeline.yml','resources/cluster_policy.yml','src/notebooks/transform.py','src/python/dq_checks.py','tests/test_transform.py']
+  const stages = ['bundle validate','bundle run (dev)','CI: PR check','bundle deploy (staging)','bundle deploy (prod)']
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>Databricks Asset Bundles</div>
+        <div style={{display:'flex',gap:6}}>
+          {(['structure','deploy'] as const).map(v=>(
+            <button key={v} onClick={()=>setView(v)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:view===v?'#4f8ef7':'var(--surface-3)',color:view===v?'white':'var(--text-secondary)'}}>{v==='structure'?'File structure':'Deploy flow'}</button>
+          ))}
+        </div>
+      </div>
+      {view==='structure' ? (
+        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+          {files.map(f=>(
+            <div key={f} style={{padding:'5px 10px',borderRadius:6,border:'1px solid var(--border)',background:'white',fontFamily:'monospace',fontSize:'.78rem',color:f.endsWith('.yml')?'#f59e0b':f.endsWith('.py')?'#4f8ef7':'#94a3b8'}}>
+              {f.includes('/')?'  ':''}📄 {f}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {stages.map((s,i)=>(
+            <div key={s} style={{display:'flex',gap:8,padding:'7px 12px',borderRadius:8,border:'1px solid var(--border)',background:'white',alignItems:'center'}}>
+              <span style={{width:22,height:22,borderRadius:'50%',background:['#94a3b8','#4f8ef7','#8b5cf6','#f59e0b','#22c55e'][i],display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:'.65rem',fontWeight:800,flexShrink:0}}>{i+1}</span>
+              <code style={{fontSize:'.78rem',color:'#1e293b'}}>{s}</code>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DatabricksSQLAnimation() {
+  const [tab, setTab] = useState<'warehouse'|'query'|'dashboard'>('warehouse')
+  const tabs2: Record<string,{desc:string,detail:string,color:string}> = {
+    warehouse:{desc:'SQL Warehouse = serverless Photon cluster for BI queries',detail:'Classic: fixed clusters · Serverless: instant start, per-second billing · Pro: JDBC/ODBC + row filters',color:'#4f8ef7'},
+    query:{desc:'Databricks SQL editor with query history and version control',detail:'Auto-complete, parameterized queries, saved queries, scheduled refreshes, query profiler built-in',color:'#8b5cf6'},
+    dashboard:{desc:'Native dashboards with live Delta queries',detail:'Lakeview dashboards · Drag-and-drop charts · Subscribe to auto-refresh · Share via link or embed',color:'#22c55e'},
+  }
+  const sel = tabs2[tab]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Databricks SQL</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['warehouse','query','dashboard'] as const).map(k=>(
+          <button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${tab===k?tabs2[k].color:'var(--border)'}`,background:tab===k?`${tabs2[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.78rem',color:tab===k?tabs2[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:12,borderRadius:8,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`}}>
+        <div style={{fontWeight:700,color:sel.color,marginBottom:6,fontSize:'.85rem'}}>{sel.desc}</div>
+        <div style={{fontSize:'.78rem',color:'#475569'}}>{sel.detail}</div>
+      </div>
+    </div>
+  )
+}
+
+function DeltaSharingAnimation() {
+  const [step2, setStep2] = useState(0)
+  const flow = [
+    {icon:'🏢',label:'Data provider',desc:'Creates a Share object in Unity Catalog with selected tables/schemas'},
+    {icon:'🔑',label:'Generate token',desc:'Provider issues a bearer token scoped to the share'},
+    {icon:'📤',label:'Share profile',desc:'Sends recipient a JSON profile file with server URL + token'},
+    {icon:'📥',label:'Recipient reads',desc:'Recipient uses any Delta Sharing client (Spark, pandas, Power BI, Tableau)'},
+    {icon:'🔒',label:'No data copy',desc:'Recipient queries data in-place — provider controls access, audits reads'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Delta Sharing — Cross-org Data Flow</div>
+      <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
+        {flow.slice(0,step2+1).map((s,i)=>(
+          <div key={s.label} style={{display:'flex',gap:10,padding:'8px 12px',borderRadius:8,border:'1px solid #22c55e44',background:'#f0fdf4',alignItems:'center'}}>
+            <span style={{fontSize:'1.2rem'}}>{s.icon}</span>
+            <div>
+              <div style={{fontWeight:700,fontSize:'.78rem',color:'#16a34a'}}>{i+1}. {s.label}</div>
+              <div style={{fontSize:'.72rem',color:'#475569'}}>{s.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button onClick={()=>setStep2(s=>Math.min(s+1,flow.length-1))} disabled={step2>=flow.length-1} style={{flex:1,padding:'7px 0',borderRadius:8,border:'none',background:step2>=flow.length-1?'#e2e8f0':'#22c55e',color:step2>=flow.length-1?'#94a3b8':'white',cursor:step2>=flow.length-1?'default':'pointer',fontWeight:700,fontSize:'.82rem'}}>Next</button>
+        <button onClick={()=>setStep2(0)} style={{padding:'7px 14px',borderRadius:8,border:'1px solid var(--border)',background:'white',cursor:'pointer',fontSize:'.82rem'}}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function IcebergIntroAnimation() {
+  const [feat, setFeat] = useState<'hidden'|'evolution'|'scan'>('hidden')
+  const feats: Record<string,{title:string,desc:string,color:string}> = {
+    hidden:{title:'Hidden Partitioning',desc:'Define partition transforms (year, month, bucket, truncate) — queries never need explicit partition filters. Iceberg applies them automatically based on predicate.',color:'#4f8ef7'},
+    evolution:{title:'Schema Evolution',desc:'Add, rename, reorder, or widen columns safely. Iceberg uses column IDs (not names) internally — renaming never breaks existing data files.',color:'#22c55e'},
+    scan:{title:'Scan Planning',desc:'Iceberg metadata layer (manifest list → manifests → data files) enables partition pruning and file-level min/max stats without scanning all files.',color:'#8b5cf6'},
+  }
+  const sel = feats[feat]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Apache Iceberg — Key Innovations</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['hidden','evolution','scan'] as const).map(k=>(
+          <button key={k} onClick={()=>setFeat(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${feat===k?feats[k].color:'var(--border)'}`,background:feat===k?`${feats[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.78rem',color:feat===k?feats[k].color:'#94a3b8'}}>{feats[k].title.split(' ')[0]}</button>
+        ))}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`}}>
+        <div style={{fontWeight:700,color:sel.color,marginBottom:6}}>{sel.title}</div>
+        <div style={{fontSize:'.8rem',color:'#475569'}}>{sel.desc}</div>
+      </div>
+    </div>
+  )
+}
+
+function IcebergFeaturesAnimation() {
+  const [sel2, setSel2] = useState<string|null>(null)
+  const features = [
+    {name:'Time Travel',api:'AS OF TIMESTAMP / VERSION AS OF',note:'Read any historical snapshot'},
+    {name:'Rollback',api:'CALL rollback_to_snapshot(table, snapshot_id)',note:'Atomically revert to prior state'},
+    {name:'Expire Snapshots',api:'CALL expire_snapshots(table, older_than)',note:'Remove old metadata + orphan files'},
+    {name:'Row-level deletes',api:'DELETE FROM t WHERE ...',note:'Copy-on-write or merge-on-read strategies'},
+    {name:'Metadata tables',api:'FROM t.snapshots / t.manifests / t.files',note:'Inspect catalog metadata as SQL'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Iceberg — Maintenance Operations</div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {features.map(f=>(
+          <div key={f.name} onClick={()=>setSel2(sel2===f.name?null:f.name)} style={{padding:'8px 12px',borderRadius:8,border:`1.5px solid ${sel2===f.name?'#4f8ef7':'var(--border)'}`,background:sel2===f.name?'#eff6ff':'white',cursor:'pointer',transition:'all .2s'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontWeight:700,fontSize:'.82rem',color:'#1e293b'}}>{f.name}</span>
+              <code style={{fontSize:'.72rem',color:'#4f8ef7'}}>{f.api.split('(')[0]}</code>
+            </div>
+            {sel2===f.name&&<div style={{marginTop:5,fontSize:'.75rem',color:'#475569'}}>{f.note}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function HudiAnimation() {
+  const [type, setType] = useState<'cow'|'mor'>('cow')
+  const types: Record<string,{name:string,write:string,read:string,compaction:string,use:string,color:string}> = {
+    cow:{name:'Copy-on-Write (CoW)',write:'Rewrites entire Parquet file on update',read:'Fast — pure Parquet, no merging',compaction:'Not needed',use:'Read-heavy, BI dashboards',color:'#4f8ef7'},
+    mor:{name:'Merge-on-Read (MoR)',write:'Appends delta log (.log files)',read:'Slower — merges base + delta at read',compaction:'Periodic compaction needed',use:'Write-heavy, real-time ingestion',color:'#8b5cf6'},
+  }
+  const sel = types[type]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Apache Hudi — CoW vs MoR</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['cow','mor'] as const).map(k=>(
+          <button key={k} onClick={()=>setType(k)} style={{flex:1,padding:'7px 0',borderRadius:8,border:`2px solid ${type===k?types[k].color:'var(--border)'}`,background:type===k?`${types[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.85rem',color:type===k?types[k].color:'#94a3b8'}}>{k.toUpperCase()}</button>
+        ))}
+      </div>
+      <div style={{fontWeight:700,color:sel.color,marginBottom:10,fontSize:'.85rem'}}>{sel.name}</div>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {[['Write latency',sel.write],['Read latency',sel.read],['Compaction',sel.compaction],['Best for',sel.use]].map(([k,v])=>(
+          <div key={k} style={{padding:'7px 12px',borderRadius:8,background:'white',border:'1px solid var(--border)',display:'flex',gap:10}}>
+            <span style={{minWidth:90,fontSize:'.72rem',color:'#64748b'}}>{k}</span>
+            <span style={{fontSize:'.78rem',color:'#1e293b'}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FormatComparisonAnimation() {
+  const [metric, setMetric] = useState<'write'|'read'|'schema'|'ecosystem'>('read')
+  const scores: Record<string,Record<string,number>> = {
+    write:{Delta:85,Iceberg:80,Hudi:90},
+    read:{Delta:90,Iceberg:88,Hudi:75},
+    schema:{Delta:80,Iceberg:95,Hudi:70},
+    ecosystem:{Delta:95,Iceberg:80,Hudi:75},
+  }
+  const colors: Record<string,string> = {Delta:'#4f8ef7',Iceberg:'#8b5cf6',Hudi:'#f59e0b'}
+  const sc = scores[metric]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Delta vs Iceberg vs Hudi</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['write','read','schema','ecosystem'] as const).map(k=>(
+          <button key={k} onClick={()=>setMetric(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${metric===k?'#4f8ef7':'var(--border)'}`,background:metric===k?'#eff6ff':'white',cursor:'pointer',fontWeight:700,fontSize:'.75rem',color:metric===k?'#3b82f6':'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {Object.entries(sc).map(([fmt,val])=>(
+          <div key={fmt} style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{minWidth:60,fontWeight:700,fontSize:'.82rem',color:colors[fmt]}}>{fmt}</span>
+            <div style={{flex:1,height:10,background:'#e2e8f0',borderRadius:5,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${val}%`,background:colors[fmt],borderRadius:5,transition:'width .4s'}}/>
+            </div>
+            <span style={{minWidth:30,fontSize:'.78rem',fontWeight:700,color:colors[fmt]}}>{val}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{marginTop:10,fontSize:'.72rem',color:'#64748b',textAlign:'center'}}>Scores are opinionated — ecosystem/maturity as of 2024, Azure-first perspective</div>
+    </div>
+  )
+}
 
 function DeltaLogAnimation() {
   const [version, setVersion] = useState(0)
