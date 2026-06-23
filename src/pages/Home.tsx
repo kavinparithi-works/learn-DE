@@ -74,7 +74,7 @@ export default function Home({ completed }: Props) {
 
         {/* Stats */}
         <div style={{ display: 'flex', gap: 32, justifyContent: 'center', flexWrap: 'wrap', marginTop: 40 }}>
-          {[['9', 'Learning Levels'], ['100+', 'Interview Questions'], ['50+', 'Animations'], ['400+', 'Hours of Content']].map(([n, l]) => (
+          {[['10', 'Learning Levels'], ['100+', 'Interview Questions'], ['60+', 'Animations'], ['500+', 'Hours of Content']].map(([n, l]) => (
             <div key={l} style={{ textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800 }}>{n}</div>
               <div style={{ fontSize: '.8rem', color: 'var(--text-3)', fontWeight: 500, marginTop: 2 }}>{l}</div>

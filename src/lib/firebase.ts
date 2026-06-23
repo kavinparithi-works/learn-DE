@@ -23,8 +23,12 @@ export async function signInGoogle() {
 export async function signInEmail(email: string, password: string) {
   try {
     return await signInWithEmailAndPassword(auth, email, password)
-  } catch {
-    return createUserWithEmailAndPassword(auth, email, password)
+  } catch (e: unknown) {
+    const code = (e as { code?: string }).code
+    if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+      return createUserWithEmailAndPassword(auth, email, password)
+    }
+    throw e
   }
 }
 
@@ -53,7 +57,7 @@ export async function saveQuizScore(topicId: string, score: number, total: numbe
     { merge: true }
   )
   await setDoc(doc(db, 'users', user.uid), { totalXP: increment(score * 10) }, { merge: true })
-  if (pct >= 80) markTopicComplete(topicId)
+  if (pct >= 80) await markTopicComplete(topicId)
 }
 
 export async function loadProgress(uid: string): Promise<Set<string>> {

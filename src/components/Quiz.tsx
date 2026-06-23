@@ -18,7 +18,7 @@ export default function Quiz({ questions, topicId }: Props) {
     const newAnswers = { ...answers, [qIdx]: chosen }
     setAnswers(newAnswers)
     const newScore = score + (isCorrect ? 1 : 0)
-    setScore(newScore)
+    setScore(prev => prev + (isCorrect ? 1 : 0))
     const totalAnswered = Object.keys(newAnswers).length
     if (totalAnswered === questions.length) {
       saveQuizScore(topicId, newScore, questions.length)

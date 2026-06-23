@@ -12,13 +12,14 @@ interface Props {
   sections: SidebarSection[]
   activeId: string
   completed: Set<string>
-  totalTopics: number
+  totalTopics?: number
   onItemClick: (id: string) => void
 }
 
-export default function Sidebar({ sections, activeId, completed, totalTopics, onItemClick }: Props) {
-  const doneCount = sections.flatMap(s => s.items).filter(i => completed.has(i.id)).length
-
+export default function Sidebar({ sections, activeId, completed, onItemClick }: Props) {
+  const allItems = sections.flatMap(s => s.items)
+  const totalTopics = allItems.length
+  const doneCount = allItems.filter(i => completed.has(i.id)).length
   const pct = totalTopics > 0 ? Math.round((doneCount / totalTopics) * 100) : 0
 
   return (

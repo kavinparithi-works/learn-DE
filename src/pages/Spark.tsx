@@ -3739,7 +3739,7 @@ function ShuffleAnimation() {
       ))}
 
       {/* Animated lines */}
-      {[0,1,2,3].map(src => [0,1,2,3].map(dst => {
+      {[0,1,2,3].flatMap(src => [0,1,2,3].map(dst => {
         const x1 = 120, y1 = 41 + src * 30
         const x2 = 480, y2 = 41 + dst * 30
         const px = x1 + (x2 - x1) * progress

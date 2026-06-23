@@ -11,12 +11,19 @@ export function useAuth() {
   useEffect(() => {
     return auth.onAuthStateChanged(async u => {
       setUser(u)
-      setLoading(false)
       if (u) {
-        const prog = await loadProgress(u.uid)
-        setCompleted(prog)
-        const s = await updateStreak(u.uid)
-        setStreak(s)
+        try {
+          const prog = await loadProgress(u.uid)
+          setCompleted(prog)
+          const s = await updateStreak(u.uid)
+          setStreak(s)
+        } catch {
+          // Firestore unavailable — proceed with empty progress
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        setLoading(false)
       }
     })
   }, [])

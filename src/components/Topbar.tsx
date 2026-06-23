@@ -3,6 +3,18 @@ import { NavLink } from 'react-router-dom'
 import type { User } from 'firebase/auth'
 import { signOut } from '../lib/firebase'
 
+const NAV_LINKS = [
+  ['Foundations', '/foundations'],
+  ['SQL', '/sql'],
+  ['Python', '/python'],
+  ['Azure', '/azure'],
+  ['Spark', '/spark'],
+  ['Delta Lake', '/delta'],
+  ['Airflow', '/airflow'],
+  ['Production', '/production'],
+  ['Interview', '/interview'],
+]
+
 interface Props {
   user: User | null
   streak: number
@@ -11,6 +23,8 @@ interface Props {
 
 export default function Topbar({ user, streak, onSignInClick }: Props) {
   const [signingOut, setSigningOut] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
 
   const handleSignOut = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -27,26 +41,32 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
       </NavLink>
 
       <nav className="topbar-nav">
-        {[
-          ['Foundations', '/foundations'],
-          ['SQL', '/sql'],
-          ['Python', '/python'],
-          ['Azure', '/azure'],
-          ['Spark', '/spark'],
-          ['Delta Lake', '/delta'],
-          ['Production', '/production'],
-          ['Interview', '/interview'],
-        ].map(([label, path]) => (
-          <NavLink
-            key={path}
-            to={path}
+        {NAV_LINKS.map(([label, path]) => (
+          <NavLink key={path} to={path}
             className={({ isActive }) => `topbar-link${isActive ? ' active' : ''}`}
-            style={{ textDecoration: 'none' }}
-          >
+            style={{ textDecoration: 'none' }}>
             {label}
           </NavLink>
         ))}
       </nav>
+
+      <div className="topbar-mobile-nav" style={{ position: 'relative' }}>
+        <button className="topbar-mobile-btn" onClick={() => setMobileOpen(o => !o)}>
+          ☰ Menu
+        </button>
+        {mobileOpen && (
+          <div className="topbar-mobile-dropdown">
+            {NAV_LINKS.map(([label, path]) => (
+              <NavLink key={path} to={path}
+                className={({ isActive }) => isActive ? 'active' : ''}
+                style={{ textDecoration: 'none' }}
+                onClick={() => setMobileOpen(false)}>
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="topbar-right">
         <div className="streak-badge">
@@ -66,7 +86,7 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
               onClick={handleSignOut}
               style={{ background: 'none', border: 'none', color: 'var(--text-4)', cursor: 'pointer', fontSize: '11px', marginLeft: '2px' }}
             >
-              {signingOut ? '...' : 'out'}
+              {signingOut ? '...' : 'Sign out'}
             </button>
           </div>
         ) : (
