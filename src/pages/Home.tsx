@@ -130,28 +130,11 @@ const HERO_STARS = [
 
 /* ── Animated developer signature ── */
 function DevSignature() {
-  const NAME = 'Kavin Parithi Sivasamy'
   const [hovered, setHovered] = useState(false)
-  const [typed, setTyped] = useState('')
-  const [showCursor, setShowCursor] = useState(true)
   const [particles, setParticles] = useState<{id:number;x:number;y:number;color:string;size:number}[]>([])
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hasTyped = useRef(false)
 
-  // Type-on name animation — runs once on mount
-  useEffect(() => {
-    if (hasTyped.current) return
-    hasTyped.current = true
-    let i = 0
-    const next = () => {
-      i++
-      setTyped(NAME.slice(0, i))
-      if (i < NAME.length) timerRef.current = setTimeout(next, 48 + Math.random() * 32)
-      else setTimeout(() => setShowCursor(false), 900)
-    }
-    timerRef.current = setTimeout(next, 600)
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [])
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
 
   // Burst particles on hover entry
   const spawnParticles = () => {
@@ -250,24 +233,14 @@ function DevSignature() {
             {hovered ? '⚡ Built with passion' : 'Crafted by'}
           </div>
 
-          {/* Typed name with cursor */}
+          {/* Name — always fully visible */}
           <div style={{
             fontSize:'1.05rem', fontWeight:900, letterSpacing:'-.03em',
             fontFamily:'var(--font-display)',
-            background: hovered
-              ? 'linear-gradient(135deg,#f9a8d4,#c4b5fd,#93c5fd)'
-              : 'linear-gradient(135deg,rgba(255,255,255,.9),rgba(199,210,254,.8))',
-            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-            transition:'all .4s ease',
+            color: hovered ? '#f9a8d4' : 'rgba(255,255,255,.92)',
+            transition:'color .4s ease',
           }}>
-            {typed}
-            {showCursor && (
-              <span style={{
-                display:'inline-block', width:2, height:'1em',
-                background:'#8b5cf6', marginLeft:1, verticalAlign:'middle',
-                animation:'cursorBlink .7s step-end infinite',
-              }}/>
-            )}
+            Kavin Parithi Sivasamy
           </div>
 
           {/* Hover subtitle — slides up */}
