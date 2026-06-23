@@ -99,20 +99,6 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
                   }} />
                   <span style={{ color: isActive ? color : undefined }}>{label}</span>
                 </span>
-                {isActive && (
-                  <span style={{
-                    position: 'absolute',
-                    bottom: 2,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    background: color,
-                    boxShadow: `0 0 8px ${color}`,
-                    display: 'block',
-                  }} />
-                )}
               </>
             )}
           </NavLink>

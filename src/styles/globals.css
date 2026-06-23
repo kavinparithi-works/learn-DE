@@ -499,19 +499,6 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   border-color:rgba(99,102,241,.2);
 }
 
-/* Colorful left accent bar on hover */
-.topic-section::before{
-  content:'';
-  position:absolute;
-  left:0;top:12%;bottom:12%;
-  width:3px;
-  background:linear-gradient(180deg,#4f8ef7,#8b5cf6,#ec4899);
-  border-radius:0 3px 3px 0;
-  opacity:0;
-  transition:opacity .35s ease,top .35s ease,bottom .35s ease;
-  z-index:1;
-}
-.topic-section:hover::before{opacity:1;top:8%;bottom:8%;}
 
 .topic-section + .topic-section{margin-top:0;}
 
@@ -526,12 +513,6 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   box-shadow:0 6px 28px rgba(9,11,40,.22);
 }
 
-/* Static gradient bar at top of header */
-.topic-header::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,#4f8ef7,#8b5cf6,#ec4899);
-  border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
-}
 
 /* Subtle mesh dot pattern over dark header */
 .topic-header::after{
