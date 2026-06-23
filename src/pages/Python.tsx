@@ -29,6 +29,13 @@ const SECTIONS = [
     { id: 'py-linux', label: 'Linux & Shell Scripting' },
     { id: 'py-git', label: 'Git Deep Dive' },
   ]},
+  { title: 'Advanced DE Python', items: [
+    { id: 'py-pydantic', label: 'Pydantic Data Validation' },
+    { id: 'py-docker', label: 'Docker for Data Engineering' },
+    { id: 'py-k8s', label: 'Kubernetes for Data Engineering' },
+    { id: 'py-deequ', label: 'Data Quality with Deequ + Great Expectations' },
+    { id: 'py-memory', label: 'Python Memory Profiling' },
+  ]},
 ]
 
 export default function Python({ completed, onComplete }: Props) {
@@ -2697,6 +2704,1071 @@ jobs:
             { question: "What does 'git bisect run <test-command>' do?", options: ["Runs tests on the current branch only", "Automates the bisect process — git checks out commits and runs the test command; the exit code (0=good, non-zero=bad) tells git which direction to bisect until the offending commit is found", "Bisects the codebase into modules for parallel testing", "Runs all commits in parallel"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-git'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── py-pydantic ───────────────────────────────────────────────── */}
+        <section id="py-pydantic" ref={el => { if (el) sectionRefs.current['py-pydantic'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Advanced DE Python</div>
+            <h1 className="topic-title">Pydantic Data Validation</h1>
+            <p className="topic-desc">Pydantic v2 is the standard library for data validation in Python data engineering. Built on Rust (via pydantic-core), it validates data at the boundary between untrusted inputs and your pipeline logic — parsing JSON API responses, validating pipeline configs, and enforcing schema contracts at runtime. Pydantic models serve as living documentation for your data contracts.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Pydantic v2 vs v1:</strong> v2 (2023+) rewrites the core in Rust — 5-50x faster than v1. Key API changes: <code>@validator</code> → <code>@field_validator</code>, <code>@root_validator</code> → <code>@model_validator</code>, <code>.dict()</code> → <code>.model_dump()</code>, <code>.json()</code> → <code>.model_dump_json()</code>. Always use v2 for new projects.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Pydantic v2: data validation for data engineering ─────────────────────────
+from pydantic import BaseModel, Field, field_validator, model_validator, computed_field
+from pydantic import ValidationError
+from pydantic_settings import BaseSettings
+from datetime import datetime
+from typing import Annotated, Literal
+from enum import Enum
+
+# ── 1. Basic BaseModel ────────────────────────────────────────────────────────
+class EventRecord(BaseModel):
+    event_id: str
+    user_id: int
+    event_type: str
+    amount: float
+    event_ts: datetime          # auto-parsed from ISO string or epoch
+    currency: str = "USD"       # default value
+    tags: list[str] = []
+
+# Pydantic parses and validates on instantiation
+event = EventRecord(
+    event_id="EVT-001",
+    user_id=42,
+    event_type="purchase",
+    amount=99.99,
+    event_ts="2024-01-15T10:30:00",  # string → datetime automatically
+)
+print(event.model_dump())   # → dict
+print(event.model_dump_json())  # → JSON string
+
+# Validation errors are structured (great for pipeline error reporting)
+try:
+    bad = EventRecord(event_id="EVT-002", user_id="not-an-int", event_type="click",
+                      amount=-5, event_ts="not-a-date")
+except ValidationError as e:
+    print(e.error_count())   # 2
+    for err in e.errors():
+        print(f"  {err['loc']}: {err['msg']}")
+
+# ── 2. Field constraints ──────────────────────────────────────────────────────
+class OrderRecord(BaseModel):
+    order_id: Annotated[str, Field(pattern=r"^ORD-\d{6}$", description="Order ID in ORD-XXXXXX format")]
+    amount: Annotated[float, Field(gt=0, lt=1_000_000, description="Order amount in USD")]
+    discount_pct: Annotated[float, Field(ge=0.0, le=1.0)] = 0.0
+    items: Annotated[list[str], Field(min_length=1, max_length=100)]
+    status: Literal["pending", "confirmed", "shipped", "delivered", "cancelled"]
+    priority: Annotated[int, Field(ge=1, le=5)] = 3
+
+# ── 3. field_validator: custom field-level validation ────────────────────────
+class PipelineEvent(BaseModel):
+    event_id: str
+    user_id: int
+    event_ts: datetime
+    region: str
+    amount: float
+
+    @field_validator("event_ts")
+    @classmethod
+    def event_ts_not_future(cls, v: datetime) -> datetime:
+        if v > datetime.utcnow():
+            raise ValueError(f"event_ts {v} is in the future — likely a clock skew issue")
+        return v
+
+    @field_validator("region")
+    @classmethod
+    def region_must_be_valid(cls, v: str) -> str:
+        valid = {"us-east-1", "eu-west-1", "ap-southeast-1"}
+        if v not in valid:
+            raise ValueError(f"region must be one of {valid}, got {v!r}")
+        return v
+
+    @field_validator("amount", mode="before")
+    @classmethod
+    def amount_coerce_str(cls, v) -> float:
+        # Accept string amounts from legacy systems: "$ 99.99" → 99.99
+        if isinstance(v, str):
+            cleaned = v.replace("$", "").replace(",", "").strip()
+            return float(cleaned)
+        return v
+
+# ── 4. model_validator: cross-field validation ────────────────────────────────
+class DateRangeConfig(BaseModel):
+    start_date: datetime
+    end_date: datetime
+    max_range_days: int = 90
+
+    @model_validator(mode="after")
+    def end_after_start(self) -> "DateRangeConfig":
+        if self.end_date <= self.start_date:
+            raise ValueError(f"end_date must be after start_date")
+        delta = (self.end_date - self.start_date).days
+        if delta > self.max_range_days:
+            raise ValueError(f"Date range {delta} days exceeds max {self.max_range_days} days")
+        return self
+
+# ── 5. computed_field: derived properties ─────────────────────────────────────
+class SalesRecord(BaseModel):
+    unit_price: float
+    quantity: int
+    discount_pct: float = 0.0
+
+    @computed_field
+    @property
+    def total_amount(self) -> float:
+        return self.unit_price * self.quantity * (1 - self.discount_pct)
+
+    @computed_field
+    @property
+    def is_bulk_order(self) -> bool:
+        return self.quantity >= 100
+
+rec = SalesRecord(unit_price=9.99, quantity=150, discount_pct=0.1)
+print(rec.total_amount)    # 1348.65
+print(rec.is_bulk_order)   # True
+print(rec.model_dump())    # includes computed fields`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── 6. Nested models ─────────────────────────────────────────────────────────
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class Address(BaseModel):
+    street: str
+    city: str
+    country: str = Field(pattern=r"^[A-Z]{2}$")  # ISO 2-letter country code
+
+class Customer(BaseModel):
+    customer_id: int
+    name: str
+    email: str
+    billing_address: Address
+    shipping_address: Optional[Address] = None  # None → same as billing
+
+    @model_validator(mode="after")
+    def default_shipping(self) -> "Customer":
+        if self.shipping_address is None:
+            self.shipping_address = self.billing_address
+        return self
+
+# Nested parsing from dict/JSON
+customer = Customer(
+    customer_id=42,
+    name="Alice",
+    email="alice@example.com",
+    billing_address={"street": "123 Main St", "city": "Seattle", "country": "US"}
+)
+
+# ── 7. Parsing API responses in pipelines ────────────────────────────────────
+import httpx
+from typing import Any
+
+class APIResponse(BaseModel):
+    status: Literal["ok", "error"]
+    data: list[EventRecord]
+    total: int
+    page: int
+    page_size: int
+
+def fetch_events(api_url: str, token: str, page: int) -> list[EventRecord]:
+    resp = httpx.get(
+        api_url,
+        params={"page": page, "size": 500},
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=30.0,
+    )
+    resp.raise_for_status()
+    parsed = APIResponse.model_validate(resp.json())  # validates full response structure
+    if parsed.status != "ok":
+        raise ValueError(f"API returned error status")
+    return parsed.data  # list of validated EventRecord instances
+
+# ── 8. BaseSettings: config from environment variables ────────────────────────
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
+
+class PipelineSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",           # load from .env file if present
+        env_prefix="PIPELINE_",    # all vars prefixed: PIPELINE_DB_HOST, etc.
+        case_sensitive=False,
+    )
+
+    db_host: str
+    db_port: int = 5432
+    db_name: str
+    db_user: str
+    db_password: str
+    s3_bucket: str
+    batch_size: int = Field(default=10_000, gt=0, le=1_000_000)
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    output_path: Path = Path("/tmp/output")
+
+    @field_validator("db_password")
+    @classmethod
+    def mask_password_in_repr(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
+
+# Settings auto-populated from environment:
+#   PIPELINE_DB_HOST=prod-db.internal
+#   PIPELINE_DB_NAME=warehouse
+#   PIPELINE_S3_BUCKET=my-data-bucket
+settings = PipelineSettings()
+print(f"Connecting to {settings.db_host}:{settings.db_port}/{settings.db_name}")
+
+# ── 9. Validating a list of records from a pipeline stage ────────────────────
+from pydantic import TypeAdapter
+
+# TypeAdapter: validate without a model class (useful for list[SomeModel])
+adapter = TypeAdapter(list[EventRecord])
+
+raw_json = '[{"event_id":"E1","user_id":1,"event_type":"click","amount":0,"event_ts":"2024-01-15T10:00:00"}]'
+events = adapter.validate_json(raw_json)
+
+# Batch validate with error collection (don't fail on first error)
+valid_records = []
+invalid_records = []
+for raw_record in raw_batch:
+    try:
+        valid_records.append(EventRecord.model_validate(raw_record))
+    except ValidationError as e:
+        invalid_records.append({"record": raw_record, "errors": e.errors()})`}</CodeBlock>
+
+          <Quiz topicId="py-pydantic" questions={[
+            { question: "In Pydantic v2, which decorator replaced the v1 @root_validator for cross-field validation that runs after all fields are set?", options: ["@field_validator(mode='all')", "@model_validator(mode='after')", "@cross_validator", "@validator(always=True)"], correct: 1 },
+            { question: "What is the primary purpose of BaseSettings in pydantic-settings?", options: ["Validate JSON schemas at runtime", "Load and validate configuration from environment variables and .env files with type checking and defaults", "Store Pydantic models in a settings registry", "Configure Pydantic's validation behavior globally"], correct: 1 },
+            { question: "When using Field(gt=0, lt=1_000_000) on a float field, what does 'gt' enforce?", options: ["The value must be greater than or equal to 0 (inclusive lower bound)", "The value must be strictly greater than 0 (exclusive lower bound — 0.0 would fail validation)", "The value must be a positive integer", "The field is globally typed (gt = global type)"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-pydantic'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── py-docker ─────────────────────────────────────────────────── */}
+        <section id="py-docker" ref={el => { if (el) sectionRefs.current['py-docker'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Advanced DE Python</div>
+            <h1 className="topic-title">Docker for Data Engineering</h1>
+            <p className="topic-desc">Docker solves the "works on my machine" problem by packaging your pipeline code, dependencies, and runtime into a portable, reproducible image. For data engineers, Docker is essential for local development stacks, CI/CD pipelines, containerized Spark applications, and deploying Airflow, dbt, and other DE tools consistently across environments.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Multi-stage builds:</strong> Use a builder stage to install dependencies (including build tools like gcc), then copy only the necessary artifacts to a slim runtime stage. This reduces final image size by 60-80% — critical for fast image pulls in CI/CD and Kubernetes pod startup times.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Dockerfile for a PySpark data engineering application ────────────────────
+
+# ─────────────────────────────────────────────
+# STAGE 1: builder — install Python dependencies
+# ─────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+# Install system build deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy only requirements first (layer caching — only re-runs on requirements change)
+COPY requirements.txt .
+
+# Install to a target directory (for clean copy to runtime stage)
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --target=/app/packages -r requirements.txt
+
+# ─────────────────────────────────────────────
+# STAGE 2: runtime — slim final image
+# ─────────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+# Install only runtime system deps (not build tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-17-jre-headless \   # Required for PySpark
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root user for security (never run data pipelines as root)
+RUN groupadd --gid 1001 appgroup && useradd --uid 1001 --gid 1001 --no-create-home appuser
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /app/packages /app/packages
+
+# Set PYTHONPATH to include our installed packages
+ENV PYTHONPATH="/app/packages:/app/src"
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+ENV PYSPARK_PYTHON="python3"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Copy application source
+COPY --chown=appuser:appgroup src/ ./src/
+COPY --chown=appuser:appgroup config/ ./config/
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 4040    # Spark UI
+
+# ENTRYPOINT is the fixed command; CMD provides default arguments (can be overridden)
+ENTRYPOINT ["python", "-m", "src.pipeline"]
+CMD ["--env", "prod", "--date", "today"]`}</CodeBlock>
+
+          <CodeBlock lang="yaml">{`# ── docker-compose.yml: local DE development stack ───────────────────────────
+version: "3.9"
+
+services:
+  # ── Apache Airflow (webserver + scheduler + worker) ──────────────────────
+  airflow-webserver:
+    image: apache/airflow:2.9.0-python3.11
+    container_name: airflow-webserver
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: "\${FERNET_KEY}"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "\${SECRET_KEY}"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    env_file:
+      - .env          # load secrets from .env file (never commit .env to git)
+    volumes:
+      - ./dags:/opt/airflow/dags           # mount DAGs for hot-reload in dev
+      - ./plugins:/opt/airflow/plugins
+      - airflow-logs:/opt/airflow/logs
+    ports:
+      - "8080:8080"   # Airflow UI
+    command: webserver
+    networks:
+      - de-network
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.0-python3.11
+    container_name: airflow-scheduler
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - airflow-logs:/opt/airflow/logs
+    command: scheduler
+    networks:
+      - de-network
+
+  # ── PostgreSQL (Airflow metadata DB + pipeline target) ────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data     # named volume for persistence
+      - ./init-scripts:/docker-entrypoint-initdb.d  # run SQL on first start
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - de-network
+
+  # ── Spark (master + 2 workers) ────────────────────────────────────────────
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    environment:
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+    ports:
+      - "8181:8080"   # Spark Master UI (avoid conflict with Airflow on 8080)
+      - "7077:7077"   # Spark master port for worker registration
+    networks:
+      - de-network
+
+  spark-worker:
+    image: bitnami/spark:3.5
+    deploy:
+      replicas: 2     # spin up 2 workers
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_MEMORY: 2G
+      SPARK_WORKER_CORES: "2"
+    depends_on:
+      - spark-master
+    networks:
+      - de-network
+
+volumes:
+  postgres-data:
+  airflow-logs:
+
+networks:
+  de-network:
+    driver: bridge`}</CodeBlock>
+
+          <CodeBlock lang="bash">{`# ── Docker CLI commands for data engineering ─────────────────────────────────
+
+# Build the image (tag with registry/repo:version)
+docker build -t my-pipeline:1.0.0 .
+
+# Build with build args (e.g., inject git SHA)
+docker build --build-arg GIT_SHA=$(git rev-parse --short HEAD) -t my-pipeline:$(git rev-parse --short HEAD) .
+
+# Run the container with resource limits
+docker run \
+  --rm \                          # auto-remove on exit
+  --name pipeline-run-001 \
+  --memory="4g" \                 # memory limit
+  --cpus="2.0" \                  # CPU limit
+  --env-file .env \               # load secrets from .env
+  -v /data/input:/app/input:ro \  # mount input (read-only)
+  -v /data/output:/app/output \   # mount output (read-write)
+  -e PIPELINE_DATE=2024-01-15 \
+  my-pipeline:1.0.0 \
+  --env prod --date 2024-01-15
+
+# Docker Compose commands
+docker compose up -d              # start all services in background
+docker compose logs -f airflow-scheduler  # follow scheduler logs
+docker compose exec postgres psql -U airflow  # shell into postgres
+docker compose down -v            # stop + remove containers and volumes
+
+# Check container resource usage
+docker stats --no-stream
+
+# .dockerignore — keep images small and avoid leaking secrets
+cat .dockerignore
+# .git
+# .env
+# __pycache__
+# *.pyc
+# *.pyo
+# .pytest_cache
+# tests/
+# docs/
+# *.egg-info
+# .venv
+# dist/`}</CodeBlock>
+
+          <Quiz topicId="py-docker" questions={[
+            { question: "Why should you use a multi-stage Docker build for a PySpark application?", options: ["Multi-stage builds allow parallel compilation of Python files", "The builder stage installs build tools and compiles dependencies; the runtime stage copies only the final artifacts — producing a much smaller final image without gcc, g++, and other build tools", "Multi-stage builds are required for Docker Compose", "Multi-stage builds enable hot-reloading in development"], correct: 1 },
+            { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical — CMD is just an alias for ENTRYPOINT", "ENTRYPOINT defines the fixed executable that always runs; CMD provides default arguments that can be overridden at docker run time without replacing the entrypoint", "CMD runs at build time; ENTRYPOINT runs at container start", "ENTRYPOINT is for scripts; CMD is for binary executables only"], correct: 1 },
+            { question: "Why should you run container processes as a non-root user in data pipelines?", options: ["Root containers are slower due to kernel overhead", "If the container is compromised or a pipeline bug escapes the container, a non-root user limits the blast radius — root would have full host privileges", "Docker requires non-root for bind mounts to work", "Non-root users have access to more memory"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-docker'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── py-k8s ────────────────────────────────────────────────────── */}
+        <section id="py-k8s" ref={el => { if (el) sectionRefs.current['py-k8s'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Advanced DE Python</div>
+            <h1 className="topic-title">Kubernetes for Data Engineering</h1>
+            <p className="topic-desc">Kubernetes (K8s) is the production standard for running containerized data workloads at scale. For data engineers, the key use cases are: running Spark on Kubernetes (driver + executor pods), using KubernetesPodOperator in Airflow for isolated task execution, and deploying data services (APIs, dbt, Flink) with automatic scaling and self-healing.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Resource requests vs limits:</strong> Requests are what K8s uses for scheduling (guaranteed capacity). Limits are the hard cap (exceeding CPU is throttled; exceeding memory triggers OOMKill). Always set both — without requests, K8s cannot bin-pack pods; without limits, a runaway Spark job can starve other workloads on the node.</div>
+          </div>
+
+          <CodeBlock lang="yaml">{`# ── Core Kubernetes concepts for data engineering ────────────────────────────
+
+# ── 1. Pod: smallest deployable unit ─────────────────────────────────────────
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbt-run-pod
+  namespace: data-pipelines
+  labels:
+    app: dbt
+    team: data-engineering
+spec:
+  restartPolicy: Never    # for batch jobs — don't restart on completion
+  containers:
+    - name: dbt
+      image: my-registry/dbt-pipeline:1.0.0
+      command: ["dbt", "run", "--profiles-dir", "/config"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "500m"     # 500 millicores = 0.5 CPU
+        limits:
+          memory: "4Gi"
+          cpu: "2000m"    # 2 CPUs max
+      env:
+        - name: DBT_TARGET
+          value: "prod"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials    # reference a K8s Secret
+              key: password
+      volumeMounts:
+        - name: dbt-profiles
+          mountPath: /config
+          readOnly: true
+        - name: output-data
+          mountPath: /app/output
+  volumes:
+    - name: dbt-profiles
+      configMap:
+        name: dbt-profiles-config    # non-sensitive config
+    - name: output-data
+      persistentVolumeClaim:
+        claimName: pipeline-output-pvc
+
+---
+# ── 2. ConfigMap: non-sensitive configuration ─────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dbt-profiles-config
+  namespace: data-pipelines
+data:
+  profiles.yml: |
+    my_project:
+      target: "{{ env_var('DBT_TARGET') }}"
+      outputs:
+        prod:
+          type: snowflake
+          account: myaccount.us-east-1
+          database: PROD_DB
+          schema: analytics
+          warehouse: COMPUTE_WH
+          role: DBT_ROLE
+
+---
+# ── 3. Secret: sensitive config (base64-encoded in etcd) ──────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+  namespace: data-pipelines
+type: Opaque
+data:
+  password: cGFzc3dvcmQxMjM=   # base64("password123") — use Sealed Secrets in prod
+  username: ZGF0YV91c2Vy
+
+---
+# ── 4. PersistentVolumeClaim: request storage ─────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pipeline-output-pvc
+  namespace: data-pipelines
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard-ssd
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+# ── 5. Job: run-to-completion workload ────────────────────────────────────────
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: daily-etl-2024-01-15
+  namespace: data-pipelines
+spec:
+  backoffLimit: 3           # retry up to 3 times on failure
+  ttlSecondsAfterFinished: 86400  # auto-delete after 24h
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: etl-job
+          image: my-registry/etl-pipeline:1.2.0
+          args: ["--date", "2024-01-15", "--env", "prod"]
+          resources:
+            requests: { memory: "8Gi", cpu: "2000m" }
+            limits: { memory: "16Gi", cpu: "4000m" }`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── Running Spark on Kubernetes ───────────────────────────────────────────────
+# spark-submit with K8s master — Spark creates driver pod, then executor pods dynamically
+
+# spark-submit command (run from CI/CD or Airflow)
+spark_submit_cmd = """
+spark-submit \\
+  --master k8s://https://my-k8s-cluster:6443 \\
+  --deploy-mode cluster \\
+  --name my-spark-job \\
+  --conf spark.kubernetes.namespace=spark-jobs \\
+  --conf spark.kubernetes.container.image=my-registry/spark-app:1.0.0 \\
+  --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \\
+  --conf spark.executor.instances=4 \\
+  --conf spark.executor.memory=4g \\
+  --conf spark.executor.cores=2 \\
+  --conf spark.driver.memory=2g \\
+  --conf spark.dynamicAllocation.enabled=true \\
+  --conf spark.dynamicAllocation.shuffleTracking.enabled=true \\
+  --conf spark.dynamicAllocation.minExecutors=2 \\
+  --conf spark.dynamicAllocation.maxExecutors=20 \\
+  --conf spark.kubernetes.executor.request.cores=1 \\
+  --conf spark.kubernetes.executor.limit.cores=2 \\
+  local:///app/src/pipeline.py --date 2024-01-15
+"""
+
+# ── KubernetesPodOperator in Airflow ──────────────────────────────────────────
+from airflow import DAG
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
+from kubernetes.client import models as k8s
+from datetime import datetime, timedelta
+
+with DAG(
+    dag_id="daily_etl_pipeline",
+    start_date=datetime(2024, 1, 1),
+    schedule_interval="0 2 * * *",
+    catchup=False,
+    default_args={"retries": 2, "retry_delay": timedelta(minutes=5)},
+) as dag:
+
+    run_etl = KubernetesPodOperator(
+        task_id="run_etl_job",
+        name="etl-pod",
+        namespace="data-pipelines",
+        image="my-registry/etl-pipeline:{{ var.value.etl_image_tag }}",
+        cmds=["python", "-m", "src.pipeline"],
+        arguments=["--date", "{{ ds }}", "--env", "prod"],
+        env_vars={
+            "PIPELINE_DATE": "{{ ds }}",
+            "LOG_LEVEL": "INFO",
+        },
+        secrets=[
+            k8s.V1EnvVar(
+                name="DB_PASSWORD",
+                value_from=k8s.V1EnvVarSource(
+                    secret_key_ref=k8s.V1SecretKeySelector(name="db-creds", key="password")
+                )
+            )
+        ],
+        container_resources=k8s.V1ResourceRequirements(
+            requests={"memory": "4Gi", "cpu": "1000m"},
+            limits={"memory": "8Gi", "cpu": "2000m"},
+        ),
+        is_delete_operator_pod=True,   # clean up pod after completion
+        get_logs=True,                 # stream pod logs to Airflow task logs
+        in_cluster=True,               # operator runs inside the K8s cluster
+        startup_timeout_seconds=300,
+    )
+
+# ── kubectl essential commands for data engineers ─────────────────────────────
+# List pods in namespace
+# kubectl get pods -n data-pipelines
+
+# Follow logs of a running pipeline pod
+# kubectl logs -f pod/etl-pod-abc123 -n data-pipelines
+
+# Exec into a pod for debugging
+# kubectl exec -it pod/etl-pod-abc123 -n data-pipelines -- /bin/bash
+
+# Describe a pod (events, resource usage, errors)
+# kubectl describe pod etl-pod-abc123 -n data-pipelines
+
+# Apply a manifest
+# kubectl apply -f k8s/job-daily-etl.yaml
+
+# Check resource usage (requires metrics-server)
+# kubectl top pods -n data-pipelines
+# kubectl top nodes
+
+# Delete completed jobs
+# kubectl delete jobs --field-selector status.successful=1 -n data-pipelines`}</CodeBlock>
+
+          <Quiz topicId="py-k8s" questions={[
+            { question: "What is the difference between resource requests and resource limits in Kubernetes?", options: ["They are identical — requests and limits must always be equal", "Requests are the guaranteed allocation used for pod scheduling; limits are the hard cap — exceeding CPU causes throttling, exceeding memory causes OOMKill", "Limits are set by the cluster admin; requests are set by the developer", "Requests apply to memory only; limits apply to CPU only"], correct: 1 },
+            { question: "When running Spark on Kubernetes, what role do executor pods play?", options: ["They run the Spark UI and store job history", "They are dynamically created by the driver pod to perform distributed computation; they are destroyed when the job finishes", "They are permanent pods that must be pre-provisioned before spark-submit", "They store shuffle data in persistent volumes only"], correct: 1 },
+            { question: "What is the main advantage of using KubernetesPodOperator in Airflow over PythonOperator?", options: ["KubernetesPodOperator is always faster", "Each task runs in an isolated container with its own image, dependencies, and resource limits — preventing dependency conflicts between tasks and enabling fine-grained resource control", "KubernetesPodOperator has built-in retry logic that PythonOperator lacks", "KubernetesPodOperator automatically parallelizes tasks across nodes"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-k8s'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── py-deequ ──────────────────────────────────────────────────── */}
+        <section id="py-deequ" ref={el => { if (el) sectionRefs.current['py-deequ'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Advanced DE Python</div>
+            <h1 className="topic-title">Data Quality with Deequ + Great Expectations</h1>
+            <p className="topic-desc">Data quality (DQ) validation is a critical gate in production data pipelines. Amazon Deequ (open source, Spark-native) and Great Expectations (Python-native, multi-engine) are the two leading frameworks. They let you define constraints on your data, run them as part of your pipeline, and fail fast when data violates your contracts — before bad data reaches downstream consumers.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>DQ framework comparison:</strong> Deequ = Spark-native, Scala/Python API, deep Spark integration (runs as a Spark job). Great Expectations = Python-native, multi-engine (Pandas/Spark/SQL), rich HTML docs, built for CI/CD. Soda = SQL-first, cloud-native. dbt tests = embedded in dbt models. For large-scale Spark pipelines, Deequ. For multi-engine platforms, Great Expectations.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── Amazon Deequ: data quality on Spark ──────────────────────────────────────
+# pip install pydeequ
+from pyspark.sql import SparkSession
+import pydeequ
+from pydeequ.checks import Check, CheckLevel
+from pydeequ.verification import VerificationSuite, VerificationResult
+from pydeequ.analyzers import AnalysisRunner, Completeness, Uniqueness, Mean, Minimum, Maximum
+
+spark = SparkSession.builder \
+    .appName("DataQuality") \
+    .config("spark.jars.packages", pydeequ.deequ_maven_coord) \
+    .getOrCreate()
+
+df = spark.read.parquet("s3://warehouse/silver/orders/")
+
+# ── 1. VerificationSuite: define and run checks ───────────────────────────────
+check = Check(spark, CheckLevel.Error, "OrdersDataQuality")
+
+verification_result = VerificationSuite(spark) \
+    .onData(df) \
+    .addCheck(
+        check
+        # Completeness: no nulls in critical fields
+        .isComplete("order_id")
+        .isComplete("customer_id")
+        .isComplete("order_date")
+        # Uniqueness: order_id must be a primary key
+        .isUnique("order_id")
+        # Non-negative values
+        .isNonNegative("amount")
+        .isNonNegative("quantity")
+        # Range checks
+        .hasMin("amount", lambda val: val >= 0.01, "Amount must be at least 1 cent")
+        .hasMax("amount", lambda val: val <= 100_000, "Amount must not exceed 100k")
+        # Completeness with threshold: at least 99% of rows have email
+        .hasCompleteness("email", lambda pct: pct >= 0.99, "Email completeness < 99%")
+        # Uniqueness with threshold: order_id must be 100% unique
+        .hasUniqueness("order_id", lambda uniq: uniq == 1.0, "order_id is not unique")
+        # Custom SQL constraint
+        .satisfies(
+            "amount > 0 AND quantity > 0",
+            "positive_financials",
+            lambda frac: frac >= 1.0   # 100% of rows must satisfy
+        )
+        # Enum check: status must be one of known values
+        .isContainedIn("status", ["pending", "confirmed", "shipped", "delivered", "cancelled"])
+        # Pattern check: order_id matches ORD-XXXXXX
+        .containsURL("website_url")
+    ) \
+    .run()
+
+# ── 2. Inspect results ────────────────────────────────────────────────────────
+result_df = VerificationResult.checkResultsAsDataFrame(spark, verification_result)
+result_df.show(truncate=False)
+
+# Overall status: SUCCESS or ERROR
+if verification_result.status == "Error":
+    failed = result_df.filter("check_status = 'Error'")
+    failed.show(truncate=False)
+    raise ValueError(f"Data quality checks failed! See above for details.")
+
+# ── 3. Analyzers: compute metrics without pass/fail ──────────────────────────
+analysis_result = AnalysisRunner(spark) \
+    .onData(df) \
+    .addAnalyzer(Completeness("email")) \
+    .addAnalyzer(Uniqueness(["order_id"])) \
+    .addAnalyzer(Mean("amount")) \
+    .addAnalyzer(Minimum("amount")) \
+    .addAnalyzer(Maximum("amount")) \
+    .run()
+
+metrics_df = analysis_result.allMetrics()
+metrics_df.show(truncate=False)
+
+# ── 4. Constraint suggestions (automatic DQ rule generation) ──────────────────
+from pydeequ.suggestions import ConstraintSuggestionRunner, DEFAULT_RULES
+
+suggestions = ConstraintSuggestionRunner(spark) \
+    .onData(df) \
+    .addConstraintRules(DEFAULT_RULES) \
+    .run()
+
+# Print auto-generated Deequ constraints from data profiling
+for s in suggestions["constraint_suggestions"]:
+    print(f"Column: {s['column_name']}, Suggestion: {s['description']}")
+    print(f"  Code: {s['code_for_constraint']}")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── Great Expectations: multi-engine data validation ─────────────────────────
+# pip install great-expectations
+import great_expectations as gx
+from great_expectations.core.batch import RuntimeBatchRequest
+import pandas as pd
+
+# ── 1. Create/load a DataContext ──────────────────────────────────────────────
+context = gx.get_context()  # reads great_expectations.yml in current dir
+
+# ── 2. Define expectations on a Pandas DataFrame ─────────────────────────────
+df = pd.read_parquet("s3://warehouse/silver/orders/sample.parquet")
+
+# Create a batch and validator
+validator = context.sources.pandas_default.read_dataframe(
+    dataframe=df,
+    asset_name="orders",
+)
+
+# Define expectations
+validator.expect_column_to_exist("order_id")
+validator.expect_column_values_to_not_be_null("order_id")
+validator.expect_column_values_to_be_unique("order_id")
+validator.expect_column_values_to_not_be_null("customer_id")
+validator.expect_column_values_to_be_between("amount", min_value=0.01, max_value=100_000)
+validator.expect_column_values_to_be_in_set(
+    "status",
+    value_set=["pending", "confirmed", "shipped", "delivered", "cancelled"]
+)
+validator.expect_column_value_lengths_to_be_between("order_id", min_value=8, max_value=20)
+validator.expect_column_values_to_match_regex("order_id", r"^ORD-\d{6}$")
+validator.expect_column_mean_to_be_between("amount", min_value=10.0, max_value=5000.0)
+validator.expect_table_row_count_to_be_between(min_value=1, max_value=10_000_000)
+
+# Save the ExpectationSuite
+validator.save_expectation_suite(discard_failed_expectations=False)
+
+# ── 3. Run a Checkpoint (validates + generates DataDocs HTML report) ──────────
+checkpoint_result = context.run_checkpoint(
+    checkpoint_name="orders_daily_checkpoint",
+    validations=[{"batch_request": {"datasource_name": "orders_source"}}],
+)
+
+if not checkpoint_result.success:
+    raise ValueError("Great Expectations checkpoint failed — see DataDocs for details")
+
+# Generate and open DataDocs (HTML report)
+context.open_data_docs()
+# Opens browser: http://localhost:8100/local_site/index.html
+
+# ── 4. Using GE in a production Airflow DAG ───────────────────────────────────
+from airflow.decorators import task
+
+@task
+def validate_data_quality(execution_date: str) -> None:
+    import great_expectations as gx
+    context = gx.get_context(context_root_dir="/opt/airflow/great_expectations")
+    result = context.run_checkpoint(
+        checkpoint_name="daily_orders_checkpoint",
+        batch_request={"runtime_parameters": {"path": f"s3://warehouse/silver/orders/dt={execution_date}/"}},
+    )
+    if not result.success:
+        failed_expectations = [
+            str(v)
+            for v in result.list_validation_results()
+            if not v.success
+        ]
+        raise ValueError(f"DQ validation failed: {failed_expectations}")
+
+# ── 5. Framework comparison table ────────────────────────────────────────────
+# | Feature              | Deequ         | Great Expectations | Soda     | dbt tests  |
+# |----------------------|---------------|--------------------|----------|------------|
+# | Engine               | Spark         | Pandas/Spark/SQL   | SQL      | SQL (dbt)  |
+# | Language             | Python/Scala  | Python             | YAML/SQL | YAML/SQL   |
+# | HTML Reports         | No            | Yes (DataDocs)     | Yes      | No         |
+# | CI/CD Integration    | Good          | Excellent          | Good     | Excellent  |
+# | Constraint Suggestions| Yes          | No                 | No       | No         |
+# | Cloud Metadata Store | S3 metrics    | Various backends   | Soda Cloud| dbt Cloud  |
+# | Best For             | Large-scale   | Multi-engine       | SQL DW   | dbt projects|
+# |                      | Spark DQ      | data platforms     | validation|            |`}</CodeBlock>
+
+          <Quiz topicId="py-deequ" questions={[
+            { question: "In Amazon Deequ, what is the difference between a Check and an Analyzer?", options: ["They are identical — Analyzers are just named Checks", "A Check defines a pass/fail constraint (e.g., isComplete, isUnique) that produces SUCCESS/ERROR; an Analyzer computes a metric (e.g., Completeness, Mean) without a pass/fail threshold", "Analyzers run on Pandas; Checks run on Spark", "Checks run during writes; Analyzers run during reads"], correct: 1 },
+            { question: "What is Deequ's constraint suggestions feature and when would you use it?", options: ["It suggests SQL indexes for faster queries", "It profiles the data and auto-generates Deequ constraint code based on observed statistics — useful when onboarding a new dataset with no existing DQ rules", "It suggests schema changes to reduce data size", "It suggests partition strategies based on cardinality"], correct: 1 },
+            { question: "What does Great Expectations DataDocs provide that raw validation results do not?", options: ["Faster validation execution", "A human-readable HTML report showing expectation definitions, validation results, and historical trends — useful for stakeholder communication and debugging", "Automatic data remediation", "Streaming validation in real-time"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-deequ'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── py-memory ─────────────────────────────────────────────────── */}
+        <section id="py-memory" ref={el => { if (el) sectionRefs.current['py-memory'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Advanced DE Python</div>
+            <h1 className="topic-title">Python Memory Profiling</h1>
+            <p className="topic-desc">Memory bugs in data pipelines are insidious — a pipeline that works on 100 MB of data crashes on 10 GB. Python's built-in tracemalloc, the memory_profiler library, and objgraph give you progressively deeper visibility into what is consuming memory. Mastering memory-efficient patterns (streaming, generators, chunked reads, explicit deletion) is what separates production-grade DE code from fragile notebook scripts.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body"><strong>Pandas copies vs views:</strong> Operations like <code>df[df['col'] &gt; 0]</code> and <code>df.loc[...]</code> may return a view (no copy) or a copy (doubled memory). After Pandas 2.0 with Copy-on-Write (CoW), assignments always create copies. Use <code>df.query()</code>, <code>df.assign()</code> and chain transformations to minimise intermediate copies. For very large data, use chunked reads with <code>pd.read_csv(chunksize=N)</code>.</div>
+          </div>
+
+          <CodeBlock lang="python">{`# ── tracemalloc: built-in memory tracing ─────────────────────────────────────
+import tracemalloc
+import linecache
+
+# ── 1. Basic: find top memory consumers ──────────────────────────────────────
+tracemalloc.start()
+
+# ... run your pipeline code here ...
+import pandas as pd
+df = pd.read_parquet("s3://warehouse/silver/orders/large_partition.parquet")
+df_filtered = df[df["amount"] > 0]          # may create a copy
+df_enriched = df_filtered.assign(           # assign creates a new DataFrame
+    amount_usd=df_filtered["amount"] / 100
+)
+
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.statistics("lineno")
+
+print("=== Top 10 memory consumers ===")
+for stat in top_stats[:10]:
+    print(f"{stat}")
+# Output: pipeline.py:12: size=245.3 MiB, count=3, average=81.8 MiB
+
+# ── 2. Compare snapshots: find memory leak between two points ─────────────────
+tracemalloc.start()
+
+snapshot1 = tracemalloc.take_snapshot()
+
+# Run one iteration of your pipeline
+process_batch(get_next_batch())
+
+snapshot2 = tracemalloc.take_snapshot()
+
+# Show what was allocated between snapshot1 and snapshot2
+top_stats = snapshot2.compare_to(snapshot1, "lineno")
+print("=== Memory delta ===")
+for stat in top_stats[:5]:
+    print(f"{stat}")
+# net_allocated_MiB shows what grew — hints at leaks
+
+# ── 3. Filter to just your application code ───────────────────────────────────
+filters = [
+    tracemalloc.Filter(True, "*/src/pipeline.py"),    # include your code
+    tracemalloc.Filter(False, "<frozen importlib*>"),  # exclude stdlib internals
+    tracemalloc.Filter(False, "<unknown>"),
+]
+filtered_stats = snapshot.filter_traces(filters).statistics("lineno")
+for stat in filtered_stats[:10]:
+    frame = stat.traceback[0]
+    print(f"  {frame.filename}:{frame.lineno}: {stat.size / 1024 / 1024:.2f} MiB")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── memory_profiler: line-by-line memory usage ───────────────────────────────
+# pip install memory-profiler psutil
+from memory_profiler import profile
+import pandas as pd
+
+@profile  # adds per-line MiB delta to the output
+def load_and_process_orders(path: str) -> pd.DataFrame:
+    # Line 1: read full Parquet file
+    df = pd.read_parquet(path)                            # +245 MiB
+
+    # Line 2: filter — may create a copy (pre-CoW)
+    df_active = df[df["status"] == "confirmed"]           # +122 MiB (copy)
+
+    # Line 3: original df still referenced → both in memory
+    df_enriched = df_active.assign(
+        discount_ratio=df_active["discount"] / df_active["amount"]
+    )                                                      # +62 MiB
+
+    # Release intermediate DataFrames early
+    del df, df_active                                     # -367 MiB freed
+    import gc
+    gc.collect()
+
+    return df_enriched
+
+# Run to see output:
+# Line 12: 245.3 MiB  +245.3 MiB  df = pd.read_parquet(path)
+# Line 15: 367.4 MiB  +122.1 MiB  df_active = df[df["status"] == "confirmed"]
+# ...
+
+# ── mprof: time-series memory profiling ──────────────────────────────────────
+# Run from CLI:
+# mprof run python pipeline.py
+# mprof plot                   → opens matplotlib chart of RSS over time
+# mprof run --include-children python -m spark_job  → include child processes
+
+# ── objgraph: find reference cycles ──────────────────────────────────────────
+# pip install objgraph
+import objgraph
+
+# Show the 10 most common types in memory
+objgraph.show_most_common_types(limit=10)
+# dict      3421
+# list      2847
+# function  1200
+# DataFrame   42
+
+# Find what's holding a reference to a large object (prevents GC)
+objgraph.show_backrefs(large_df, max_depth=3, filename="backrefs.png")
+
+# Count growth between two points (memory leak detection)
+objgraph.get_leaking_objects()
+
+# ── Common DE memory anti-patterns and fixes ──────────────────────────────────
+import pandas as pd
+
+# ❌ ANTI-PATTERN 1: reading an entire large file into memory
+df = pd.read_csv("s3://bucket/large_events.csv")  # 50 GB → OOM
+
+# ✅ FIX: chunked reading
+chunk_size = 100_000
+result_chunks = []
+for chunk in pd.read_csv("s3://bucket/large_events.csv", chunksize=chunk_size):
+    processed = chunk[chunk["amount"] > 0].assign(amount_usd=chunk["amount"] / 100)
+    result_chunks.append(processed)
+    del chunk  # free each chunk after processing
+final_df = pd.concat(result_chunks, ignore_index=True)
+
+# ❌ ANTI-PATTERN 2: accumulating all records in a list
+all_records = []
+for file in parquet_files:
+    all_records.extend(pd.read_parquet(file).to_dict("records"))  # explodes memory
+
+# ✅ FIX: process and write each file immediately
+for file in parquet_files:
+    df = pd.read_parquet(file)
+    write_to_delta(df)
+    del df
+    import gc; gc.collect()
+
+# ❌ ANTI-PATTERN 3: retaining large intermediate DataFrames in long-running code
+def run_pipeline():
+    raw = extract()          # 4 GB
+    validated = validate(raw)  # another 4 GB — raw still referenced!
+    transformed = transform(validated)
+    # raw and validated are still in memory while transform runs → 12 GB peak
+
+# ✅ FIX: explicit deletion of intermediate results
+def run_pipeline():
+    raw = extract()
+    validated = validate(raw)
+    del raw; import gc; gc.collect()          # free 4 GB before transform
+    transformed = transform(validated)
+    del validated; gc.collect()               # free 4 GB before load
+    load(transformed)
+
+# ── Best practice: use generators instead of lists for large pipelines ─────────
+def iter_records(parquet_files: list[str]):
+    """Stream records from multiple files without loading all into memory."""
+    for f in parquet_files:
+        df = pd.read_parquet(f)
+        yield from df.itertuples(index=False)  # one row at a time
+        del df
+
+total = sum(row.amount for row in iter_records(parquet_files))  # O(1) memory`}</CodeBlock>
+
+          <Quiz topicId="py-memory" questions={[
+            { question: "What does tracemalloc.take_snapshot().compare_to(earlier_snapshot, 'lineno') reveal?", options: ["The total memory used by the Python process at that moment", "The net memory allocated between the two snapshots broken down by source line — useful for identifying memory leaks in iterative pipeline code", "The time elapsed between the two snapshots", "The CPU usage per line of code"], correct: 1 },
+            { question: "A Pandas pipeline processing a 10 GB CSV hits OOM. Which approach fixes this with minimal code change?", options: ["Switch to PyPy — it has a more efficient garbage collector", "Use pd.read_csv(path, chunksize=N) to process the file in chunks, processing and writing each chunk before reading the next", "Increase Python recursion limit with sys.setrecursionlimit()", "Use multiprocessing to read the file in parallel — each process uses less memory"], correct: 1 },
+            { question: "In a long-running Python pipeline, why should you explicitly call 'del large_df' followed by 'gc.collect()' after you are done with a large DataFrame?", options: ["del is required before a variable can be reassigned", "CPython's reference counting frees objects immediately on del; gc.collect() handles reference cycles that reference counting alone cannot detect — together they ensure memory is returned to the OS promptly rather than waiting for the next GC cycle", "gc.collect() compresses memory to reduce fragmentation", "This is required for thread safety in multi-threaded pipelines"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-memory'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
       </main>
