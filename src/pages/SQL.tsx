@@ -88,6 +88,812 @@ function JoinVennDiagram() {
   )
 }
 
+// ─── Strings animation ───────────────────────────────────────────────────────
+function StringsAnimation() {
+  const [input, setInput] = useState('  Hello World  ')
+  const ops = [
+    { name:'TRIM', fn: (s:string) => s.trim() },
+    { name:'UPPER', fn: (s:string) => s.toUpperCase() },
+    { name:'LOWER', fn: (s:string) => s.toLowerCase() },
+    { name:'LENGTH', fn: (s:string) => String(s.length) },
+    { name:'LEFT(5)', fn: (s:string) => s.slice(0,5) },
+    { name:'REPLACE(" ","_")', fn: (s:string) => s.replaceAll(' ','_') },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>String Function Live Demo</div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14 }}>
+        <label style={{ fontSize:'.85rem', color:'var(--text-secondary)' }}>Input:</label>
+        <input value={input} onChange={e=>setInput(e.target.value)} style={{ flex:1, padding:'6px 10px', borderRadius:8, border:'1.5px solid var(--border)', fontFamily:'monospace', fontSize:'.88rem' }} />
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:8 }}>
+        {ops.map(op => (
+          <div key={op.name} style={{ padding:'8px 12px', background:'white', border:'1px solid var(--border)', borderRadius:8 }}>
+            <div style={{ fontFamily:'monospace', fontSize:'.72rem', color:'#4f8ef7', marginBottom:4 }}>{op.name}</div>
+            <div style={{ fontFamily:'monospace', fontWeight:700, color:'#1e293b', fontSize:'.82rem', wordBreak:'break-all' }}>"{op.fn(input)}"</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Date animation ───────────────────────────────────────────────────────────
+function DateAnimation() {
+  const [date, setDate] = useState('2024-07-15 14:30:00')
+  const ops = [
+    { name:"DATE_TRUNC('month')", fn: (s:string) => { const d=new Date(s); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01` } },
+    { name:"DATE_TRUNC('year')", fn: (s:string) => `${new Date(s).getFullYear()}-01-01` },
+    { name:"EXTRACT(YEAR)", fn: (s:string) => String(new Date(s).getFullYear()) },
+    { name:"EXTRACT(MONTH)", fn: (s:string) => String(new Date(s).getMonth()+1) },
+    { name:"EXTRACT(DOW)", fn: (s:string) => String(new Date(s).getDay()) },
+    { name:"TO_DATE", fn: (s:string) => s.split(' ')[0] },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Date Function Live Demo</div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14 }}>
+        <label style={{ fontSize:'.85rem', color:'var(--text-secondary)' }}>Timestamp:</label>
+        <input value={date} onChange={e=>setDate(e.target.value)} style={{ flex:1, padding:'6px 10px', borderRadius:8, border:'1.5px solid var(--border)', fontFamily:'monospace', fontSize:'.88rem' }} />
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(180px,1fr))', gap:8 }}>
+        {ops.map(op => { let result=''; try { result=op.fn(date) } catch { result='(invalid)' } return (
+          <div key={op.name} style={{ padding:'8px 12px', background:'white', border:'1px solid var(--border)', borderRadius:8 }}>
+            <div style={{ fontFamily:'monospace', fontSize:'.72rem', color:'#8b5cf6', marginBottom:4 }}>{op.name}</div>
+            <div style={{ fontFamily:'monospace', fontWeight:700, color:'#1e293b', fontSize:'.85rem' }}>{result}</div>
+          </div>
+        )})}
+      </div>
+    </div>
+  )
+}
+
+// ─── Aggregation animation ─────────────────────────────────────────────────────
+function AggAnimation() {
+  const data = [100, 200, null, 150, 300, null, 250]
+  const noNulls = data.filter((v): v is number => v !== null)
+  const results = [
+    { fn:'COUNT(*)', val: data.length, note:'includes NULLs' },
+    { fn:'COUNT(amount)', val: noNulls.length, note:'ignores NULLs' },
+    { fn:'SUM(amount)', val: noNulls.reduce((s,v)=>s+v,0), note:'' },
+    { fn:'AVG(amount)', val: Math.round(noNulls.reduce((s,v)=>s+v,0)/noNulls.length), note:'ignores NULLs' },
+    { fn:'MIN(amount)', val: Math.min(...noNulls), note:'' },
+    { fn:'MAX(amount)', val: Math.max(...noNulls), note:'' },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Aggregate Functions with NULLs</div>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+        {data.map((v,i) => (
+          <div key={i} style={{ padding:'5px 10px', borderRadius:6, background:v===null?'#fef2f2':'white', border:`1px solid ${v===null?'#fecaca':'var(--border)'}`, fontFamily:'monospace', fontSize:'.82rem', color:v===null?'#ef4444':'#1e293b' }}>{v===null?'NULL':v}</div>
+        ))}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:8 }}>
+        {results.map(r => (
+          <div key={r.fn} style={{ padding:'8px 12px', background:'white', border:'1px solid var(--border)', borderRadius:8 }}>
+            <div style={{ fontFamily:'monospace', fontSize:'.72rem', color:'#22c55e', marginBottom:4 }}>{r.fn}</div>
+            <div style={{ fontFamily:'monospace', fontWeight:700, fontSize:'1rem', color:'#1e293b' }}>{r.val}</div>
+            {r.note && <div style={{ fontSize:'.68rem', color:'#f59e0b', marginTop:4 }}>{r.note}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── SELECT logical order ────────────────────────────────────────────────────
+function SelectOrderAnimation() {
+  const [step, setStep] = useState(-1)
+  const steps = [
+    { clause: 'FROM', color: '#94a3b8', desc: 'Load the table(s) into memory' },
+    { clause: 'JOIN', color: '#8b5cf6', desc: 'Combine with related tables' },
+    { clause: 'WHERE', color: '#ef4444', desc: 'Filter rows before grouping' },
+    { clause: 'GROUP BY', color: '#f59e0b', desc: 'Collapse rows into groups' },
+    { clause: 'HAVING', color: '#f97316', desc: 'Filter groups after aggregation' },
+    { clause: 'SELECT', color: '#22c55e', desc: 'Compute output columns (aliases defined here)' },
+    { clause: 'ORDER BY', color: '#4f8ef7', desc: 'Sort the result set' },
+    { clause: 'LIMIT', color: '#06b6d4', desc: 'Restrict number of rows returned' },
+  ]
+  useEffect(() => {
+    const id = setInterval(() => setStep(s => (s + 1) % steps.length), 900)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>SQL Logical Processing Order</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+        {steps.map((s, i) => (
+          <div key={i} style={{ padding: '5px 14px', borderRadius: 'var(--radius-full)', background: i === step ? s.color : 'white', color: i === step ? '#fff' : 'var(--text-muted)', border: `1.5px solid ${i <= step ? s.color : 'var(--border)'}`, fontFamily: 'monospace', fontWeight: 700, fontSize: '.82rem', transition: 'all .2s' }}>
+            {i + 1}. {s.clause}
+          </div>
+        ))}
+      </div>
+      {step >= 0 && (
+        <div style={{ padding: '10px 14px', borderRadius: 8, background: `${steps[step].color}18`, border: `1px solid ${steps[step].color}40`, fontFamily: 'monospace', fontSize: '.85rem', color: steps[step].color }}>
+          {steps[step].clause}: {steps[step].desc}
+        </div>
+      )}
+      <div style={{ marginTop: 10, fontSize: '.75rem', color: 'var(--text-muted)' }}>⚠️ SELECT is step 6 — you cannot reference a SELECT alias in WHERE</div>
+    </div>
+  )
+}
+
+// ─── DISTINCT animation ───────────────────────────────────────────────────────
+function DistinctAnimation() {
+  const rows = [
+    { id: 1, customer: 'Alice', category: 'Electronics' },
+    { id: 2, customer: 'Bob',   category: 'Clothing' },
+    { id: 3, customer: 'Alice', category: 'Electronics' },
+    { id: 4, customer: 'Carol', category: 'Books' },
+    { id: 5, customer: 'Bob',   category: 'Electronics' },
+  ]
+  const [mode, setMode] = useState<'all'|'distinct'>('all')
+  const displayed = mode === 'all' ? rows : rows.filter((r, i, arr) => arr.findIndex(x => x.customer === r.customer && x.category === r.category) === i)
+  const dupes = rows.length - displayed.length
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        {(['all', 'distinct'] as const).map(m => (
+          <button key={m} onClick={() => setMode(m)} style={{ padding: '5px 16px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${m === 'all' ? '#94a3b8' : '#22c55e'}`, background: mode === m ? (m === 'all' ? '#94a3b8' : '#22c55e') : 'transparent', color: mode === m ? '#fff' : (m === 'all' ? '#94a3b8' : '#22c55e'), fontWeight: 600, fontSize: '.82rem', cursor: 'pointer' }}>{m === 'all' ? 'All rows' : 'DISTINCT customer, category'}</button>
+        ))}
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+        <thead><tr style={{ background: 'var(--surface-3)' }}>{['id','customer','category'].map(h => <th key={h} style={{ padding: '7px 12px', textAlign: 'left', fontWeight: 700 }}>{h}</th>)}</tr></thead>
+        <tbody>
+          {rows.map(r => {
+            const hidden = mode === 'distinct' && displayed.findIndex(d => d.id === r.id) === -1
+            return (
+              <tr key={r.id} style={{ borderBottom: '1px solid var(--border)', opacity: hidden ? 0.2 : 1, background: hidden ? '#fef2f2' : 'white', transition: 'opacity .3s' }}>
+                <td style={{ padding: '7px 12px' }}>{r.id}</td>
+                <td style={{ padding: '7px 12px', fontWeight: 600 }}>{r.customer}</td>
+                <td style={{ padding: '7px 12px' }}>{r.category}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      {mode === 'distinct' && <div style={{ marginTop: 8, fontSize: '.78rem', color: '#ef4444' }}>Removed {dupes} duplicate row(s) — row 3 (Alice/Electronics) is a dup of row 1</div>}
+    </div>
+  )
+}
+
+// ─── NULL handling animation ──────────────────────────────────────────────────
+function NullAnimation() {
+  const rows = [
+    { id: 1, amount: 100, discount: 10 },
+    { id: 2, amount: 200, discount: null },
+    { id: 3, amount:  50, discount: null },
+    { id: 4, amount: 150, discount: 20 },
+  ]
+  const [fn, setFn] = useState<'raw'|'coalesce'|'count'>('raw')
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+        {([['raw','Raw NULLs'],['coalesce','COALESCE(discount,0)'],['count','COUNT(*) vs COUNT(discount)']] as const).map(([k,l]) => (
+          <button key={k} onClick={() => setFn(k)} style={{ padding: '5px 14px', borderRadius: 'var(--radius-full)', border: `1.5px solid ${fn===k?'#f59e0b':'var(--border)'}`, background: fn===k?'#f59e0b':'white', color: fn===k?'#fff':'var(--text-secondary)', fontWeight: 600, fontSize: '.78rem', cursor: 'pointer' }}>{l}</button>
+        ))}
+      </div>
+      {fn !== 'count' ? (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+          <thead><tr style={{ background: 'var(--surface-3)' }}>{['id','amount',fn==='raw'?'discount':'COALESCE(discount,0)'].map(h => <th key={h} style={{ padding:'7px 12px', textAlign:'left', fontWeight:700 }}>{h}</th>)}</tr></thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} style={{ borderBottom: '1px solid var(--border)', background: r.discount === null && fn==='raw' ? '#fef2f2' : 'white' }}>
+                <td style={{ padding:'7px 12px' }}>{r.id}</td>
+                <td style={{ padding:'7px 12px' }}>{r.amount}</td>
+                <td style={{ padding:'7px 12px', color: r.discount === null ? '#ef4444' : 'inherit', fontWeight: r.discount === null ? 700 : 400 }}>
+                  {fn==='raw' ? (r.discount === null ? 'NULL' : r.discount) : (r.discount ?? 0)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {[['COUNT(*)', rows.length, 'Counts ALL rows including NULLs', '#22c55e'],['COUNT(discount)', rows.filter(r=>r.discount!==null).length, 'Ignores NULL rows', '#4f8ef7']].map(([name,val,note,color]) => (
+            <div key={String(name)} style={{ padding:'12px 16px', background:'white', border:`1.5px solid ${color}40`, borderRadius:8, textAlign:'center' }}>
+              <div style={{ fontFamily:'monospace', fontWeight:700, fontSize:'1.1rem', color: String(color) }}>{String(val)}</div>
+              <div style={{ fontFamily:'monospace', fontSize:'.78rem', color:'var(--text-secondary)', marginTop:4 }}>{String(name)}</div>
+              <div style={{ fontSize:'.72rem', color:'var(--text-muted)', marginTop:6, lineHeight:1.4 }}>{String(note)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── CASE WHEN animation ──────────────────────────────────────────────────────
+function CaseAnimation() {
+  const amounts = [30, 120, 600, 2500]
+  const bucket = (a: number) => a < 50 ? { label:'Small', color:'#94a3b8' } : a < 200 ? { label:'Medium', color:'#22c55e' } : a < 1000 ? { label:'Large', color:'#f59e0b' } : { label:'Enterprise', color:'#8b5cf6' }
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '.9rem' }}>CASE WHEN — value bucketing</div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        {amounts.map(a => {
+          const b = bucket(a)
+          return (
+            <div key={a} style={{ flex: '1 1 120px', padding: '12px 14px', background: `${b.color}18`, border: `1.5px solid ${b.color}`, borderRadius: 10, textAlign: 'center' }}>
+              <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '1.1rem', color: b.color }}>${a}</div>
+              <div style={{ marginTop: 6, fontWeight: 700, color: b.color, fontSize: '.82rem' }}>→ {b.label}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ fontFamily: 'monospace', fontSize: '.78rem', color: 'var(--text-secondary)', background: '#0d1117', borderRadius: 8, padding: '10px 14px', lineHeight: 1.8 }}>
+        <span style={{ color: '#4f8ef7' }}>CASE</span>{'\n'}
+        {'  '}<span style={{ color: '#f59e0b' }}>WHEN</span> amount {'<'} 50   <span style={{ color: '#f59e0b' }}>THEN</span> <span style={{ color: '#22c55e' }}>'Small'</span>{'\n'}
+        {'  '}<span style={{ color: '#f59e0b' }}>WHEN</span> amount {'<'} 200  <span style={{ color: '#f59e0b' }}>THEN</span> <span style={{ color: '#22c55e' }}>'Medium'</span>{'\n'}
+        {'  '}<span style={{ color: '#f59e0b' }}>WHEN</span> amount {'<'} 1000 <span style={{ color: '#f59e0b' }}>THEN</span> <span style={{ color: '#22c55e' }}>'Large'</span>{'\n'}
+        {'  '}<span style={{ color: '#f59e0b' }}>ELSE</span> <span style={{ color: '#22c55e' }}>'Enterprise'</span>{'\n'}
+        <span style={{ color: '#4f8ef7' }}>END</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── GROUP BY / ROLLUP animation ──────────────────────────────────────────────
+function GroupByAnimation() {
+  const data = [
+    { region:'EU', cat:'Electronics', rev:300 },
+    { region:'EU', cat:'Clothing',    rev:150 },
+    { region:'US', cat:'Electronics', rev:500 },
+    { region:'US', cat:'Clothing',    rev:200 },
+  ]
+  const [mode, setMode] = useState<'group'|'rollup'>('group')
+  const grouped = data.map(r => ({ ...r }))
+  const rollup = [
+    ...data,
+    { region:'EU', cat:'(subtotal)', rev: data.filter(r=>r.region==='EU').reduce((s,r)=>s+r.rev,0) },
+    { region:'US', cat:'(subtotal)', rev: data.filter(r=>r.region==='US').reduce((s,r)=>s+r.rev,0) },
+    { region:'(grand)', cat:'(total)', rev: data.reduce((s,r)=>s+r.rev,0) },
+  ]
+  const rows = mode === 'group' ? grouped : rollup
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        {([['group','GROUP BY'],['rollup','GROUP BY ROLLUP']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setMode(k)} style={{ padding:'5px 16px', borderRadius:'var(--radius-full)', border:`1.5px solid ${k==='group'?'#4f8ef7':'#8b5cf6'}`, background:mode===k?(k==='group'?'#4f8ef7':'#8b5cf6'):'transparent', color:mode===k?'#fff':(k==='group'?'#4f8ef7':'#8b5cf6'), fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
+        <thead><tr style={{ background:'var(--surface-3)' }}>{['region','category','revenue'].map(h=><th key={h} style={{ padding:'7px 12px', textAlign:'left', fontWeight:700 }}>{h}</th>)}</tr></thead>
+        <tbody>
+          {rows.map((r,i) => {
+            const isSubtotal = 'cat' in r && (r.cat === '(subtotal)' || r.cat === '(total)')
+            return (
+              <tr key={i} style={{ borderBottom:'1px solid var(--border)', background: isSubtotal ? '#faf5ff' : 'white', fontWeight: isSubtotal ? 700 : 400 }}>
+                <td style={{ padding:'7px 12px', color: isSubtotal ? '#8b5cf6' : 'inherit' }}>{r.region}</td>
+                <td style={{ padding:'7px 12px', color: isSubtotal ? '#8b5cf6' : 'inherit' }}>{r.cat}</td>
+                <td style={{ padding:'7px 12px', fontFamily:'monospace', color: isSubtotal ? '#8b5cf6' : 'inherit' }}>{r.rev}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      {mode === 'rollup' && <div style={{ marginTop:8, fontSize:'.75rem', color:'#8b5cf6' }}>Purple rows = subtotals/grand total added by ROLLUP automatically</div>}
+    </div>
+  )
+}
+
+// ─── Anti/Semi join animation ─────────────────────────────────────────────────
+function AntiSemiAnimation() {
+  const customers = [{ id:1,name:'Alice' },{ id:2,name:'Bob' },{ id:3,name:'Carol' },{ id:4,name:'Dave' }]
+  const orders = [{ id:101,customerId:1 },{ id:102,customerId:2 },{ id:103,customerId:2 }]
+  const [mode, setMode] = useState<'semi'|'anti'>('semi')
+  const matched = new Set(orders.map(o => o.customerId))
+  const result = mode === 'semi' ? customers.filter(c => matched.has(c.id)) : customers.filter(c => !matched.has(c.id))
+  return (
+    <div className="anim-wrap" style={{ background: 'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['semi','SEMI JOIN (EXISTS)'],['anti','ANTI JOIN (NOT EXISTS)']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setMode(k)} style={{ padding:'5px 14px', borderRadius:'var(--radius-full)', border:`1.5px solid ${k==='semi'?'#22c55e':'#ef4444'}`, background:mode===k?(k==='semi'?'#22c55e':'#ef4444'):'transparent', color:mode===k?'#fff':(k==='semi'?'#22c55e':'#ef4444'), fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:16, alignItems:'start' }}>
+        <div>
+          <div style={{ fontWeight:700, fontSize:'.78rem', color:'var(--text-muted)', marginBottom:8 }}>customers</div>
+          {customers.map(c => {
+            const inResult = result.some(r => r.id === c.id)
+            return <div key={c.id} style={{ padding:'6px 10px', borderRadius:6, background:inResult?(mode==='semi'?'#f0fdf4':'#fff5f5'):mode==='semi'?'#f8fafc':'#f0fdf4', border:`1px solid ${inResult?(mode==='semi'?'#22c55e':'#ef4444'):'var(--border)'}`, marginBottom:4, fontSize:'.82rem', opacity: inResult ? 1 : 0.4, transition:'all .3s' }}>{c.id}: {c.name}</div>
+          })}
+        </div>
+        <div style={{ fontSize:'1.5rem', color:'var(--text-muted)', paddingTop:28 }}>{mode==='semi'?'✓':'✗'}</div>
+        <div>
+          <div style={{ fontWeight:700, fontSize:'.78rem', color:'var(--text-muted)', marginBottom:8 }}>orders</div>
+          {orders.map(o => <div key={o.id} style={{ padding:'6px 10px', borderRadius:6, background:'white', border:'1px solid var(--border)', marginBottom:4, fontSize:'.82rem' }}>order {o.id} (cust {o.customerId})</div>)}
+        </div>
+      </div>
+      <div style={{ marginTop:10, fontSize:'.78rem', color:mode==='semi'?'#22c55e':'#ef4444' }}>
+        {mode==='semi' ? 'Customers Alice & Bob have orders → returned (columns from customers only)' : 'Carol & Dave have NO orders → anti-join returns them'}
+      </div>
+    </div>
+  )
+}
+
+// ─── Subquery vs CTE animation ────────────────────────────────────────────────
+function SubqueryCTEAnimation() {
+  const [view, setView] = useState<'sub'|'cte'>('sub')
+  return (
+    <div className="anim-wrap" style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['sub','Subquery (nested)'],['cte','CTE (named)']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setView(k)} style={{ padding:'5px 14px', borderRadius:'var(--radius-full)', border:`1.5px solid ${k==='sub'?'#f59e0b':'#22c55e'}`, background:view===k?(k==='sub'?'#f59e0b':'#22c55e'):'transparent', color:view===k?'#fff':(k==='sub'?'#f59e0b':'#22c55e'), fontWeight:600, fontSize:'.8rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <pre style={{ margin:0, fontFamily:'monospace', fontSize:'.78rem', lineHeight:1.8, color:'#e6edf3', whiteSpace:'pre-wrap' }}>
+        {view === 'sub' ? (
+          <><span style={{ color:'#8b949e' }}>{/* Hard to read: nested subqueries */}</span>
+{`SELECT dept, avg_sal
+FROM (
+    SELECT department AS dept,
+           AVG(salary) AS avg_sal
+    FROM employees
+    GROUP BY department
+) dept_stats
+WHERE avg_sal > 80000;`}</>
+        ) : (
+          <><span style={{ color:'#8b949e' }}>{/* Easy to read: named steps */}</span>
+{`WITH dept_stats AS (
+    SELECT department AS dept,
+           AVG(salary) AS avg_sal
+    FROM employees
+    GROUP BY department
+)
+SELECT dept, avg_sal
+FROM dept_stats
+WHERE avg_sal > 80000;`}</>
+        )}
+      </pre>
+    </div>
+  )
+}
+
+// ─── SET ops animation ────────────────────────────────────────────────────────
+function SetOpsAnimation() {
+  const setA = ['alice@x.com','bob@x.com','carol@x.com']
+  const setB = ['bob@x.com','carol@x.com','dave@x.com']
+  const [op, setOp] = useState<'union'|'unionall'|'intersect'|'except'>('union')
+  const results: Record<string, string[]> = {
+    union:     [...new Set([...setA,...setB])],
+    unionall:  [...setA,...setB],
+    intersect: setA.filter(e => setB.includes(e)),
+    except:    setA.filter(e => !setB.includes(e)),
+  }
+  const result = results[op]
+  const color = { union:'#4f8ef7', unionall:'#8b5cf6', intersect:'#22c55e', except:'#ef4444' }[op]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:6, marginBottom:14, flexWrap:'wrap' }}>
+        {([['union','UNION'],['unionall','UNION ALL'],['intersect','INTERSECT'],['except','EXCEPT']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setOp(k)} style={{ padding:'4px 12px', borderRadius:'var(--radius-full)', border:`1.5px solid ${op===k?color:'var(--border)'}`, background:op===k?color:'white', color:op===k?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.78rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
+        {[['Query A (subscribers)', setA, '#4f8ef7'],['Query B (customers)', setB, '#22c55e'],['Result', result, color]].map(([title, rows, c]) => (
+          <div key={String(title)}>
+            <div style={{ fontWeight:700, fontSize:'.75rem', color:String(c), marginBottom:8 }}>{String(title)}</div>
+            {(rows as string[]).map((e,i) => <div key={i} style={{ padding:'5px 8px', borderRadius:5, background:'white', border:`1px solid ${String(c)}40`, marginBottom:4, fontSize:'.72rem', fontFamily:'monospace' }}>{e}</div>)}
+            {title === 'Result' && <div style={{ marginTop:6, fontSize:'.7rem', color:'var(--text-muted)' }}>{op==='unionall'?`${result.length} rows (dupes kept)`:op==='union'?`${result.length} unique rows`:op==='intersect'?`${result.length} in both`:`${result.length} in A not B`}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Window function animation ────────────────────────────────────────────────
+function WindowAnimation() {
+  const orders = [
+    { id:1, cust:'Alice', amt:100 },
+    { id:2, cust:'Alice', amt:200 },
+    { id:3, cust:'Bob',   amt: 50 },
+    { id:4, cust:'Bob',   amt:150 },
+    { id:5, cust:'Alice', amt:300 },
+  ]
+  const [fn, setFn] = useState<'rownum'|'rank'|'sum'>('rownum')
+  const withFn = orders.map((o,_i, arr) => {
+    const partitioned = arr.filter(x => x.cust === o.cust).sort((a,b)=>a.amt-b.amt)
+    const idx = partitioned.findIndex(x => x.id === o.id)
+    const runningSum = partitioned.slice(0,idx+1).reduce((s,x)=>s+x.amt,0)
+    const sortedAll = [...arr].sort((a,b)=>b.amt-a.amt)
+    const rankIdx = sortedAll.findIndex(x => x.id === o.id)
+    return { ...o, rownum: idx+1, rank: rankIdx+1, sum: runningSum }
+  })
+  const col = fn === 'rownum' ? 'ROW_NUMBER() per customer' : fn === 'rank' ? 'RANK() by amount DESC (all)' : 'SUM(amt) running per customer'
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Window Functions — live result</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['rownum','ROW_NUMBER'],['rank','RANK'],['sum','Running SUM']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setFn(k)} style={{ padding:'5px 14px', borderRadius:'var(--radius-full)', border:`1.5px solid ${fn===k?'#6366f1':'var(--border)'}`, background:fn===k?'#6366f1':'white', color:fn===k?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.8rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
+        <thead><tr style={{ background:'var(--surface-3)' }}>{['id','customer','amount',col].map(h=><th key={h} style={{ padding:'7px 12px', textAlign:'left', fontWeight:700, fontSize:'.75rem' }}>{h}</th>)}</tr></thead>
+        <tbody>
+          {withFn.map(r => (
+            <tr key={r.id} style={{ borderBottom:'1px solid var(--border)' }}>
+              <td style={{ padding:'7px 12px' }}>{r.id}</td>
+              <td style={{ padding:'7px 12px', fontWeight:600, color:r.cust==='Alice'?'#4f8ef7':'#22c55e' }}>{r.cust}</td>
+              <td style={{ padding:'7px 12px', fontFamily:'monospace' }}>{r.amt}</td>
+              <td style={{ padding:'7px 12px', fontFamily:'monospace', fontWeight:700, color:'#6366f1' }}>{fn==='rownum'?r.rownum:fn==='rank'?r.rank:r.sum}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ─── Window frame animation ───────────────────────────────────────────────────
+function FrameAnimation() {
+  const days = [10,25,30,20,40,35,50,45,60,55]
+  const [frame, setFrame] = useState<'running'|'rolling3'|'full'>('running')
+  const getVal = (i: number) => {
+    if (frame === 'running') return days.slice(0,i+1).reduce((s,v)=>s+v,0)
+    if (frame === 'rolling3') return Math.round(days.slice(Math.max(0,i-2),i+1).reduce((s,v)=>s+v,0)/Math.min(3,i+1))
+    return Math.round(days.reduce((s,v)=>s+v,0)/days.length)
+  }
+  const [hover, setHover] = useState(-1)
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Window Frame Visualizer</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        {([['running','Running total (UNBOUNDED PRECEDING)'],['rolling3','3-day rolling avg (2 PRECEDING)'],['full','Full partition avg']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setFrame(k)} style={{ padding:'4px 12px', borderRadius:'var(--radius-full)', border:`1.5px solid ${frame===k?'#4f8ef7':'var(--border)'}`, background:frame===k?'#4f8ef7':'white', color:frame===k?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.75rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:4, alignItems:'flex-end', height:90 }}>
+        {days.map((v,i) => {
+          const maxV = Math.max(...days)
+          const wval = getVal(i)
+          const inWindow = frame==='rolling3' ? (hover>=0 && i>=hover-2 && i<=hover) : hover>=0 && i<=hover
+          return (
+            <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }} onMouseEnter={()=>setHover(i)} onMouseLeave={()=>setHover(-1)}>
+              <div style={{ fontSize:'.62rem', color:'#6366f1', fontFamily:'monospace' }}>{hover===i?wval:''}</div>
+              <div style={{ width:'100%', background:inWindow?'#6366f180':hover===i?'#6366f1':'#e2e8f0', borderRadius:'3px 3px 0 0', height:`${(v/maxV)*60}px`, transition:'background .15s' }} />
+              <div style={{ fontSize:'.65rem', color:'var(--text-muted)' }}>d{i+1}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ marginTop:8, fontSize:'.75rem', color:'var(--text-secondary)' }}>Hover a bar to see the window value. Purple = rows included in window.</div>
+    </div>
+  )
+}
+
+// ─── CTE animation ────────────────────────────────────────────────────────────
+function CTEAnimation() {
+  const [step, setStep] = useState(0)
+  const steps = [
+    { name:'completed_orders', color:'#4f8ef7', desc:'Step 1: aggregate orders per customer', rows:[{k:'Alice',v:1500},{k:'Bob',v:800},{k:'Carol',v:3200}] },
+    { name:'customer_segments', color:'#8b5cf6', desc:'Step 2: apply segment rules from step 1', rows:[{k:'Alice',v:'Regular'},{k:'Bob',v:'New'},{k:'Carol',v:'VIP'}] },
+    { name:'final SELECT', color:'#22c55e', desc:'Step 3: aggregate by segment', rows:[{k:'New',v:1},{k:'Regular',v:1},{k:'VIP',v:1}] },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>CTE — step-by-step data flow</div>
+      <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+        {steps.map((s,i) => <button key={i} onClick={()=>setStep(i)} style={{ padding:'4px 12px', borderRadius:'var(--radius-full)', border:`1.5px solid ${step===i?s.color:'var(--border)'}`, background:step===i?s.color:'white', color:step===i?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.78rem', cursor:'pointer' }}>{s.name}</button>)}
+      </div>
+      <div style={{ padding:'12px 16px', background:'white', border:`1.5px solid ${steps[step].color}`, borderRadius:10 }}>
+        <div style={{ fontFamily:'monospace', fontWeight:700, color:steps[step].color, marginBottom:10 }}>WITH {steps[step].name} AS (...)</div>
+        <div style={{ fontSize:'.75rem', color:'var(--text-secondary)', marginBottom:10 }}>{steps[step].desc}</div>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.8rem' }}>
+          <tbody>{steps[step].rows.map((r,i) => <tr key={i}><td style={{ padding:'5px 10px', borderBottom:'1px solid var(--border)' }}>{r.k}</td><td style={{ padding:'5px 10px', borderBottom:'1px solid var(--border)', fontFamily:'monospace', color:steps[step].color, fontWeight:700 }}>{r.v}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ─── PIVOT animation ──────────────────────────────────────────────────────────
+function PivotAnimation() {
+  const long = [
+    { customer:'Alice', category:'Electronics', amount:300 },
+    { customer:'Alice', category:'Clothing',    amount:150 },
+    { customer:'Bob',   category:'Electronics', amount:200 },
+    { customer:'Bob',   category:'Books',       amount: 50 },
+    { customer:'Carol', category:'Clothing',    amount:400 },
+  ]
+  const wide = [
+    { customer:'Alice', Electronics:300, Clothing:150, Books:0 },
+    { customer:'Bob',   Electronics:200, Clothing:0,   Books:50 },
+    { customer:'Carol', Electronics:0,   Clothing:400, Books:0  },
+  ]
+  const [pivoted, setPivoted] = useState(false)
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>PIVOT — long to wide</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        <button onClick={()=>setPivoted(false)} style={{ padding:'5px 16px', borderRadius:'var(--radius-full)', border:`1.5px solid ${!pivoted?'#ef4444':'var(--border)'}`, background:!pivoted?'#ef4444':'white', color:!pivoted?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>Long (before)</button>
+        <button onClick={()=>setPivoted(true)} style={{ padding:'5px 16px', borderRadius:'var(--radius-full)', border:`1.5px solid ${pivoted?'#22c55e':'var(--border)'}`, background:pivoted?'#22c55e':'white', color:pivoted?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>Wide (after PIVOT)</button>
+      </div>
+      {!pivoted ? (
+        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
+          <thead><tr style={{ background:'var(--surface-3)' }}>{['customer','category','amount'].map(h=><th key={h} style={{ padding:'7px 12px', textAlign:'left', fontWeight:700 }}>{h}</th>)}</tr></thead>
+          <tbody>{long.map((r,i) => <tr key={i} style={{ borderBottom:'1px solid var(--border)' }}><td style={{ padding:'7px 12px' }}>{r.customer}</td><td style={{ padding:'7px 12px', color:'#4f8ef7' }}>{r.category}</td><td style={{ padding:'7px 12px', fontFamily:'monospace' }}>{r.amount}</td></tr>)}</tbody>
+        </table>
+      ) : (
+        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
+          <thead><tr style={{ background:'var(--surface-3)' }}>{['customer','Electronics','Clothing','Books'].map(h=><th key={h} style={{ padding:'7px 12px', textAlign:'left', fontWeight:700 }}>{h}</th>)}</tr></thead>
+          <tbody>{wide.map((r,i) => <tr key={i} style={{ borderBottom:'1px solid var(--border)' }}><td style={{ padding:'7px 12px', fontWeight:700 }}>{r.customer}</td>{[r.Electronics,r.Clothing,r.Books].map((v,j) => <td key={j} style={{ padding:'7px 12px', fontFamily:'monospace', color:v>0?'#22c55e':'#94a3b8' }}>{v}</td>)}</tr>)}</tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+// ─── Transaction animation ─────────────────────────────────────────────────────
+function TransactionAnimation() {
+  const [state, setState] = useState<'idle'|'running'|'committed'|'rolledback'>('idle')
+  const steps = ['BEGIN', 'UPDATE accounts SET bal=bal-100 WHERE id=1', 'UPDATE accounts SET bal=bal+100 WHERE id=2', 'COMMIT / ROLLBACK']
+  const [currentStep, setCurrentStep] = useState(-1)
+  const start = () => {
+    setState('running'); setCurrentStep(0)
+    setTimeout(()=>setCurrentStep(1),700)
+    setTimeout(()=>setCurrentStep(2),1400)
+    setTimeout(()=>setCurrentStep(3),2000)
+  }
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>ACID Transaction — transfer $100</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:14 }}>
+        {steps.map((s,i) => (
+          <div key={i} style={{ padding:'8px 14px', borderRadius:8, background:currentStep>=i?'#1e293b':'white', border:`1.5px solid ${currentStep>=i?'#22c55e':'var(--border)'}`, fontFamily:'monospace', fontSize:'.82rem', color:currentStep>=i?'#22c55e':'var(--text-secondary)', transition:'all .3s' }}>
+            {currentStep>=i?'✓ ':'  '}{s}
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={start} disabled={state==='running'} style={{ padding:'6px 20px', borderRadius:'var(--radius-full)', border:'1.5px solid #22c55e', background:state==='running'?'#94a3b8':'#22c55e', color:'white', fontWeight:700, fontSize:'.82rem', cursor:state==='running'?'not-allowed':'pointer' }}>▶ Run Transaction</button>
+        <button onClick={()=>{setState('rolledback');setCurrentStep(3)}} style={{ padding:'6px 20px', borderRadius:'var(--radius-full)', border:'1.5px solid #ef4444', background:'#ef4444', color:'white', fontWeight:700, fontSize:'.82rem', cursor:'pointer' }}>✗ Rollback</button>
+        <button onClick={()=>{setState('idle');setCurrentStep(-1)}} style={{ padding:'6px 14px', borderRadius:'var(--radius-full)', border:'1.5px solid var(--border)', background:'white', color:'var(--text-secondary)', fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>Reset</button>
+      </div>
+      {currentStep===3 && state!=='rolledback' && <div style={{ marginTop:8, fontSize:'.8rem', color:'#22c55e', fontWeight:700 }}>✓ COMMIT — both updates visible atomically</div>}
+      {state==='rolledback' && <div style={{ marginTop:8, fontSize:'.8rem', color:'#ef4444', fontWeight:700 }}>✗ ROLLBACK — neither update applied. Balances unchanged.</div>}
+    </div>
+  )
+}
+
+// ─── DDL animation ─────────────────────────────────────────────────────────────
+function DDLAnimation() {
+  const [op, setOp] = useState<'create'|'alter'|'drop'>('create')
+  const sqls = {
+    create: `CREATE TABLE orders (
+  order_id   BIGINT       NOT NULL,
+  customer_id INT         NOT NULL,
+  amount     DECIMAL(18,2),
+  status     VARCHAR(20)  DEFAULT 'pending',
+  created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (order_id)
+);`,
+    alter: `-- Add a column
+ALTER TABLE orders ADD COLUMN discount DECIMAL(10,2);
+
+-- Rename a column (PostgreSQL / Spark)
+ALTER TABLE orders RENAME COLUMN status TO order_status;
+
+-- Change data type
+ALTER TABLE orders ALTER COLUMN amount TYPE DECIMAL(20,4);
+
+-- Add an index
+CREATE INDEX idx_orders_customer ON orders(customer_id);`,
+    drop: `-- Drop with safety check
+DROP TABLE IF EXISTS orders_staging;
+
+-- Truncate (delete all rows, keep structure)
+TRUNCATE TABLE orders_staging;
+
+-- Drop column
+ALTER TABLE orders DROP COLUMN IF EXISTS old_field;`,
+  }
+  return (
+    <div className="anim-wrap" style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['create','CREATE'],['alter','ALTER'],['drop','DROP']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setOp(k)} style={{ padding:'5px 16px', borderRadius:'var(--radius-full)', border:`1.5px solid ${op===k?'#4f8ef7':'#30363d'}`, background:op===k?'#4f8ef7':'#161b22', color:'#e6edf3', fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <pre style={{ margin:0, fontFamily:'monospace', fontSize:'.78rem', color:'#e6edf3', whiteSpace:'pre-wrap', lineHeight:1.8 }}>{sqls[op]}</pre>
+    </div>
+  )
+}
+
+// ─── Views animation ──────────────────────────────────────────────────────────
+function ViewsAnimation() {
+  const [type, setType] = useState<'view'|'mat'>('view')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['view','View (virtual)'],['mat','Materialized View']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setType(k)} style={{ padding:'5px 16px', borderRadius:'var(--radius-full)', border:`1.5px solid ${type===k?'#8b5cf6':'var(--border)'}`, background:type===k?'#8b5cf6':'white', color:type===k?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        {[
+          { label:'Storage', view:'None — query re-executes each time', mat:'Physical table — stored on disk' },
+          { label:'Freshness', view:'Always current', mat:'Stale until refreshed (REFRESH MATERIALIZED VIEW)' },
+          { label:'Speed', view:'As fast as underlying query', mat:'Sub-second (pre-computed)' },
+          { label:'Use when', view:'Data changes frequently, simplicity matters', mat:'Expensive aggregation, many users query same data' },
+        ].map(r => (
+          <div key={r.label} style={{ background:'white', border:'1px solid var(--border)', borderRadius:8, padding:'10px 14px' }}>
+            <div style={{ fontSize:'.72rem', color:'var(--text-muted)', marginBottom:4 }}>{r.label}</div>
+            <div style={{ fontSize:'.82rem', color:type==='view'?'#4f8ef7':'#8b5cf6', fontWeight:500 }}>{type==='view'?r.view:r.mat}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── DML animation ────────────────────────────────────────────────────────────
+function DMLAnimation() {
+  const [op, setOp] = useState<'insert'|'update'|'delete'|'merge'>('insert')
+  const before = [{ id:1,status:'pending',amt:100 },{ id:2,status:'shipped',amt:200 },{ id:3,status:'pending',amt:50 }]
+  const after: Record<string, typeof before> = {
+    insert: [...before, { id:4, status:'pending', amt:300 }],
+    update: before.map(r => r.status==='pending' ? { ...r, status:'processing' } : r),
+    delete: before.filter(r => r.status !== 'pending'),
+    merge:  [...before.map(r => r.id===1?{...r,amt:150}:r), { id:4,status:'new',amt:300 }],
+  }
+  const [show, setShow] = useState<'before'|'after'>('before')
+  const rows = show === 'before' ? before : after[op]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:6, marginBottom:14, flexWrap:'wrap' }}>
+        {([['insert','INSERT'],['update','UPDATE'],['delete','DELETE'],['merge','MERGE']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>{setOp(k);setShow('before')}} style={{ padding:'4px 12px', borderRadius:'var(--radius-full)', border:`1.5px solid ${op===k?'#22c55e':'var(--border)'}`, background:op===k?'#22c55e':'white', color:op===k?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.78rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+        {(['before','after'] as const).map(s => <button key={s} onClick={()=>setShow(s)} style={{ padding:'4px 14px', borderRadius:'var(--radius-full)', border:`1.5px solid ${show===s?'#4f8ef7':'var(--border)'}`, background:show===s?'#4f8ef7':'white', color:show===s?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.78rem', cursor:'pointer' }}>{s === 'before' ? 'Before' : `After ${op.toUpperCase()}`}</button>)}
+      </div>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
+        <thead><tr style={{ background:'var(--surface-3)' }}>{['id','status','amount'].map(h=><th key={h} style={{ padding:'7px 12px', textAlign:'left', fontWeight:700 }}>{h}</th>)}</tr></thead>
+        <tbody>
+          {rows.map((r,i) => {
+            const isNew = show==='after' && !before.some(b=>b.id===r.id)
+            const isChanged = show==='after' && before.some(b=>b.id===r.id && (b.status!==r.status||b.amt!==r.amt))
+            return <tr key={i} style={{ borderBottom:'1px solid var(--border)', background:isNew?'#f0fdf4':isChanged?'#fefce8':'white' }}><td style={{ padding:'7px 12px' }}>{r.id}</td><td style={{ padding:'7px 12px', color:isChanged?'#f59e0b':isNew?'#22c55e':'inherit' }}>{r.status}</td><td style={{ padding:'7px 12px', fontFamily:'monospace', color:isChanged?'#f59e0b':isNew?'#22c55e':'inherit' }}>{r.amt}</td></tr>
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ─── SQL Patterns animation ───────────────────────────────────────────────────
+function SQLPatternsAnimation() {
+  const patterns = [
+    { name:'Top-N per group', desc:'ROW_NUMBER() OVER (PARTITION BY category ORDER BY sales DESC)', use:'Best-selling product per category' },
+    { name:'Running total', desc:'SUM(amount) OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)', use:'Cumulative revenue over time' },
+    { name:'Gap detection', desc:'LAG(date)+1 ≠ date → gap found', use:'Missing dates in time-series' },
+    { name:'Dedup (latest)', desc:'ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) = 1', use:'Keep latest record per key' },
+    { name:'Date spine join', desc:'LEFT JOIN calendar ON date BETWEEN start AND end', use:'Fill in days with no events as 0' },
+  ]
+  const [active, setActive] = useState(0)
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Common SQL Patterns</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:14 }}>
+        {patterns.map((p,i) => <button key={i} onClick={()=>setActive(i)} style={{ padding:'8px 14px', borderRadius:8, border:`1.5px solid ${active===i?'#6366f1':'var(--border)'}`, background:active===i?'#6366f1':'white', color:active===i?'#fff':'var(--text-secondary)', fontWeight:active===i?700:400, fontSize:'.83rem', cursor:'pointer', textAlign:'left' }}>{p.name}</button>)}
+      </div>
+      <div style={{ padding:'12px 16px', background:'#0d1117', borderRadius:10, border:'1px solid #30363d' }}>
+        <div style={{ fontFamily:'monospace', fontSize:'.82rem', color:'#a5b4fc', marginBottom:8 }}>{patterns[active].desc}</div>
+        <div style={{ fontSize:'.78rem', color:'#64748b' }}>Use case: {patterns[active].use}</div>
+      </div>
+    </div>
+  )
+}
+
+// ─── EXPLAIN / execution plan animation ──────────────────────────────────────
+function ExplainAnimation() {
+  const [plan, setPlan] = useState<'bad'|'good'>('bad')
+  const nodes = {
+    bad: [
+      { op:'Full Table Scan', table:'orders (50M rows)', cost:'HIGH', color:'#ef4444' },
+      { op:'Hash Join', table:'+ customers', cost:'HIGH', color:'#f59e0b' },
+      { op:'Sort', table:'ORDER BY amount DESC', cost:'MED', color:'#f59e0b' },
+      { op:'Limit', table:'TOP 10', cost:'LOW', color:'#22c55e' },
+    ],
+    good: [
+      { op:'Index Seek', table:'orders.idx_customer_date', cost:'LOW', color:'#22c55e' },
+      { op:'Nested Loop Join', table:'+ customers (small)', cost:'LOW', color:'#22c55e' },
+      { op:'Top N Sort', table:'ORDER BY amount DESC LIMIT 10', cost:'LOW', color:'#22c55e' },
+    ],
+  }
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>EXPLAIN Plan — before & after optimization</div>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['bad','Unoptimized'],['good','Optimized']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setPlan(k)} style={{ padding:'5px 16px', borderRadius:'var(--radius-full)', border:`1.5px solid ${plan===k?'#4f8ef7':'var(--border)'}`, background:plan===k?'#4f8ef7':'white', color:plan===k?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.82rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {nodes[plan].map((n,i) => (
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'white', border:`1.5px solid ${n.color}40`, borderLeft:`3px solid ${n.color}`, borderRadius:8 }}>
+            <div style={{ fontFamily:'monospace', fontWeight:700, color:n.color, minWidth:120, fontSize:'.82rem' }}>{n.op}</div>
+            <div style={{ flex:1, fontSize:'.8rem', color:'var(--text-secondary)' }}>{n.table}</div>
+            <div style={{ fontFamily:'monospace', fontWeight:700, fontSize:'.78rem', color:n.color }}>{n.cost}</div>
+          </div>
+        ))}
+      </div>
+      {plan==='bad' && <div style={{ marginTop:8, fontSize:'.75rem', color:'#ef4444' }}>Full scan on 50M rows → add index on customer_id + date</div>}
+      {plan==='good' && <div style={{ marginTop:8, fontSize:'.75rem', color:'#22c55e' }}>Index seek reads only matching rows → 1000× faster</div>}
+    </div>
+  )
+}
+
+// ─── Performance anti-patterns animation ──────────────────────────────────────
+function PerformanceAnimation() {
+  const patterns = [
+    { bad:"WHERE YEAR(order_date) = 2024", good:"WHERE order_date BETWEEN '2024-01-01' AND '2024-12-31'", issue:'Function wraps column → non-sargable, no index' },
+    { bad:"SELECT * FROM orders JOIN customers ...", good:"SELECT o.id, o.amt, c.name FROM orders o JOIN customers c ...", issue:'SELECT * reads all columns including unneeded ones' },
+    { bad:"WHERE id NOT IN (SELECT customer_id FROM orders)", good:"WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id)", issue:'NOT IN returns 0 rows if subquery has any NULL' },
+    { bad:"SELECT DISTINCT a, b FROM big_table", good:"SELECT a, b FROM big_table GROUP BY a, b HAVING COUNT(*) = 1", issue:'DISTINCT triggers full sort or hash on all selected columns' },
+  ]
+  const [active, setActive] = useState(0)
+  const p = patterns[active]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Performance Anti-patterns</div>
+      <div style={{ display:'flex', gap:6, marginBottom:14, flexWrap:'wrap' }}>
+        {patterns.map((_,i) => <button key={i} onClick={()=>setActive(i)} style={{ padding:'4px 12px', borderRadius:'var(--radius-full)', border:`1.5px solid ${active===i?'#ef4444':'var(--border)'}`, background:active===i?'#ef4444':'white', color:active===i?'#fff':'var(--text-secondary)', fontWeight:600, fontSize:'.78rem', cursor:'pointer' }}>#{i+1}</button>)}
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        <div style={{ background:'#fef2f2', border:'1px solid #fecaca', borderRadius:8, padding:'10px 14px' }}>
+          <div style={{ fontSize:'.72rem', color:'#ef4444', fontWeight:700, marginBottom:4 }}>✗ Anti-pattern</div>
+          <code style={{ fontSize:'.82rem', color:'#991b1b' }}>{p.bad}</code>
+        </div>
+        <div style={{ background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:8, padding:'10px 14px' }}>
+          <div style={{ fontSize:'.72rem', color:'#22c55e', fontWeight:700, marginBottom:4 }}>✓ Better</div>
+          <code style={{ fontSize:'.82rem', color:'#166534' }}>{p.good}</code>
+        </div>
+        <div style={{ background:'#fffbeb', border:'1px solid #fde68a', borderRadius:8, padding:'8px 12px', fontSize:'.78rem', color:'#92400e' }}>⚠️ {p.issue}</div>
+      </div>
+    </div>
+  )
+}
+
+// ─── JSON in SQL animation ────────────────────────────────────────────────────
+function JSONSQLAnimation() {
+  const [step, setStep] = useState<'raw'|'extract'|'parsed'>('raw')
+  return (
+    <div className="anim-wrap" style={{ background:'#0d1117', border:'1px solid #30363d', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {([['raw','Raw JSON column'],['extract','GET_JSON_OBJECT'],['parsed','from_json() struct']] as const).map(([k,l]) => (
+          <button key={k} onClick={()=>setStep(k)} style={{ padding:'4px 12px', borderRadius:'var(--radius-full)', border:`1.5px solid ${step===k?'#f59e0b':'#30363d'}`, background:step===k?'#f59e0b':'#161b22', color:'#e6edf3', fontWeight:600, fontSize:'.78rem', cursor:'pointer' }}>{l}</button>
+        ))}
+      </div>
+      {step === 'raw' && <pre style={{ margin:0, fontFamily:'monospace', fontSize:'.78rem', color:'#e6edf3', lineHeight:1.8 }}>{`-- JSON stored as STRING column
+SELECT event_data FROM events LIMIT 1;
+
+-- event_data value:
+{"user_id": 42, "action": "purchase",
+ "item": {"sku": "ABC123", "price": 99.99},
+ "tags": ["sale", "electronics"]}`}</pre>}
+      {step === 'extract' && <pre style={{ margin:0, fontFamily:'monospace', fontSize:'.78rem', color:'#e6edf3', lineHeight:1.8 }}>{`-- Extract scalar values (Spark SQL)
+SELECT
+    GET_JSON_OBJECT(event_data, '$.user_id')       AS user_id,
+    GET_JSON_OBJECT(event_data, '$.action')        AS action,
+    GET_JSON_OBJECT(event_data, '$.item.price')    AS price,
+    JSON_ARRAY_LENGTH(event_data, '$.tags')        AS tag_count
+FROM events;`}</pre>}
+      {step === 'parsed' && <pre style={{ margin:0, fontFamily:'monospace', fontSize:'.78rem', color:'#e6edf3', lineHeight:1.8 }}>{`-- Parse to struct (Spark SQL) — strongly typed
+FROM_JSON(event_data, 'user_id INT, action STRING,
+  item STRUCT<sku:STRING, price:DOUBLE>,
+  tags ARRAY<STRING>') AS e
+
+-- Then access with dot notation:
+SELECT e.user_id, e.item.price, e.tags[0] FROM ...`}</pre>}
+    </div>
+  )
+}
+
 // ─── Index Animation ─────────────────────────────────────────────────────────
 function IndexAnimation() {
   const [mode, setMode] = useState<'full' | 'btree'>('full')
@@ -183,6 +989,7 @@ export default function SQL({ completed, onComplete, onUnmark }: Props) {
             <span className="topic-tag">Level 3</span>
             <h2>SELECT, WHERE, ORDER BY, LIMIT</h2>
           </div>
+          <SelectOrderAnimation />
           <p>The SELECT statement is the foundation of all SQL queries. <code>SELECT</code> chooses columns, <code>FROM</code> specifies the table, <code>WHERE</code> filters rows before aggregation, <code>ORDER BY</code> sorts results, and <code>LIMIT</code>/<code>OFFSET</code> paginates. Column aliases with <code>AS</code> rename output columns. The <code>*</code> wildcard selects all columns but should be avoided in production  -  always name columns explicitly for resilience against schema changes.</p>
           <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body">Logical processing order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. SELECT is evaluated late, so you cannot use a SELECT alias in WHERE.</div></div>
           <CodeBlock language="sql" code={`-- Basic SELECT with filtering and sorting
@@ -225,6 +1032,7 @@ ORDER BY started_at DESC;`} />
         {/* ── DISTINCT ── */}
         <section id="sql-distinct" ref={ref('sql-distinct')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>DISTINCT and Deduplication</h2></div>
+          <DistinctAnimation />
           <p>DISTINCT eliminates duplicate rows from query results. It operates on the full selected row, not just one column. For large tables, DISTINCT is expensive  -  it requires a sort or hash operation across all selected columns. In data engineering, deduplication is often better handled with window functions (ROW_NUMBER) or QUALIFY (Spark SQL / Snowflake), which give you control over which duplicate to keep.</p>
           <CodeBlock language="sql" code={`-- Basic DISTINCT
 SELECT DISTINCT customer_id FROM orders;
@@ -257,6 +1065,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 
         {/* ── NULLS ── */}
         <section id="sql-nulls" ref={ref('sql-nulls')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>NULL Handling</h2></div>
+          <NullAnimation />
           <p>NULL represents the absence of a value  -  it is not zero, not an empty string, and not false. NULL comparisons always return UNKNOWN, not TRUE or FALSE. This means <code>col = NULL</code> never matches anything; you must use <code>IS NULL</code> or <code>IS NOT NULL</code>. Aggregate functions ignore NULLs except COUNT(*). Understanding NULL propagation is critical for correct results in joins, aggregations, and CASE expressions.</p>
           <CodeBlock language="sql" code={`-- NULL comparisons
 SELECT * FROM orders WHERE discount IS NULL;       -- correct
@@ -301,6 +1110,7 @@ SELECT NVL(discount, 0)    FROM orders;          -- Oracle / Spark SQL`} />
         {/* ── CASE ── */}
         <section id="sql-case" ref={ref('sql-case')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>CASE WHEN Expressions</h2></div>
+          <CaseAnimation />
           <p>CASE WHEN is SQL's conditional expression. It comes in two forms: searched CASE (evaluates boolean conditions) and simple CASE (compares a value against options). CASE is used in SELECT for derived columns, in ORDER BY for custom sort orders, in GROUP BY for custom bucketing, and inside aggregate functions for conditional aggregation (a pivot-like pattern without PIVOT syntax).</p>
           <CodeBlock language="sql" code={`-- Searched CASE WHEN
 SELECT
@@ -355,6 +1165,7 @@ ORDER BY
         {/* ── STRINGS ── */}
         <section id="sql-strings" ref={ref('sql-strings')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>String Functions</h2></div>
+          <StringsAnimation />
           <p>String manipulation is essential for data cleaning, standardization, and parsing. Different databases use slightly different function names but the logic is the same. In data engineering you frequently clean source data: trim whitespace, standardize case, extract substrings, replace characters, and parse structured strings like emails, URLs, or delimited fields.</p>
           <CodeBlock language="sql" code={`-- Case manipulation
 SELECT UPPER('hello'), LOWER('WORLD'), INITCAP('john doe');
@@ -416,6 +1227,7 @@ SELECT CHARINDEX('.', email)   AS dot_pos FROM customers; -- SQL Server`} />
         {/* ── DATES ── */}
         <section id="sql-dates" ref={ref('sql-dates')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>Date / Time Functions</h2></div>
+          <DateAnimation />
           <p>Date and time handling is a core data engineering skill  -  event timestamps, partitioning by date, time-series aggregations, and SLA calculations all require mastery of date functions. Key concepts: always store timestamps in UTC, convert to local time at query time; understand the difference between DATE, TIMESTAMP, and TIMESTAMP WITH TIME ZONE; use DATE_TRUNC for period bucketing rather than extracting year/month/day separately.</p>
           <CodeBlock language="sql" code={`-- Current date and time
 SELECT CURRENT_DATE, CURRENT_TIMESTAMP, NOW();
@@ -476,6 +1288,7 @@ WHERE cal_date BETWEEN start_date AND end_date
         {/* ── AGGREGATIONS ── */}
         <section id="sql-agg" ref={ref('sql-agg')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>Aggregations</h2></div>
+          <AggAnimation />
           <p>Aggregate functions collapse multiple rows into a single value. The standard functions (COUNT, SUM, AVG, MIN, MAX) are available everywhere. Statistical functions (STDDEV, VARIANCE, PERCENTILE_CONT, PERCENTILE_DISC) vary by database. All aggregates except COUNT(*) ignore NULLs. Understanding the difference between PERCENTILE_CONT (interpolated) and PERCENTILE_DISC (actual data point) matters for SLA analysis.</p>
           <CodeBlock language="sql" code={`-- Standard aggregations
 SELECT
@@ -525,6 +1338,7 @@ FROM pipeline_runs;`} />
         {/* ── GROUP BY ── */}
         <section id="sql-groupby" ref={ref('sql-groupby')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>GROUP BY, HAVING, ROLLUP, CUBE, GROUPING SETS</h2></div>
+          <GroupByAnimation />
           <p>GROUP BY collapses rows sharing the same key into a single group for aggregation. HAVING filters groups after aggregation (WHERE filters rows before). Advanced grouping  -  ROLLUP, CUBE, GROUPING SETS  -  produce subtotals and grand totals in a single query, replacing multiple UNION ALLs. ROLLUP generates a hierarchy of subtotals; CUBE generates all possible combinations; GROUPING SETS gives you explicit control.</p>
           <CodeBlock language="sql" code={`-- GROUP BY with HAVING
 SELECT
@@ -644,6 +1458,7 @@ WHERE  o.status = 'completed';`} />
         {/* ── ANTI-JOINS ── */}
         <section id="sql-antijoin" ref={ref('sql-antijoin')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Anti-joins and Semi-joins</h2></div>
+          <AntiSemiAnimation />
           <p>A semi-join returns rows from the left table where a match EXISTS in the right table (but does not include right-table columns). An anti-join returns rows from the left table where NO match exists in the right table. These patterns are common in data engineering: finding unprocessed records, detecting orphaned data, and incremental load logic.</p>
           <CodeBlock language="sql" code={`-- SEMI-JOIN: orders that have at least one item (3 equivalent forms)
 
@@ -696,6 +1511,7 @@ AND r.status = 'completed';`} />
         {/* ── SUBQUERIES ── */}
         <section id="sql-subqueries" ref={ref('sql-subqueries')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Subqueries (scalar, correlated, EXISTS)</h2></div>
+          <SubqueryCTEAnimation />
           <p>A subquery is a SELECT nested inside another query. Scalar subqueries return exactly one value. Inline views (derived tables) in FROM return a set of rows. Correlated subqueries reference the outer query and re-execute for each outer row  -  they can be slow but are sometimes necessary. Understanding when to use a subquery vs a JOIN vs a CTE is key to writing maintainable, performant SQL.</p>
           <CodeBlock language="sql" code={`-- Scalar subquery in SELECT
 SELECT
@@ -755,6 +1571,7 @@ WHERE revenue_rank <= 10;`} />
         {/* ── SET OPS ── */}
         <section id="sql-setops" ref={ref('sql-setops')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>SET Operations (UNION, INTERSECT, EXCEPT)</h2></div>
+          <SetOpsAnimation />
           <p>SET operations combine results of two queries with compatible column lists. UNION removes duplicates (expensive); UNION ALL keeps all rows (fast  -  no dedup). INTERSECT returns rows in both queries. EXCEPT (MINUS in Oracle) returns rows in the first query that are not in the second. In data engineering, UNION ALL is heavily used for combining daily partitions, EXCEPT is great for finding data discrepancies between systems.</p>
           <CodeBlock language="sql" code={`-- UNION ALL (keeps duplicates, faster  -  preferred in data engineering)
 SELECT customer_id, 'web'    AS channel, amount FROM web_orders
@@ -800,6 +1617,7 @@ ORDER BY order_id;   -- applies to combined result`} />
         {/* ── CTEs ── */}
         <section id="sql-cte" ref={ref('sql-cte')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>CTEs and Recursive CTEs</h2></div>
+          <CTEAnimation />
           <p>A Common Table Expression (CTE) is a named temporary result set defined with WITH. CTEs make complex queries readable by breaking them into named steps. They can be referenced multiple times in the same query. Recursive CTEs use WITH RECURSIVE to traverse hierarchical data (org charts, folder trees, bill of materials). In most databases CTEs are not materialized by default  -  they are inlined like subqueries, though some support MATERIALIZED hints.</p>
           <CodeBlock language="sql" code={`-- Basic CTE: clean up a complex subquery chain
 WITH
@@ -872,6 +1690,7 @@ SELECT d FROM date_spine;`} />
         {/* ── WINDOW FUNCTIONS ── */}
         <section id="sql-window" ref={ref('sql-window')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Window Functions</h2></div>
+          <WindowAnimation />
           <p>Window functions perform calculations across a set of rows related to the current row without collapsing them into one (unlike GROUP BY). The OVER() clause defines the window: PARTITION BY groups rows, ORDER BY determines order within the partition. Window functions are evaluated after WHERE, GROUP BY, and HAVING  -  so you can window-aggregate over filtered/grouped results.</p>
           <CodeBlock language="sql" code={`-- Ranking functions
 SELECT
@@ -940,6 +1759,7 @@ SELECT * FROM (
         {/* ── FRAMES ── */}
         <section id="sql-frames" ref={ref('sql-frames')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Window Frames (ROWS / RANGE BETWEEN)</h2></div>
+          <FrameAnimation />
           <p>The frame clause inside OVER() restricts which rows are included in the window calculation. ROWS mode counts physical rows; RANGE mode includes all rows with the same ORDER BY value. Common frames: UNBOUNDED PRECEDING to CURRENT ROW (running total), N PRECEDING to CURRENT ROW (rolling N-period window), UNBOUNDED PRECEDING to UNBOUNDED FOLLOWING (full partition). The default frame when ORDER BY is present is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW.</p>
           <CodeBlock language="sql" code={`-- 7-day rolling average (ROWS mode: exactly 7 preceding rows)
 SELECT
@@ -995,6 +1815,7 @@ FROM orders;
         {/* ── PIVOT ── */}
         <section id="sql-pivot" ref={ref('sql-pivot')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>PIVOT / UNPIVOT / Conditional Aggregation</h2></div>
+          <PivotAnimation />
           <p>PIVOT rotates rows into columns  -  transforming long/narrow tables to wide/flat. UNPIVOT does the reverse. Most databases support conditional aggregation (CASE + SUM) as a portable PIVOT equivalent. Snowflake, SQL Server, and Oracle have native PIVOT syntax. Spark SQL supports PIVOT in SELECT. Knowing both approaches makes you portable across engines.</p>
           <CodeBlock language="sql" code={`-- Conditional aggregation PIVOT (portable, works everywhere)
 SELECT
@@ -1046,6 +1867,7 @@ UNPIVOT (amount FOR category IN (electronics, clothing, books)) unpvt;`} />
         {/* ── JSON ── */}
         <section id="sql-json" ref={ref('sql-json')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>JSON Functions in SQL</h2></div>
+          <JSONSQLAnimation />
           <p>Modern data often arrives as semi-structured JSON. SQL engines can parse, query, and generate JSON natively. Spark SQL and Databricks handle JSON extensively  -  from_json() and to_json() are daily tools. PostgreSQL has rich JSON operators. BigQuery uses JSON_EXTRACT. Knowing how to shred JSON columns into structured data is essential for Bronze-to-Silver transformations.</p>
           <CodeBlock language="sql" code={`-- Spark SQL: parse JSON string column
 SELECT
@@ -1098,6 +1920,7 @@ SELECT row_to_json(t) FROM orders t;  -- PostgreSQL`} />
         {/* ── DML ── */}
         <section id="sql-dml" ref={ref('sql-dml')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>DML: INSERT, UPDATE, DELETE, MERGE</h2></div>
+          <DMLAnimation />
           <p>Data Manipulation Language (DML) modifies table data. MERGE (also called UPSERT) is the most powerful  -  it conditionally inserts, updates, or deletes in a single atomic statement. In Delta Lake, MERGE is central to SCD Type 2 and incremental loads. Understanding DML atomicity and how it interacts with transactions is critical for data integrity.</p>
           <CodeBlock language="sql" code={`-- INSERT variants
 INSERT INTO orders (customer_id, amount, status) VALUES (1, 99.99, 'pending');
@@ -1159,6 +1982,7 @@ WHEN NOT MATCHED BY SOURCE THEN
         {/* ── DDL ── */}
         <section id="sql-ddl" ref={ref('sql-ddl')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>DDL: CREATE, ALTER, DROP, TRUNCATE</h2></div>
+          <DDLAnimation />
           <p>Data Definition Language (DDL) manages table structures and schema. CREATE TABLE defines columns, types, and constraints. ALTER TABLE modifies existing structures. DROP removes objects permanently. TRUNCATE deletes all rows faster than DELETE (no row-level logging). In cloud warehouses (Databricks, Snowflake, BigQuery), DDL is mostly SQL  -  understanding CREATE TABLE AS SELECT (CTAS) and CREATE OR REPLACE TABLE is essential for pipeline work.</p>
           <CodeBlock language="sql" code={`-- CREATE TABLE with constraints
 CREATE TABLE orders (
@@ -1217,6 +2041,7 @@ TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = 'true');`} />
         {/* ── VIEWS ── */}
         <section id="sql-views" ref={ref('sql-views')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Views and Materialized Views</h2></div>
+          <ViewsAnimation />
           <p>A view is a named saved query  -  it does not store data. Every time the view is queried, the underlying SQL runs. Views provide security (hide columns), abstraction (stable interface over changing schema), and reuse. Materialized views (or materialized tables in Databricks) store query results physically, dramatically speeding up expensive aggregations at the cost of staleness. They must be refreshed periodically.</p>
           <CodeBlock language="sql" code={`-- Regular view (no data stored)
 CREATE OR REPLACE VIEW v_active_customers AS
@@ -1270,6 +2095,7 @@ SELECT ... FROM silver.customers JOIN silver.orders USING (customer_id);`} />
         {/* ── TRANSACTIONS ── */}
         <section id="sql-transactions" ref={ref('sql-transactions')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Transactions, ACID, Isolation Levels</h2></div>
+          <TransactionAnimation />
           <p>A transaction is a unit of work that is either fully committed or fully rolled back. ACID guarantees: Atomicity (all or nothing), Consistency (valid state before and after), Isolation (concurrent transactions do not interfere), Durability (committed data survives crashes). Isolation levels trade off between performance and correctness. Understanding concurrency anomalies (dirty read, non-repeatable read, phantom read) is critical for data engineers building reliable pipelines.</p>
           <CodeBlock language="sql" code={`-- Basic transaction
 BEGIN;
@@ -1410,6 +2236,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
         {/* ── EXECUTION PLANS ── */}
         <section id="sql-execution" ref={ref('sql-execution')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Execution Plans and EXPLAIN</h2></div>
+          <ExplainAnimation />
           <p>The query optimizer converts SQL into an execution plan  -  a tree of physical operations. EXPLAIN shows the estimated plan; EXPLAIN ANALYZE actually executes the query and shows real statistics. Key nodes to understand: Seq Scan (full table scan), Index Scan (B-tree lookup), Bitmap Index Scan (multiple index ranges), Nested Loop (good for small sets), Hash Join (good for large sets with hash-able join), Merge Join (good for pre-sorted data). The optimizer makes decisions based on table statistics  -  outdated stats lead to bad plans.</p>
           <CodeBlock language="sql" code={`-- PostgreSQL EXPLAIN ANALYZE
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
@@ -1460,6 +2287,7 @@ ANALYZE TABLE orders COMPUTE STATISTICS;   -- Spark SQL
         {/* ── PATTERNS ── */}
         <section id="sql-patterns" ref={ref('sql-patterns')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Common SQL Patterns</h2></div>
+          <SQLPatternsAnimation />
           <p>Mastering these recurring patterns separates intermediate from senior SQL practitioners. These patterns appear in data engineering interviews and real pipeline code constantly: deduplication, running totals, year-over-year comparison, gaps and islands, top-N per group, sessionization, median, and pivoting arbitrary categories.</p>
           <CodeBlock language="sql" code={`-- 1. Top N per group (top 3 products per category)
 SELECT * FROM (
@@ -1541,6 +2369,7 @@ SELECT * FROM ranked WHERE rn = 1;`} />
         {/* ── PERFORMANCE ── */}
         <section id="sql-performance" ref={ref('sql-performance')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Query Performance Tuning</h2></div>
+          <PerformanceAnimation />
           <p>Query performance optimization is a systematic process: identify slow queries, understand the execution plan, check for missing indexes, rewrite non-sargable predicates, eliminate unnecessary work, and verify statistics are fresh. The most impactful changes are usually: adding the right index, fixing a non-sargable predicate, avoiding SELECT *, and moving filtering as early as possible.</p>
           <CodeBlock language="sql" code={`-- 1. Sargability: predicates that CAN use an index (Search ARGument ABLE)
 -- SARGABLE:

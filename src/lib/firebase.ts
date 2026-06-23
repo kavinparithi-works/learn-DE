@@ -38,7 +38,7 @@ export function signOut() {
 
 export async function markTopicComplete(topicId: string) {
   const user = auth.currentUser
-  if (!user) return
+  if (!user) throw new Error('Not signed in')
   await setDoc(
     doc(db, 'users', user.uid, 'progress', topicId),
     { status: 'completed', completedAt: serverTimestamp() },
@@ -49,7 +49,7 @@ export async function markTopicComplete(topicId: string) {
 
 export async function unmarkTopicComplete(topicId: string) {
   const user = auth.currentUser
-  if (!user) return
+  if (!user) throw new Error('Not signed in')
   await setDoc(
     doc(db, 'users', user.uid, 'progress', topicId),
     { status: 'incomplete' },

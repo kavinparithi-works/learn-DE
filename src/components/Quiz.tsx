@@ -1,10 +1,23 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { saveQuizScore } from '../lib/firebase'
 import type { QuizQuestion } from '../lib/types'
 
 interface Props {
   questions: QuizQuestion[]
   topicId: string
+}
+
+function shuffleOptions(q: QuizQuestion): QuizQuestion {
+  const indexed = q.options.map((opt, i) => ({ opt, isCorrect: i === q.correct }))
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]]
+  }
+  return {
+    ...q,
+    options: indexed.map(x => x.opt),
+    correct: indexed.findIndex(x => x.isCorrect),
+  }
 }
 
 const CONFETTI_COLORS = ['#4f8ef7','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4','#f97316']
@@ -42,6 +55,7 @@ function getGrade(pct: number) {
 }
 
 export default function Quiz({ questions, topicId }: Props) {
+  const shuffled = useMemo(() => questions.map(shuffleOptions), [topicId])
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [score, setScore] = useState(0)
   const [done, setDone] = useState(false)
@@ -164,7 +178,7 @@ export default function Quiz({ questions, topicId }: Props) {
         <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
       </div>
       <div className="quiz-body">
-        {questions.map((q, i) => {
+        {shuffled.map((q, i) => {
           const userAnswer = answers[i]
           const isAnswered = userAnswer !== undefined
 
