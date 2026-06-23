@@ -357,10 +357,10 @@ export default function Home({ completed }: Props) {
             From Zero to Senior<br />Azure Data Engineer
           </h1>
 
-          {/* Creator byline — attention-grabbing */}
+          {/* Creator byline */}
           <div style={{
             display:'inline-flex', alignItems:'center', gap:10,
-            marginBottom:22, marginTop:4,
+            marginBottom:28, marginTop:4,
           }}>
             <div style={{ height:1, width:40, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.25))' }}/>
             <a
@@ -396,14 +396,56 @@ export default function Home({ completed }: Props) {
             <div style={{ height:1, width:40, background:'linear-gradient(90deg,rgba(255,255,255,.25),transparent)' }}/>
           </div>
 
-          <p style={{
-            fontSize:'1.08rem',color:'rgba(255,255,255,.6)',
-            maxWidth:580,margin:'0 auto 40px',lineHeight:1.75,
-            fontFamily:'var(--font-sans)',
+          {/* Hero punch quote */}
+          <div style={{
+            maxWidth:620, margin:'0 auto 40px',
+            padding:'22px 32px',
+            borderRadius:18,
+            background:'linear-gradient(135deg,rgba(79,142,247,.08),rgba(139,92,246,.1),rgba(236,72,153,.07))',
+            border:'1px solid rgba(139,92,246,.22)',
+            backdropFilter:'blur(12px)',
+            position:'relative', overflow:'hidden',
           }}>
-            Master SQL, Python, Apache Spark, Delta Lake, Databricks, Azure, and Airflow
-            with animations, quizzes, and real-world production content.
-          </p>
+            {/* decorative quote mark */}
+            <div style={{
+              position:'absolute', top:-10, left:20,
+              fontSize:'8rem', lineHeight:1,
+              color:'rgba(139,92,246,.12)',
+              fontFamily:'Georgia, serif',
+              fontWeight:900,
+              pointerEvents:'none', userSelect:'none',
+            }}>"</div>
+
+            <p style={{
+              margin:0,
+              fontSize:'clamp(1rem,2.2vw,1.18rem)',
+              fontWeight:700,
+              fontFamily:'var(--font-display)',
+              lineHeight:1.65,
+              letterSpacing:'-.01em',
+              color:'rgba(255,255,255,.88)',
+              position:'relative', zIndex:1,
+            }}>
+              Built by a{' '}
+              <span style={{
+                background:'linear-gradient(135deg,#f9a8d4,#c4b5fd)',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+              }}>Data Engineer</span>
+              , powered by AI —{' '}
+              <span style={{ color:'rgba(255,255,255,.55)', fontWeight:500 }}>for every person who dares to dream of becoming one.</span>
+            </p>
+
+            <p style={{
+              margin:'14px 0 0',
+              fontSize:'.88rem',
+              fontFamily:'var(--font-sans)',
+              color:'rgba(255,255,255,.4)',
+              lineHeight:1.7,
+              position:'relative', zIndex:1,
+            }}>
+              You don't need a perfect background. You need the right roadmap. This is yours.
+            </p>
+          </div>
 
           <div style={{ display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',marginBottom:56 }}>
             <Link to="/foundations" style={{
