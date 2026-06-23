@@ -1715,6 +1715,13 @@ th{
 ════════════════════════════════════════════════════ */
 .topic-section + .topic-section{margin-top:0;}
 
+/* Topic flash on sidebar click — pure CSS, zero cost */
+@keyframes topicFlash{
+  0%  {box-shadow:0 0 0 3px rgba(99,102,241,.45),0 4px 24px rgba(99,102,241,.15);}
+  100%{box-shadow:0 1px 2px rgba(0,0,0,.03),0 4px 16px rgba(79,142,247,.06);}
+}
+.topic-section.section-flash{animation:topicFlash 550ms ease-out forwards;}
+
 /* ════════════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════════════ */

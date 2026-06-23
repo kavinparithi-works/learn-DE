@@ -153,7 +153,12 @@ export default function SQL({ completed, onComplete }: Props) {
 
   const scrollTo = (id: string) => {
     setActiveId(id)
-    sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const el = sectionRefs.current[id]
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el.classList.remove('section-flash')
+    requestAnimationFrame(() => el.classList.add('section-flash'))
+    setTimeout(() => el.classList.remove('section-flash'), 600)
   }
 
   useEffect(() => {

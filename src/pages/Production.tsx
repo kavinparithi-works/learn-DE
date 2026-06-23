@@ -120,7 +120,15 @@ const SECTIONS = [
 export default function Production({ completed, onComplete }: Props) {
   const [activeId, setActiveId] = useState('prod-architecture')
   const sectionRefs = useRef<Record<string, HTMLElement>>({})
-  const scrollTo = (id: string) => { setActiveId(id); sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  const scrollTo = (id: string) => {
+    setActiveId(id)
+    const el = sectionRefs.current[id]
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el.classList.remove('section-flash')
+    requestAnimationFrame(() => el.classList.add('section-flash'))
+    setTimeout(() => el.classList.remove('section-flash'), 600)
+  }
   useEffect(() => {
     const observer = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) setActiveId(e.target.id) }) }, { rootMargin: '-30% 0px -60% 0px' })
     Object.values(sectionRefs.current).forEach(el => observer.observe(el))
