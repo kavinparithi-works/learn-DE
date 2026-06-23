@@ -104,6 +104,29 @@ const FEATURES = [
   ['🏆', 'Cert-Ready Content', 'Covers DP-203, Databricks Professional, and AZ-900. Aligned with what companies actually interview for.', '#fff7ed', '#fed7aa'],
 ]
 
+const FOOTER_LINKS = [
+  ['Foundations','/foundations','#4f8ef7'],
+  ['SQL','/sql','#f59e0b'],
+  ['Python','/python','#3b82f6'],
+  ['Azure','/azure','#0078d4'],
+  ['Spark','/spark','#f97316'],
+  ['Delta Lake','/delta','#ef4444'],
+  ['Airflow','/airflow','#00ad46'],
+  ['Production','/production','#8b5cf6'],
+  ['Interview','/interview','#ec4899'],
+]
+
+const HERO_STARS = [
+  { top:'15%', left:'8%',  size:2,   delay:0   },
+  { top:'25%', left:'92%', size:3,   delay:.5  },
+  { top:'70%', left:'5%',  size:2,   delay:1   },
+  { top:'60%', left:'88%', size:2.5, delay:1.5 },
+  { top:'40%', left:'18%', size:1.5, delay:.8  },
+  { top:'80%', left:'75%', size:2,   delay:.3  },
+  { top:'10%', left:'55%', size:1.5, delay:1.2 },
+  { top:'50%', left:'82%', size:2,   delay:.7  },
+]
+
 export default function Home({ completed }: Props) {
   return (
     <div style={{ marginTop: 'var(--topbar-h)' }}>
@@ -120,17 +143,49 @@ export default function Home({ completed }: Props) {
         <div style={{ position:'absolute',bottom:-60,right:'10%',width:500,height:500,borderRadius:'50%',background:'radial-gradient(circle,rgba(79,142,247,.15) 0%,transparent 70%)',pointerEvents:'none' }} />
         <div style={{ position:'absolute',top:'20%',right:'20%',width:300,height:300,borderRadius:'50%',background:'radial-gradient(circle,rgba(236,72,153,.1) 0%,transparent 70%)',pointerEvents:'none' }} />
 
+        {/* Grid overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+          maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)',
+        }} />
+
+        {/* Star dots */}
+        {HERO_STARS.map((star, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: star.top, left: star.left,
+            width: star.size, height: star.size, borderRadius: '50%',
+            background: 'white', pointerEvents: 'none',
+            animation: `pulse 3s ease-in-out ${star.delay}s infinite`,
+            boxShadow: `0 0 ${star.size * 3}px white`,
+          }} />
+        ))}
+
         <div className="animate-fadein" style={{ position:'relative',zIndex:1 }}>
-          <div style={{
-            display:'inline-flex',alignItems:'center',gap:8,
-            padding:'6px 18px',borderRadius:'9999px',
-            background:'rgba(255,255,255,.06)',
-            border:'1px solid rgba(255,255,255,.12)',
-            fontSize:'.75rem',fontWeight:700,color:'rgba(255,255,255,.7)',
-            textTransform:'uppercase',letterSpacing:'.08em',
-            marginBottom:28,backdropFilter:'blur(8px)',
-          }}>
-            🎓 Data Engineering Learning Platform
+          {/* Hero badge with pulsing ring */}
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: 28 }}>
+            {/* Pulsing ring behind badge */}
+            <div style={{
+              position: 'absolute',
+              inset: -4,
+              borderRadius: '9999px',
+              border: '1.5px solid rgba(139,92,246,.5)',
+              animation: 'glowPulse 2s ease-in-out infinite',
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              display:'inline-flex',alignItems:'center',gap:8,
+              padding:'6px 18px',borderRadius:'9999px',
+              background:'rgba(255,255,255,.06)',
+              border:'1px solid rgba(255,255,255,.12)',
+              fontSize:'.75rem',fontWeight:700,color:'rgba(255,255,255,.7)',
+              textTransform:'uppercase',letterSpacing:'.08em',
+              backdropFilter:'blur(8px)',
+            }}>
+              🎓 Data Engineering Learning Platform
+            </div>
           </div>
 
           <h1 style={{
@@ -280,46 +335,141 @@ export default function Home({ completed }: Props) {
       <footer style={{
         background:'#080e1a',
         borderTop:'1px solid rgba(255,255,255,.06)',
-        padding:'44px 48px',textAlign:'center',
+        padding:'52px 48px 40px',
+        textAlign:'center',
       }}>
         {/* Gradient top border line */}
         <div style={{
-          height:1,
-          background:'linear-gradient(90deg,transparent,#4f8ef7,#8b5cf6,#ec4899,transparent)',
-          marginBottom:32,
+          height: 1,
+          background: 'linear-gradient(90deg,transparent,#4f8ef7,#8b5cf6,#ec4899,transparent)',
+          marginBottom: 40,
         }} />
 
-        <div style={{
-          display:'flex',gap:6,justifyContent:'center',marginBottom:20,flexWrap:'wrap',
+        {/* Watermark logo */}
+        <div style={{ marginBottom: 24, opacity: 0.15 }}>
+          <svg width="48" height="48" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block' }}>
+            <path d="M20 3L35.5885 12V28L20 37L4.41154 28V12L20 3Z" fill="url(#footerGrad)" />
+            <line x1="12" y1="20" x2="28" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="16" y1="14" x2="24" y2="26" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.7"/>
+            <line x1="24" y1="14" x2="16" y2="26" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.7"/>
+            <circle cx="20" cy="20" r="4" fill="white" />
+            <circle cx="28" cy="20" r="2.5" fill="white" fillOpacity="0.9"/>
+            <circle cx="14" cy="13" r="2" fill="white" fillOpacity="0.8"/>
+            <circle cx="14" cy="27" r="2" fill="white" fillOpacity="0.8"/>
+            <defs>
+              <linearGradient id="footerGrad" x1="4" y1="3" x2="36" y2="37" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#4f8ef7"/>
+                <stop offset=".5" stopColor="#8b5cf6"/>
+                <stop offset="1" stopColor="#ec4899"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        {/* Tagline */}
+        <p style={{
+          fontSize: '.9rem',
+          color: 'rgba(255,255,255,.35)',
+          marginBottom: 28,
+          letterSpacing: '.01em',
         }}>
-          {[
-            ['Foundations','/foundations','#4f8ef7'],
-            ['SQL','/sql','#f59e0b'],
-            ['Python','/python','#3b82f6'],
-            ['Azure','/azure','#0078d4'],
-            ['Spark','/spark','#f97316'],
-            ['Delta Lake','/delta','#ef4444'],
-            ['Airflow','/airflow','#00ad46'],
-            ['Production','/production','#8b5cf6'],
-            ['Interview','/interview','#ec4899'],
-          ].map(([l,p,c]) => (
+          Built with ❤️ for the Data Engineering community
+        </p>
+
+        <div style={{
+          display:'flex',gap:10,justifyContent:'center',marginBottom:28,flexWrap:'wrap',
+        }}>
+          {FOOTER_LINKS.map(([l, p, c]) => (
             <Link key={p} to={p} style={{
-              color:c,padding:'5px 14px',borderRadius:'9999px',
-              border:`1px solid ${c}30`,background:`${c}10`,
-              fontSize:'.8rem',fontWeight:700,textDecoration:'none',
-              transition:'all 180ms ease',
-              fontFamily:'var(--font-sans)',
+              color: c,
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              border: `1px solid ${c}30`,
+              background: `${c}10`,
+              fontSize: '.8rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+              transition: 'all 180ms ease',
+              fontFamily: 'var(--font-sans)',
+              letterSpacing: '.01em',
             }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=`${c}20`}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=`${c}10`}}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${c}22`; (e.currentTarget as HTMLElement).style.borderColor = `${c}55` }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${c}10`; (e.currentTarget as HTMLElement).style.borderColor = `${c}30` }}
             >{l}</Link>
           ))}
         </div>
-        <p style={{ color:'rgba(255,255,255,.25)',fontSize:'.82rem',lineHeight:1.8 }}>
-          © 2026 LearnWithMe  -  Data Engineering Learning Platform<br/>
-          Built with React + TypeScript + Firebase + GitHub Pages
+
+        <p style={{ color:'rgba(255,255,255,.18)',fontSize:'.78rem',lineHeight:2,marginBottom:28 }}>
+          © 2026 learnDE · Data Engineering Learning Platform · Built with React + TypeScript + Firebase
         </p>
+
+        {/* Developer signature */}
+        <div style={{
+          display:'inline-flex',alignItems:'center',gap:12,
+          padding:'10px 22px',
+          background:'linear-gradient(135deg,rgba(79,142,247,.08),rgba(139,92,246,.08))',
+          border:'1px solid rgba(139,92,246,.2)',
+          borderRadius:'var(--radius-xl)',
+          backdropFilter:'blur(12px)',
+        }}>
+          {/* Signature icon — subtle circuit/code mark */}
+          <div style={{
+            width:32,height:32,borderRadius:'50%',flexShrink:0,
+            background:'linear-gradient(135deg,#4f8ef7,#8b5cf6)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            fontSize:'.9rem',fontWeight:900,color:'white',
+            boxShadow:'0 0 16px rgba(139,92,246,.4)',
+            fontFamily:'var(--font-mono)',
+          }}>K</div>
+          <div style={{ textAlign:'left' }}>
+            <div style={{
+              fontSize:'.78rem',fontWeight:800,letterSpacing:'.04em',
+              textTransform:'uppercase',
+              background:'linear-gradient(135deg,#93c5fd,#c4b5fd)',
+              WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',
+              fontFamily:'var(--font-display)',
+            }}>Crafted by</div>
+            <div style={{
+              fontSize:'.95rem',fontWeight:900,letterSpacing:'-.02em',
+              color:'rgba(255,255,255,.88)',
+              fontFamily:'var(--font-display)',
+            }}>Kavin Parithi Sivasamy</div>
+          </div>
+          <a
+            href="https://www.linkedin.com/in/kavinparithi"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display:'flex',alignItems:'center',gap:6,
+              padding:'6px 14px',borderRadius:'var(--radius-full)',
+              background:'rgba(10,102,194,.25)',
+              border:'1px solid rgba(10,102,194,.4)',
+              color:'#7dd3fc',fontSize:'.75rem',fontWeight:700,
+              textDecoration:'none',transition:'all .2s ease',
+              fontFamily:'var(--font-sans)',
+            }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(10,102,194,.45)';(e.currentTarget as HTMLElement).style.borderColor='rgba(10,102,194,.7)'}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(10,102,194,.25)';(e.currentTarget as HTMLElement).style.borderColor='rgba(10,102,194,.4)'}}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            Connect
+          </a>
+        </div>
       </footer>
+
+      {/* Keyframe injection for glowPulse and pulse */}
+      <style>{`
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.06); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.4); }
+        }
+      `}</style>
     </div>
   )
 }
@@ -335,6 +485,7 @@ function LevelCard({ lv, i, completed }: {
   return (
     <Link
       to={lv.path}
+      data-color={lv.accent}
       className="animate-slidein"
       style={{
         background:'var(--bg-card)',borderRadius:'var(--radius-2xl)',
@@ -401,15 +552,18 @@ function LevelCard({ lv, i, completed }: {
       )}
 
       <div style={{ padding:'24px 24px 20px',position:'relative',zIndex:1 }}>
-        {/* Level badge — 44x44 */}
+        {/* Level badge — 44x44, checkmark if done */}
         <div style={{
           display:'inline-flex',alignItems:'center',justifyContent:'center',
           width:44,height:44,borderRadius:'var(--radius-lg)',
-          background:lv.gradient,color:'white',
+          background: isDone ? 'linear-gradient(135deg,#22c55e,#16a34a)' : lv.gradient,
+          color:'white',
           fontFamily:'var(--font-display)',fontSize:'.85rem',fontWeight:900,
           marginBottom:16,
-          boxShadow:`0 4px 20px ${lv.glow}, 0 2px 8px rgba(0,0,0,.2)`,
-        }}>{lv.num}</div>
+          boxShadow: isDone
+            ? '0 4px 20px rgba(34,197,94,.4), 0 2px 8px rgba(0,0,0,.2)'
+            : `0 4px 20px ${lv.glow}, 0 2px 8px rgba(0,0,0,.2)`,
+        }}>{isDone ? '✓' : lv.num}</div>
 
         <div style={{
           fontFamily:'var(--font-display)',fontSize:'1.08rem',fontWeight:800,

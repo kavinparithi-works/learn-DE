@@ -5,15 +5,16 @@ export function useScrollReveal() {
   const { pathname } = useLocation()
 
   useEffect(() => {
+    // Use a single class toggle — no inline style mutations at all.
+    // CSS handles opacity/transform entirely via .sr-hidden and .sr-reveal.
     const sections = Array.from(
       document.querySelectorAll<HTMLElement>('.topic-section')
     )
 
-    // Reset all sections to hidden before observing
+    // Mark all hidden via class (not inline style — avoids layout thrashing)
     sections.forEach(el => {
-      el.style.opacity = '0'
-      el.style.transform = 'translateY(32px)'
       el.classList.remove('sr-reveal')
+      el.classList.add('sr-hidden')
     })
 
     const obs = new IntersectionObserver(
@@ -21,37 +22,35 @@ export function useScrollReveal() {
         entries.forEach(entry => {
           if (!entry.isIntersecting) return
           const el = entry.target as HTMLElement
-          // Clear inline hidden state so animation can run
-          el.style.opacity = ''
-          el.style.transform = ''
+          el.classList.remove('sr-hidden')
           el.classList.add('sr-reveal')
-          // After animation finishes, remove class so hover transforms work freely
-          el.addEventListener('animationend', () => {
-            el.classList.remove('sr-reveal')
-          }, { once: true })
           obs.unobserve(el)
         })
       },
-      { threshold: 0.07, rootMargin: '0px 0px -24px 0px' }
+      // Higher threshold = fires later = less janky during fast scroll
+      { threshold: 0.05, rootMargin: '0px 0px -16px 0px' }
     )
 
-    // Delay slightly so page-enter transition finishes first
+    // Small delay so the page-enter transition completes first
     const t = setTimeout(() => {
       sections.forEach((el, idx) => {
-        // Sections already in viewport on load get a staggered cascade
         const rect = el.getBoundingClientRect()
-        if (rect.top < window.innerHeight) {
-          el.style.animationDelay = `${idx * 55}ms`
-        } else {
-          el.style.animationDelay = '0ms'
-        }
+        // Already visible on load — stagger them, no delay for off-screen
+        el.style.animationDelay = rect.top < window.innerHeight
+          ? `${Math.min(idx * 40, 200)}ms`  // cap stagger at 200ms max
+          : '0ms'
         obs.observe(el)
       })
-    }, 160)
+    }, 120)
 
     return () => {
       clearTimeout(t)
       obs.disconnect()
+      // Clean up classes on unmount
+      sections.forEach(el => {
+        el.classList.remove('sr-hidden', 'sr-reveal')
+        el.style.animationDelay = ''
+      })
     }
   }, [pathname])
 }
