@@ -31,6 +31,542 @@ const SECTIONS = [
   ]},
 ]
 
+function ADLSAnimation() {
+  const [tier, setTier] = useState<'hot'|'cool'|'cold'|'archive'>('hot')
+  const tiers = [
+    {name:'hot',color:'#ef4444',cost:'$0.018/GB',latency:'<10ms',use:'Active pipeline data'},
+    {name:'cool',color:'#f59e0b',cost:'$0.01/GB',latency:'<50ms',use:'30–90 day backlog'},
+    {name:'cold',color:'#8b5cf6',cost:'$0.005/GB',latency:'<100ms',use:'90–180 day archive'},
+    {name:'archive',color:'#64748b',cost:'$0.00099/GB',latency:'15 hrs rehydrate',use:'Compliance/audit'},
+  ]
+  const sel = tiers.find(t=>t.name===tier)!
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>ADLS Gen2 Storage Tiers</div>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {tiers.map(t=>(
+          <button key={t.name} onClick={()=>setTier(t.name as typeof tier)} style={{ flex:1, padding:'6px 0', borderRadius:8, border:`2px solid ${tier===t.name?t.color:'var(--border)'}`, background:tier===t.name?`${t.color}15`:'white', fontWeight:700, cursor:'pointer', fontSize:'.78rem', color:tier===t.name?t.color:'#94a3b8', textTransform:'capitalize' }}>{t.name}</button>
+        ))}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        {[['Cost/GB/mo',sel.cost],['Latency',sel.latency],['Use case',sel.use],['Best for',tier==='hot'?'bronze/silver layer':tier==='cool'?'staging/temp':tier==='cold'?'near-archive':'regulatory hold']].map(([k,v])=>(
+          <div key={k} style={{ padding:'8px 12px', borderRadius:8, background:'white', border:'1px solid var(--border)' }}>
+            <div style={{ fontSize:'.7rem', color:'var(--text-secondary)', marginBottom:2 }}>{k}</div>
+            <div style={{ fontWeight:700, fontSize:'.82rem', color:'#1e293b' }}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function BlobAnimation() {
+  const [view, setView] = useState<'types'|'lifecycle'>('types')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Blob Storage</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['types','lifecycle'] as const).map(v=>(
+            <button key={v} onClick={()=>setView(v)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.78rem', background:view===v?'#4f8ef7':'var(--surface-3)', color:view===v?'white':'var(--text-secondary)' }}>{v}</button>
+          ))}
+        </div>
+      </div>
+      {view==='types' ? (
+        <div style={{ display:'flex', gap:8 }}>
+          {[{type:'Block Blob',use:'Files, Parquet, CSVs — most common for DE',color:'#4f8ef7'},{type:'Append Blob',use:'Log files — append-only, never modify',color:'#22c55e'},{type:'Page Blob',use:'VM disks — random read/write',color:'#f59e0b'}].map(b=>(
+            <div key={b.type} style={{ flex:1, padding:12, borderRadius:10, border:`2px solid ${b.color}33`, background:`${b.color}0d` }}>
+              <div style={{ fontWeight:700, fontSize:'.8rem', color:b.color, marginBottom:6 }}>{b.type}</div>
+              <div style={{ fontSize:'.72rem', color:'#475569' }}>{b.use}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {[{days:'0–30',tier:'Hot',cost:'$0.018/GB',color:'#ef4444'},{days:'30–90',tier:'Cool',cost:'$0.01/GB',color:'#f59e0b'},{days:'90–365',tier:'Archive',cost:'$0.001/GB',color:'#64748b'},{days:'365+',tier:'Delete',cost:'$0',color:'#22c55e'}].map(r=>(
+            <div key={r.tier} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 14px', borderRadius:8, border:`1px solid ${r.color}33`, background:`${r.color}0d` }}>
+              <span style={{ fontSize:'.8rem', fontWeight:700, color:r.color }}>{r.days} days</span>
+              <span style={{ fontSize:'.82rem', fontWeight:700, color:'#1e293b' }}>{r.tier}</span>
+              <span style={{ fontSize:'.8rem', fontFamily:'monospace', color:'#475569' }}>{r.cost}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SynapseAnimation() {
+  const [view, setView] = useState<'dedicated'|'serverless'|'spark'>('dedicated')
+  const items: Record<string,{title:string,props:string[],color:string}> = {
+    dedicated:{title:'Dedicated SQL Pool',props:['Pre-allocated DWUs (100–30,000)','Massively Parallel Processing (MPP)','Best for: complex OLAP, consistent perf','$5+/hour when running — pause when idle'],color:'#4f8ef7'},
+    serverless:{title:'Serverless SQL Pool',props:['Query files directly on ADLS Gen2','Pay per TB scanned','Best for: ad-hoc exploration, ELT scripts','No infrastructure management'],color:'#8b5cf6'},
+    spark:{title:'Spark Pool',props:['Apache Spark — notebook-driven','Auto-scale worker nodes','Best for: ML, big data transforms','Integrates with Delta Lake natively'],color:'#22c55e'},
+  }
+  const sel = items[view]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Azure Synapse — Compute Engines</div>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {Object.keys(items).map(k=>(
+          <button key={k} onClick={()=>setView(k as typeof view)} style={{ flex:1, padding:'6px 0', borderRadius:8, border:`2px solid ${view===k?items[k].color:'var(--border)'}`, background:view===k?`${items[k].color}15`:'white', fontWeight:700, cursor:'pointer', fontSize:'.75rem', color:view===k?items[k].color:'#94a3b8' }}>{k}</button>
+        ))}
+      </div>
+      <div style={{ padding:14, borderRadius:10, border:`2px solid ${sel.color}44`, background:`${sel.color}0d` }}>
+        <div style={{ fontWeight:700, fontSize:'.85rem', color:sel.color, marginBottom:8 }}>{sel.title}</div>
+        {sel.props.map(p=><div key={p} style={{ fontSize:'.78rem', color:'#475569', marginBottom:4 }}>• {p}</div>)}
+      </div>
+    </div>
+  )
+}
+
+function DatabricksAnimation() {
+  const [step, setStep] = useState(0)
+  const steps = ['Workspace created','Cluster provisioned (DBR 14.x)','Notebook: read ADLS bronze','Transform & clean in Spark','Write Delta silver layer','Job scheduled via Workflows']
+  const colors = ['#4f8ef7','#8b5cf6','#22c55e','#f59e0b','#ec4899','#06b6d4']
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Databricks Pipeline Steps</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
+        {steps.slice(0,step+1).map((s,i)=>(
+          <div key={s} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${colors[i]}44`, background:`${colors[i]}11`, display:'flex', alignItems:'center', gap:8, animation:'fadeIn .3s ease' }}>
+            <span style={{ width:22, height:22, borderRadius:'50%', background:colors[i], display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:'.7rem', fontWeight:800, flexShrink:0 }}>{i+1}</span>
+            <span style={{ fontSize:'.82rem', fontWeight:600, color:'#1e293b' }}>{s}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={()=>setStep(s=>Math.min(s+1,steps.length-1))} disabled={step>=steps.length-1} style={{ flex:1, padding:'8px 0', borderRadius:8, border:'none', background:step>=steps.length-1?'#e2e8f0':'#4f8ef7', color:step>=steps.length-1?'#94a3b8':'white', cursor:step>=steps.length-1?'default':'pointer', fontWeight:700, fontSize:'.85rem' }}>Next Step</button>
+        <button onClick={()=>setStep(0)} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid var(--border)', background:'white', cursor:'pointer', fontSize:'.85rem' }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function EventHubAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),600);return()=>clearInterval(t)},[])
+  const partitions = 4
+  const msgs = ['order.placed','user.signup','payment.done','click.event','cart.add','order.placed']
+  const part = tick % partitions
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Event Hub — Partitioned Streaming</div>
+      <div style={{ marginBottom:10, fontSize:'.78rem', color:'var(--text-secondary)' }}>Events hash to partitions by partition key → ordered within partition</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:12 }}>
+        {Array.from({length:partitions},(_,i)=>(
+          <div key={i} style={{ padding:'8px 6px', borderRadius:8, border:`2px solid ${i===part?'#4f8ef7':'var(--border)'}`, background:i===part?'#eff6ff':'white', textAlign:'center', transition:'all .3s' }}>
+            <div style={{ fontSize:'.72rem', fontWeight:700, color:i===part?'#3b82f6':'#94a3b8' }}>P-{i}</div>
+            {i===part&&<div style={{ fontSize:'.68rem', color:'#4f8ef7', marginTop:3 }}>{msgs[tick%msgs.length]}</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:10 }}>
+        {[['Throughput','1 MB/s/partition'],['Retention','1–7 days'],['Protocol','AMQP / Kafka'],['Scale','1–10000 partitions']].map(([k,v])=>(
+          <div key={k} style={{ flex:1, padding:'6px 8px', borderRadius:8, background:'white', border:'1px solid var(--border)' }}>
+            <div style={{ fontSize:'.65rem', color:'var(--text-secondary)' }}>{k}</div>
+            <div style={{ fontWeight:700, fontSize:'.72rem', color:'#1e293b' }}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function EventGridAnimation() {
+  const [active, setActive] = useState<number|null>(null)
+  const events = [
+    {source:'ADLS Gen2',event:'BlobCreated',subscribers:['ADF Trigger','Azure Function','Logic App']},
+    {source:'Blob Storage',event:'BlobDeleted',subscribers:['Azure Function','Event Hub']},
+    {source:'Custom Topic',event:'pipeline.done',subscribers:['Teams Webhook','Service Bus']},
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Event Grid — Event Routing (Click an event)</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        {events.map((e,i)=>(
+          <div key={e.event} onClick={()=>setActive(active===i?null:i)} style={{ cursor:'pointer' }}>
+            <div style={{ padding:'8px 12px', borderRadius:8, border:`1.5px solid ${active===i?'#4f8ef7':'var(--border)'}`, background:active===i?'#eff6ff':'white', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all .2s' }}>
+              <div><span style={{ fontSize:'.72rem', color:'#94a3b8' }}>{e.source} → </span><span style={{ fontWeight:700, fontSize:'.82rem', color:'#1e293b' }}>{e.event}</span></div>
+              <span style={{ fontSize:'.72rem', color:'#4f8ef7' }}>{e.subscribers.length} subscribers</span>
+            </div>
+            {active===i&&(
+              <div style={{ marginTop:4, marginLeft:16, display:'flex', gap:6, flexWrap:'wrap' }}>
+                {e.subscribers.map(s=><span key={s} style={{ padding:'3px 10px', borderRadius:12, background:'#4f8ef711', border:'1px solid #4f8ef744', fontSize:'.75rem', color:'#3b82f6' }}>→ {s}</span>)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ServiceBusAnimation() {
+  const [mode, setMode] = useState<'queue'|'topic'>('queue')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Service Bus — Queue vs Topic</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['queue','topic'] as const).map(m=>(
+            <button key={m} onClick={()=>setMode(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:mode===m?'#4f8ef7':'var(--surface-3)', color:mode===m?'white':'var(--text-secondary)' }}>{m}</button>
+          ))}
+        </div>
+      </div>
+      {mode==='queue' ? (
+        <div>
+          <div style={{ fontSize:'.8rem', color:'var(--text-secondary)', marginBottom:10 }}>One consumer receives each message (competing consumers pattern)</div>
+          <div style={{ display:'flex', alignItems:'center', gap:0 }}>
+            <div style={{ padding:'10px 16px', borderRadius:8, background:'#eff6ff', border:'2px solid #4f8ef7', fontSize:'.82rem', fontWeight:700, color:'#3b82f6' }}>Producer</div>
+            <div style={{ flex:1, height:2, background:'#4f8ef7' }}/>
+            <div style={{ padding:'10px 12px', borderRadius:8, background:'#f0fdf4', border:'2px solid #22c55e', fontSize:'.78rem', fontWeight:700, color:'#16a34a', textAlign:'center', minWidth:80 }}>Queue</div>
+            <div style={{ flex:1, height:2, background:'#22c55e' }}/>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {['Consumer A','Consumer B','Consumer C'].map((c,i)=><div key={c} style={{ padding:'6px 12px', borderRadius:8, background:i===0?'#f0fdf4':'#f8fafc', border:`1px solid ${i===0?'#4ade80':'#e2e8f0'}`, fontSize:'.75rem', fontWeight:700, color:i===0?'#16a34a':'#94a3b8' }}>{c} {i===0?'(receives)':'(idle)'}</div>)}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ fontSize:'.8rem', color:'var(--text-secondary)', marginBottom:10 }}>All subscribers receive a copy (pub/sub pattern)</div>
+          <div style={{ display:'flex', alignItems:'center', gap:0 }}>
+            <div style={{ padding:'10px 16px', borderRadius:8, background:'#eff6ff', border:'2px solid #4f8ef7', fontSize:'.82rem', fontWeight:700, color:'#3b82f6' }}>Producer</div>
+            <div style={{ flex:1, height:2, background:'#4f8ef7' }}/>
+            <div style={{ padding:'10px 12px', borderRadius:8, background:'#faf5ff', border:'2px solid #8b5cf6', fontSize:'.78rem', fontWeight:700, color:'#7c3aed', textAlign:'center', minWidth:80 }}>Topic</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {['Sub: pipeline-a','Sub: reporting','Sub: audit-log'].map(s=><div key={s} style={{ display:'flex', alignItems:'center', gap:6 }}><div style={{ width:20, height:2, background:'#8b5cf6' }}/><div style={{ padding:'6px 12px', borderRadius:8, background:'#faf5ff', border:'1px solid #c4b5fd', fontSize:'.72rem', fontWeight:700, color:'#7c3aed' }}>{s}</div></div>)}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AzureFunctionsAnimation() {
+  const [trigger, setTrigger] = useState<'blob'|'timer'|'http'|'eventhub'>('blob')
+  const info: Record<string,{icon:string,desc:string,example:string,color:string}> = {
+    blob:{icon:'📂',desc:'Fires when a blob is created/modified in Storage',example:'New file in raw/ → validate + move to bronze/',color:'#4f8ef7'},
+    timer:{icon:'⏰',desc:'Cron-based schedule — no event needed',example:'0 */1 * * * → hourly cost report email',color:'#8b5cf6'},
+    http:{icon:'🌐',desc:'REST endpoint — scales to zero',example:'POST /api/ingest → queue for processing',color:'#22c55e'},
+    eventhub:{icon:'⚡',desc:'Batched events from Event Hub partitions',example:'Consume telemetry → write to Cosmos DB',color:'#f59e0b'},
+  }
+  const sel = info[trigger]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Azure Functions — Trigger Types</div>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {Object.keys(info).map(k=>(
+          <button key={k} onClick={()=>setTrigger(k as typeof trigger)} style={{ flex:1, padding:'6px 0', borderRadius:8, border:`2px solid ${trigger===k?info[k].color:'var(--border)'}`, background:trigger===k?`${info[k].color}15`:'white', cursor:'pointer', fontWeight:700, fontSize:'.75rem', color:trigger===k?info[k].color:'#94a3b8' }}>{info[k].icon} {k}</button>
+        ))}
+      </div>
+      <div style={{ padding:14, borderRadius:10, border:`2px solid ${sel.color}44`, background:`${sel.color}0d` }}>
+        <div style={{ fontSize:'.82rem', fontWeight:700, color:sel.color, marginBottom:6 }}>{sel.desc}</div>
+        <div style={{ fontFamily:'monospace', fontSize:'.78rem', color:'#475569', background:'white', padding:'6px 10px', borderRadius:6, border:'1px solid var(--border)' }}>{sel.example}</div>
+      </div>
+      <div style={{ marginTop:10, fontSize:'.73rem', color:'var(--text-secondary)' }}>⚡ Scales to zero — pay only for executions (first 1M/mo free)</div>
+    </div>
+  )
+}
+
+function StreamAnalyticsAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),800);return()=>clearInterval(t)},[])
+  const events = ['sensor:42.1°C','sensor:41.9°C','alert:SPIKE 98.5°C','sensor:42.0°C','payment:$120','payment:$85','fraud:SUSPICIOUS $9999']
+  const current = events[tick%events.length]
+  const isAlert = current.startsWith('alert') || current.startsWith('fraud')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Stream Analytics — Real-time SQL Processing</div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+        <div style={{ flex:1, padding:'8px 12px', borderRadius:8, background:'#eff6ff', border:'1px solid #93c5fd', fontFamily:'monospace', fontSize:'.8rem', color:'#1e40af' }}>Event Hub → {current}</div>
+        <div style={{ fontSize:1.2+'rem' }}>{isAlert?'🚨':'→'}</div>
+        <div style={{ flex:1, padding:'8px 12px', borderRadius:8, background:isAlert?'#fef2f2':'#f0fdf4', border:`1px solid ${isAlert?'#f87171':'#4ade80'}`, fontFamily:'monospace', fontSize:'.8rem', color:isAlert?'#ef4444':'#16a34a' }}>{isAlert?'Alert fired → output':'Passes filter → sink'}</div>
+      </div>
+      <div style={{ background:'#1e293b', borderRadius:8, padding:12 }}>
+        <pre style={{ margin:0, color:'#7dd3fc', fontSize:'.75rem' }}>{`SELECT sensor_id, AVG(temp) as avg_temp
+INTO alert-output
+FROM input TIMESTAMP BY ts
+GROUP BY sensor_id, TumblingWindow(minute, 5)
+HAVING AVG(temp) > 90`}</pre>
+      </div>
+    </div>
+  )
+}
+
+function KeyVaultAnimation() {
+  const [mode, setMode] = useState<'store'|'fetch'>('store')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Azure Key Vault — Secret Management</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['store','fetch'] as const).map(m=>(
+            <button key={m} onClick={()=>setMode(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:mode===m?'#4f8ef7':'var(--surface-3)', color:mode===m?'white':'var(--text-secondary)' }}>{m}</button>
+          ))}
+        </div>
+      </div>
+      {mode==='store' ? (
+        <div>
+          {[{bad:'DB_PASSWORD=s3cr3t in .env',good:'DB_PASSWORD → Key Vault secret',color:'#ef4444'},{bad:'SAS token in Airflow config',good:'SAS token → Key Vault, ref by URI',color:'#f59e0b'},{bad:'Service principal key in code',good:'Managed Identity → no secret needed',color:'#8b5cf6'}].map(r=>(
+            <div key={r.bad} style={{ display:'flex', gap:6, marginBottom:8, alignItems:'center' }}>
+              <div style={{ flex:1, padding:'6px 10px', borderRadius:6, background:'#fef2f2', border:'1px solid #f87171', fontSize:'.72rem', color:'#ef4444', textDecoration:'line-through' }}>{r.bad}</div>
+              <span style={{ color:'#22c55e', fontWeight:700 }}>→</span>
+              <div style={{ flex:1, padding:'6px 10px', borderRadius:6, background:'#f0fdf4', border:'1px solid #4ade80', fontSize:'.72rem', color:'#16a34a' }}>{r.good}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {[{step:'App uses Managed Identity','detail':'No password, no key — Azure handles auth automatically'},{'step':'GET secret URI','detail':'https://myvault.vault.azure.net/secrets/db-password'},{'step':'Key Vault returns secret','detail':'AES-256 encrypted at rest, TLS in transit'},{'step':'Secret never in code/logs','detail':'Rotate in vault → app picks up automatically'}].map(s=>(
+            <div key={s.step} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'flex-start' }}>
+              <span style={{ padding:'2px 8px', borderRadius:12, background:'#4f8ef7', color:'white', fontSize:'.7rem', fontWeight:700, whiteSpace:'nowrap' }}>{s.step}</span>
+              <span style={{ fontSize:'.75rem', color:'var(--text-secondary)', paddingTop:2 }}>{s.detail}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function IdentityAnimation() {
+  const [view, setView] = useState<'rbac'|'managed'>('rbac')
+  const roles = [
+    {name:'Storage Blob Data Reader',perms:'Read blobs only',color:'#22c55e'},
+    {name:'Storage Blob Data Contributor',perms:'Read + write blobs',color:'#4f8ef7'},
+    {name:'Storage Blob Data Owner',perms:'Full access + ACL',color:'#8b5cf6'},
+    {name:'Owner',perms:'Everything incl. IAM',color:'#ef4444'},
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Azure Identity & RBAC</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['rbac','managed'] as const).map(v=>(
+            <button key={v} onClick={()=>setView(v)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:view===v?'#4f8ef7':'var(--surface-3)', color:view===v?'white':'var(--text-secondary)' }}>{v==='rbac'?'RBAC Roles':'Managed Identity'}</button>
+          ))}
+        </div>
+      </div>
+      {view==='rbac' ? (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {roles.map(r=>(
+            <div key={r.name} style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', borderRadius:8, border:`1px solid ${r.color}33`, background:`${r.color}0d` }}>
+              <span style={{ fontWeight:700, fontSize:'.8rem', color:r.color }}>{r.name}</span>
+              <span style={{ fontSize:'.75rem', color:'#475569' }}>{r.perms}</span>
+            </div>
+          ))}
+          <div style={{ fontSize:'.72rem', color:'#64748b', marginTop:4 }}>✓ Least-privilege: assign only what the service needs</div>
+        </div>
+      ) : (
+        <div>
+          {[{type:'System-assigned',desc:'Tied to resource lifetime — deleted with resource',icon:'🔗'},{type:'User-assigned',desc:'Standalone — shared across multiple resources',icon:'👤'}].map(m=>(
+            <div key={m.type} style={{ padding:12, marginBottom:8, borderRadius:10, border:'1px solid var(--border)', background:'white', display:'flex', gap:10, alignItems:'flex-start' }}>
+              <span style={{ fontSize:'1.2rem' }}>{m.icon}</span>
+              <div>
+                <div style={{ fontWeight:700, fontSize:'.82rem', color:'#1e293b', marginBottom:3 }}>{m.type}</div>
+                <div style={{ fontSize:'.75rem', color:'#475569' }}>{m.desc}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ fontSize:'.75rem', color:'#16a34a', padding:'6px 10px', borderRadius:8, background:'#f0fdf4', border:'1px solid #4ade80' }}>✓ No credentials stored — Azure handles token rotation automatically</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MonitorAnimation() {
+  const [tab, setTab] = useState<'metrics'|'kql'>('metrics')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Azure Monitor</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['metrics','kql'] as const).map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:tab===t?'#4f8ef7':'var(--surface-3)', color:tab===t?'white':'var(--text-secondary)' }}>{t==='metrics'?'Metrics':'KQL Query'}</button>
+          ))}
+        </div>
+      </div>
+      {tab==='metrics' ? (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8 }}>
+          {[{metric:'Pipeline Success Rate',val:'98.7%',trend:'↑',color:'#22c55e'},{metric:'Avg Run Duration',val:'4m 32s',trend:'↓',color:'#4f8ef7'},{metric:'Failed Runs (24h)',val:'3',trend:'→',color:'#ef4444'},{metric:'Data Processed',val:'847 GB',trend:'↑',color:'#8b5cf6'}].map(m=>(
+            <div key={m.metric} style={{ padding:'10px 12px', borderRadius:8, border:`1px solid ${m.color}33`, background:`${m.color}0d` }}>
+              <div style={{ fontSize:'.7rem', color:'#64748b', marginBottom:3 }}>{m.metric}</div>
+              <div style={{ fontWeight:900, fontSize:'1.1rem', color:m.color }}>{m.val} <span style={{ fontSize:'.8rem' }}>{m.trend}</span></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ background:'#1e293b', borderRadius:8, padding:12 }}>
+          <pre style={{ margin:0, color:'#7dd3fc', fontSize:'.78rem' }}>{`// KQL: find slow ADF pipeline runs
+ADFActivityRun
+| where TimeGenerated > ago(24h)
+| where Status == "Succeeded"
+| summarize AvgDuration=avg(Duration)
+    by PipelineName
+| order by AvgDuration desc
+| take 10`}</pre>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CosmosAnimation() {
+  const [api, setApi] = useState<'nosql'|'mongo'|'table'>('nosql')
+  const items: Record<string,{title:string,model:string,qs:string,use:string,color:string}> = {
+    nosql:{title:'Core (NoSQL)',model:'JSON documents with partition key',qs:'SQL-like: SELECT * FROM c WHERE c.user_id = "42"',use:'Events, sessions, product catalog',color:'#4f8ef7'},
+    mongo:{title:'MongoDB API',model:'BSON documents + Atlas-compatible',qs:'db.events.find({type:"purchase"})',use:'Lift & shift MongoDB apps',color:'#22c55e'},
+    table:{title:'Table API',model:'Key-value: PartitionKey + RowKey',qs:'TableClient.get_entity(pk, rk)',use:'Simple lookups, IoT metadata',color:'#f59e0b'},
+  }
+  const sel = items[api]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Cosmos DB — API Selection</div>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {Object.keys(items).map(k=>(
+          <button key={k} onClick={()=>setApi(k as typeof api)} style={{ flex:1, padding:'6px 0', borderRadius:8, border:`2px solid ${api===k?items[k].color:'var(--border)'}`, background:api===k?`${items[k].color}15`:'white', cursor:'pointer', fontWeight:700, fontSize:'.75rem', color:api===k?items[k].color:'#94a3b8' }}>{items[k].title}</button>
+        ))}
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {[['Data Model',sel.model],['Query',sel.qs],['Best for',sel.use]].map(([k,v])=>(
+          <div key={k} style={{ padding:'8px 12px', borderRadius:8, background:'white', border:'1px solid var(--border)', display:'flex', gap:10 }}>
+            <span style={{ fontSize:'.72rem', color:'#64748b', minWidth:70 }}>{k}</span>
+            <span style={{ fontSize:'.78rem', color:'#1e293b', fontFamily:'monospace' }}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AzureSQLAnimation() {
+  const [view, setView] = useState<'tiers'|'dtu'>('tiers')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Azure SQL Database</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['tiers','dtu'] as const).map(v=>(
+            <button key={v} onClick={()=>setView(v)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:view===v?'#4f8ef7':'var(--surface-3)', color:view===v?'white':'var(--text-secondary)' }}>{v==='tiers'?'Service Tiers':'DTU vs vCore'}</button>
+          ))}
+        </div>
+      </div>
+      {view==='tiers' ? (
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {[{tier:'Basic',vcore:'5 DTU',storage:'2 GB',price:'$5/mo',color:'#94a3b8'},{tier:'Standard',vcore:'10–3000 DTU',storage:'250 GB',price:'$15+/mo',color:'#4f8ef7'},{tier:'Premium',vcore:'125–4000 DTU',storage:'1 TB',price:'$465+/mo',color:'#8b5cf6'},{tier:'Business Critical',vcore:'2–80 vCore',storage:'4 TB',price:'In-memory OLTP',color:'#22c55e'}].map(r=>(
+            <div key={r.tier} style={{ display:'flex', gap:8, padding:'8px 12px', borderRadius:8, border:`1px solid ${r.color}33`, background:`${r.color}0d` }}>
+              <span style={{ minWidth:120, fontWeight:700, fontSize:'.8rem', color:r.color }}>{r.tier}</span>
+              <span style={{ fontSize:'.75rem', color:'#475569', flex:1 }}>{r.vcore} · {r.storage} · {r.price}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {[{model:'DTU',desc:'Blended CPU + IO + memory unit — simple, less control',use:'Dev/test, small workloads',color:'#f59e0b'},{model:'vCore',desc:'Explicit vCPUs + RAM — maps to on-prem specs',use:'Production, cost control, Azure Hybrid Benefit',color:'#4f8ef7'}].map(m=>(
+            <div key={m.model} style={{ padding:12, marginBottom:8, borderRadius:10, border:`2px solid ${m.color}44`, background:`${m.color}0d` }}>
+              <div style={{ fontWeight:700, fontSize:'.85rem', color:m.color, marginBottom:4 }}>{m.model} model</div>
+              <div style={{ fontSize:'.75rem', color:'#475569', marginBottom:4 }}>{m.desc}</div>
+              <div style={{ fontSize:'.72rem', color:'#64748b' }}>Best for: {m.use}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DevOpsAnimation() {
+  const [step, setStep] = useState(0)
+  const pipeline = [
+    {stage:'Source',detail:'git push → triggers pipeline',color:'#4f8ef7'},
+    {stage:'Build',detail:'Docker build, pytest, mypy',color:'#8b5cf6'},
+    {stage:'Test',detail:'Integration tests against dev DB',color:'#22c55e'},
+    {stage:'Stage',detail:'Deploy to staging AKS namespace',color:'#f59e0b'},
+    {stage:'Gate',detail:'Manual approval required',color:'#f97316'},
+    {stage:'Prod',detail:'Blue-green deploy to production',color:'#ec4899'},
+  ]
+  useEffect(()=>{
+    const t = setInterval(()=>setStep(s=>(s+1)%(pipeline.length+1)),900)
+    return()=>clearInterval(t)
+  },[])
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Azure DevOps CI/CD Pipeline</div>
+      <div style={{ display:'flex', alignItems:'center', gap:4, overflowX:'auto', paddingBottom:8 }}>
+        {pipeline.map((p,i)=>(
+          <div key={p.stage} style={{ display:'flex', alignItems:'center' }}>
+            <div style={{ padding:'8px 10px', borderRadius:8, border:`2px solid ${i<step?p.color:'var(--border)'}`, background:i<step?`${p.color}15`:'white', textAlign:'center', minWidth:70, transition:'all .5s' }}>
+              <div style={{ fontSize:'.72rem', fontWeight:700, color:i<step?p.color:'#94a3b8' }}>{p.stage}</div>
+              {i===step-1&&<div style={{ fontSize:'.6rem', color:p.color, marginTop:2 }}>▶ running</div>}
+              {i<step-1&&<div style={{ fontSize:'.65rem', color:'#22c55e', marginTop:2 }}>✓</div>}
+            </div>
+            {i<pipeline.length-1&&<div style={{ width:12, height:2, background:i<step?pipeline[i+1].color:'#e2e8f0', transition:'background .5s', flexShrink:0 }}/>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TerraformAnimation() {
+  const [step, setStep] = useState<'init'|'plan'|'apply'|'destroy'>('init')
+  const steps = ['init','plan','apply','destroy'] as const
+  const info: Record<string,{desc:string,output:string,color:string}> = {
+    init:{desc:'Download providers, initialize backend',output:'Initializing provider plugins...\n✓ Installed azurerm v3.85.0\n✓ Terraform initialized',color:'#4f8ef7'},
+    plan:{desc:'Show what will be created/changed/destroyed',output:'Plan: 3 to add, 1 to change, 0 to destroy\n+ azurerm_resource_group.de_rg\n+ azurerm_storage_account.adls\n~ azurerm_databricks_workspace.ws',color:'#8b5cf6'},
+    apply:{desc:'Execute the plan — create/update resources',output:'azurerm_resource_group.de_rg: Creating...\nazurerm_storage_account.adls: Creating...\nApply complete! Resources: 3 added',color:'#22c55e'},
+    destroy:{desc:'Tear down all managed resources',output:'Plan: 0 to add, 0 to change, 3 to destroy\nDestroy complete! Resources: 3 destroyed',color:'#ef4444'},
+  }
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Terraform Lifecycle</div>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {steps.map(s=>(
+          <button key={s} onClick={()=>setStep(s)} style={{ flex:1, padding:'6px 0', borderRadius:8, border:`2px solid ${step===s?info[s].color:'var(--border)'}`, background:step===s?`${info[s].color}15`:'white', cursor:'pointer', fontWeight:700, fontSize:'.82rem', color:step===s?info[s].color:'#94a3b8' }}>terraform {s}</button>
+        ))}
+      </div>
+      <div style={{ fontSize:'.78rem', color:'var(--text-secondary)', marginBottom:8 }}>{info[step].desc}</div>
+      <div style={{ background:'#0f172a', borderRadius:8, padding:12 }}>
+        <pre style={{ margin:0, color:info[step].color, fontSize:'.75rem', whiteSpace:'pre-wrap' }}>{info[step].output}</pre>
+      </div>
+    </div>
+  )
+}
+
+function CostAnimation() {
+  const [resource, setResource] = useState('databricks')
+  const costs: Record<string,{monthly:string,tips:string[],color:string}> = {
+    databricks:{monthly:'$500–$5000+',tips:['Auto-terminate clusters after 30m idle','Use spot instances for non-critical jobs','Cluster pools reuse warm VMs','Reserved instances: up to 63% discount'],color:'#f59e0b'},
+    synapse:{monthly:'$200–$3000+',tips:['Pause dedicated pool when not running','Use serverless for ad-hoc queries','Compression reduces data scanned cost','Auto-pause: saves 70%+ in dev envs'],color:'#4f8ef7'},
+    eventhub:{monthly:'$10–$500+',tips:['Choose right throughput units','Capture to ADLS to avoid re-reads','Standard vs Premium: 10x price difference','Delete old consumer groups'],color:'#22c55e'},
+    adls:{monthly:'$20–$500+',tips:['Lifecycle policies tier old data to archive','ZRS vs LRS: 3x price for redundancy','Soft delete has a retention cost','Minimize cross-region egress'],color:'#8b5cf6'},
+  }
+  const sel = costs[resource]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Azure Cost Optimization</div>
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {Object.keys(costs).map(r=>(
+          <button key={r} onClick={()=>setResource(r)} style={{ flex:1, padding:'6px 0', borderRadius:8, border:`2px solid ${resource===r?costs[r].color:'var(--border)'}`, background:resource===r?`${costs[r].color}15`:'white', cursor:'pointer', fontWeight:700, fontSize:'.72rem', color:resource===r?costs[r].color:'#94a3b8', textTransform:'capitalize' }}>{r}</button>
+        ))}
+      </div>
+      <div style={{ padding:'8px 14px', borderRadius:8, background:`${sel.color}11`, border:`1px solid ${sel.color}44`, marginBottom:10 }}>
+        <span style={{ fontSize:'.72rem', color:'#64748b' }}>Typical monthly cost: </span>
+        <span style={{ fontWeight:800, fontSize:'.9rem', color:sel.color }}>{sel.monthly}</span>
+      </div>
+      {sel.tips.map(t=>(
+        <div key={t} style={{ display:'flex', gap:8, marginBottom:6, alignItems:'flex-start' }}>
+          <span style={{ color:'#22c55e', flexShrink:0 }}>💡</span>
+          <span style={{ fontSize:'.78rem', color:'#1e293b' }}>{t}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function AzureArchitectureAnimation() {
   return (
     <svg viewBox="0 0 820 180" className="anim-wrap" style={{ width: '100%', maxWidth: 760, display: 'block', margin: '0 0 1.5rem', borderRadius: 12, background: '#0f1923' }}>
@@ -367,6 +903,7 @@ az policy assignment create \\
             <h1 className="topic-title">ADLS Gen2</h1>
             <p className="topic-desc">Azure Data Lake Storage Gen2 combines Azure Blob Storage with a Hierarchical Namespace (HNS). HNS enables true directory semantics with atomic renames and ACL-based access control, making it the standard storage layer for Azure data platforms running Spark and Databricks.</p>
           </div>
+          <ADLSAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#9889;</span>
             <div className="callout-body">
@@ -586,6 +1123,7 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
             <h1 className="topic-title">Azure Blob Storage</h1>
             <p className="topic-desc">Azure Blob Storage is the foundational object storage service. It supports three blob types for different use cases, multiple replication strategies, and SAS tokens for delegated, time-limited access. ADLS Gen2 is built on Blob Storage with HNS added - they share the same underlying infrastructure.</p>
           </div>
+          <BlobAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128230;</span>
             <div className="callout-body">
@@ -1090,6 +1628,7 @@ dataset_param = {
             <h1 className="topic-title">Azure Synapse Analytics</h1>
             <p className="topic-desc">Synapse is Azure's unified analytics platform combining a dedicated SQL pool (formerly SQL DW - massively parallel processing), a serverless SQL pool (query-on-demand over data lake files), Apache Spark pools, and integration pipelines - all in one workspace. Understanding when to use each pool type is critical for exam and interviews.</p>
           </div>
+          <SynapseAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#9878;</span>
             <div className="callout-body">
@@ -1334,6 +1873,7 @@ gold_df.write.format("delta") \\
             <h1 className="topic-title">Azure Databricks</h1>
             <p className="topic-desc">Azure Databricks is the managed Spark platform on Azure, jointly developed by Databricks and Microsoft. It provides workspace management, cluster lifecycle, Unity Catalog for data governance, Delta Lake integration, and deep Azure service integrations. It runs in your Azure subscription (BYOC - bring your own cloud) with Databricks managing the control plane.</p>
           </div>
+          <DatabricksAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128218;</span>
             <div className="callout-body">
@@ -1547,6 +2087,7 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
             <h1 className="topic-title">Event Hub</h1>
             <p className="topic-desc">Azure Event Hub is a fully managed, high-throughput event streaming service capable of ingesting millions of events per second. It is partitioned (like Kafka topics), supports consumer groups for independent reads, and is the primary Azure service for real-time data ingestion pipelines. Event Hub Premium and Dedicated tiers offer schema registry and private endpoints.</p>
           </div>
+          <EventHubAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#9888;</span>
             <div className="callout-body">
@@ -1822,6 +2363,7 @@ producer.flush()  # wait for all messages to be delivered`}</CodeBlock>
             <h1 className="topic-title">Event Grid</h1>
             <p className="topic-desc">Azure Event Grid is a fully managed event routing service built for reactive, event-driven architectures. It delivers discrete events (not streams) from sources like Azure services (Blob Storage, Resource Manager) or custom topics to handlers like Azure Functions, Logic Apps, webhooks, or Event Hub. It is the backbone of event-driven file ingestion patterns in Azure data platforms.</p>
           </div>
+          <EventGridAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128260;</span>
             <div className="callout-body">
@@ -2003,6 +2545,7 @@ processed.writeStream \\
             <h1 className="topic-title">Azure Service Bus</h1>
             <p className="topic-desc">Azure Service Bus is an enterprise messaging service supporting queues (point-to-point) and topics with subscriptions (pub/sub). Unlike Event Hub, Service Bus guarantees ordered delivery, supports message sessions for FIFO processing, dead letter queues for failed messages, and transactional semantics - making it the right choice for workflow orchestration and reliable command messaging.</p>
           </div>
+          <ServiceBusAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128235;</span>
             <div className="callout-body">
@@ -2233,6 +2776,7 @@ for t in threads:
             <h1 className="topic-title">Azure Functions</h1>
             <p className="topic-desc">Azure Functions is a serverless compute service for event-driven code execution. Functions are triggered by events (HTTP requests, timers, blob creation, queue messages, Event Hub events) and can read/write to other services via input/output bindings - all declared in configuration, not code. For data engineering, Functions are ideal for lightweight ETL triggers, file processing, and API integrations.</p>
           </div>
+          <AzureFunctionsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#10052;</span>
             <div className="callout-body">
@@ -2528,6 +3072,7 @@ func azure functionapp publish func-data-platform-realtime --python`}</CodeBlock
             <h1 className="topic-title">Azure Stream Analytics</h1>
             <p className="topic-desc">Azure Stream Analytics (ASA) is a fully managed, serverless real-time analytics service. It uses a SQL-like query language with temporal windowing functions to process streaming data from Event Hubs, IoT Hub, or Blob Storage and route results to 20+ sinks.</p>
           </div>
+          <StreamAnalyticsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -2678,6 +3223,7 @@ az stream-analytics job start \
             <h1 className="topic-title">Key Vault Deep Dive</h1>
             <p className="topic-desc">Azure Key Vault centralises secrets, encryption keys, and TLS certificates. It integrates natively with ADF linked services, Azure Functions app settings, Databricks secret scopes, and virtually every Azure service via managed identity.</p>
           </div>
+          <KeyVaultAnimation />
           <div className="callout callout-danger">
             <span className="callout-icon">&#128680;</span>
             <div className="callout-body">
@@ -2824,6 +3370,7 @@ spark.conf.set(
             <h1 className="topic-title">Azure AD / Entra ID and Identity</h1>
             <p className="topic-desc">Microsoft Entra ID (formerly Azure Active Directory) is the identity platform for Azure. For data engineering, the critical concepts are service principals, managed identities, workload identity federation, and OAuth 2.0 token flows used by SDKs and pipelines.</p>
           </div>
+          <IdentityAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -3102,6 +3649,7 @@ az network vnet peering create \
             <h1 className="topic-title">Azure Monitor Deep Dive</h1>
             <p className="topic-desc">Azure Monitor is the unified observability platform for Azure. It collects metrics (numerical time-series), logs (structured/unstructured text), and traces. Log Analytics workspace stores logs queryable with KQL. Application Insights adds APM for applications.</p>
           </div>
+          <MonitorAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -3250,6 +3798,7 @@ az monitor action-group create \
             <h1 className="topic-title">Cosmos DB Deep Dive</h1>
             <p className="topic-desc">Azure Cosmos DB is a globally distributed, multi-model NoSQL database with guaranteed single-digit millisecond latency at any scale. The partition key is the single most important design decision  -  it determines data distribution, query efficiency, and throughput consumption.</p>
           </div>
+          <CosmosAnimation />
           <div className="callout callout-danger">
             <span className="callout-icon">&#9888;</span>
             <div className="callout-body">
@@ -3403,6 +3952,7 @@ az cosmosdb sql container query-throughput \
             <h1 className="topic-title">Azure SQL Database</h1>
             <p className="topic-desc">Azure SQL Database is a fully managed PaaS relational database built on SQL Server. Key choices: DTU vs vCore purchasing model, single database vs elastic pool vs Managed Instance, and geo-replication strategy.</p>
           </div>
+          <AzureSQLAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -3554,6 +4104,7 @@ rows = cursor.fetchall()`}</CodeBlock>
             <h1 className="topic-title">Azure DevOps and GitHub Actions</h1>
             <p className="topic-desc">CI/CD for data engineering pipelines: automatically test, build, and deploy ADF pipelines, Databricks notebooks, Terraform infrastructure, and dbt models when code is merged. Azure DevOps and GitHub Actions are the two dominant platforms.</p>
           </div>
+          <DevOpsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -3745,6 +4296,7 @@ jobs:
             <h1 className="topic-title">Terraform for Azure</h1>
             <p className="topic-desc">Terraform is the de-facto IaC tool for Azure data platforms. It declaratively manages all Azure resources  -  VNets, storage accounts, ADF, Databricks workspaces  -  with a state file tracking what exists, enabling plan/apply/destroy workflows.</p>
           </div>
+          <TerraformAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -4009,6 +4561,7 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
             <h1 className="topic-title">Azure Cost Management</h1>
             <p className="topic-desc">Cloud cost is an engineering concern. Data platforms commonly overspend on idle Databricks clusters, over-provisioned Synapse dedicated pools, and unnecessary data egress. Understanding Azure Cost Management tools lets you monitor, alert, and optimise spend proactively.</p>
           </div>
+          <CostAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
