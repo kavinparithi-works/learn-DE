@@ -47,6 +47,17 @@ export async function markTopicComplete(topicId: string) {
   await setDoc(doc(db, 'users', user.uid), { totalXP: increment(50) }, { merge: true })
 }
 
+export async function unmarkTopicComplete(topicId: string) {
+  const user = auth.currentUser
+  if (!user) return
+  await setDoc(
+    doc(db, 'users', user.uid, 'progress', topicId),
+    { status: 'incomplete' },
+    { merge: true }
+  )
+  await setDoc(doc(db, 'users', user.uid), { totalXP: increment(-50) }, { merge: true })
+}
+
 export async function saveQuizScore(topicId: string, score: number, total: number) {
   const user = auth.currentUser
   if (!user) return

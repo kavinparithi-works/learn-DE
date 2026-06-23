@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
-import { markTopicComplete } from '../lib/firebase'
+import { markTopicComplete, unmarkTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: (id?: string) => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void }
 
 const SECTIONS = [
   { title: 'Level 6 - Cloud and Azure', items: [
@@ -162,7 +162,7 @@ function ADFPipelineAnimation() {
   )
 }
 
-export default function Azure({ completed, onComplete }: Props) {
+export default function Azure({ completed, onComplete, onUnmark }: Props) {
   const [activeId, setActiveId] = useState('az-fundamentals')
   const sectionRefs = useRef<Record<string, HTMLElement>>({})
 
@@ -357,7 +357,7 @@ az policy assignment create \\
               correct: 2
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-fundamentals'); onComplete('az-fundamentals') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-fundamentals')) { await unmarkTopicComplete('az-fundamentals'); onUnmark('az-fundamentals') } else { await markTopicComplete('az-fundamentals'); onComplete('az-fundamentals') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-adls ───────────────────────────────────────────── */}
@@ -576,7 +576,7 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
               correct: 3
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-adls'); onComplete('az-adls') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-adls')) { await unmarkTopicComplete('az-adls'); onUnmark('az-adls') } else { await markTopicComplete('az-adls'); onComplete('az-adls') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-blob ───────────────────────────────────────────── */}
@@ -769,7 +769,7 @@ az storage account blob-service-properties update \\
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-blob'); onComplete('az-blob') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-blob')) { await unmarkTopicComplete('az-blob'); onUnmark('az-blob') } else { await markTopicComplete('az-blob'); onComplete('az-blob') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-adf ────────────────────────────────────────────── */}
@@ -1080,7 +1080,7 @@ dataset_param = {
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-adf'); onComplete('az-adf') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-adf')) { await unmarkTopicComplete('az-adf'); onUnmark('az-adf') } else { await markTopicComplete('az-adf'); onComplete('az-adf') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-synapse ────────────────────────────────────────── */}
@@ -1324,7 +1324,7 @@ gold_df.write.format("delta") \\
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-synapse'); onComplete('az-synapse') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-synapse')) { await unmarkTopicComplete('az-synapse'); onUnmark('az-synapse') } else { await markTopicComplete('az-synapse'); onComplete('az-synapse') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-databricks ─────────────────────────────────────── */}
@@ -1537,7 +1537,7 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-databricks'); onComplete('az-databricks') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-databricks')) { await unmarkTopicComplete('az-databricks'); onUnmark('az-databricks') } else { await markTopicComplete('az-databricks'); onComplete('az-databricks') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-eventhub ───────────────────────────────────────── */}
@@ -1812,7 +1812,7 @@ producer.flush()  # wait for all messages to be delivered`}</CodeBlock>
               correct: 2
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-eventhub'); onComplete('az-eventhub') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-eventhub')) { await unmarkTopicComplete('az-eventhub'); onUnmark('az-eventhub') } else { await markTopicComplete('az-eventhub'); onComplete('az-eventhub') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-eventgrid ──────────────────────────────────────── */}
@@ -1993,7 +1993,7 @@ processed.writeStream \\
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-eventgrid'); onComplete('az-eventgrid') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-eventgrid')) { await unmarkTopicComplete('az-eventgrid'); onUnmark('az-eventgrid') } else { await markTopicComplete('az-eventgrid'); onComplete('az-eventgrid') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-servicebus ─────────────────────────────────────── */}
@@ -2223,7 +2223,7 @@ for t in threads:
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-servicebus'); onComplete('az-servicebus') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-servicebus')) { await unmarkTopicComplete('az-servicebus'); onUnmark('az-servicebus') } else { await markTopicComplete('az-servicebus'); onComplete('az-servicebus') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-functions ──────────────────────────────────────── */}
@@ -2518,7 +2518,7 @@ func azure functionapp publish func-data-platform-realtime --python`}</CodeBlock
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-functions'); onComplete('az-functions') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-functions')) { await unmarkTopicComplete('az-functions'); onUnmark('az-functions') } else { await markTopicComplete('az-functions'); onComplete('az-functions') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-streamanalytics ── */}
@@ -2668,7 +2668,7 @@ az stream-analytics job start \
               correct: 2
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-streamanalytics'); onComplete('az-streamanalytics') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-streamanalytics')) { await unmarkTopicComplete('az-streamanalytics'); onUnmark('az-streamanalytics') } else { await markTopicComplete('az-streamanalytics'); onComplete('az-streamanalytics') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-keyvault ── */}
@@ -2814,7 +2814,7 @@ spark.conf.set(
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-keyvault'); onComplete('az-keyvault') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-keyvault')) { await unmarkTopicComplete('az-keyvault'); onUnmark('az-keyvault') } else { await markTopicComplete('az-keyvault'); onComplete('az-keyvault') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-identity ── */}
@@ -2958,7 +2958,7 @@ print(result.stdout.strip())`}</CodeBlock>
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-identity'); onComplete('az-identity') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-identity')) { await unmarkTopicComplete('az-identity'); onUnmark('az-identity') } else { await markTopicComplete('az-identity'); onComplete('az-identity') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-networking ── */}
@@ -3092,7 +3092,7 @@ az network vnet peering create \
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-networking'); onComplete('az-networking') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-networking')) { await unmarkTopicComplete('az-networking'); onUnmark('az-networking') } else { await markTopicComplete('az-networking'); onComplete('az-networking') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-monitor ── */}
@@ -3240,7 +3240,7 @@ az monitor action-group create \
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-monitor'); onComplete('az-monitor') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-monitor')) { await unmarkTopicComplete('az-monitor'); onUnmark('az-monitor') } else { await markTopicComplete('az-monitor'); onComplete('az-monitor') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-cosmos ── */}
@@ -3393,7 +3393,7 @@ az cosmosdb sql container query-throughput \
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-cosmos'); onComplete('az-cosmos') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-cosmos')) { await unmarkTopicComplete('az-cosmos'); onUnmark('az-cosmos') } else { await markTopicComplete('az-cosmos'); onComplete('az-cosmos') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-sql ── */}
@@ -3544,7 +3544,7 @@ rows = cursor.fetchall()`}</CodeBlock>
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-sql'); onComplete('az-sql') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-sql')) { await unmarkTopicComplete('az-sql'); onUnmark('az-sql') } else { await markTopicComplete('az-sql'); onComplete('az-sql') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-devops ── */}
@@ -3735,7 +3735,7 @@ jobs:
               correct: 1
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-devops'); onComplete('az-devops') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-devops')) { await unmarkTopicComplete('az-devops'); onUnmark('az-devops') } else { await markTopicComplete('az-devops'); onComplete('az-devops') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-terraform ── */}
@@ -3999,7 +3999,7 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
               correct: 2
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-terraform'); onComplete('az-terraform') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-terraform')) { await unmarkTopicComplete('az-terraform'); onUnmark('az-terraform') } else { await markTopicComplete('az-terraform'); onComplete('az-terraform') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
         {/* ── az-cost ── */}
@@ -4179,7 +4179,7 @@ az advisor recommendation list \
               correct: 2
             }
           ]} />
-          <button onClick={async () => { await markTopicComplete('az-cost'); onComplete('az-cost') }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete &#10003;</button>
+          <button onClick={async () => { if (completed.has('az-cost')) { await unmarkTopicComplete('az-cost'); onUnmark('az-cost') } else { await markTopicComplete('az-cost'); onComplete('az-cost') } }} className="complete-btn-inline" style={{ marginTop: 16 }}>Mark Complete &#10003;</button>
         </section>
 
       </main>

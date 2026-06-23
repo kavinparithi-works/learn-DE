@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
-import { markTopicComplete } from '../lib/firebase'
+import { markTopicComplete, unmarkTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: (id?: string) => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void }
 
 const SECTIONS = [
   { title: 'Level 7 - Apache Spark + PySpark', items: [
@@ -44,13 +44,14 @@ const SECTIONS = [
   ]},
 ]
 
-const MC_BTN = {
+const MC_BTN = (done: boolean) => ({
   marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)',
-  background: 'var(--green-500)', color: 'white', border: 'none',
+  background: done ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--green-500)',
+  color: 'white', border: 'none',
   fontWeight: 700, cursor: 'pointer', fontSize: '.84rem'
-} as const
+}) as const
 
-export default function Spark({ completed, onComplete }: Props) {
+export default function Spark({ completed, onComplete, onUnmark }: Props) {
   const [activeId, setActiveId] = useState('spark-arch')
   const sectionRefs = useRef<Record<string, HTMLElement>>({})
 
@@ -75,7 +76,7 @@ export default function Spark({ completed, onComplete }: Props) {
 
   const totalTopics = SECTIONS.flatMap(s => s.items).length
   const ref = (id: string) => (el: HTMLElement | null) => { if (el) sectionRefs.current[id] = el }
-  const mc = (id: string) => async () => { await markTopicComplete(id); onComplete(id) }
+  const mc = (id: string) => async () => { if (completed.has(id)) { await unmarkTopicComplete(id); onUnmark(id) } else { await markTopicComplete(id); onComplete(id) } }
 
   return (
     <div className="page-with-sidebar">
@@ -169,7 +170,7 @@ print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
               correct: 3
             },
           ]} />
-          <button onClick={mc('spark-arch')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-arch')} style={MC_BTN(completed.has('spark-arch'))}>{completed.has('spark-arch') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── DAG, STAGES, TASKS ─────────────────────────────────────────── */}
@@ -258,7 +259,7 @@ df.rdd.map(lambda row: bc.value.get(row.key))
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-dag')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-dag')} style={MC_BTN(completed.has('spark-dag'))}>{completed.has('spark-dag') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── LAZY EVALUATION ────────────────────────────────────────────── */}
@@ -355,7 +356,7 @@ df4.explain(True)
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-lazy')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-lazy')} style={MC_BTN(completed.has('spark-lazy'))}>{completed.has('spark-lazy') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── RDD vs DataFrame vs Dataset ────────────────────────────────── */}
@@ -454,7 +455,7 @@ result_df.rdd.foreachPartition(process_partition)
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-rdd')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-rdd')} style={MC_BTN(completed.has('spark-rdd'))}>{completed.has('spark-rdd') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── READING DATA ───────────────────────────────────────────────── */}
@@ -582,7 +583,7 @@ df_events = df_kafka.select(
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-reading')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-reading')} style={MC_BTN(completed.has('spark-reading'))}>{completed.has('spark-reading') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── WRITING DATA ───────────────────────────────────────────────── */}
@@ -699,7 +700,7 @@ df.select(
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-writing')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-writing')} style={MC_BTN(completed.has('spark-writing'))}>{completed.has('spark-writing') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── CORE TRANSFORMATIONS ───────────────────────────────────────── */}
@@ -810,7 +811,7 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-transforms')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-transforms')} style={MC_BTN(completed.has('spark-transforms'))}>{completed.has('spark-transforms') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── BUILT-IN FUNCTIONS ─────────────────────────────────────────── */}
@@ -934,7 +935,7 @@ df.groupBy("user_id").agg(
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-functions')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-functions')} style={MC_BTN(completed.has('spark-functions'))}>{completed.has('spark-functions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── WINDOW FUNCTIONS ───────────────────────────────────────────── */}
@@ -1041,7 +1042,7 @@ df_scd = df_history \
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-window')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-window')} style={MC_BTN(completed.has('spark-window'))}>{completed.has('spark-window') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── JOIN STRATEGIES ────────────────────────────────────────────── */}
@@ -1153,7 +1154,7 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-joins')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-joins')} style={MC_BTN(completed.has('spark-joins'))}>{completed.has('spark-joins') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── PARTITIONING DEEP DIVE ──────────────────────────────────────── */}
@@ -1271,7 +1272,7 @@ df.withColumn("pid", spark_partition_id()) \
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-partitions')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-partitions')} style={MC_BTN(completed.has('spark-partitions'))}>{completed.has('spark-partitions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── DATA SKEW ──────────────────────────────────────────────────── */}
@@ -1386,7 +1387,7 @@ result = non_null.join(dim_user, "user_id", "left") \
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-skew')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-skew')} style={MC_BTN(completed.has('spark-skew'))}>{completed.has('spark-skew') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── MEMORY MANAGEMENT ──────────────────────────────────────────── */}
@@ -1489,7 +1490,7 @@ spark.conf.set("spark.memory.offHeap.size",      "4g")
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-memory')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-memory')} style={MC_BTN(completed.has('spark-memory'))}>{completed.has('spark-memory') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── CACHING ────────────────────────────────────────────────────── */}
@@ -1600,7 +1601,7 @@ silver_df.unpersist()   # free memory`}
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-cache')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-cache')} style={MC_BTN(completed.has('spark-cache'))}>{completed.has('spark-cache') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── BROADCAST VARIABLES & ACCUMULATORS ─────────────────────────── */}
@@ -1714,7 +1715,7 @@ print(unique_errors.value)   # set of all error codes seen`}
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-broadcast')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-broadcast')} style={MC_BTN(completed.has('spark-broadcast'))}>{completed.has('spark-broadcast') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── UDFs ───────────────────────────────────────────────────────── */}
@@ -1846,7 +1847,7 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-udfs')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-udfs')} style={MC_BTN(completed.has('spark-udfs'))}>{completed.has('spark-udfs') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── SPARK SQL ──────────────────────────────────────────────────── */}
@@ -1982,7 +1983,7 @@ spark.sql("""
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-sql')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-sql')} style={MC_BTN(completed.has('spark-sql'))}>{completed.has('spark-sql') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── STRUCTURED STREAMING ───────────────────────────────────────── */}
@@ -2133,7 +2134,7 @@ for q in spark.streams.active:
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-streaming')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-streaming')} style={MC_BTN(completed.has('spark-streaming'))}>{completed.has('spark-streaming') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── STATEFUL STREAMING ─────────────────────────────────────────── */}
@@ -2273,7 +2274,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-streaming-state')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-streaming-state')} style={MC_BTN(completed.has('spark-streaming-state'))}>{completed.has('spark-streaming-state') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── CATALYST OPTIMIZER ─────────────────────────────────────────── */}
@@ -2387,7 +2388,7 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-catalyst')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-catalyst')} style={MC_BTN(completed.has('spark-catalyst'))}>{completed.has('spark-catalyst') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── AQE ────────────────────────────────────────────────────────── */}
@@ -2495,7 +2496,7 @@ with spark.conf as c:
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-aqe')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-aqe')} style={MC_BTN(completed.has('spark-aqe'))}>{completed.has('spark-aqe') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── TUNGSTEN ───────────────────────────────────────────────────── */}
@@ -2606,7 +2607,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-tungsten')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-tungsten')} style={MC_BTN(completed.has('spark-tungsten'))}>{completed.has('spark-tungsten') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── PERFORMANCE CONFIG ─────────────────────────────────────────── */}
@@ -2710,7 +2711,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-config')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-config')} style={MC_BTN(completed.has('spark-config'))}>{completed.has('spark-config') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── SPARK UI ───────────────────────────────────────────────────── */}
@@ -2832,7 +2833,7 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-ui')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-ui')} style={MC_BTN(completed.has('spark-ui'))}>{completed.has('spark-ui') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── SPARK + DELTA LAKE ─────────────────────────────────────────── */}
@@ -2975,7 +2976,7 @@ changes = spark.read.format("delta") \
               correct: 1
             },
           ]} />
-          <button onClick={mc('spark-delta')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('spark-delta')} style={MC_BTN(completed.has('spark-delta'))}>{completed.has('spark-delta') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── KAFKA ARCHITECTURE ─────────────────────────────────────────── */}
@@ -3063,7 +3064,7 @@ changes = spark.read.format("delta") \
               correct: 1
             },
           ]} />
-          <button onClick={mc('kafka-arch')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('kafka-arch')} style={MC_BTN(completed.has('kafka-arch'))}>{completed.has('kafka-arch') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── KAFKA PYTHON API ────────────────────────────────────────────── */}
@@ -3180,7 +3181,7 @@ finally:
               correct: 1
             },
           ]} />
-          <button onClick={mc('kafka-python')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('kafka-python')} style={MC_BTN(completed.has('kafka-python'))}>{completed.has('kafka-python') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── KAFKA EXACTLY-ONCE SEMANTICS ───────────────────────────────── */}
@@ -3301,7 +3302,7 @@ stream_df.writeStream \\
               correct: 1
             },
           ]} />
-          <button onClick={mc('kafka-eos')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('kafka-eos')} style={MC_BTN(completed.has('kafka-eos'))}>{completed.has('kafka-eos') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── KAFKA CONNECT + DEBEZIUM ────────────────────────────────────── */}
@@ -3390,7 +3391,7 @@ stream_df.writeStream \\
               correct: 1
             },
           ]} />
-          <button onClick={mc('kafka-connect')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('kafka-connect')} style={MC_BTN(completed.has('kafka-connect'))}>{completed.has('kafka-connect') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── SCHEMA REGISTRY + AVRO ─────────────────────────────────────── */}
@@ -3504,7 +3505,7 @@ while True:
               correct: 1
             },
           ]} />
-          <button onClick={mc('kafka-schema')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('kafka-schema')} style={MC_BTN(completed.has('kafka-schema'))}>{completed.has('kafka-schema') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── KAFKA VS AZURE EVENT HUB ───────────────────────────────────── */}
@@ -3597,7 +3598,7 @@ df.writeStream \\
               correct: 1
             },
           ]} />
-          <button onClick={mc('kafka-vs-eventhub')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('kafka-vs-eventhub')} style={MC_BTN(completed.has('kafka-vs-eventhub'))}>{completed.has('kafka-vs-eventhub') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
       </main>

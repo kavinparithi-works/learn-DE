@@ -17,36 +17,36 @@ import Interview from './pages/Interview'
 import Airflow from './pages/Airflow'
 import './styles/globals.css'
 
-function AppRoutes({ completed, refreshProgress }: { completed: Set<string>; refreshProgress: (id?: string) => void }) {
+function AppRoutes({ completed, refreshProgress, unmarkProgress }: { completed: Set<string>; refreshProgress: (id?: string) => void; unmarkProgress: (id: string) => void }) {
   const location = useLocation()
   useScrollReveal()
   return (
     <PageTransition key={location.pathname}>
       <Routes location={location}>
         <Route path="/" element={<Home completed={completed} />} />
-        <Route path="/foundations" element={<Foundations completed={completed} onComplete={refreshProgress} />} />
-        <Route path="/sql"         element={<SQL         completed={completed} onComplete={refreshProgress} />} />
-        <Route path="/python"      element={<Python      completed={completed} onComplete={refreshProgress} />} />
-        <Route path="/azure"       element={<Azure       completed={completed} onComplete={refreshProgress} />} />
-        <Route path="/spark"       element={<Spark       completed={completed} onComplete={refreshProgress} />} />
-        <Route path="/delta"       element={<Delta       completed={completed} onComplete={refreshProgress} />} />
-        <Route path="/production"  element={<Production  completed={completed} onComplete={refreshProgress} />} />
+        <Route path="/foundations" element={<Foundations completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
+        <Route path="/sql"         element={<SQL         completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
+        <Route path="/python"      element={<Python      completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
+        <Route path="/azure"       element={<Azure       completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
+        <Route path="/spark"       element={<Spark       completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
+        <Route path="/delta"       element={<Delta       completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
+        <Route path="/production"  element={<Production  completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
         <Route path="/interview"   element={<Interview   completed={completed} />} />
-        <Route path="/airflow"     element={<Airflow     completed={completed} onComplete={refreshProgress} />} />
+        <Route path="/airflow"     element={<Airflow     completed={completed} onComplete={refreshProgress} onUnmark={unmarkProgress} />} />
       </Routes>
     </PageTransition>
   )
 }
 
 export default function App() {
-  const { user, streak, completed, refreshProgress } = useAuth()
+  const { user, streak, completed, refreshProgress, unmarkProgress } = useAuth()
   const [authOpen, setAuthOpen] = useState(false)
 
   return (
     <BrowserRouter basename="/learn-DE">
       <Topbar user={user} streak={streak} onSignInClick={() => setAuthOpen(true)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
-      <AppRoutes completed={completed} refreshProgress={refreshProgress} />
+      <AppRoutes completed={completed} refreshProgress={refreshProgress} unmarkProgress={unmarkProgress} />
     </BrowserRouter>
   )
 }

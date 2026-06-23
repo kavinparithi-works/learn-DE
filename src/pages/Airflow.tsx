@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
-import { markTopicComplete } from '../lib/firebase'
+import { markTopicComplete, unmarkTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: (id?: string) => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void }
 
 const SECTIONS = [
   { title: 'Level 9 - Apache Airflow', items: [
@@ -23,13 +23,14 @@ const SECTIONS = [
   ]},
 ]
 
-const MC_BTN = {
+const MC_BTN = (done: boolean) => ({
   marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)',
-  background: 'var(--green-500)', color: 'white', border: 'none',
+  background: done ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--green-500)',
+  color: 'white', border: 'none',
   fontWeight: 700, cursor: 'pointer', fontSize: '.84rem'
-} as const
+}) as const
 
-export default function Airflow({ completed, onComplete }: Props) {
+export default function Airflow({ completed, onComplete, onUnmark }: Props) {
   const [activeId, setActiveId] = useState('airflow-intro')
   const sectionRefs = useRef<Record<string, HTMLElement>>({})
 
@@ -54,7 +55,7 @@ export default function Airflow({ completed, onComplete }: Props) {
 
   const totalTopics = SECTIONS.flatMap(s => s.items).length
   const ref = (id: string) => (el: HTMLElement | null) => { if (el) sectionRefs.current[id] = el }
-  const mc = (id: string) => async () => { await markTopicComplete(id); onComplete(id) }
+  const mc = (id: string) => async () => { if (completed.has(id)) { await unmarkTopicComplete(id); onUnmark(id) } else { await markTopicComplete(id); onComplete(id) } }
 
   return (
     <div className="page-with-sidebar">
@@ -145,7 +146,7 @@ print(airflow.__version__)  # e.g. '2.8.1'
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-intro')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-intro')} style={MC_BTN(completed.has('airflow-intro'))}>{completed.has('airflow-intro') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── DAG FUNDAMENTALS ─── */}
@@ -251,7 +252,7 @@ with DAG(
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-dag')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-dag')} style={MC_BTN(completed.has('airflow-dag'))}>{completed.has('airflow-dag') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── CORE OPERATORS ─── */}
@@ -358,7 +359,7 @@ notify = EmailOperator(
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-operators')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-operators')} style={MC_BTN(completed.has('airflow-operators'))}>{completed.has('airflow-operators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── SPARK & DATABRICKS OPERATORS ─── */}
@@ -464,7 +465,7 @@ trigger_api = SimpleHttpOperator(
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-spark')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-spark')} style={MC_BTN(completed.has('airflow-spark'))}>{completed.has('airflow-spark') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── SENSORS ─── */}
@@ -571,7 +572,7 @@ wait_for_bronze = ExternalTaskSensor(
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-sensors')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-sensors')} style={MC_BTN(completed.has('airflow-sensors'))}>{completed.has('airflow-sensors') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── TASKFLOW API ─── */}
@@ -696,7 +697,7 @@ dag_instance = orders_pipeline()`}
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-taskflow')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-taskflow')} style={MC_BTN(completed.has('airflow-taskflow'))}>{completed.has('airflow-taskflow') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── XCOMS ─── */}
@@ -786,7 +787,7 @@ bash_task = BashOperator(
               correct: 0,
             },
           ]} />
-          <button onClick={mc('airflow-xcoms')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-xcoms')} style={MC_BTN(completed.has('airflow-xcoms'))}>{completed.has('airflow-xcoms') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── CONNECTIONS & HOOKS ─── */}
@@ -892,7 +893,7 @@ class DataQualityApiHook(BaseHook):
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-connections')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-connections')} style={MC_BTN(completed.has('airflow-connections'))}>{completed.has('airflow-connections') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── KUBERNETES EXECUTOR ─── */}
@@ -1000,7 +1001,7 @@ run_spark_job = KubernetesPodOperator(
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-k8s')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-k8s')} style={MC_BTN(completed.has('airflow-k8s'))}>{completed.has('airflow-k8s') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── CI/CD & TESTING ─── */}
@@ -1116,7 +1117,7 @@ def test_dag_retries(dagbag):
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-cicd')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-cicd')} style={MC_BTN(completed.has('airflow-cicd'))}>{completed.has('airflow-cicd') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── MONITORING & ALERTING ─── */}
@@ -1233,7 +1234,7 @@ with DAG(
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-monitoring')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-monitoring')} style={MC_BTN(completed.has('airflow-monitoring'))}>{completed.has('airflow-monitoring') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         {/* ─── AIRFLOW VS DATABRICKS VS ADF ─── */}
@@ -1331,7 +1332,7 @@ tool: Azure Data Factory (ADF)
               correct: 1,
             },
           ]} />
-          <button onClick={mc('airflow-vs-databricks')} style={MC_BTN}>Mark Complete ✓</button>
+          <button onClick={mc('airflow-vs-databricks')} style={MC_BTN(completed.has('airflow-vs-databricks'))}>{completed.has('airflow-vs-databricks') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
       </main>

@@ -38,5 +38,13 @@ export function useAuth() {
     }
   }
 
-  return { user, loading, completed, streak, refreshProgress }
+  const unmarkProgress = async (topicId: string) => {
+    setCompleted(prev => { const n = new Set(prev); n.delete(topicId); return n })
+    if (auth.currentUser) {
+      const prog = await loadProgress(auth.currentUser.uid)
+      setCompleted(prog)
+    }
+  }
+
+  return { user, loading, completed, streak, refreshProgress, unmarkProgress }
 }
