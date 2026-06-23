@@ -71,6 +71,7 @@ export default function Airflow({ completed, onComplete, onUnmark }: Props) {
               Apache Airflow is an open-source workflow orchestration platform that lets you author, schedule, and monitor data pipelines as Directed Acyclic Graphs (DAGs). Airflow orchestrates  -  it does not execute compute itself. It tells other systems (Spark, dbt, Python, APIs) what to run and when. The scheduler evaluates DAGs every heartbeat, determines which tasks are ready to run based on dependencies, and queues them to an executor. Understanding this architecture is critical: Airflow is a control plane, not a data plane.
             </p>
           </div>
+          <AirflowArchAnimation />
           <AirflowDagAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -264,6 +265,7 @@ with DAG(
               Operators are the building blocks of a DAG  -  each operator becomes one task. <code>PythonOperator</code> runs a Python callable. <code>BashOperator</code> runs a shell command. <code>EmailOperator</code> sends email alerts. <code>DummyOperator</code>/<code>EmptyOperator</code> (2.4+) creates structural nodes for grouping or fanout. <code>BranchPythonOperator</code> enables conditional logic by returning the task_id(s) to execute next  -  all other branches are skipped.
             </p>
           </div>
+          <OperatorsAnimation />
           <CodeBlock lang="python">{`from airflow.operators.python  import PythonOperator, BranchPythonOperator
 from airflow.operators.bash    import BashOperator
 from airflow.operators.email   import EmailOperator
@@ -371,6 +373,7 @@ notify = EmailOperator(
               For data engineering workflows, Airflow frequently submits jobs to Spark clusters or Databricks. <code>SparkSubmitOperator</code> submits a jar/Python file to a YARN/Standalone cluster via spark-submit. <code>SparkSqlOperator</code> runs SQL on Spark Thrift Server. <code>DatabricksRunNowOperator</code> triggers an existing Databricks Job by job_id. <code>DatabricksSubmitRunOperator</code> creates and runs a one-off Databricks job run (notebook or Python script). <code>SimpleHttpOperator</code>/<code>HttpOperator</code> calls REST APIs and is useful for triggering external systems.
             </p>
           </div>
+          <SparkSubmitAnimation />
           <CodeBlock lang="python">{`from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.apache.spark.operators.spark_sql   import SparkSqlOperator
 from airflow.providers.databricks.operators.databricks    import (
@@ -477,6 +480,7 @@ trigger_api = SimpleHttpOperator(
               Sensors are special operators that wait for a condition to be true before proceeding. <code>FileSensor</code> waits for a file/directory to appear. <code>S3KeySensor</code> waits for an S3 key (exact or wildcard). <code>SqlSensor</code> runs a SQL query and waits until it returns a non-zero result. <code>ExternalTaskSensor</code> waits for a task in another DAG to succeed. Key parameters: <code>poke_interval</code> (seconds between checks), <code>timeout</code> (max seconds to wait  -  raises <code>AirflowSensorTimeout</code> if exceeded), <code>mode</code> ('poke' keeps the worker slot busy; 'reschedule' releases the slot between checks  -  always use 'reschedule' in production).
             </p>
           </div>
+          <SensorsAnimation />
           <CodeBlock lang="python">{`from airflow.sensors.filesystem           import FileSensor
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 from airflow.sensors.sql                  import SqlSensor
@@ -584,6 +588,7 @@ wait_for_bronze = ExternalTaskSensor(
               The TaskFlow API (Airflow 2.0+) uses the <code>@task</code> decorator to define tasks as Python functions. XComs are passed automatically between <code>@task</code> functions  -  return values become XCom outputs, function parameters become XCom inputs. <code>@task.branch</code> replaces <code>BranchPythonOperator</code>. <code>@task_group</code> replaces <code>TaskGroup</code> context manager for grouping tasks visually. Dynamic task mapping with <code>.expand()</code> allows creating N tasks at runtime based on input data.
             </p>
           </div>
+          <TaskFlowAnimation />
           <CodeBlock lang="python">{`from airflow.decorators import dag, task, task_group
 from datetime import datetime
 
@@ -709,6 +714,7 @@ dag_instance = orders_pipeline()`}
               XComs (Cross-Communications) allow tasks to exchange small amounts of data via the Airflow metadata database. A task pushes a value with <code>ti.xcom_push(key, value)</code> and another pulls it with <code>ti.xcom_pull(task_ids, key)</code>. With TaskFlow API, this is automatic. XComs are stored in the metadata DB  -  this creates a critical constraint: XComs are for metadata only (IDs, counts, status strings, small config dicts). Never push large DataFrames, file contents, or binary data through XComs. For large data, write to S3/ADLS/Delta and pass only the path via XCom.
             </p>
           </div>
+          <XComAnimation />
           <CodeBlock lang="python">{`# ── Manual XCom push/pull (classic operators) ─────────────────────────
 def extract_fn(**context):
     ti = context['ti']
@@ -799,6 +805,7 @@ bash_task = BashOperator(
               Connections store credentials and endpoint URLs for external systems (databases, cloud storage, APIs, Spark clusters). They are managed in the Airflow UI (Admin &gt; Connections) or via environment variables (<code>AIRFLOW_CONN_{"{CONN_ID}"}</code>). Hooks are the Python interface for connections  -  they handle authentication and provide high-level methods. <code>PostgresHook</code>, <code>S3Hook</code>, <code>HttpHook</code>, <code>SparkHook</code>. When building custom integrations, create a custom Hook that extends <code>BaseHook</code>.
             </p>
           </div>
+          <ConnectionsAnimation />
           <CodeBlock lang="python">{`from airflow.hooks.base          import BaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.amazon.aws.hooks.s3     import S3Hook
@@ -905,6 +912,7 @@ class DataQualityApiHook(BaseHook):
               The KubernetesExecutor spins up a dedicated pod for each task. No persistent workers  -  the scheduler creates a pod when a task is ready, the pod runs the task and terminates. This provides perfect isolation, independent resource allocation per task, and eliminates noisy-neighbor problems. <code>KubernetesPodOperator</code> runs an arbitrary Docker image in a pod  -  essential for tasks requiring custom dependencies. Configure resource requests/limits, secrets, volume mounts, and image pull policies.
             </p>
           </div>
+          <K8sOperatorAnimation />
           <CodeBlock lang="python">{`from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from kubernetes.client import models as k8s
 
@@ -1013,6 +1021,7 @@ run_spark_job = KubernetesPodOperator(
               Production Airflow deployments use the DAG factory pattern to generate many similar DAGs programmatically. DAGs are tested with pytest using <code>airflow.models.DagBag</code>. CI pipelines validate DAGs on every PR: import correctly, have no cycles, meet naming conventions. DAG versioning uses <code>version</code> tags or <code>doc_md</code>. Never deploy broken DAGs  -  a parsing error in one DAG file can impact the scheduler's ability to process other DAGs.
             </p>
           </div>
+          <CICDAnimation />
           <CodeBlock lang="python">{`# ── DAG Factory Pattern ───────────────────────────────────────────────
 # dag_factory.py  -  generates one DAG per table config
 import yaml
@@ -1129,6 +1138,7 @@ def test_dag_retries(dagbag):
               Production Airflow requires comprehensive monitoring. SLA misses trigger <code>sla_miss_callback</code> when a task or DAG run exceeds its declared SLA. Task-level callbacks (<code>on_success_callback</code>, <code>on_failure_callback</code>, <code>on_retry_callback</code>) execute custom Python on state changes  -  use these for Slack/PagerDuty alerts. Airflow emits StatsD metrics (task duration, success/failure counts, scheduler heartbeat) which can be forwarded to Prometheus/Datadog.
             </p>
           </div>
+          <MonitoringAnimation />
           <CodeBlock lang="python">{`import json, urllib.request
 from datetime import timedelta
 from airflow import DAG
@@ -1246,6 +1256,7 @@ with DAG(
               Choosing the right orchestration tool depends on your data platform, team, and complexity. Apache Airflow is the most flexible  -  code-first, any operator, any cloud, rich ecosystem. Databricks Workflows is tightly integrated with Databricks notebooks and jobs  -  best when your entire platform is Databricks. Azure Data Factory (ADF) is Azure-native with a GUI-first approach  -  great for simple ELT and Azure service integration. In practice, many production platforms use a hybrid: Airflow for complex cross-system orchestration, Databricks Workflows for Databricks-internal compute graphs, ADF for simple Azure data movements.
             </p>
           </div>
+          <VSComparisionAnimation />
           <CodeBlock lang="yaml">{`# ── Comparison Matrix ─────────────────────────────────────────────────
 tool: Apache Airflow
   strengths:
@@ -1341,6 +1352,358 @@ tool: Azure Data Factory (ADF)
 }
 
 // ─── ANIMATION COMPONENTS ────────────────────────────────────────────────────
+
+function AirflowArchAnimation() {
+  const [comp, setComp] = useState<'scheduler'|'executor'|'webserver'|'metadata'>('scheduler')
+  const comps: Record<string,{desc:string,detail:string,color:string}> = {
+    scheduler:{desc:'Parses DAGs, schedules task instances, sets state in metadata DB',detail:'Runs in a loop: parse DAGs → find ready tasks → submit to executor every heartbeat',color:'#4f8ef7'},
+    executor:{desc:'Runs the actual task code on workers',detail:'LocalExecutor (threads) · CeleryExecutor (distributed) · KubernetesExecutor (pod per task)',color:'#8b5cf6'},
+    webserver:{desc:'Flask web UI for monitoring, triggering, and viewing logs',detail:'Read-only access to metadata DB — does not schedule or run tasks',color:'#22c55e'},
+    metadata:{desc:'Postgres/MySQL database storing DAG state, task instances, connections',detail:'Single source of truth — scheduler, webserver, and workers all read/write here',color:'#f59e0b'},
+  }
+  const sel = comps[comp]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Airflow Architecture — Click a Component</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['scheduler','executor','webserver','metadata'] as const).map(k=>(
+          <button key={k} onClick={()=>setComp(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${comp===k?comps[k].color:'var(--border)'}`,background:comp===k?`${comps[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:comp===k?comps[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:`2px solid ${sel.color}44`,background:`${sel.color}0d`}}>
+        <div style={{fontWeight:700,color:sel.color,marginBottom:6,fontSize:'.85rem',textTransform:'capitalize'}}>{comp}</div>
+        <div style={{fontSize:'.82rem',color:'#1e293b',marginBottom:6}}>{sel.desc}</div>
+        <div style={{fontSize:'.75rem',color:'#475569',fontStyle:'italic'}}>{sel.detail}</div>
+      </div>
+    </div>
+  )
+}
+
+function OperatorsAnimation() {
+  const [op, setOp] = useState<'python'|'bash'|'sql'|'sensor'|'branch'>('python')
+  const ops: Record<string,{cls:string,use:string,example:string,color:string}> = {
+    python:{cls:'PythonOperator',use:'Run any Python callable',example:'python_callable=my_transform_fn',color:'#4f8ef7'},
+    bash:{cls:'BashOperator',use:'Run shell command',example:'bash_command="dbt run --models staging"',color:'#8b5cf6'},
+    sql:{cls:'SQLExecuteQueryOperator',use:'Execute SQL against a connection',example:'sql="CALL proc_load_gold()", conn_id="snowflake"',color:'#22c55e'},
+    sensor:{cls:'FileSensor / S3Sensor',use:'Wait for condition before proceeding',example:'filepath="/data/ready.flag", poke_interval=60',color:'#f59e0b'},
+    branch:{cls:'BranchPythonOperator',use:'Route to different tasks dynamically',example:'python_callable=choose_branch → returns task_id',color:'#ec4899'},
+  }
+  const sel = ops[op]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Operators — Select Type</div>
+      <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:12}}>
+        {(['python','bash','sql','sensor','branch'] as const).map(k=>(
+          <button key={k} onClick={()=>setOp(k)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.78rem',background:op===k?ops[k].color:'var(--surface-3)',color:op===k?'white':'var(--text-secondary)'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+        {[['Class',sel.cls],['Use',sel.use],['Example param',sel.example]].map(([k,v])=>(
+          <div key={k} style={{padding:'8px 12px',borderRadius:8,background:'white',border:'1px solid var(--border)',display:'flex',gap:10}}>
+            <span style={{minWidth:80,fontSize:'.72rem',color:'#64748b'}}>{k}</span>
+            <span style={{fontSize:'.78rem',color:'#1e293b',fontFamily:k==='Class'||k==='Example param'?'monospace':undefined,fontWeight:k==='Class'?700:400}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SparkSubmitAnimation() {
+  const [step, setStep] = useState(0)
+  const steps = [
+    {label:'DAG scheduled',desc:'Scheduler sets SparkSubmitOperator task instance to QUEUED'},
+    {label:'Submit job',desc:'Airflow calls spark-submit with spark_binary, application, and conf'},
+    {label:'YARN/K8s request',desc:'Spark master allocates executor containers on the cluster'},
+    {label:'Job runs',desc:'Spark executors process data — Airflow polls for completion'},
+    {label:'Task state',desc:'Operator sets SUCCESS/FAILED based on spark-submit exit code'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>SparkSubmitOperator — Execution Flow</div>
+      <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:10}}>
+        {steps.slice(0,step+1).map((s,i)=>(
+          <div key={s.label} style={{display:'flex',gap:10,padding:'8px 12px',borderRadius:8,border:'1px solid #4f8ef744',background:'#eff6ff',alignItems:'center'}}>
+            <span style={{width:22,height:22,borderRadius:'50%',background:'#4f8ef7',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:'.65rem',fontWeight:800,flexShrink:0}}>{i+1}</span>
+            <div>
+              <div style={{fontWeight:700,fontSize:'.78rem',color:'#3b82f6'}}>{s.label}</div>
+              <div style={{fontSize:'.72rem',color:'#475569'}}>{s.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button onClick={()=>setStep(s=>Math.min(s+1,steps.length-1))} disabled={step>=steps.length-1} style={{flex:1,padding:'7px 0',borderRadius:8,border:'none',background:step>=steps.length-1?'#e2e8f0':'#4f8ef7',color:step>=steps.length-1?'#94a3b8':'white',cursor:step>=steps.length-1?'default':'pointer',fontWeight:700,fontSize:'.82rem'}}>Next Step</button>
+        <button onClick={()=>setStep(0)} style={{padding:'7px 14px',borderRadius:8,border:'1px solid var(--border)',background:'white',cursor:'pointer',fontSize:'.82rem'}}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function SensorsAnimation() {
+  const [mode, setMode] = useState<'poke'|'reschedule'>('poke')
+  const [elapsed, setElapsed] = useState(0)
+  const [found, setFound] = useState(false)
+  useEffect(()=>{
+    if(found)return
+    const t=setInterval(()=>setElapsed(e=>{
+      if(e>=5){setFound(true);return e}
+      return e+1
+    }),400)
+    return()=>clearInterval(t)
+  },[found])
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>Sensors — Poke vs Reschedule</div>
+        <div style={{display:'flex',gap:6}}>
+          {(['poke','reschedule'] as const).map(m=>(
+            <button key={m} onClick={()=>{setMode(m);setElapsed(0);setFound(false)}} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:mode===m?'#4f8ef7':'var(--surface-3)',color:mode===m?'white':'var(--text-secondary)'}}>{m}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{display:'flex',gap:6,alignItems:'center',marginBottom:10}}>
+        {Array.from({length:6},(_,i)=>(
+          <div key={i} style={{flex:1,padding:'8px 4px',borderRadius:6,border:`1px solid ${i<elapsed?'#4ade80':i===elapsed&&!found?'#4f8ef7':'var(--border)'}`,background:i<elapsed?'#f0fdf4':i===elapsed&&!found?'#eff6ff':'white',textAlign:'center',transition:'all .3s'}}>
+            <div style={{fontSize:'.6rem',color:'#94a3b8'}}>t={i}m</div>
+            <div style={{fontSize:'.7rem',fontWeight:700,color:i<elapsed?'#16a34a':i===elapsed&&!found?'#3b82f6':'#94a3b8'}}>{i<elapsed?'poke':i===elapsed&&!found?'▶':'—'}</div>
+          </div>
+        ))}
+      </div>
+      {found&&<div style={{padding:'6px 12px',borderRadius:8,background:'#f0fdf4',border:'1px solid #4ade80',fontSize:'.78rem',color:'#166534',marginBottom:8}}>✓ Condition met — sensor succeeded, downstream tasks unblocked</div>}
+      <div style={{fontSize:'.75rem',color:'#64748b'}}>
+        {mode==='poke'?'Poke mode: worker slot occupied the whole time (expensive for long waits)':'Reschedule mode: releases worker slot between pokes (recommended for long-running sensors)'}
+      </div>
+    </div>
+  )
+}
+
+function TaskFlowAnimation() {
+  const [view, setView] = useState<'classic'|'taskflow'>('taskflow')
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>TaskFlow API vs Classic</div>
+        <div style={{display:'flex',gap:6}}>
+          {(['classic','taskflow'] as const).map(v=>(
+            <button key={v} onClick={()=>setView(v)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:view===v?'#4f8ef7':'var(--surface-3)',color:view===v?'white':'var(--text-secondary)'}}>{v}</button>
+          ))}
+        </div>
+      </div>
+      {view==='classic' ? (
+        <pre style={{background:'#1e293b',color:'#a5f3fc',padding:12,borderRadius:8,fontSize:'.72rem',overflow:'auto'}}>{`def extract(**context):
+    return {"rows": 100}
+
+def load(**context):
+    ti = context['ti']
+    data = ti.xcom_pull(task_ids='extract')
+    print(data)
+
+t1 = PythonOperator(task_id='extract',
+    python_callable=extract)
+t2 = PythonOperator(task_id='load',
+    python_callable=load)
+t1 >> t2`}</pre>
+      ) : (
+        <pre style={{background:'#1e293b',color:'#86efac',padding:12,borderRadius:8,fontSize:'.72rem',overflow:'auto'}}>{`@dag(schedule="@daily")
+def my_pipeline():
+
+    @task
+    def extract():
+        return {"rows": 100}
+
+    @task
+    def load(data: dict):
+        print(data)
+
+    load(extract())  # dependencies auto-wired!
+
+my_pipeline()`}</pre>
+      )}
+      <div style={{marginTop:8,fontSize:'.75rem',color:view==='classic'?'#94a3b8':'#16a34a'}}>{view==='classic'?'Classic: manual xcom_pull, verbose boilerplate':'TaskFlow: @task decorators, XComs auto-managed, cleaner dependencies'}</div>
+    </div>
+  )
+}
+
+function XComAnimation() {
+  const [state, setState] = useState<'push'|'pull'|'backend'>('push')
+  const stateInfo: Record<string,{desc:string,code:string,color:string}> = {
+    push:{desc:'task_instance.xcom_push() — stores value in metadata DB',code:'return {"count": 1234}  # auto-pushed via TaskFlow',color:'#4f8ef7'},
+    pull:{desc:'task_instance.xcom_pull() — retrieves value from metadata DB',code:'data = ti.xcom_pull(task_ids="extract", key="return_value")',color:'#8b5cf6'},
+    backend:{desc:'Custom XCom backend (S3, GCS) for large payloads >48KB',code:'AIRFLOW__CORE__XCOM_BACKEND=airflow.providers.amazon.aws.xcom_backends.s3.S3XComBackend',color:'#f59e0b'},
+  }
+  const sel = stateInfo[state]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>XComs — Task Communication</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['push','pull','backend'] as const).map(k=>(
+          <button key={k} onClick={()=>setState(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${state===k?stateInfo[k].color:'var(--border)'}`,background:state===k?`${stateInfo[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.82rem',color:state===k?stateInfo[k].color:'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{fontSize:'.8rem',color:'#1e293b',marginBottom:8}}>{sel.desc}</div>
+      <code style={{display:'block',padding:'8px 12px',borderRadius:8,background:'#1e293b',color:'#a5f3fc',fontSize:'.73rem',overflowX:'auto',whiteSpace:'pre'}}>{sel.code}</code>
+      {state==='backend'&&<div style={{marginTop:8,fontSize:'.75rem',color:'#f59e0b'}}>⚠️ Default metadata DB XCom limit ~48KB — use custom backend for DataFrames/large payloads</div>}
+    </div>
+  )
+}
+
+function ConnectionsAnimation() {
+  const [conn, setConn] = useState<'postgres'|'s3'|'spark'|'http'>('postgres')
+  const conns: Record<string,{fields:string[],use:string,color:string}> = {
+    postgres:{fields:['Host: db.prod.internal','Port: 5432','Schema: analytics','Login: airflow_user','Password: ***'],use:'SQLExecuteQueryOperator, PostgresHook',color:'#4f8ef7'},
+    s3:{fields:['Conn type: Amazon Web Services','AWS Access Key ID: AKIA...','AWS Secret Key: ***','Extra: {"region": "eu-west-1"}'],use:'S3Hook, S3Sensor, S3KeySensor',color:'#f59e0b'},
+    spark:{fields:['Conn type: Spark','Host: spark://spark-master','Port: 7077','Deploy mode: cluster'],use:'SparkSubmitOperator, SparkJDBCOperator',color:'#ef4444'},
+    http:{fields:['Conn type: HTTP','Host: https://api.example.com','Extra: {"Authorization": "Bearer ***"}'],use:'SimpleHttpOperator, HttpSensor',color:'#22c55e'},
+  }
+  const sel = conns[conn]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Connections — Select Type</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['postgres','s3','spark','http'] as const).map(k=>(
+          <button key={k} onClick={()=>setConn(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${conn===k?conns[k].color:'var(--border)'}`,background:conn===k?`${conns[k].color}15`:'white',cursor:'pointer',fontWeight:700,fontSize:'.78rem',color:conn===k?conns[k].color:'#94a3b8',textTransform:'uppercase'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:8}}>
+        {sel.fields.map(f=>(
+          <div key={f} style={{padding:'5px 10px',borderRadius:6,background:'white',border:'1px solid var(--border)',fontFamily:'monospace',fontSize:'.76rem',color:'#1e293b'}}>{f}</div>
+        ))}
+      </div>
+      <div style={{fontSize:'.75rem',color:'#64748b'}}>Used by: {sel.use}</div>
+    </div>
+  )
+}
+
+function K8sOperatorAnimation() {
+  const [tab, setTab] = useState<'flow'|'config'>('flow')
+  const flow2 = ['DAG scheduled → KubernetesPodOperator triggered','Kubernetes API: create Pod with image + command','Pod runs in cluster — logs streamed to Airflow','Pod completes → Airflow reads exit code','Pod deleted (unless is_delete_operator_pod=False)']
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{fontWeight:700,fontSize:'.9rem'}}>KubernetesPodOperator</div>
+        <div style={{display:'flex',gap:6}}>
+          {(['flow','config'] as const).map(v=>(
+            <button key={v} onClick={()=>setTab(v)} style={{padding:'4px 12px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.8rem',background:tab===v?'#4f8ef7':'var(--surface-3)',color:tab===v?'white':'var(--text-secondary)'}}>{v==='flow'?'Flow':'Key params'}</button>
+          ))}
+        </div>
+      </div>
+      {tab==='flow' ? (
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {flow2.map((s,i)=>(
+            <div key={s} style={{display:'flex',gap:8,padding:'7px 12px',borderRadius:8,border:'1px solid #4f8ef744',background:'#eff6ff',alignItems:'flex-start'}}>
+              <span style={{width:20,height:20,borderRadius:'50%',background:'#4f8ef7',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:'.65rem',fontWeight:800,flexShrink:0,marginTop:1}}>{i+1}</span>
+              <span style={{fontSize:'.78rem',color:'#1e293b'}}>{s}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:5}}>
+          {[['namespace','Target Kubernetes namespace'],['image','Docker image to run'],['cmds / arguments','Entrypoint override'],['env_vars','Environment variables'],['resources','CPU/memory limits'],['image_pull_secrets','Private registry auth']].map(([k,v])=>(
+            <div key={k} style={{display:'flex',gap:8,padding:'6px 10px',borderRadius:7,border:'1px solid var(--border)',background:'white'}}>
+              <code style={{minWidth:100,fontSize:'.76rem',color:'#4f8ef7'}}>{k}</code>
+              <span style={{fontSize:'.76rem',color:'#475569'}}>{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CICDAnimation() {
+  const [stage, setStage] = useState(0)
+  const stages = [
+    {icon:'📝',name:'PR opened',desc:'Developer pushes DAG file to feature branch'},
+    {icon:'🔍',name:'Lint + test',desc:'flake8, pylint, pytest with dag.test() — validates all tasks locally'},
+    {icon:'🏗',name:'Build image',desc:'Docker build with new DAG files baked in (or mounted via git-sync)'},
+    {icon:'🚀',name:'Deploy to dev',desc:'Helm upgrade / kubectl apply pushes new image to dev Airflow'},
+    {icon:'✅',name:'Integration test',desc:'Trigger test DAG runs, verify task states via Airflow REST API'},
+    {icon:'🎯',name:'Promote to prod',desc:'Merge to main → prod deploy on tag/release'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>CI/CD for Airflow DAGs</div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:12}}>
+        {stages.map((s,i)=>(
+          <button key={s.name} onClick={()=>setStage(i)} style={{padding:'4px 10px',borderRadius:20,border:'none',cursor:'pointer',fontWeight:700,fontSize:'.72rem',background:stage===i?'#4f8ef7':'var(--surface-3)',color:stage===i?'white':'var(--text-secondary)'}}>{i+1}. {s.name}</button>
+        ))}
+      </div>
+      <div style={{padding:14,borderRadius:10,border:'1px solid #4f8ef744',background:'#eff6ff'}}>
+        <div style={{fontSize:'1.5rem',marginBottom:6}}>{stages[stage].icon}</div>
+        <div style={{fontWeight:700,fontSize:'.85rem',color:'#3b82f6',marginBottom:4}}>{stages[stage].name}</div>
+        <div style={{fontSize:'.78rem',color:'#475569'}}>{stages[stage].desc}</div>
+      </div>
+    </div>
+  )
+}
+
+function MonitoringAnimation() {
+  const [sel3, setSel3] = useState<string|null>(null)
+  const metrics = [
+    {name:'Task duration',alert:'p95 > 2× baseline',why:'Slow tasks → SLA miss → downstream delay'},
+    {name:'DAG run success rate',alert:'< 95% in 24h window',why:'Repeated failures signal data quality or infra issue'},
+    {name:'Scheduler heartbeat',alert:'> 30s gap',why:'Scheduler health — if it stops, nothing runs'},
+    {name:'Zombie task count',alert:'> 0 for > 5 min',why:'Orphaned tasks not updating state — worker died'},
+    {name:'Queue depth',alert:'> executor capacity',why:'Executor backlog — add workers or reduce concurrency'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Airflow Monitoring — Key Metrics (click to expand)</div>
+      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+        {metrics.map(m=>(
+          <div key={m.name} onClick={()=>setSel3(sel3===m.name?null:m.name)} style={{padding:'8px 12px',borderRadius:8,border:`1.5px solid ${sel3===m.name?'#f59e0b':'var(--border)'}`,background:sel3===m.name?'#fffbeb':'white',cursor:'pointer',transition:'all .2s'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontWeight:700,fontSize:'.82rem',color:'#1e293b'}}>{m.name}</span>
+              <span style={{fontSize:'.72rem',padding:'2px 8px',borderRadius:12,background:'#fef3c7',color:'#92400e',fontWeight:700}}>Alert: {m.alert}</span>
+            </div>
+            {sel3===m.name&&<div style={{marginTop:5,fontSize:'.75rem',color:'#475569'}}>{m.why}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function VSComparisionAnimation() {
+  const [metric2, setMetric2] = useState<'latency'|'cost'|'complexity'|'scalability'>('latency')
+  const scores2: Record<string,Record<string,number>> = {
+    latency:{Airflow:60,'Databricks Workflows':85},
+    cost:{Airflow:80,'Databricks Workflows':55},
+    complexity:{Airflow:50,'Databricks Workflows':75},
+    scalability:{Airflow:70,'Databricks Workflows':90},
+  }
+  const colors2: Record<string,string> = {Airflow:'#4f8ef7','Databricks Workflows':'#ec4899'}
+  const notes: Record<string,string> = {
+    latency:'Databricks tasks start faster — no container spin-up per task',
+    cost:'Airflow cheaper for many light tasks; Databricks costs more for simple orchestration',
+    complexity:'Databricks UI is simpler; Airflow offers more control for complex branching',
+    scalability:'Databricks auto-scales clusters; Airflow needs manual executor tuning',
+  }
+  const sc2 = scores2[metric2]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:20,marginBottom:20}}>
+      <div style={{fontWeight:700,marginBottom:12,fontSize:'.9rem'}}>Airflow vs Databricks Workflows</div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        {(['latency','cost','complexity','scalability'] as const).map(k=>(
+          <button key={k} onClick={()=>setMetric2(k)} style={{flex:1,padding:'6px 0',borderRadius:8,border:`2px solid ${metric2===k?'#4f8ef7':'var(--border)'}`,background:metric2===k?'#eff6ff':'white',cursor:'pointer',fontWeight:700,fontSize:'.72rem',color:metric2===k?'#3b82f6':'#94a3b8',textTransform:'capitalize'}}>{k}</button>
+        ))}
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:8}}>
+        {Object.entries(sc2).map(([tool,val])=>(
+          <div key={tool} style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{minWidth:140,fontWeight:700,fontSize:'.78rem',color:colors2[tool]}}>{tool}</span>
+            <div style={{flex:1,height:10,background:'#e2e8f0',borderRadius:5,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${val}%`,background:colors2[tool],borderRadius:5,transition:'width .4s'}}/>
+            </div>
+            <span style={{minWidth:25,fontSize:'.78rem',fontWeight:700,color:colors2[tool]}}>{val}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:'.75rem',color:'#64748b',fontStyle:'italic'}}>{notes[metric2]}</div>
+    </div>
+  )
+}
 
 function AirflowDagAnimation() {
   const [tick, setTick] = useState<number>(0)
