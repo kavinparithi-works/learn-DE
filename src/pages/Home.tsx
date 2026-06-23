@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
 
 interface Props {
   completed: Set<string>
@@ -126,6 +127,193 @@ const HERO_STARS = [
   { top:'10%', left:'55%', size:1.5, delay:1.2 },
   { top:'50%', left:'82%', size:2,   delay:.7  },
 ]
+
+/* ── Animated developer signature ── */
+function DevSignature() {
+  const NAME = 'Kavin Parithi Sivasamy'
+  const [hovered, setHovered] = useState(false)
+  const [typed, setTyped] = useState('')
+  const [showCursor, setShowCursor] = useState(true)
+  const [particles, setParticles] = useState<{id:number;x:number;y:number;color:string;size:number}[]>([])
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasTyped = useRef(false)
+
+  // Type-on name animation — runs once on mount
+  useEffect(() => {
+    if (hasTyped.current) return
+    hasTyped.current = true
+    let i = 0
+    const next = () => {
+      i++
+      setTyped(NAME.slice(0, i))
+      if (i < NAME.length) timerRef.current = setTimeout(next, 48 + Math.random() * 32)
+      else setTimeout(() => setShowCursor(false), 900)
+    }
+    timerRef.current = setTimeout(next, 600)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
+
+  // Burst particles on hover entry
+  const spawnParticles = () => {
+    const colors = ['#4f8ef7','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4']
+    const pts = Array.from({length: 12}, (_, i) => ({
+      id: Date.now() + i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      color: colors[i % colors.length],
+      size: 3 + Math.random() * 4,
+    }))
+    setParticles(pts)
+    setTimeout(() => setParticles([]), 900)
+  }
+
+  const handleEnter = () => { setHovered(true); spawnParticles() }
+  const handleLeave = () => { setHovered(false) }
+
+  return (
+    <div
+      style={{ perspective: 900, display:'inline-block' }}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <div style={{
+        position:'relative',
+        display:'inline-flex', alignItems:'center', gap:16,
+        padding:'14px 28px',
+        borderRadius:20,
+        background: hovered
+          ? 'linear-gradient(135deg,rgba(79,142,247,.18),rgba(139,92,246,.22),rgba(236,72,153,.14))'
+          : 'linear-gradient(135deg,rgba(79,142,247,.07),rgba(139,92,246,.09))',
+        border: hovered
+          ? '1px solid rgba(139,92,246,.55)'
+          : '1px solid rgba(139,92,246,.2)',
+        backdropFilter:'blur(16px)',
+        boxShadow: hovered
+          ? '0 0 0 1px rgba(139,92,246,.15), 0 8px 48px rgba(99,102,241,.28), 0 0 60px rgba(139,92,246,.12)'
+          : '0 4px 24px rgba(99,102,241,.08)',
+        transform: hovered ? 'translateY(-5px) scale(1.035)' : 'translateY(0) scale(1)',
+        transition:'all .45s cubic-bezier(.22,1,.36,1)',
+        cursor:'default',
+        overflow:'hidden',
+      }}>
+
+        {/* Burst particles */}
+        {particles.map(p => (
+          <div key={p.id} style={{
+            position:'absolute', left:`${p.x}%`, top:`${p.y}%`,
+            width:p.size, height:p.size, borderRadius:'50%',
+            background:p.color, pointerEvents:'none',
+            animation:'particleBurst .85s ease-out forwards',
+          }}/>
+        ))}
+
+        {/* Shimmer sweep on hover */}
+        <div style={{
+          position:'absolute', inset:0,
+          background:'linear-gradient(105deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%)',
+          backgroundSize:'200% 100%',
+          backgroundPosition: hovered ? '0% 0%' : '200% 0%',
+          transition:'background-position .7s ease',
+          borderRadius:20, pointerEvents:'none',
+        }}/>
+
+        {/* Avatar — morphs from K initial to emoji on hover */}
+        <div style={{
+          width:48, height:48, borderRadius:'50%', flexShrink:0,
+          background: hovered
+            ? 'linear-gradient(135deg,#ec4899,#8b5cf6,#4f8ef7)'
+            : 'linear-gradient(135deg,#4f8ef7,#8b5cf6)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize: hovered ? '1.5rem' : '1.05rem',
+          fontWeight:900, color:'white',
+          fontFamily: hovered ? 'inherit' : 'var(--font-mono)',
+          boxShadow: hovered
+            ? '0 0 0 3px rgba(139,92,246,.3), 0 0 28px rgba(139,92,246,.55)'
+            : '0 0 16px rgba(79,142,247,.4)',
+          transform: hovered ? 'rotate(360deg) scale(1.12)' : 'rotate(0deg) scale(1)',
+          transition:'all .6s cubic-bezier(.34,1.56,.64,1)',
+        }}>
+          {hovered ? '⚡' : 'K'}
+        </div>
+
+        {/* Text block */}
+        <div style={{ textAlign:'left', position:'relative' }}>
+          <div style={{
+            fontSize:'.72rem', fontWeight:800, letterSpacing:'.1em',
+            textTransform:'uppercase',
+            background:'linear-gradient(135deg,#93c5fd,#c4b5fd)',
+            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+            fontFamily:'var(--font-display)',
+            opacity: hovered ? 1 : 0.7,
+            transition:'opacity .3s ease',
+          }}>
+            {hovered ? '⚡ Built with passion' : 'Crafted by'}
+          </div>
+
+          {/* Typed name with cursor */}
+          <div style={{
+            fontSize:'1.05rem', fontWeight:900, letterSpacing:'-.03em',
+            fontFamily:'var(--font-display)',
+            background: hovered
+              ? 'linear-gradient(135deg,#f9a8d4,#c4b5fd,#93c5fd)'
+              : 'linear-gradient(135deg,rgba(255,255,255,.9),rgba(199,210,254,.8))',
+            WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+            transition:'all .4s ease',
+          }}>
+            {typed}
+            {showCursor && (
+              <span style={{
+                display:'inline-block', width:2, height:'1em',
+                background:'#8b5cf6', marginLeft:1, verticalAlign:'middle',
+                animation:'cursorBlink .7s step-end infinite',
+              }}/>
+            )}
+          </div>
+
+          {/* Hover subtitle — slides up */}
+          <div style={{
+            fontSize:'.72rem', color:'rgba(255,255,255,.5)',
+            fontFamily:'var(--font-sans)', letterSpacing:'.02em',
+            maxHeight: hovered ? 20 : 0,
+            opacity: hovered ? 1 : 0,
+            overflow:'hidden',
+            transition:'all .35s cubic-bezier(.22,1,.36,1)',
+            marginTop: hovered ? 3 : 0,
+          }}>
+            Data Engineer · React · TypeScript · Firebase
+          </div>
+        </div>
+
+        {/* LinkedIn — appears on hover */}
+        <a
+          href="https://www.linkedin.com/in/kavinparithi"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display:'flex', alignItems:'center', gap:6,
+            padding:'7px 16px', borderRadius:999,
+            background:'rgba(10,102,194,.3)',
+            border:'1px solid rgba(10,102,194,.5)',
+            color:'#7dd3fc', fontSize:'.75rem', fontWeight:700,
+            textDecoration:'none',
+            fontFamily:'var(--font-sans)',
+            opacity: hovered ? 1 : 0,
+            transform: hovered ? 'scale(1) translateX(0)' : 'scale(.8) translateX(12px)',
+            transition:'all .4s cubic-bezier(.34,1.56,.64,1)',
+            pointerEvents: hovered ? 'auto' : 'none',
+            flexShrink:0,
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          Connect
+        </a>
+      </div>
+    </div>
+  )
+}
 
 export default function Home({ completed }: Props) {
   return (
@@ -404,59 +592,7 @@ export default function Home({ completed }: Props) {
         </p>
 
         {/* Developer signature */}
-        <div style={{
-          display:'inline-flex',alignItems:'center',gap:12,
-          padding:'10px 22px',
-          background:'linear-gradient(135deg,rgba(79,142,247,.08),rgba(139,92,246,.08))',
-          border:'1px solid rgba(139,92,246,.2)',
-          borderRadius:'var(--radius-xl)',
-          backdropFilter:'blur(12px)',
-        }}>
-          {/* Signature icon — subtle circuit/code mark */}
-          <div style={{
-            width:32,height:32,borderRadius:'50%',flexShrink:0,
-            background:'linear-gradient(135deg,#4f8ef7,#8b5cf6)',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            fontSize:'.9rem',fontWeight:900,color:'white',
-            boxShadow:'0 0 16px rgba(139,92,246,.4)',
-            fontFamily:'var(--font-mono)',
-          }}>K</div>
-          <div style={{ textAlign:'left' }}>
-            <div style={{
-              fontSize:'.78rem',fontWeight:800,letterSpacing:'.04em',
-              textTransform:'uppercase',
-              background:'linear-gradient(135deg,#93c5fd,#c4b5fd)',
-              WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',
-              fontFamily:'var(--font-display)',
-            }}>Crafted by</div>
-            <div style={{
-              fontSize:'.95rem',fontWeight:900,letterSpacing:'-.02em',
-              color:'rgba(255,255,255,.88)',
-              fontFamily:'var(--font-display)',
-            }}>Kavin Parithi Sivasamy</div>
-          </div>
-          <a
-            href="https://www.linkedin.com/in/kavinparithi"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display:'flex',alignItems:'center',gap:6,
-              padding:'6px 14px',borderRadius:'var(--radius-full)',
-              background:'rgba(10,102,194,.25)',
-              border:'1px solid rgba(10,102,194,.4)',
-              color:'#7dd3fc',fontSize:'.75rem',fontWeight:700,
-              textDecoration:'none',transition:'all .2s ease',
-              fontFamily:'var(--font-sans)',
-            }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(10,102,194,.45)';(e.currentTarget as HTMLElement).style.borderColor='rgba(10,102,194,.7)'}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(10,102,194,.25)';(e.currentTarget as HTMLElement).style.borderColor='rgba(10,102,194,.4)'}}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
-            Connect
-          </a>
-        </div>
+        <DevSignature />
       </footer>
 
       {/* Keyframe injection for glowPulse and pulse */}
@@ -468,6 +604,14 @@ export default function Home({ completed }: Props) {
         @keyframes pulse {
           0%, 100% { opacity: 0.4; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.4); }
+        }
+        @keyframes cursorBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        @keyframes particleBurst {
+          0%   { transform: translate(0,0) scale(1); opacity: 1; }
+          100% { transform: translate(calc((var(--rx,1) - 0.5) * 80px), calc((var(--ry,1) - 0.5) * 80px)) scale(0); opacity: 0; }
         }
       `}</style>
     </div>
