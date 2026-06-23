@@ -686,8 +686,8 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .code-block{
   position:relative;
   background:linear-gradient(160deg,#141e35 0%,#111828 65%,#141830 100%);
-  border-radius:var(--radius-lg);
-  overflow:hidden;margin:16px 36px;
+  border-radius:12px;
+  overflow:hidden;margin:16px 0;
   border:1px solid rgba(99,130,200,.18);
   box-shadow:0 2px 12px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.04);
   transition:box-shadow .28s ease,border-color .28s ease;
@@ -824,17 +824,17 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
    QUIZ — ADDICTIVE DARK CARD
 ════════════════════════════════════════════════════ */
 .quiz-container{
-  background:#f8f9ff;
-  border:1.5px solid rgba(99,102,241,.15);
+  background:#fffde7;
+  border:1.5px solid rgba(245,197,24,.25);
   border-radius:var(--radius-xl);padding:0;margin:16px 20px 28px;
-  box-shadow:0 2px 12px rgba(99,102,241,.06);
+  box-shadow:0 2px 12px rgba(245,197,24,.08);
   overflow:hidden;position:relative;
 }
 .quiz-container::before{display:none;}
 .quiz-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:20px 24px 14px;
-  border-bottom:1px solid rgba(99,102,241,.12);
+  border-bottom:1px solid rgba(245,197,24,.2);
 }
 .quiz-title{
   font-family:var(--font-display);font-size:1rem;font-weight:800;
@@ -844,8 +844,8 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .quiz-title::before{content:'🧠';font-size:1.1rem;}
 .quiz-score-badge{
   padding:5px 16px;border-radius:var(--radius-full);
-  background:rgba(99,102,241,.08);border:1.5px solid rgba(99,102,241,.2);
-  font-size:.84rem;font-weight:800;color:var(--blue-700);
+  background:rgba(245,197,24,.15);border:1.5px solid rgba(245,197,24,.35);
+  font-size:.84rem;font-weight:800;color:#92620a;
 }
 .quiz-progress-bar{
   height:4px;background:rgba(255,255,255,.06);
@@ -874,7 +874,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .quiz-options{display:flex;flex-direction:column;gap:8px;}
 .quiz-opt{
   padding:12px 18px;border-radius:var(--radius-lg);
-  border:1.5px solid rgba(99,102,241,.13);
+  border:1.5px solid rgba(245,197,24,.2);
   background:#ffffff;
   font-size:.9rem;text-align:left;cursor:pointer;
   transition:all .2s cubic-bezier(.34,1.56,.64,1);
@@ -1431,8 +1431,8 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .topic-section > .code-block,
 .topic-section > .callout,
 .topic-section > .quiz-container {
-  margin-left:20px !important;
-  margin-right:20px !important;
+  margin-left:24px !important;
+  margin-right:24px !important;
 }
 
 /* Paragraph — generous line-height, breathing room */
