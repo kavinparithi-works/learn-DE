@@ -186,7 +186,7 @@ export default function Home({ completed }: Props) {
 
           {/* Stats row */}
           <div style={{ display:'flex',gap:24,justifyContent:'center',flexWrap:'wrap',marginTop:52 }}>
-            {STATS.map(s => (
+            {STATS.map((s, i) => (
               <div key={s.l} className="animate-popin" style={{
                 textAlign:'center',padding:'14px 24px',
                 background:'rgba(255,255,255,.07)',
@@ -194,11 +194,15 @@ export default function Home({ completed }: Props) {
                 borderRadius:'var(--radius-xl)',
                 backdropFilter:'blur(8px)',
                 minWidth:110,
+                animation:'countUp 0.4s ease backwards',
+                animationDelay:`${i * 0.1}s`,
               }}>
                 <div style={{ fontSize:'1.4rem',marginBottom:4 }}>{s.icon}</div>
                 <div style={{
                   fontFamily:'var(--font-display)',fontSize:'1.9rem',fontWeight:900,
-                  color:'#fff',letterSpacing:'-.03em',lineHeight:1.1,
+                  letterSpacing:'-.03em',lineHeight:1.1,
+                  background:'linear-gradient(135deg,#ffffff 0%,#93c5fd 100%)',
+                  WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',
                 }}>{s.n}</div>
                 <div style={{ fontSize:'.72rem',color:'rgba(255,255,255,.5)',fontWeight:600,marginTop:4,textTransform:'uppercase',letterSpacing:'.06em' }}>{s.l}</div>
               </div>
@@ -235,95 +239,7 @@ export default function Home({ completed }: Props) {
           gap:20,maxWidth:1160,margin:'0 auto',
         }}>
           {LEVELS.map((lv, i) => (
-            <Link
-              key={lv.id}
-              to={lv.path}
-              className="animate-slidein"
-              style={{
-                background:'var(--bg-card)',borderRadius:'var(--radius-2xl)',
-                border:'1.5px solid var(--border)',overflow:'hidden',
-                textDecoration:'none',display:'block',
-                transition:'all 260ms ease',
-                animationDelay:`${i * 0.045}s`,
-                position:'relative',
-              }}
-              onMouseEnter={e=>{
-                const el = e.currentTarget as HTMLElement
-                el.style.transform='translateY(-6px)'
-                el.style.boxShadow=`0 20px 48px ${lv.glow},0 6px 16px rgba(0,0,0,.08)`
-                el.style.borderColor='transparent'
-              }}
-              onMouseLeave={e=>{
-                const el = e.currentTarget as HTMLElement
-                el.style.transform=''
-                el.style.boxShadow=''
-                el.style.borderColor=''
-              }}
-            >
-              {/* Gradient top bar */}
-              <div style={{ height:5,background:lv.gradient }} />
-
-              {/* Completion shimmer */}
-              {completed.has(lv.id) && (
-                <div style={{
-                  position:'absolute',inset:0,
-                  background:`radial-gradient(ellipse at 50% 0%,${lv.glow} 0%,transparent 65%)`,
-                  pointerEvents:'none',zIndex:0,
-                }} />
-              )}
-
-              <div style={{ padding:'24px 24px 20px',position:'relative',zIndex:1 }}>
-                {/* Level badge */}
-                <div style={{
-                  display:'inline-flex',alignItems:'center',justifyContent:'center',
-                  width:40,height:40,borderRadius:'var(--radius-lg)',
-                  background:lv.gradient,color:'white',
-                  fontFamily:'var(--font-display)',fontSize:'.85rem',fontWeight:900,
-                  marginBottom:16,
-                  boxShadow:`0 4px 16px ${lv.glow}`,
-                }}>{lv.num}</div>
-
-                <div style={{
-                  fontFamily:'var(--font-display)',fontSize:'1.08rem',fontWeight:800,
-                  marginBottom:8,color:'var(--text-1)',letterSpacing:'-.02em',
-                  lineHeight:1.25,
-                }}>{lv.title}</div>
-
-                <div style={{
-                  fontSize:'.84rem',color:'var(--text-3)',lineHeight:1.65,marginBottom:18,
-                }}>{lv.desc}</div>
-
-                {/* Tags */}
-                <div style={{ display:'flex',flexWrap:'wrap',gap:6,marginBottom:18 }}>
-                  {lv.tags.map(t => (
-                    <span key={t} style={{
-                      padding:'3px 11px',borderRadius:'9999px',
-                      background:'var(--gray-100)',color:'var(--gray-600)',
-                      fontSize:'.7rem',fontWeight:700,letterSpacing:'.01em',
-                      border:'1px solid var(--gray-200)',
-                    }}>{t}</span>
-                  ))}
-                </div>
-
-                {/* Progress bar */}
-                <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                  <span style={{ fontSize:'.75rem',color:'var(--text-4)',fontWeight:600,whiteSpace:'nowrap' }}>
-                    ⏱ {lv.hours}
-                  </span>
-                  <div style={{ flex:1,height:5,background:'var(--gray-100)',borderRadius:3,overflow:'hidden' }}>
-                    <div style={{
-                      height:'100%',background:lv.gradient,borderRadius:3,
-                      width:completed.has(lv.id)?'100%':'0%',
-                      transition:'width 1.2s ease',
-                      boxShadow:completed.has(lv.id)?`0 0 8px ${lv.glow}`:'none',
-                    }} />
-                  </div>
-                  {completed.has(lv.id) && (
-                    <span style={{ fontSize:'.72rem',color:lv.accent,fontWeight:800 }}>✓</span>
-                  )}
-                </div>
-              </div>
-            </Link>
+            <LevelCard key={lv.id} lv={lv} i={i} completed={completed} />
           ))}
         </div>
       </section>
@@ -355,30 +271,7 @@ export default function Home({ completed }: Props) {
           gap:18,maxWidth:1100,margin:'0 auto',
         }}>
           {FEATURES.map(([icon, title, desc, bg, border], i) => (
-            <div key={String(title)} className="animate-slidein" style={{
-              background:`linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.03))`,
-              borderRadius:'var(--radius-xl)',
-              border:'1px solid rgba(255,255,255,.08)',
-              padding:'24px',
-              animationDelay:`${i * 0.05}s`,
-              transition:'all 240ms ease',
-              backdropFilter:'blur(8px)',
-            }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,.09)';(e.currentTarget as HTMLElement).style.transform='translateY(-3px)'}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.03))';(e.currentTarget as HTMLElement).style.transform=''}}
-            >
-              <div style={{
-                width:44,height:44,borderRadius:'var(--radius-lg)',
-                background:`linear-gradient(135deg,${bg},${border})`,
-                display:'flex',alignItems:'center',justifyContent:'center',
-                fontSize:'1.35rem',marginBottom:16,
-              }}>{icon}</div>
-              <div style={{
-                fontFamily:'var(--font-display)',fontSize:'1rem',fontWeight:800,
-                marginBottom:8,color:'#fff',letterSpacing:'-.02em',
-              }}>{title}</div>
-              <div style={{ fontSize:'.84rem',color:'rgba(255,255,255,.5)',lineHeight:1.7 }}>{desc}</div>
-            </div>
+            <FeatureCard key={String(title)} icon={icon} title={title} desc={desc} bg={bg} border={border} i={i} />
           ))}
         </div>
       </section>
@@ -389,6 +282,13 @@ export default function Home({ completed }: Props) {
         borderTop:'1px solid rgba(255,255,255,.06)',
         padding:'44px 48px',textAlign:'center',
       }}>
+        {/* Gradient top border line */}
+        <div style={{
+          height:1,
+          background:'linear-gradient(90deg,transparent,#4f8ef7,#8b5cf6,#ec4899,transparent)',
+          marginBottom:32,
+        }} />
+
         <div style={{
           display:'flex',gap:6,justifyContent:'center',marginBottom:20,flexWrap:'wrap',
         }}>
@@ -424,49 +324,358 @@ export default function Home({ completed }: Props) {
   )
 }
 
-function PipelineDemo() {
-  const nodes = [
-    { icon:'🔌', label:'Source Systems', color:'#bfdbfe' },
-    { icon:'☁', label:'Ingest ADF', color:'#ddd6fe' },
-    { icon:'🥉', label:'Bronze Raw', color:'#fde68a' },
-    { icon:'⚡', label:'Spark Transform', color:'#bbf7d0' },
-    { icon:'🥇', label:'Gold Delta', color:'#fed7aa' },
-  ]
+/* ── Level Card (extracted to support hover state on arrow) ── */
+function LevelCard({ lv, i, completed }: {
+  lv: typeof LEVELS[number]
+  i: number
+  completed: Set<string>
+}) {
+  const isDone = completed.has(lv.id)
 
   return (
-    <div style={{
-      display:'flex',alignItems:'center',justifyContent:'center',
-      flexWrap:'wrap',gap:0,padding:'24px 0 8px',
-    }}>
-      {nodes.map((n, i) => (
-        <div key={i} style={{ display:'flex',alignItems:'center' }}>
-          <div className="animate-popin" style={{
-            display:'flex',flexDirection:'column',alignItems:'center',gap:8,
-            padding:'14px 18px',
-            background:`rgba(255,255,255,.07)`,
-            border:`1.5px solid ${n.color}50`,
-            borderRadius:'var(--radius-xl)',minWidth:94,
-            backdropFilter:'blur(8px)',
-            animationDelay:`${i * 0.1}s`,
-            transition:'all 200ms ease',
-          }}>
-            <div style={{ fontSize:'1.6rem' }}>{n.icon}</div>
-            <div style={{
-              fontSize:'.68rem',fontWeight:700,color:'rgba(255,255,255,.75)',
-              textAlign:'center',lineHeight:1.3,
-              fontFamily:'var(--font-sans)',
-            }}>{n.label}</div>
-          </div>
-          {i < nodes.length - 1 && (
-            <div style={{
-              width:32,textAlign:'center',
-              color:'rgba(255,255,255,.3)',fontSize:'1rem',
-              animation:'pulse 2s ease-in-out infinite',
-              animationDelay:`${i * 0.15}s`,
-            }}>→</div>
-          )}
+    <Link
+      to={lv.path}
+      className="animate-slidein"
+      style={{
+        background:'var(--bg-card)',borderRadius:'var(--radius-2xl)',
+        border:'1.5px solid var(--border)',overflow:'hidden',
+        textDecoration:'none',display:'block',
+        transition:'all 260ms ease',
+        animationDelay:`${i * 0.045}s`,
+        position:'relative',
+        cursor:'pointer',
+      }}
+      onMouseEnter={e=>{
+        const el = e.currentTarget as HTMLElement
+        el.style.transform='translateY(-6px)'
+        el.style.boxShadow=`0 20px 48px ${lv.glow},0 6px 16px rgba(0,0,0,.08)`
+        el.style.borderColor='transparent'
+        // shimmer on top bar
+        const bar = el.querySelector('.level-top-bar') as HTMLElement | null
+        if (bar) bar.style.backgroundPosition='200% center'
+        // slide-in arrow
+        const arrow = el.querySelector('.level-arrow') as HTMLElement | null
+        if (arrow) { arrow.style.opacity='1'; arrow.style.transform='translateX(0)' }
+      }}
+      onMouseLeave={e=>{
+        const el = e.currentTarget as HTMLElement
+        el.style.transform=''
+        el.style.boxShadow=''
+        el.style.borderColor=''
+        const bar = el.querySelector('.level-top-bar') as HTMLElement | null
+        if (bar) bar.style.backgroundPosition='0% center'
+        const arrow = el.querySelector('.level-arrow') as HTMLElement | null
+        if (arrow) { arrow.style.opacity='0'; arrow.style.transform='translateX(-6px)' }
+      }}
+    >
+      {/* Gradient top bar — 6px with shimmer sweep */}
+      <div
+        className="level-top-bar"
+        style={{
+          height:6,
+          background:`${lv.gradient}, linear-gradient(90deg,transparent 0%,rgba(255,255,255,.45) 50%,transparent 100%)`,
+          backgroundSize:'200% 100%',
+          backgroundPosition:'0% center',
+          transition:'background-position 600ms ease',
+        }}
+      />
+
+      {/* Radial glow always visible at 40% */}
+      <div style={{
+        position:'absolute',inset:0,
+        background:`radial-gradient(ellipse at 50% 0%,${lv.glow} 0%,transparent 65%)`,
+        opacity:0.4,
+        pointerEvents:'none',zIndex:0,
+      }} />
+
+      {/* Completed: Done badge top-right */}
+      {isDone && (
+        <div style={{
+          position:'absolute',top:16,right:16,
+          background:'linear-gradient(135deg,#22c55e,#16a34a)',
+          color:'white',fontSize:'.68rem',fontWeight:800,
+          padding:'3px 10px',borderRadius:'9999px',
+          letterSpacing:'.03em',zIndex:2,
+          boxShadow:'0 2px 8px rgba(34,197,94,.4)',
+        }}>✓ Done</div>
+      )}
+
+      <div style={{ padding:'24px 24px 20px',position:'relative',zIndex:1 }}>
+        {/* Level badge — 44x44 */}
+        <div style={{
+          display:'inline-flex',alignItems:'center',justifyContent:'center',
+          width:44,height:44,borderRadius:'var(--radius-lg)',
+          background:lv.gradient,color:'white',
+          fontFamily:'var(--font-display)',fontSize:'.85rem',fontWeight:900,
+          marginBottom:16,
+          boxShadow:`0 4px 20px ${lv.glow}, 0 2px 8px rgba(0,0,0,.2)`,
+        }}>{lv.num}</div>
+
+        <div style={{
+          fontFamily:'var(--font-display)',fontSize:'1.08rem',fontWeight:800,
+          marginBottom:8,color:'var(--text-1)',letterSpacing:'-.02em',
+          lineHeight:1.25,
+        }}>{lv.title}</div>
+
+        <div style={{
+          fontSize:'.84rem',color:'var(--text-3)',lineHeight:1.65,marginBottom:18,
+        }}>{lv.desc}</div>
+
+        {/* Tags */}
+        <div style={{ display:'flex',flexWrap:'wrap',gap:6,marginBottom:18 }}>
+          {lv.tags.map(t => (
+            <span key={t} style={{
+              padding:'3px 11px',borderRadius:'9999px',
+              background:'var(--gray-100)',color:'var(--gray-600)',
+              fontSize:'.7rem',fontWeight:700,letterSpacing:'.01em',
+              border:'1px solid var(--gray-200)',
+            }}>{t}</span>
+          ))}
         </div>
-      ))}
+
+        {/* Progress bar row + arrow */}
+        <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+          <span style={{ fontSize:'.75rem',color:'var(--text-4)',fontWeight:600,whiteSpace:'nowrap' }}>
+            ⏱ {lv.hours}
+          </span>
+          <div style={{ flex:1,height:5,background:'var(--gray-100)',borderRadius:3,overflow:'hidden' }}>
+            <div style={{
+              height:'100%',background:lv.gradient,borderRadius:3,
+              width:isDone?'100%':'0%',
+              transition:'width 1.2s ease',
+              boxShadow:isDone?`0 0 8px ${lv.glow}`:'none',
+            }} />
+          </div>
+          {isDone && (
+            <span style={{ fontSize:'.72rem',color:lv.accent,fontWeight:800 }}>✓</span>
+          )}
+          {/* Arrow that slides in on hover */}
+          <span
+            className="level-arrow"
+            style={{
+              fontSize:'.9rem',color:lv.accent,fontWeight:800,
+              opacity:0,
+              transform:'translateX(-6px)',
+              transition:'opacity 220ms ease, transform 220ms ease',
+              display:'inline-block',
+              lineHeight:1,
+            }}
+          >→</span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+/* ── Feature Card (extracted to support icon hover state) ── */
+function FeatureCard({ icon, title, desc, bg, border, i }: {
+  icon: string
+  title: string
+  desc: string
+  bg: string
+  border: string
+  i: number
+}) {
+  return (
+    <div
+      className="animate-slidein"
+      style={{
+        background:`linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.03))`,
+        borderRadius:'var(--radius-xl)',
+        border:'1px solid rgba(255,255,255,.08)',
+        padding:'24px',
+        animationDelay:`${i * 0.05}s`,
+        transition:'all 240ms ease',
+        backdropFilter:'blur(8px)',
+      }}
+      onMouseEnter={e=>{
+        const el = e.currentTarget as HTMLElement
+        el.style.background='rgba(255,255,255,.09)'
+        el.style.transform='translateY(-3px)'
+        const iconEl = el.querySelector('.feature-icon') as HTMLElement | null
+        if (iconEl) iconEl.style.transform='scale(1.15) rotate(-5deg)'
+      }}
+      onMouseLeave={e=>{
+        const el = e.currentTarget as HTMLElement
+        el.style.background='linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.03))'
+        el.style.transform=''
+        const iconEl = el.querySelector('.feature-icon') as HTMLElement | null
+        if (iconEl) iconEl.style.transform=''
+      }}
+    >
+      <div
+        className="feature-icon"
+        style={{
+          width:44,height:44,borderRadius:'var(--radius-lg)',
+          background:`linear-gradient(135deg,${bg},${border})`,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          fontSize:'1.35rem',marginBottom:16,
+          transition:'transform 250ms ease',
+        }}
+      >{icon}</div>
+      <div style={{
+        fontFamily:'var(--font-display)',fontSize:'1rem',fontWeight:800,
+        marginBottom:8,color:'#fff',letterSpacing:'-.02em',
+      }}>{title}</div>
+      <div style={{ fontSize:'.84rem',color:'rgba(255,255,255,.5)',lineHeight:1.7 }}>{desc}</div>
+    </div>
+  )
+}
+
+/* ── Pipeline SVG Demo ── */
+function PipelineDemo() {
+  const nodes = [
+    { icon:'🔌', label:'Source Systems',  grad:['#3b5fc0','#4f8ef7'], x:50  },
+    { icon:'☁',  label:'Ingest ADF',      grad:['#6d3fc0','#818cf8'], x:190 },
+    { icon:'🥉', label:'Bronze Raw',      grad:['#b45309','#f59e0b'], x:330 },
+    { icon:'⚡', label:'Spark Transform', grad:['#166534','#22c55e'], x:470 },
+    { icon:'🥇', label:'Gold Delta',      grad:['#9a3412','#f97316'], x:610 },
+  ]
+
+  const nodeW = 90
+  const nodeH = 70
+  const nodeRx = 12
+  const cy = 60
+
+  return (
+    <div style={{ padding:'24px 0 8px', maxWidth:700, margin:'0 auto', width:'100%' }}>
+      <svg
+        viewBox="0 0 700 120"
+        width="100%"
+        style={{ maxWidth:700, display:'block', margin:'0 auto', overflow:'visible' }}
+        aria-label="Data pipeline diagram"
+      >
+        <defs>
+          {nodes.map((n, i) => (
+            <linearGradient key={`grad${i}`} id={`nodeGrad${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={n.grad[0]} />
+              <stop offset="100%" stopColor={n.grad[1]} />
+            </linearGradient>
+          ))}
+
+          {/* Connector line gradient */}
+          <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4f8ef7" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#ec4899" stopOpacity="0.7" />
+          </linearGradient>
+        </defs>
+
+        {/* Connector lines between nodes */}
+        {nodes.slice(0,-1).map((_n, i) => {
+          const lineX1 = nodes[i].x + nodeW
+          const lineX2 = nodes[i+1].x
+          return (
+            <g key={`conn${i}`}>
+              {/* Dashed animated line */}
+              <line
+                x1={lineX1} y1={cy}
+                x2={lineX2} y2={cy}
+                stroke="url(#lineGrad)"
+                strokeWidth="2"
+                strokeDasharray="6 4"
+                style={{
+                  animation:`dashFlow 1.4s linear infinite`,
+                  animationDelay:`${i * 0.28}s`,
+                }}
+              />
+              {/* Flowing dot along the connector */}
+              <circle r="4" fill="#c4b5fd" opacity="0.9">
+                <animateMotion
+                  dur="1.4s"
+                  repeatCount="indefinite"
+                  begin={`${i * 0.28}s`}
+                >
+                  <mpath xlinkHref={`#connPath${i}`} />
+                </animateMotion>
+              </circle>
+              {/* Hidden path for animateMotion */}
+              <path
+                id={`connPath${i}`}
+                d={`M ${lineX1} ${cy} L ${lineX2} ${cy}`}
+                fill="none"
+                stroke="none"
+              />
+            </g>
+          )
+        })}
+
+        {/* Node rects + labels */}
+        {nodes.map((n, i) => (
+          <g key={`node${i}`} style={{ animation:`fadeInUp 0.4s ease backwards`, animationDelay:`${i * 0.09}s` }}>
+            {/* Drop shadow filter inline */}
+            <rect
+              x={n.x} y={cy - nodeH / 2}
+              width={nodeW} height={nodeH}
+              rx={nodeRx} ry={nodeRx}
+              fill={`url(#nodeGrad${i})`}
+              opacity="0.92"
+              filter="drop-shadow(0 4px 12px rgba(0,0,0,0.35))"
+            />
+            {/* Subtle inner border */}
+            <rect
+              x={n.x} y={cy - nodeH / 2}
+              width={nodeW} height={nodeH}
+              rx={nodeRx} ry={nodeRx}
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="1"
+            />
+            {/* Emoji */}
+            <text
+              x={n.x + nodeW / 2} y={cy - 8}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize="22"
+            >{n.icon}</text>
+            {/* Label — two lines if needed */}
+            {n.label.split(' ').length > 1 ? (
+              <>
+                <text
+                  x={n.x + nodeW / 2} y={cy + 14}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fontWeight="700"
+                  fill="rgba(255,255,255,0.9)"
+                  fontFamily="var(--font-sans, sans-serif)"
+                >{n.label.split(' ').slice(0, Math.ceil(n.label.split(' ').length / 2)).join(' ')}</text>
+                <text
+                  x={n.x + nodeW / 2} y={cy + 25}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fontWeight="700"
+                  fill="rgba(255,255,255,0.9)"
+                  fontFamily="var(--font-sans, sans-serif)"
+                >{n.label.split(' ').slice(Math.ceil(n.label.split(' ').length / 2)).join(' ')}</text>
+              </>
+            ) : (
+              <text
+                x={n.x + nodeW / 2} y={cy + 19}
+                textAnchor="middle"
+                fontSize="9"
+                fontWeight="700"
+                fill="rgba(255,255,255,0.9)"
+                fontFamily="var(--font-sans, sans-serif)"
+              >{n.label}</text>
+            )}
+          </g>
+        ))}
+
+        <style>{`
+          @keyframes dashFlow {
+            from { stroke-dashoffset: 0; }
+            to   { stroke-dashoffset: -20; }
+          }
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes countUp {
+            from { opacity: 0; transform: translateY(10px) scale(0.92); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
+      </svg>
     </div>
   )
 }
