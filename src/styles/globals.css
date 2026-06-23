@@ -145,7 +145,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   position:fixed;top:0;left:0;right:0;height:var(--topbar-h);z-index:100;
   display:flex;align-items:center;gap:16px;padding:0 28px;
   background:rgba(255,255,255,.88);
-  backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-bottom:1px solid rgba(226,232,240,.55);
   box-shadow:0 1px 0 rgba(0,0,0,.04),0 8px 32px rgba(15,23,42,.06);
   position:fixed;
@@ -466,7 +466,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
     radial-gradient(ellipse 80% 45% at 18% 8%, rgba(99,102,241,.045) 0%, transparent 58%),
     radial-gradient(ellipse 65% 55% at 82% 85%, rgba(139,92,246,.035) 0%, transparent 60%);
   background-size:28px 28px, 100% 100%, 100% 100%;
-  background-attachment:local, fixed, fixed;
+  background-attachment:local, local, local;
   min-height:calc(100vh - var(--topbar-h));
   scrollbar-width:thin;
   scrollbar-color:rgba(203,213,225,.6) transparent;
@@ -521,13 +521,6 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 }
 .topic-section:hover::before{opacity:1;top:8%;bottom:8%;}
 
-/* Staggered card entrance animation */
-.topic-section{animation:cardEntrance .45s cubic-bezier(.22,.68,0,1.2) backwards;}
-.topic-section:nth-child(2){animation-delay:.06s;}
-.topic-section:nth-child(3){animation-delay:.12s;}
-.topic-section:nth-child(4){animation-delay:.18s;}
-.topic-section:nth-child(5){animation-delay:.24s;}
-.topic-section:nth-child(6){animation-delay:.3s;}
 .topic-section + .topic-section{margin-top:0;}
 
 /* ── Topic Header — dark, immersive ── */
@@ -538,6 +531,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
   position:relative;overflow:hidden;
   margin-bottom:0;
+  box-shadow:0 6px 28px rgba(9,11,40,.22);
 }
 
 /* Animated rainbow shimmer bar at top of header */
@@ -610,11 +604,23 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   box-shadow:0 4px 14px rgba(79,142,247,.2);
 }
 
+/* Gradient fade bridge — softens dark-header → white-body junction */
+.topic-header + * {
+  margin-top:0 !important;
+}
+.topic-section > .topic-header::before {
+  /* inherits existing shimmer — no change */
+}
+
 /* ── Inner content universal margin ── */
 .topic-section > *:not(.topic-header) {
   margin-left:36px !important;
   margin-right:36px !important;
   box-sizing:border-box;
+}
+/* First element after header gets top breathing room */
+.topic-header + * {
+  margin-top:24px !important;
 }
 
 /* Venn container */
@@ -694,6 +700,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 ════════════════════════════════════════════════════ */
 .complete-btn{
   display:inline-flex;align-items:center;gap:9px;
+  align-self:flex-start;width:fit-content;
   padding:13px 36px;border-radius:var(--radius-full);
   background:linear-gradient(135deg,#22c55e 0%,#16a34a 50%,#059669 100%);
   color:white;font-size:.88rem;font-weight:700;
@@ -1579,12 +1586,14 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
   font-family:var(--font-display);
   font-size:1.22rem !important;font-weight:800 !important;color:var(--text-1) !important;
   margin-top:30px;margin-bottom:11px;letter-spacing:-.025em;
-  position:relative;display:inline-block;
+  margin-left:36px;margin-right:36px;
+  position:relative;display:block;
 }
 .topic-section > h2::after,
 .topic-section h2:not([class])::after{
-  content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,rgba(99,102,241,.38),transparent);
+  content:'';display:block;height:2px;margin-top:4px;
+  width:60px;
+  background:linear-gradient(90deg,rgba(99,102,241,.5),rgba(139,92,246,.2),transparent);
   border-radius:2px;
 }
 
