@@ -686,8 +686,8 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .code-block{
   position:relative;
   background:linear-gradient(160deg,#141e35 0%,#111828 65%,#141830 100%);
-  border-radius:12px;
-  overflow:hidden;margin:16px 0;
+  border-radius:16px !important;
+  overflow:hidden;margin:20px 24px;
   border:1px solid rgba(99,130,200,.18);
   box-shadow:0 2px 12px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.04);
   transition:box-shadow .28s ease,border-color .28s ease;
@@ -1428,8 +1428,7 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
    CONTENT INSIDE TOPIC-SECTION — RICH TYPOGRAPHY
 ════════════════════════════════════════════════════ */
 
-/* code-block, callout, quiz override inner margins */
-.topic-section > .code-block,
+/* callout and quiz inner margins */
 .topic-section > .callout,
 .topic-section > .quiz-container {
   margin-left:24px !important;
@@ -1728,7 +1727,6 @@ th{
 @media(min-width:1400px){
   .main-content{padding:32px 48px;}
   .topic-section > *:not(.topic-header){margin-left:44px;margin-right:44px;}
-  .topic-section > .code-block,
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:28px !important;margin-right:28px !important;}
   .complete-btn{margin-left:44px;}
@@ -1738,7 +1736,6 @@ th{
   .main-content{padding:28px 32px;}
   .topic-header{padding:22px 28px 20px;}
   .topic-section > *:not(.topic-header){margin-left:28px !important;margin-right:28px !important;}
-  .topic-section > .code-block,
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:16px !important;margin-right:16px !important;}
   .complete-btn{margin-left:28px !important;}
@@ -1749,7 +1746,6 @@ th{
   .main-content{padding:20px 20px;}
   .topic-header{padding:20px 20px 18px;}
   .topic-section > *:not(.topic-header){margin-left:20px !important;margin-right:20px !important;}
-  .topic-section > .code-block,
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:12px !important;margin-right:12px !important;}
   .complete-btn{margin-left:20px !important;}
@@ -1762,7 +1758,6 @@ th{
   .topbar-mobile-nav{display:flex;}
   .topbar{padding:0 16px;}
   .topic-section > *:not(.topic-header){margin-left:14px !important;margin-right:14px !important;}
-  .topic-section > .code-block,
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:8px !important;margin-right:8px !important;}
   .complete-btn{margin-left:14px !important;}
