@@ -243,17 +243,12 @@ function DevSignature() {
             Kavin Parithi Sivasamy
           </div>
 
-          {/* Hover subtitle — slides up */}
           <div style={{
-            fontSize:'.72rem', color:'rgba(255,255,255,.5)',
+            fontSize:'.72rem', color:'rgba(255,255,255,.45)',
             fontFamily:'var(--font-sans)', letterSpacing:'.02em',
-            maxHeight: hovered ? 20 : 0,
-            opacity: hovered ? 1 : 0,
-            overflow:'hidden',
-            transition:'all .35s cubic-bezier(.22,1,.36,1)',
-            marginTop: hovered ? 3 : 0,
+            marginTop:3,
           }}>
-            Data Engineer · React · TypeScript · Firebase
+            Data Engineer
           </div>
         </div>
 
@@ -270,10 +265,10 @@ function DevSignature() {
             color:'#7dd3fc', fontSize:'.75rem', fontWeight:700,
             textDecoration:'none',
             fontFamily:'var(--font-sans)',
-            opacity: hovered ? 1 : 0,
-            transform: hovered ? 'scale(1) translateX(0)' : 'scale(.8) translateX(12px)',
+            opacity: 1,
+            transform: hovered ? 'scale(1.05) translateX(0)' : 'scale(1) translateX(0)',
             transition:'all .4s cubic-bezier(.34,1.56,.64,1)',
-            pointerEvents: hovered ? 'auto' : 'none',
+            pointerEvents: 'auto',
             flexShrink:0,
           }}
           onClick={e => e.stopPropagation()}
