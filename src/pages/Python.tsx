@@ -198,6 +198,7 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
             <p className="topic-desc">Python is dynamically typed at runtime but supports static type annotations checked by tools like mypy and Pyright. In production data pipelines, type hints are not optional  -  they prevent entire classes of bugs, make IDE auto-complete reliable, and serve as living documentation for schema contracts.</p>
           </div>
 
+          <TypeHintsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -373,6 +374,7 @@ def write_dataset(
             <p className="topic-desc">Choosing the right data structure is a multiplier on pipeline performance. A membership test that costs O(n) in a list costs O(1) in a set. A priority queue implemented with a sorted list costs O(n log n) per insert; heapq costs O(log n). These differences dominate at pipeline scale.</p>
           </div>
 
+          <DataStructuresAnimation />
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', fontFamily: 'var(--font-mono)' }}>
               <thead>
@@ -527,6 +529,7 @@ combined = today_counts + yesterday_counts`}</CodeBlock>
             <p className="topic-desc">Comprehensions are Python's most idiomatic feature for building collections. They're faster than equivalent for-loops because the iteration is implemented in C inside the interpreter. Generator expressions look identical but produce values lazily  -  critical when processing files or streams that don't fit in memory.</p>
           </div>
 
+          <ComprehensionAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -677,7 +680,7 @@ t_gen = timeit.timeit("sum(x**2 for x in range(100_000))", number=100)
 
         <section id="py-functions" ref={el => { if (el) sectionRefs.current['py-functions'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Functions, args/kwargs, closures, functools</h1><p className="topic-desc">Python functions are first-class objects. Mastering args/kwargs, closures, functools.partial, and lru_cache is essential for building flexible, reusable pipeline components.</p></div>
-
+          <FunctoolsAnimation />
           <CodeBlock lang="python">{`from typing import Any, Callable
 import functools
 
@@ -779,7 +782,7 @@ def _(obj: pd.DataFrame) -> str:
 
         <section id="py-generators" ref={el => { if (el) sectionRefs.current['py-generators'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Generators &amp; itertools</h1><p className="topic-desc">Generators are the cornerstone of memory-efficient data pipelines in Python. itertools provides lazy, composable building blocks for data stream processing.</p></div>
-
+          <GeneratorAnimation />
           <CodeBlock lang="python">{`from typing import Iterator, Generator
 import itertools
 
@@ -897,7 +900,7 @@ cumulative = list(itertools.accumulate(daily_sales, operator.add))
 
         <section id="py-decorators" ref={el => { if (el) sectionRefs.current['py-decorators'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Decorators</h1><p className="topic-desc">Decorators let you wrap functions with cross-cutting concerns (logging, retry, timing, caching) without modifying business logic. They are the backbone of clean, DRY pipeline code.</p></div>
-
+          <DecoratorAnimation />
           <CodeBlock lang="python">{`import functools, time, logging, threading
 from typing import TypeVar, Callable, Any
 
@@ -1038,7 +1041,7 @@ def process_event(record: dict) -> dict:
 
         <section id="py-oop" ref={el => { if (el) sectionRefs.current['py-oop'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">OOP, ABC, Protocol, dataclasses, __slots__</h1><p className="topic-desc">Python's OOP supports multiple inheritance, abstract base classes, structural typing via Protocol, and zero-boilerplate value objects with dataclasses. Understanding MRO and __dunder__ methods is critical for building reusable DE frameworks.</p></div>
-
+          <OOPAnimation />
           <CodeBlock lang="python">{`from abc import ABC, abstractmethod
 from typing import Protocol, runtime_checkable
 
@@ -1184,7 +1187,7 @@ full_etl = ingest | enrich   # DataPipeline(name='ingest|enrich', stages=6)`}</C
 
         <section id="py-context" ref={el => { if (el) sectionRefs.current['py-context'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Context Managers</h1><p className="topic-desc">Context managers guarantee resource cleanup even when exceptions occur. __enter__/__exit__, contextlib.contextmanager, suppress, and ExitStack are essential for robust database connections, file handles, and distributed locks.</p></div>
-
+          <ContextManagerAnimation />
           <CodeBlock lang="python">{`from contextlib import contextmanager, suppress, ExitStack
 import time, logging
 
@@ -1305,7 +1308,7 @@ def pipeline_stage(name: str, conn):
 
         <section id="py-errors" ref={el => { if (el) sectionRefs.current['py-errors'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Error Handling, Custom Exceptions &amp; Logging</h1><p className="topic-desc">Robust pipelines need structured error handling with custom exception hierarchies, exception chaining (raise X from Y), and structured logging. structlog and Python's logging module are the standard tools.</p></div>
-
+          <ErrorHierarchyAnimation />
           <CodeBlock lang="python">{`import logging
 import sys
 from typing import Optional
@@ -1595,6 +1598,7 @@ async def fetch_with_timeout(url: str) -> dict | None:
             <h1 className="topic-title">File I/O, pathlib, CSV, JSON, YAML, TOML & Config</h1>
             <p className="topic-desc">Data engineers read and write files constantly. pathlib provides modern OS-agnostic path handling. Parsing CSV, JSON, YAML, TOML, and .env files correctly is fundamental for building configurable, portable pipeline code.</p>
           </div>
+          <FileIOAnimation />
           <CodeBlock lang="python">{`from pathlib import Path
 import json, csv, gzip, io
 
@@ -1732,6 +1736,7 @@ def atomic_write_json(data: dict, path: Path) -> None:
             <h1 className="topic-title">Regular Expressions (re module)</h1>
             <p className="topic-desc">Regular expressions are essential for parsing log files, extracting data from unstructured text, validating formats, and transforming messy strings in ETL pipelines.</p>
           </div>
+          <RegexAnimation />
           <CodeBlock lang="python">{`import re
 
 # Basic patterns  -  compile for reuse in loops
@@ -1829,6 +1834,7 @@ def validate_table_name(name: str) -> str:
             <h1 className="topic-title">Testing with pytest  -  fixtures, parametrize, mocking</h1>
             <p className="topic-desc">Quality data pipelines need automated tests. pytest fixtures provide reusable test setup, parametrize covers edge cases efficiently, and unittest.mock patches external dependencies so tests run without real DBs or APIs.</p>
           </div>
+          <TestingAnimation />
           <CodeBlock lang="python">{`# tests/test_pipeline.py
 import pytest
 import pandas as pd
@@ -1953,6 +1959,7 @@ async def test_async_pipeline():
             <h1 className="topic-title">Package Management  -  pip, venv, poetry, pyproject.toml</h1>
             <p className="topic-desc">Reproducible Python environments are critical for data pipelines. Understanding virtual environments, pyproject.toml, poetry, and conda prevents the "works on my machine" problem and enables reliable CI/CD deployments.</p>
           </div>
+          <PackagesAnimation />
           <CodeBlock lang="bash">{`# Virtual environments  -  isolate project dependencies
 python -m venv .venv
 source .venv/bin/activate        # Linux/macOS
@@ -2063,6 +2070,7 @@ conda env export > environment.yml
             <h1 className="topic-title">pandas Deep Dive for Data Engineering</h1>
             <p className="topic-desc">pandas is the workhorse of Python-based data pipelines. Mastering dtype optimization, vectorized operations, groupby, merge, pivot_table, memory management, and chunked reading is essential for handling real-world datasets efficiently.</p>
           </div>
+          <PandasAnimation />
           <PythonMemoryAnimation />
           <CodeBlock lang="python">{`import pandas as pd
 import numpy as np
@@ -2177,6 +2185,7 @@ df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=Fa
             <h1 className="topic-title">Database Connections  -  psycopg2, SQLAlchemy, Connection Pooling</h1>
             <p className="topic-desc">Proper database connection management prevents connection leaks, ensures transactional integrity, and maximizes throughput. psycopg2 for direct Postgres, SQLAlchemy for ORM/abstraction, and connection pooling for high-concurrency workloads.</p>
           </div>
+          <DBConnectionAnimation />
           <CodeBlock lang="python">{`import psycopg2
 import psycopg2.extras
 from contextlib import contextmanager
@@ -2306,6 +2315,7 @@ def run_upsert(records: list[dict], table: str) -> int:
             <h1 className="topic-title">HTTP Clients  -  requests, httpx, retry, pagination, rate limiting</h1>
             <p className="topic-desc">Data engineers constantly pull data from REST APIs. Handling pagination, rate limits, OAuth, retry with backoff, and session management correctly is critical for reliable API ingestion pipelines.</p>
           </div>
+          <HTTPAnimation />
           <CodeBlock lang="python">{`import requests
 import time
 import logging
@@ -2464,6 +2474,7 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
             <h1 className="topic-title">Linux & Shell Scripting for Data Engineers</h1>
             <p className="topic-desc">Data engineers work in Linux environments daily  -  managing file systems, scheduling jobs with cron, monitoring processes, piping data between commands, and writing robust shell scripts for pipeline orchestration.</p>
           </div>
+          <LinuxScriptAnimation />
           <CodeBlock lang="bash">{`#!/bin/bash
 # Robust pipeline shell script
 set -euo pipefail   # -e: exit on error, -u: error on unset vars, -o pipefail: catch pipe errors
@@ -2584,6 +2595,7 @@ wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</Cod
             <h1 className="topic-title">Git Deep Dive for Data Engineers</h1>
             <p className="topic-desc">Git is not just version control  -  it's the backbone of CI/CD, code review, and collaborative development. Data engineers need fluency in branching strategies, rebase vs merge, cherry-pick, bisect, hooks, and GitHub Actions for pipeline automation.</p>
           </div>
+          <GitAnimation />
           <CodeBlock lang="bash">{`# Branching strategy: GitHub Flow for data engineering teams
 # main → always deployable
 # feature/xxx → short-lived feature branches
@@ -2718,7 +2730,7 @@ jobs:
             <h1 className="topic-title">Pydantic Data Validation</h1>
             <p className="topic-desc">Pydantic v2 is the standard library for data validation in Python data engineering. Built on Rust (via pydantic-core), it validates data at the boundary between untrusted inputs and your pipeline logic  -  parsing JSON API responses, validating pipeline configs, and enforcing schema contracts at runtime. Pydantic models serve as living documentation for your data contracts.</p>
           </div>
-
+          <PydanticAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body"><strong>Pydantic v2 vs v1:</strong> v2 (2023+) rewrites the core in Rust  -  5-50x faster than v1. Key API changes: <code>@validator</code> → <code>@field_validator</code>, <code>@root_validator</code> → <code>@model_validator</code>, <code>.dict()</code> → <code>.model_dump()</code>, <code>.json()</code> → <code>.model_dump_json()</code>. Always use v2 for new projects.</div>
@@ -2961,7 +2973,7 @@ for raw_record in raw_batch:
             <h1 className="topic-title">Docker for Data Engineering</h1>
             <p className="topic-desc">Docker solves the "works on my machine" problem by packaging your pipeline code, dependencies, and runtime into a portable, reproducible image. For data engineers, Docker is essential for local development stacks, CI/CD pipelines, containerized Spark applications, and deploying Airflow, dbt, and other DE tools consistently across environments.</p>
           </div>
-
+          <DockerPyAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body"><strong>Multi-stage builds:</strong> Use a builder stage to install dependencies (including build tools like gcc), then copy only the necessary artifacts to a slim runtime stage. This reduces final image size by 60-80%  -  critical for fast image pulls in CI/CD and Kubernetes pod startup times.</div>
@@ -3192,7 +3204,7 @@ cat .dockerignore
             <h1 className="topic-title">Kubernetes for Data Engineering</h1>
             <p className="topic-desc">Kubernetes (K8s) is the production standard for running containerized data workloads at scale. For data engineers, the key use cases are: running Spark on Kubernetes (driver + executor pods), using KubernetesPodOperator in Airflow for isolated task execution, and deploying data services (APIs, dbt, Flink) with automatic scaling and self-healing.</p>
           </div>
-
+          <K8sAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body"><strong>Resource requests vs limits:</strong> Requests are what K8s uses for scheduling (guaranteed capacity). Limits are the hard cap (exceeding CPU is throttled; exceeding memory triggers OOMKill). Always set both  -  without requests, K8s cannot bin-pack pods; without limits, a runaway Spark job can starve other workloads on the node.</div>
@@ -3417,7 +3429,7 @@ with DAG(
             <h1 className="topic-title">Data Quality with Deequ + Great Expectations</h1>
             <p className="topic-desc">Data quality (DQ) validation is a critical gate in production data pipelines. Amazon Deequ (open source, Spark-native) and Great Expectations (Python-native, multi-engine) are the two leading frameworks. They let you define constraints on your data, run them as part of your pipeline, and fail fast when data violates your contracts  -  before bad data reaches downstream consumers.</p>
           </div>
-
+          <DataQualityPyAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body"><strong>DQ framework comparison:</strong> Deequ = Spark-native, Scala/Python API, deep Spark integration (runs as a Spark job). Great Expectations = Python-native, multi-engine (Pandas/Spark/SQL), rich HTML docs, built for CI/CD. Soda = SQL-first, cloud-native. dbt tests = embedded in dbt models. For large-scale Spark pipelines, Deequ. For multi-engine platforms, Great Expectations.</div>
@@ -3777,6 +3789,771 @@ total = sum(row.amount for row in iter_records(parquet_files))  # O(1) memory`}<
         </section>
 
       </main>
+    </div>
+  )
+}
+
+function TypeHintsAnimation() {
+  const [mode, setMode] = useState<'runtime'|'static'>('static')
+  const checks = [
+    { name:'def read_parquet(path: str)', pass:true, err:'' },
+    { name:'def enrich(event: RawEvent)', pass:true, err:'' },
+    { name:"user_id: int = 'abc'", pass:mode==='runtime', err:"mypy: str is not assignable to int" },
+    { name:"write_dataset(mode='bad')", pass:mode==='runtime', err:"mypy: Literal error — not in ['overwrite','append']" },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Python Type Hints — Static vs Runtime</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['static','runtime'] as const).map(m => (
+            <button key={m} onClick={()=>setMode(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.8rem', background:mode===m?'#4f8ef7':'var(--surface-3)', color:mode===m?'white':'var(--text-secondary)' }}>{m==='static'?'mypy check':'runtime'}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        {checks.map(c => (
+          <div key={c.name} style={{ padding:'8px 14px', borderRadius:8, border:`1px solid ${c.pass?'#4ade80':'#f87171'}`, background:c.pass?'#f0fdf4':'#fef2f2', display:'flex', alignItems:'flex-start', gap:10 }}>
+            <span style={{ fontSize:'.9rem' }}>{c.pass?'✓':'✗'}</span>
+            <div>
+              <code style={{ fontSize:'.8rem', color:'#1e293b' }}>{c.name}</code>
+              {!c.pass && <div style={{ fontSize:'.72rem', color:'#ef4444', marginTop:2 }}>{c.err}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop:10, fontSize:'.73rem', color:'var(--text-secondary)' }}>
+        {mode==='static' ? '💡 mypy catches type errors at check time — zero runtime overhead' : '⚠️ At runtime Python ignores annotations — type errors silently pass'}
+      </div>
+    </div>
+  )
+}
+
+function DataStructuresAnimation() {
+  const [active, setActive] = useState<string|null>(null)
+  const structures = [
+    { name:'list', ops:[{op:'access',big:'O(1)'},{op:'search',big:'O(n)'},{op:'append',big:'O(1)'},{op:'insert mid',big:'O(n)'}], color:'#4f8ef7' },
+    { name:'dict', ops:[{op:'get',big:'O(1)'},{op:'set',big:'O(1)'},{op:'delete',big:'O(1)'},{op:'iterate',big:'O(n)'}], color:'#8b5cf6' },
+    { name:'set', ops:[{op:'add',big:'O(1)'},{op:'in',big:'O(1)'},{op:'union',big:'O(n)'},{op:'diff',big:'O(n)'}], color:'#22c55e' },
+    { name:'heapq', ops:[{op:'push',big:'O(log n)'},{op:'pop',big:'O(log n)'},{op:'peek',big:'O(1)'},{op:'build',big:'O(n)'}], color:'#f59e0b' },
+    { name:'deque', ops:[{op:'appendleft',big:'O(1)'},{op:'popleft',big:'O(1)'},{op:'access',big:'O(n)'},{op:'rotate',big:'O(k)'}], color:'#ec4899' },
+  ]
+  const sel = structures.find(s=>s.name===active)
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Python Data Structures — Click to see Big-O complexity</div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:12 }}>
+        {structures.map(s => (
+          <button key={s.name} onClick={()=>setActive(active===s.name?null:s.name)} style={{ padding:'6px 16px', borderRadius:20, border:`2px solid ${active===s.name?s.color:'var(--border)'}`, background:active===s.name?s.color:'white', color:active===s.name?'white':'#1e293b', fontWeight:700, cursor:'pointer', fontFamily:'monospace', fontSize:'.85rem', transition:'all .2s' }}>{s.name}</button>
+        ))}
+      </div>
+      {sel && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, animation:'fadeIn .3s ease' }}>
+          {sel.ops.map(o => (
+            <div key={o.op} style={{ padding:'8px 14px', borderRadius:8, border:`1px solid ${sel.color}33`, background:`${sel.color}11`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <code style={{ fontSize:'.8rem', color:'#1e293b' }}>{o.op}</code>
+              <span style={{ fontWeight:800, color:sel.color, fontFamily:'monospace', fontSize:'.85rem' }}>{o.big}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {!sel && <div style={{ textAlign:'center', color:'var(--text-secondary)', fontSize:'.85rem', padding:16 }}>Click a structure above</div>}
+    </div>
+  )
+}
+
+function ComprehensionAnimation() {
+  const [type, setType] = useState<'list'|'gen'>('list')
+  const n = 100000
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>List Comp vs Generator — Memory Comparison</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['list','gen'] as const).map(t => (
+            <button key={t} onClick={()=>setType(t)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.8rem', background:type===t?'#4f8ef7':'var(--surface-3)', color:type===t?'white':'var(--text-secondary)' }}>{t==='list'?'[x for x]':'(x for x)'}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        <div style={{ padding:14, borderRadius:10, border:`2px solid ${type==='list'?'#ef4444':'var(--border)'}`, background:type==='list'?'#fef2f2':'white' }}>
+          <div style={{ fontFamily:'monospace', fontWeight:700, fontSize:'.85rem', color:type==='list'?'#ef4444':'#64748b', marginBottom:8 }}>[x**2 for x in range({n.toLocaleString()})]</div>
+          <div style={{ fontSize:'.8rem' }}><span style={{ color:'#ef4444', fontWeight:700 }}>~{(n*28/1024/1024).toFixed(1)} MB</span> allocated</div>
+          <div style={{ marginTop:6, height:8, background:'#fee2e2', borderRadius:4 }}><div style={{ height:'100%', width:'100%', background:'#ef4444', borderRadius:4, transition:'all .5s' }}/></div>
+          <div style={{ fontSize:'.72rem', marginTop:6, color:'#64748b' }}>Full list in RAM before first item used</div>
+        </div>
+        <div style={{ padding:14, borderRadius:10, border:`2px solid ${type==='gen'?'#22c55e':'var(--border)'}`, background:type==='gen'?'#f0fdf4':'white' }}>
+          <div style={{ fontFamily:'monospace', fontWeight:700, fontSize:'.85rem', color:type==='gen'?'#16a34a':'#64748b', marginBottom:8 }}>(x**2 for x in range({n.toLocaleString()}))</div>
+          <div style={{ fontSize:'.8rem' }}><span style={{ color:'#16a34a', fontWeight:700 }}>~120 bytes</span> (constant)</div>
+          <div style={{ marginTop:6, height:8, background:'#dcfce7', borderRadius:4 }}><div style={{ height:'100%', width:'0.03%', background:'#22c55e', borderRadius:4, transition:'all .5s' }}/></div>
+          <div style={{ fontSize:'.72rem', marginTop:6, color:'#64748b' }}>Yields one item at a time — O(1) memory</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FunctoolsAnimation() {
+  const [hits, setHits] = useState(0)
+  const [misses, setMisses] = useState(0)
+  const inputs = [1,2,1,3,2,1,4]
+  const [step, setStep] = useState(0)
+  const hit = useRef<Record<number,boolean>>({})
+  const handleStep = () => {
+    if (step >= inputs.length) return
+    const arg = inputs[step]
+    if (hit.current[arg]) setHits(h=>h+1); else { setMisses(m=>m+1); hit.current[arg]=true }
+    setStep(s=>s+1)
+  }
+  const reset = () => { setStep(0); setHits(0); setMisses(0); hit.current={} }
+  const total = hits+misses||1
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>functools.lru_cache — Cache Hit/Miss Demo</div>
+      <div style={{ fontFamily:'monospace', fontSize:'.8rem', marginBottom:14, background:'#f8fafc', padding:10, borderRadius:8 }}>
+        <span style={{ color:'#8b5cf6' }}>@lru_cache</span>(maxsize=3)<br/>
+        def get_tier(customer_id) → str: ...
+      </div>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:12 }}>
+        {inputs.slice(0,step).map((v,i) => (
+          <span key={i} style={{ padding:'3px 10px', borderRadius:14, fontFamily:'monospace', fontSize:'.8rem', background:step>1&&inputs.slice(0,i).includes(v)?'#f0fdf4':'#eff6ff', border:`1px solid ${step>1&&inputs.slice(0,i).includes(v)?'#4ade80':'#93c5fd'}`, color:step>1&&inputs.slice(0,i).includes(v)?'#16a34a':'#3b82f6' }}>{step>1&&inputs.slice(0,i).includes(v)?'HIT':'MISS'} ({v})</span>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:16, marginBottom:12 }}>
+        <div style={{ flex:1, textAlign:'center', padding:10, borderRadius:8, background:'#f0fdf4', border:'1px solid #4ade80' }}>
+          <div style={{ fontSize:'1.4rem', fontWeight:900, color:'#16a34a' }}>{hits}</div>
+          <div style={{ fontSize:'.72rem', color:'#64748b' }}>Cache Hits</div>
+        </div>
+        <div style={{ flex:1, textAlign:'center', padding:10, borderRadius:8, background:'#eff6ff', border:'1px solid #93c5fd' }}>
+          <div style={{ fontSize:'1.4rem', fontWeight:900, color:'#3b82f6' }}>{misses}</div>
+          <div style={{ fontSize:'.72rem', color:'#64748b' }}>DB Calls</div>
+        </div>
+        <div style={{ flex:1, textAlign:'center', padding:10, borderRadius:8, background:'#faf5ff', border:'1px solid #c4b5fd' }}>
+          <div style={{ fontSize:'1.4rem', fontWeight:900, color:'#8b5cf6' }}>{Math.round(hits/total*100)}%</div>
+          <div style={{ fontSize:'.72rem', color:'#64748b' }}>Hit Rate</div>
+        </div>
+      </div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={handleStep} disabled={step>=inputs.length} style={{ flex:1, padding:'8px 0', borderRadius:8, border:'none', background:step>=inputs.length?'#e2e8f0':'#4f8ef7', color:step>=inputs.length?'#94a3b8':'white', cursor:step>=inputs.length?'default':'pointer', fontWeight:700, fontSize:'.85rem' }}>Call get_tier({inputs[step]??'—'})</button>
+        <button onClick={reset} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid var(--border)', background:'white', cursor:'pointer', fontSize:'.85rem' }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function GeneratorAnimation() {
+  const [step, setStep] = useState(0)
+  const [running, setRunning] = useState(false)
+  const maxStep = 6
+  useEffect(() => {
+    if (!running) return
+    if (step >= maxStep) { setRunning(false); return }
+    const t = setTimeout(() => setStep(s=>s+1), 700)
+    return () => clearTimeout(t)
+  }, [running, step])
+  const stages = ['read_jsonl()', 'filter(type="purchase")', 'transform()', 'batch(n=500)', 'write_delta()', 'commit']
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Generator Pipeline — Lazy Data Flow (O(1) memory per stage)</div>
+      <div style={{ display:'flex', alignItems:'center', gap:0, marginBottom:16, overflowX:'auto' }}>
+        {stages.map((s,i) => (
+          <div key={s} style={{ display:'flex', alignItems:'center' }}>
+            <div style={{ padding:'8px 10px', borderRadius:8, border:`2px solid ${i<step?'#22c55e':i===step?'#4f8ef7':'var(--border)'}`, background:i<step?'#f0fdf4':i===step?'#eff6ff':'white', fontSize:'.72rem', fontFamily:'monospace', fontWeight:700, color:i<step?'#16a34a':i===step?'#3b82f6':'#94a3b8', minWidth:90, textAlign:'center', transition:'all .4s', whiteSpace:'nowrap' }}>
+              {i<step?'✓ ':i===step?'▶ ':''}{s}
+            </div>
+            {i<stages.length-1 && <div style={{ width:18, height:2, background:i<step?'#22c55e':'#e2e8f0', transition:'background .4s', flexShrink:0 }}/>}
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize:'.78rem', color:'var(--text-secondary)', marginBottom:12, height:32 }}>
+        {step===0 && 'No data loaded yet — generator is lazy'}
+        {step===1 && '📂 Reading first record from disk...'}
+        {step===2 && '🔍 Filtering: only purchase events pass through'}
+        {step===3 && '⚙️ Transforming: normalize fields, add audit cols'}
+        {step===4 && '📦 Batching 500 records before write'}
+        {step===5 && '💾 Writing batch to Delta table'}
+        {step>=6 && '✅ Pipeline complete — constant memory throughout!'}
+      </div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={()=>{setStep(0);setRunning(true)}} style={{ flex:1, padding:'8px 0', borderRadius:8, border:'none', background:'#4f8ef7', color:'white', cursor:'pointer', fontWeight:700, fontSize:'.85rem' }}>▶ Run Pipeline</button>
+        <button onClick={()=>{setStep(0);setRunning(false)}} style={{ padding:'8px 14px', borderRadius:8, border:'1px solid var(--border)', background:'white', cursor:'pointer', fontSize:'.85rem' }}>Reset</button>
+      </div>
+    </div>
+  )
+}
+
+function DecoratorAnimation() {
+  const layers = [
+    { name:'@retry(max=3)', color:'#f59e0b', desc:'1st applied outermost wrapper — catches exceptions, retries' },
+    { name:'@timer', color:'#8b5cf6', desc:'2nd — wraps retry wrapper, measures total wall time' },
+    { name:'@rate_limit(10/s)', color:'#22c55e', desc:'3rd — innermost, throttles calls before hitting the function' },
+    { name:'fetch_api_page()', color:'#4f8ef7', desc:'Core function — executes last, inside all wrappers' },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Decorator Stack — Application vs Execution Order</div>
+      <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+        <div style={{ flex:1, minWidth:200 }}>
+          <div style={{ fontSize:'.78rem', color:'var(--text-secondary)', marginBottom:8 }}>Applied bottom→up (decorators wrap inside out):</div>
+          {layers.map((l,i) => (
+            <div key={l.name} style={{ padding:`${8+i*4}px ${10+i*8}px`, marginBottom:4, borderRadius:8, border:`2px solid ${l.color}44`, background:`${l.color}11`, fontFamily:'monospace', fontSize:'.8rem', fontWeight:700, color:l.color }}>{l.name}</div>
+          ))}
+        </div>
+        <div style={{ flex:1, minWidth:200 }}>
+          <div style={{ fontSize:'.78rem', color:'var(--text-secondary)', marginBottom:8 }}>Call execution order:</div>
+          {[layers[0],layers[1],layers[2],layers[3],layers[2],layers[1],layers[0]].map((l,i) => (
+            <div key={i} style={{ fontSize:'.75rem', padding:'4px 10px', marginBottom:3, borderRadius:6, background:`${l.color}15`, borderLeft:`3px solid ${l.color}`, color:'#1e293b' }}>
+              {i<4?'→ enter':'← exit'} {l.name}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function OOPAnimation() {
+  const [mode, setMode] = useState<'abc'|'protocol'>('abc')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>ABC vs Protocol — Typing Approaches</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['abc','protocol'] as const).map(m => (
+            <button key={m} onClick={()=>setMode(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:mode===m?'#4f8ef7':'var(--surface-3)', color:mode===m?'white':'var(--text-secondary)' }}>{m.toUpperCase()}</button>
+          ))}
+        </div>
+      </div>
+      {mode==='abc' ? (
+        <div>
+          <div style={{ fontSize:'.82rem', marginBottom:10, color:'var(--text-secondary)' }}>Nominal typing — must explicitly inherit</div>
+          {[{cls:'S3Source',ok:true,note:'inherits DataSource ✓'},{cls:'AzureSource',ok:true,note:'inherits DataSource ✓'},{cls:'LocalWriter',ok:false,note:'does NOT inherit → isinstance fails'}].map(r=>(
+            <div key={r.cls} style={{ display:'flex', justifyContent:'space-between', padding:'7px 12px', marginBottom:6, borderRadius:8, border:`1px solid ${r.ok?'#4ade80':'#f87171'}`, background:r.ok?'#f0fdf4':'#fef2f2' }}>
+              <code style={{ fontSize:'.82rem' }}>{r.cls}</code>
+              <span style={{ fontSize:'.75rem', color:r.ok?'#16a34a':'#ef4444' }}>{r.note}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          <div style={{ fontSize:'.82rem', marginBottom:10, color:'var(--text-secondary)' }}>Structural typing — any class with matching methods works</div>
+          {[{cls:'S3Source',ok:true,note:'has .read() .write() .schema() ✓'},{cls:'AzureSource',ok:true,note:'has .read() .write() .schema() ✓'},{cls:'LocalWriter',ok:true,note:'has the right methods → satisfies Protocol ✓'}].map(r=>(
+            <div key={r.cls} style={{ display:'flex', justifyContent:'space-between', padding:'7px 12px', marginBottom:6, borderRadius:8, border:'1px solid #4ade80', background:'#f0fdf4' }}>
+              <code style={{ fontSize:'.82rem' }}>{r.cls}</code>
+              <span style={{ fontSize:'.75rem', color:'#16a34a' }}>{r.note}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ContextManagerAnimation() {
+  const [mode, setMode] = useState<'with'|'without'>('with')
+  const [step, setStep] = useState(0)
+  const steps = mode==='with'
+    ? ['open file handle','read data','process records','[exception thrown!]','__exit__ called → file closed','exception re-raised']
+    : ['open file handle','read data','process records','[exception thrown!]','FILE HANDLE LEAKED ⚠️','exception propagates']
+  useEffect(()=>{
+    setStep(0)
+    const t = setInterval(()=>setStep(s=>s<steps.length-1?s+1:s),700)
+    return ()=>clearInterval(t)
+  },[mode])
+  const colors = ['#22c55e','#4f8ef7','#8b5cf6','#ef4444',mode==='with'?'#22c55e':'#ef4444','#f59e0b']
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Context Manager — Resource Safety</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['with','without'] as const).map(m=>(
+            <button key={m} onClick={()=>setMode(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:mode===m?'#4f8ef7':'var(--surface-3)', color:mode===m?'white':'var(--text-secondary)' }}>{m==='with'?'with statement':'no context mgr'}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {steps.slice(0,step+1).map((s,i)=>(
+          <div key={s} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${colors[i]}44`, background:`${colors[i]}11`, display:'flex', alignItems:'center', gap:8, animation:'fadeIn .3s ease' }}>
+            <span style={{ width:8, height:8, borderRadius:'50%', background:colors[i], display:'inline-block', flexShrink:0 }}/>
+            <span style={{ fontSize:'.8rem', fontWeight:600, color:'#1e293b' }}>{s}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ErrorHierarchyAnimation() {
+  const [selected, setSelected] = useState<string|null>(null)
+  const flat = [
+    {name:'Exception',level:0,color:'#64748b'},{name:'PipelineError',level:1,color:'#8b5cf6'},
+    {name:'DataQualityError',level:2,color:'#ef4444'},{name:'SchemaEvolutionError',level:2,color:'#f59e0b'},
+    {name:'UpstreamAPIError',level:2,color:'#f97316'},{name:'ValueError',level:1,color:'#64748b'},{name:'KeyError',level:1,color:'#64748b'},
+  ]
+  const info: Record<string,string> = {
+    DataQualityError:'Catch specifically → send DQ alert, skip batch',
+    SchemaEvolutionError:'Catches as PipelineError → log + halt pipeline',
+    UpstreamAPIError:'Catches as PipelineError → retry or alert',
+    ValueError:'Generic — caught last resort by except Exception',
+    PipelineError:'Catches self + all subclasses',
+    Exception:'Catches everything above',
+  }
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Exception Hierarchy — Click an exception</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {flat.map(e=>(
+          <div key={e.name} onClick={()=>setSelected(selected===e.name?null:e.name)} style={{ marginLeft:e.level*20, padding:'7px 14px', borderRadius:8, border:`1.5px solid ${selected===e.name?e.color:'var(--border)'}`, background:selected===e.name?`${e.color}15`:'white', cursor:'pointer', display:'flex', alignItems:'center', gap:8, transition:'all .2s' }}>
+            <span style={{ fontFamily:'monospace', fontSize:'.82rem', fontWeight:700, color:e.color }}>{e.name}</span>
+            {e.level>0&&<span style={{ fontSize:'.68rem', color:'var(--text-secondary)' }}>↳ inherits</span>}
+          </div>
+        ))}
+      </div>
+      {selected&&info[selected]&&(
+        <div style={{ marginTop:10, padding:'8px 14px', borderRadius:8, background:'#f8fafc', border:'1px solid var(--border)', fontSize:'.8rem', color:'#1e293b' }}>
+          <strong>{selected}:</strong> {info[selected]}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FileIOAnimation() {
+  const [op, setOp] = useState('glob')
+  const ops: Record<string,{code:string,result:string}> = {
+    glob:{code:"sorted(raw_dir.glob('**/*.parquet'))",result:"/data/raw/2024/01/part-00.parquet\n/data/raw/2024/02/part-00.parquet\n/data/raw/2024/03/part-00.parquet"},
+    stem:{code:"Path('/data/raw/events_2024-01.jsonl.gz').stem",result:"events_2024-01.jsonl"},
+    suffix:{code:"Path('/data/raw/events_2024-01.jsonl.gz').suffix",result:".gz"},
+    parent:{code:"Path('/data/raw/events.parquet').parent",result:"/data/raw"},
+    mkdir:{code:"processed_dir.mkdir(parents=True, exist_ok=True)",result:"Directory created (no error if exists)"},
+    atomic:{code:"tmp.rename(final_path)  # atomic on POSIX",result:"File visible atomically — readers never see partial write"},
+  }
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>pathlib Operations</div>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+        {Object.keys(ops).map(o=>(
+          <button key={o} onClick={()=>setOp(o)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.78rem', background:op===o?'#4f8ef7':'var(--surface-3)', color:op===o?'white':'var(--text-secondary)' }}>{o}</button>
+        ))}
+      </div>
+      <div style={{ background:'#1e293b', borderRadius:8, padding:12, marginBottom:10 }}>
+        <code style={{ color:'#7dd3fc', fontSize:'.82rem' }}>{ops[op].code}</code>
+      </div>
+      <div style={{ background:'#f0fdf4', border:'1px solid #4ade80', borderRadius:8, padding:10 }}>
+        <pre style={{ margin:0, fontSize:'.78rem', color:'#166534', whiteSpace:'pre-wrap' }}>{ops[op].result}</pre>
+      </div>
+    </div>
+  )
+}
+
+function RegexAnimation() {
+  const [input, setInput] = useState('Call me at (415) 555-0182 or email hello@example.com by 2024-03-15')
+  const patterns = [
+    { name:'Email', regex:/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, color:'#8b5cf6' },
+    { name:'Phone', regex:/\+?1?\s*\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/g, color:'#22c55e' },
+    { name:'Date', regex:/\d{4}-\d{2}-\d{2}/g, color:'#f59e0b' },
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Regex Live Tester</div>
+      <textarea value={input} onChange={e=>setInput(e.target.value)} rows={3} style={{ width:'100%', padding:10, borderRadius:8, border:'1.5px solid var(--border)', fontFamily:'monospace', fontSize:'.82rem', resize:'vertical', boxSizing:'border-box', marginBottom:12 }}/>
+      {patterns.map(p=>{
+        const matches = input.match(p.regex)||[]
+        return (
+          <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
+            <span style={{ minWidth:50, padding:'3px 10px', borderRadius:14, background:`${p.color}22`, color:p.color, fontWeight:700, fontSize:'.75rem', textAlign:'center' }}>{p.name}</span>
+            <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
+              {matches.length>0 ? matches.map((m,i)=>(
+                <span key={i} style={{ padding:'2px 8px', borderRadius:12, background:`${p.color}15`, border:`1px solid ${p.color}44`, fontFamily:'monospace', fontSize:'.78rem', color:p.color }}>{m}</span>
+              )) : <span style={{ fontSize:'.75rem', color:'#94a3b8' }}>no matches</span>}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function TestingAnimation() {
+  const [running, setRunning] = useState(false)
+  const [done, setDone] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const tests = [
+    { name:'test_normalize_adds_columns', result:'pass', ms:12 },
+    { name:'test_validate_schema_passes', result:'pass', ms:8 },
+    { name:'test_validate_schema_fails', result:'pass', ms:6 },
+    { name:'test_deduplicate_removes_dups', result:'pass', ms:15 },
+    { name:'test_convert_to_usd[USD]', result:'pass', ms:5 },
+    { name:'test_convert_to_usd[EUR]', result:'pass', ms:5 },
+    { name:'test_write_to_postgres_sql', result:'pass', ms:20 },
+    { name:'test_fetch_api_handles_429', result:'fail', ms:34, error:'AssertionError: expected 2 calls, got 1' },
+  ]
+  useEffect(()=>{
+    if(!running) return
+    if(progress>=tests.length){setRunning(false);setDone(true);return}
+    const t = setTimeout(()=>setProgress(p=>p+1),300)
+    return()=>clearTimeout(t)
+  },[running,progress])
+  const run = ()=>{setProgress(0);setDone(false);setRunning(true)}
+  const passed = tests.slice(0,progress).filter(t=>t.result==='pass').length
+  const failed = tests.slice(0,progress).filter(t=>t.result==='fail').length
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>pytest Test Runner Simulation</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:5, marginBottom:12, maxHeight:220, overflowY:'auto' }}>
+        {tests.slice(0,progress).map(t=>(
+          <div key={t.name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 10px', borderRadius:6, background:t.result==='pass'?'#f0fdf4':'#fef2f2', border:`1px solid ${t.result==='pass'?'#4ade80':'#f87171'}`, animation:'fadeIn .2s ease' }}>
+            <span style={{ fontFamily:'monospace', fontSize:'.75rem', color:'#1e293b' }}>{t.name}</span>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:'.68rem', color:'#94a3b8' }}>{t.ms}ms</span>
+              <span style={{ fontSize:'.8rem', fontWeight:700, color:t.result==='pass'?'#16a34a':'#ef4444' }}>{t.result==='pass'?'PASS':'FAIL'}</span>
+            </div>
+          </div>
+        ))}
+        {done&&failed>0&&<div style={{ padding:'6px 10px', borderRadius:6, background:'#fef2f2', border:'1px solid #f87171', fontSize:'.72rem', color:'#ef4444' }}>✗ {tests.find(t=>t.result==='fail')?.error}</div>}
+      </div>
+      {(running||done) && (
+        <div style={{ display:'flex', gap:12, marginBottom:10 }}>
+          <span style={{ color:'#16a34a', fontWeight:700, fontSize:'.85rem' }}>✓ {passed} passed</span>
+          {failed>0&&<span style={{ color:'#ef4444', fontWeight:700, fontSize:'.85rem' }}>✗ {failed} failed</span>}
+        </div>
+      )}
+      <button onClick={run} style={{ width:'100%', padding:'8px 0', borderRadius:8, border:'none', background:running?'#e2e8f0':'#4f8ef7', color:running?'#94a3b8':'white', cursor:running?'default':'pointer', fontWeight:700, fontSize:'.85rem' }}>{running?`Running... ${progress}/${tests.length}`:'▶ Run Tests'}</button>
+    </div>
+  )
+}
+
+function PackagesAnimation() {
+  const [view, setView] = useState<'venv'|'poetry'>('venv')
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Package Isolation</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['venv','poetry'] as const).map(m=>(
+            <button key={m} onClick={()=>setView(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.78rem', background:view===m?'#4f8ef7':'var(--surface-3)', color:view===m?'white':'var(--text-secondary)' }}>{m}</button>
+          ))}
+        </div>
+      </div>
+      {view==='venv' ? (
+        <div style={{ display:'flex', gap:10 }}>
+          {[{proj:'pipeline_a',pkgs:['pandas 1.5','pyarrow 12']},{proj:'pipeline_b',pkgs:['pandas 2.1','pyarrow 14']},{proj:'system',pkgs:['python 3.11','pip']}].map(v=>(
+            <div key={v.proj} style={{ flex:1, padding:12, borderRadius:10, border:'2px solid var(--border)', background:'white' }}>
+              <div style={{ fontWeight:700, fontSize:'.78rem', color:'#1e293b', marginBottom:8 }}>{v.proj==='system'?'🌐':'📦'} {v.proj}</div>
+              {v.pkgs.map(p=><div key={p} style={{ padding:'3px 8px', marginBottom:4, borderRadius:6, background:v.proj==='system'?'#f1f5f9':'#eff6ff', fontSize:'.73rem', fontFamily:'monospace', color:'#475569' }}>{p}</div>)}
+              {v.proj!=='system'&&<div style={{ fontSize:'.65rem', color:'#4f8ef7', marginTop:6 }}>isolated .venv/</div>}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {[{step:'pyproject.toml',desc:'Declare abstract deps (pandas ^2.1)'},{step:'poetry.lock',desc:'Pinned exact versions (pandas==2.1.4)'},{step:'poetry install',desc:'Install exactly what lock file says'},{step:'poetry add pandas',desc:'Resolve + update lock atomically'}].map(s=>(
+            <div key={s.step} style={{ display:'flex', gap:10, marginBottom:8, alignItems:'flex-start' }}>
+              <code style={{ padding:'3px 10px', borderRadius:20, background:'#4f8ef7', color:'white', fontSize:'.72rem', fontWeight:700, whiteSpace:'nowrap' }}>{s.step}</code>
+              <span style={{ fontSize:'.78rem', color:'var(--text-secondary)', paddingTop:3 }}>{s.desc}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PandasAnimation() {
+  const [op, setOp] = useState('read')
+  const data = [
+    {user_id:1,event:'click',amount:0},{user_id:2,event:'purchase',amount:99.99},{user_id:2,event:'purchase',amount:99.99},{user_id:3,event:'view',amount:0},
+  ]
+  const ops: Record<string,{label:string,rows:object[]}> = {
+    read:{label:'pd.read_parquet()',rows:data},
+    filter:{label:"df[df.event=='purchase']",rows:data.filter(r=>r.event==='purchase')},
+    dedup:{label:'df.drop_duplicates()',rows:[data[0],data[1],data[3]]},
+    groupby:{label:"df.groupby('user_id').amount.sum()",rows:[{user_id:1,amount:0},{user_id:2,amount:199.98},{user_id:3,amount:0}]},
+  }
+  const result = ops[op].rows
+  const cols = result.length>0?Object.keys(result[0]):[]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>pandas DataFrame Operations</div>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+        {Object.entries(ops).map(([k,v])=>(
+          <button key={k} onClick={()=>setOp(k)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.78rem', background:op===k?'#4f8ef7':'var(--surface-3)', color:op===k?'white':'var(--text-secondary)' }}>{v.label}</button>
+        ))}
+      </div>
+      <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.8rem', fontFamily:'monospace' }}>
+          <thead><tr>{cols.map(c=><th key={c} style={{ padding:'6px 12px', background:'#1e293b', color:'white', textAlign:'left', fontWeight:700 }}>{c}</th>)}</tr></thead>
+          <tbody>{result.map((r,i)=><tr key={i} style={{ background:i%2===0?'white':'#f8fafc' }}>{cols.map(c=><td key={c} style={{ padding:'5px 12px', borderBottom:'1px solid var(--border)' }}>{(r as Record<string,unknown>)[c] as string}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+      <div style={{ marginTop:8, fontSize:'.73rem', color:'var(--text-secondary)' }}>{result.length} rows</div>
+    </div>
+  )
+}
+
+function DBConnectionAnimation() {
+  const [active, setActive] = useState(0)
+  useEffect(()=>{
+    const t = setInterval(()=>setActive(a=>(a+1)%3),1200)
+    return()=>clearInterval(t)
+  },[])
+  const pool = Array.from({length:5},(_,i)=>i)
+  const workers = ['Worker A','Worker B','Worker C']
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>DB Connection Pool</div>
+      <div style={{ display:'flex', gap:8, marginBottom:16, justifyContent:'center' }}>
+        {pool.map(i=>(
+          <div key={i} style={{ width:40, height:40, borderRadius:8, border:`2px solid ${i<3?'#4f8ef7':'var(--border)'}`, background:i===active?'#4f8ef7':i<3?'#eff6ff':'#f8fafc', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.7rem', fontWeight:700, color:i===active?'white':i<3?'#3b82f6':'#94a3b8', transition:'all .5s' }}>{i<3?'IN USE':'IDLE'}</div>
+        ))}
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+        {workers.map((w,i)=>(
+          <div key={w} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 12px', borderRadius:8, border:`1px solid ${i===active?'#4f8ef7':'var(--border)'}`, background:i===active?'#eff6ff':'white', transition:'all .5s' }}>
+            <span style={{ fontSize:'.78rem', fontWeight:700, flex:1 }}>{w}</span>
+            <span style={{ fontSize:'.72rem', color:i===active?'#3b82f6':'#94a3b8', fontFamily:'monospace' }}>{i===active?'⚡ executing query':'⏳ waiting for conn'}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop:10, fontSize:'.73rem', color:'var(--text-secondary)' }}>Pool size: 5 · 3 workers share connections — no connection per-thread</div>
+    </div>
+  )
+}
+
+function HTTPAnimation() {
+  const [step, setStep] = useState(0)
+  const [running, setRunning] = useState(false)
+  const steps = [
+    {label:'Session created', color:'#4f8ef7'},
+    {label:'GET /events?page=1', color:'#8b5cf6'},
+    {label:'200 OK + 500 records', color:'#22c55e'},
+    {label:'429 Too Many Requests', color:'#f59e0b'},
+    {label:'Wait Retry-After: 1s', color:'#f97316'},
+    {label:'GET /events?page=1 (retry)', color:'#8b5cf6'},
+    {label:'200 OK + 500 records', color:'#22c55e'},
+    {label:'Session closed', color:'#64748b'},
+  ]
+  useEffect(()=>{
+    if(!running)return
+    if(step>=steps.length){setRunning(false);return}
+    const t = setTimeout(()=>setStep(s=>s+1),600)
+    return()=>clearTimeout(t)
+  },[running,step])
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>HTTP Request Lifecycle with Retry</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:5, marginBottom:12, minHeight:160 }}>
+        {steps.slice(0,step).map((s,i)=>(
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px', borderRadius:6, border:`1px solid ${s.color}44`, background:`${s.color}11`, animation:'fadeIn .3s ease' }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:s.color, flexShrink:0 }}/>
+            <span style={{ fontFamily:'monospace', fontSize:'.78rem', color:'#1e293b' }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>{setStep(0);setRunning(true)}} style={{ width:'100%', padding:'8px 0', borderRadius:8, border:'none', background:running?'#e2e8f0':'#4f8ef7', color:running?'#94a3b8':'white', cursor:running?'default':'pointer', fontWeight:700, fontSize:'.85rem' }}>{running?'Running...':'▶ Simulate Request'}</button>
+    </div>
+  )
+}
+
+function LinuxScriptAnimation() {
+  const [cmd, setCmd] = useState(0)
+  const commands = [
+    {input:'import subprocess; result = subprocess.run(["ls","-la"], capture_output=True, text=True)', output:'total 48\ndrwxr-xr-x 8 de de 4096 Jan 15 10:32 .\n-rw-r--r-- 1 de de 1024 Jan 15 10:30 pipeline.py\n-rw-r--r-- 1 de de 4096 Jan 15 09:00 config.yaml'},
+    {input:'subprocess.run(["gzip","-k","events.jsonl"], check=True)', output:'events.jsonl.gz created (check=True raises on nonzero exit)'},
+    {input:'os.environ.get("PIPELINE_ENV", "dev")', output:'"prod"'},
+    {input:'shutil.copy2("output.parquet", "/mnt/archive/2024-01-15.parquet")', output:'Copied with metadata preserved'},
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Python Shell / subprocess Demos</div>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+        {['ls -la','gzip','os.environ','shutil.copy2'].map((c,i)=>(
+          <button key={c} onClick={()=>setCmd(i)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:600, fontSize:'.78rem', background:cmd===i?'#4f8ef7':'var(--surface-3)', color:cmd===i?'white':'var(--text-secondary)' }}>{c}</button>
+        ))}
+      </div>
+      <div style={{ background:'#1e293b', borderRadius:8, padding:12, marginBottom:8 }}>
+        <code style={{ color:'#7dd3fc', fontSize:'.78rem', wordBreak:'break-all' }}>{commands[cmd].input}</code>
+      </div>
+      <div style={{ background:'#0f172a', borderRadius:8, padding:12 }}>
+        <pre style={{ margin:0, color:'#4ade80', fontSize:'.78rem', whiteSpace:'pre-wrap' }}>{commands[cmd].output}</pre>
+      </div>
+    </div>
+  )
+}
+
+function GitAnimation() {
+  const [step, setStep] = useState<'working'|'staged'|'committed'|'pushed'>('working')
+  const steps = ['working','staged','committed','pushed'] as const
+  const idx = steps.indexOf(step)
+  const zones = [
+    {name:'Working Tree',desc:'Modified files — not tracked',active:idx===0,color:'#f59e0b'},
+    {name:'Staging Area',desc:'git add → queued for commit',active:idx===1,color:'#8b5cf6'},
+    {name:'Local Repo',desc:'git commit → permanent snapshot',active:idx===2,color:'#4f8ef7'},
+    {name:'Remote (GitHub)',desc:'git push → shared with team',active:idx===3,color:'#22c55e'},
+  ]
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Git Data Flow — Step through</div>
+      <div style={{ display:'flex', alignItems:'center', gap:0, marginBottom:16, overflowX:'auto' }}>
+        {zones.map((z,i)=>(
+          <div key={z.name} style={{ display:'flex', alignItems:'center' }}>
+            <div style={{ padding:'10px 14px', borderRadius:8, border:`2px solid ${z.active?z.color:'var(--border)'}`, background:z.active?`${z.color}15`:'white', minWidth:110, textAlign:'center', transition:'all .3s' }}>
+              <div style={{ fontWeight:700, fontSize:'.78rem', color:z.active?z.color:'#94a3b8' }}>{z.name}</div>
+              <div style={{ fontSize:'.65rem', color:'#94a3b8', marginTop:3 }}>{z.desc}</div>
+            </div>
+            {i<zones.length-1&&<div style={{ width:20, height:2, background:idx>i?zones[i+1].color:'#e2e8f0', transition:'background .3s', flexShrink:0 }}/>}
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+        {(['working','staged','committed','pushed'] as const).map((s,i)=>(
+          <button key={s} onClick={()=>setStep(s)} disabled={idx>=i&&s!==steps[0]} style={{ flex:1, padding:'7px 0', borderRadius:8, border:'none', background:step===s?'#4f8ef7':idx>=i?'#e2e8f0':'var(--surface-3)', color:step===s?'white':idx>=i?'#64748b':'var(--text-secondary)', cursor:'pointer', fontWeight:600, fontSize:'.78rem' }}>{['Start','git add','git commit','git push'][i]}</button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PydanticAnimation() {
+  const [mode, setMode] = useState<'valid'|'invalid'>('valid')
+  const valid = {user_id:42,event_type:'click',amount:99.99,timestamp:'2024-01-15T10:00:00'}
+  const invalid = {user_id:'not-an-int',event_type:'click',amount:-5,timestamp:'bad-date'}
+  const errors = [
+    "user_id: Input should be a valid integer",
+    "amount: Input should be greater than 0",
+    "timestamp: Input should be a valid datetime",
+  ]
+  const data = mode==='valid'?valid:invalid
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Pydantic Validation</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['valid','invalid'] as const).map(m=>(
+            <button key={m} onClick={()=>setMode(m)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:mode===m?'#4f8ef7':'var(--surface-3)', color:mode===m?'white':'var(--text-secondary)' }}>{m} data</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ background:'#1e293b', borderRadius:8, padding:12, marginBottom:10 }}>
+        <pre style={{ margin:0, color:'#7dd3fc', fontSize:'.78rem' }}>{JSON.stringify(data,null,2)}</pre>
+      </div>
+      {mode==='valid' ? (
+        <div style={{ padding:12, borderRadius:8, background:'#f0fdf4', border:'1px solid #4ade80', fontSize:'.82rem', color:'#16a34a', fontWeight:700 }}>✓ EventModel validated successfully</div>
+      ) : (
+        <div style={{ padding:12, borderRadius:8, background:'#fef2f2', border:'1px solid #f87171' }}>
+          <div style={{ fontWeight:700, fontSize:'.82rem', color:'#ef4444', marginBottom:8 }}>✗ ValidationError: 3 errors</div>
+          {errors.map(e=><div key={e} style={{ fontSize:'.75rem', color:'#b91c1c', marginBottom:4 }}>• {e}</div>)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DockerPyAnimation() {
+  const [phase, setPhase] = useState<'build'|'run'|'push'>('build')
+  const layers = ['FROM python:3.11-slim','COPY requirements.txt .','RUN pip install -r requirements.txt','COPY pipeline/ /app/pipeline/','ENTRYPOINT ["python","-m","pipeline"]']
+  const containers = ['pipeline_a (running)','pipeline_b (running)','pipeline_c (exited 0)']
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <div style={{ fontWeight:700, fontSize:'.9rem' }}>Docker Image & Container</div>
+        <div style={{ display:'flex', gap:6 }}>
+          {(['build','run','push'] as const).map(p=>(
+            <button key={p} onClick={()=>setPhase(p)} style={{ padding:'4px 12px', borderRadius:20, border:'none', cursor:'pointer', fontWeight:700, fontSize:'.8rem', background:phase===p?'#4f8ef7':'var(--surface-3)', color:phase===p?'white':'var(--text-secondary)' }}>{p}</button>
+          ))}
+        </div>
+      </div>
+      {phase==='build'&&(
+        <div>
+          {layers.map((l,i)=>(
+            <div key={l} style={{ padding:'6px 12px', marginBottom:4, borderRadius:6, border:'1px solid #4f8ef744', background:'#eff6ff', fontFamily:'monospace', fontSize:'.78rem', color:'#1e4c8c' }}>Layer {i+1}: {l}</div>
+          ))}
+          <div style={{ marginTop:8, fontSize:'.73rem', color:'var(--text-secondary)' }}>Each RUN/COPY creates a cached layer — unchanged layers reuse cache</div>
+        </div>
+      )}
+      {phase==='run'&&(
+        <div>
+          {containers.map((c)=>(
+            <div key={c} style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', marginBottom:6, borderRadius:8, border:`1px solid ${c.includes('exited')?'#e2e8f0':'#4ade80'}`, background:c.includes('exited')?'#f8fafc':'#f0fdf4' }}>
+              <code style={{ fontSize:'.8rem' }}>{c}</code>
+              <span style={{ fontSize:'.72rem', color:c.includes('exited')?'#94a3b8':'#16a34a' }}>{c.includes('exited')?'done':'▶ running'}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {phase==='push'&&(
+        <div>
+          {['Tag: acr.azurecr.io/pipeline:latest','Tag: acr.azurecr.io/pipeline:v1.2.3','Push layer cache (only changed layers)','Digest: sha256:a1b2c3…'].map(s=>(
+            <div key={s} style={{ padding:'6px 12px', marginBottom:4, borderRadius:6, background:'#f0fdf4', border:'1px solid #4ade8044', fontSize:'.78rem', color:'#166534' }}>✓ {s}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function K8sAnimation() {
+  const [replicas, setReplicas] = useState(2)
+  const pods = Array.from({length:5},(_,i)=>i)
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>Kubernetes Deployment — Pod Scaling</div>
+      <div style={{ display:'flex', gap:4, marginBottom:16, justifyContent:'center' }}>
+        {pods.map(i=>(
+          <div key={i} style={{ width:52, height:52, borderRadius:10, border:`2px solid ${i<replicas?'#4f8ef7':'#e2e8f0'}`, background:i<replicas?'#eff6ff':'#f8fafc', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', transition:'all .5s' }}>
+            <div style={{ fontSize:'.65rem', fontWeight:700, color:i<replicas?'#3b82f6':'#94a3b8' }}>pod-{i+1}</div>
+            <div style={{ fontSize:'.55rem', color:i<replicas?'#22c55e':'#94a3b8', marginTop:2 }}>{i<replicas?'Running':'Pending'}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+        <span style={{ fontSize:'.82rem', fontWeight:700 }}>replicas: {replicas}</span>
+        <input type="range" min={1} max={5} value={replicas} onChange={e=>setReplicas(+e.target.value)} style={{ flex:1, accentColor:'#4f8ef7' }}/>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+        {[{k:'Desired',v:replicas},{k:'Ready',v:replicas},{k:'Available',v:replicas},{k:'Strategy',v:'RollingUpdate'}].map(r=>(
+          <div key={r.k} style={{ padding:'6px 12px', borderRadius:8, background:'white', border:'1px solid var(--border)', display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontSize:'.78rem', color:'var(--text-secondary)' }}>{r.k}</span>
+            <span style={{ fontSize:'.78rem', fontWeight:700, color:'#1e293b', fontFamily:'monospace' }}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DataQualityPyAnimation() {
+  const [run, setRun] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const checks = [
+    {name:'isComplete(user_id)',result:'pass',pct:100},
+    {name:'isComplete(event_type)',result:'pass',pct:100},
+    {name:'isNonNegative(amount)',result:'fail',pct:94,note:'6% rows have amount < 0'},
+    {name:'isUnique(event_id)',result:'pass',pct:100},
+    {name:'isContainedIn(status,["ok","fail","pending"])',result:'fail',pct:97,note:'3% unknown status values'},
+    {name:'hasSize >= 1000',result:'pass',pct:100},
+  ]
+  useEffect(()=>{
+    if(!run)return
+    if(progress>=checks.length){setRun(false);return}
+    const t = setTimeout(()=>setProgress(p=>p+1),400)
+    return()=>clearTimeout(t)
+  },[run,progress])
+  return (
+    <div className="anim-wrap" style={{ background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:20, marginBottom:20 }}>
+      <div style={{ fontWeight:700, marginBottom:12, fontSize:'.9rem' }}>PyDeequ Data Quality Checks</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:12 }}>
+        {checks.slice(0,progress).map(c=>(
+          <div key={c.name} style={{ padding:'7px 12px', borderRadius:8, border:`1px solid ${c.result==='pass'?'#4ade80':'#f87171'}`, background:c.result==='pass'?'#f0fdf4':'#fef2f2', display:'flex', justifyContent:'space-between', alignItems:'center', animation:'fadeIn .3s ease' }}>
+            <code style={{ fontSize:'.75rem', color:'#1e293b' }}>{c.name}</code>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              {c.note&&<span style={{ fontSize:'.68rem', color:'#ef4444' }}>{c.note}</span>}
+              <span style={{ fontWeight:700, fontSize:'.78rem', color:c.result==='pass'?'#16a34a':'#ef4444' }}>{c.result.toUpperCase()}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>{setProgress(0);setRun(true)}} style={{ width:'100%', padding:'8px 0', borderRadius:8, border:'none', background:run?'#e2e8f0':'#4f8ef7', color:run?'#94a3b8':'white', cursor:run?'default':'pointer', fontWeight:700, fontSize:'.85rem' }}>{run?`Running checks... ${progress}/${checks.length}`:'▶ Run DQ Checks'}</button>
     </div>
   )
 }
