@@ -301,6 +301,7 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   margin-bottom:20px;
   box-shadow:0 1px 3px rgba(0,0,0,.04),0 4px 16px rgba(79,142,247,.07);
   position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:stretch;
   transition:box-shadow var(--transition-slow),transform var(--transition-slow);
 }
 .topic-section:hover{
@@ -383,14 +384,26 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   max-width:100%;
   height:auto;
 }
-/* Generic animation wrapper class — applied to all animation root divs */
-.anim-wrap {
-  display:block;
-  margin-left:auto !important;
-  margin-right:auto !important;
-  max-width:760px;
-  width:calc(100% - 72px);
+/* Generic animation wrapper — centered in the flex-column topic-section */
+.topic-section > .anim-wrap {
+  align-self:center;
+  width:calc(100% - 72px) !important;
+  max-width:760px !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  margin-top:16px;
+  margin-bottom:4px;
   box-sizing:border-box;
+}
+/* Bare SVG direct children (NetworkAnimation, StarSchemaAnimation) */
+.topic-section > svg.anim-wrap {
+  align-self:center;
+  display:block;
+  width:calc(100% - 72px) !important;
+  max-width:760px !important;
+  height:auto;
+  margin-left:0 !important;
+  margin-right:0 !important;
 }
 
 /* ════════════════════════════════════════════════════
@@ -922,6 +935,7 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   .topic-section > .quiz-container{margin-left:16px!important;margin-right:16px!important;}
   .complete-btn{margin-left:28px !important;}
   .topic-section table{margin-left:0;margin-right:0;width:100%;}
+  .topic-section > .anim-wrap{margin-left:0!important;margin-right:0!important;width:calc(100% - 56px)!important;}
 }
 @media(max-width:1024px){
   .main-content{padding:20px 20px;}
@@ -931,6 +945,7 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   .topic-section > .callout,
   .topic-section > .quiz-container{margin-left:12px!important;margin-right:12px!important;}
   .complete-btn{margin-left:20px !important;}
+  .topic-section > .anim-wrap{margin-left:0!important;margin-right:0!important;width:calc(100% - 40px)!important;}
 }
 @media(max-width:768px){
   .sidebar{display:none;}
@@ -944,6 +959,7 @@ hr{border:none;height:2px;background:linear-gradient(90deg,transparent,var(--blu
   .topic-section > .quiz-container{margin-left:8px!important;margin-right:8px!important;}
   .complete-btn{margin-left:14px!important;}
   .topic-header{border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;padding:16px 14px 14px;}
+  .topic-section > .anim-wrap{margin-left:0!important;margin-right:0!important;width:calc(100% - 28px)!important;}
 }
 
 /* ════════════════════════════════════════════════════
