@@ -8,26 +8,26 @@ interface Props { completed: Set<string>; onComplete: () => void }
 
 const SECTIONS = [
   { title: 'Level 1 - Computer Fundamentals', items: [
-    { id: 'binary', label: 'Binary and Number Systems' },
+    { id: 'binary', label: 'Binary & Numbers' },
     { id: 'cpu', label: 'CPU Architecture' },
-    { id: 'memory', label: 'Memory Deep Dive' },
-    { id: 'storage', label: 'Storage Systems' },
-    { id: 'os', label: 'Operating Systems' },
-    { id: 'linux', label: 'Linux for Data Engineers' },
-    { id: 'networking', label: 'Networking Basics' },
-    { id: 'docker', label: 'Docker and Containers' },
+    { id: 'memory', label: 'Memory' },
+    { id: 'storage', label: 'Storage' },
+    { id: 'os', label: 'OS Basics' },
+    { id: 'linux', label: 'Linux' },
+    { id: 'networking', label: 'Networking' },
+    { id: 'docker', label: 'Docker' },
   ]},
   { title: 'Level 2 - Data Fundamentals', items: [
     { id: 'data-types', label: 'Data Types and Schemas' },
-    { id: 'file-formats', label: 'File Formats: CSV, JSON, Parquet, Avro' },
-    { id: 'compression', label: 'Compression Algorithms' },
-    { id: 'serialization', label: 'Serialization Formats' },
-    { id: 'databases', label: 'Databases Deep Dive' },
+    { id: 'file-formats', label: 'File Formats' },
+    { id: 'compression', label: 'Compression' },
+    { id: 'serialization', label: 'Serialization' },
+    { id: 'databases', label: 'Databases' },
     { id: 'data-warehouse', label: 'Data Warehouses' },
     { id: 'medallion', label: 'Medallion Architecture' },
     { id: 'data-quality', label: 'Data Quality' },
     { id: 'data-governance', label: 'Data Governance' },
-    { id: 'batch-vs-streaming', label: 'Batch vs Streaming' },
+    { id: 'batch-vs-streaming', label: 'Batch vs Stream' },
   ]},
 ]
 

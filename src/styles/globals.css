@@ -687,14 +687,11 @@ hr{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--blu
 .code-block{
   position:relative;
   background:linear-gradient(160deg,#0b1120 0%,#080d1b 65%,#0d0f1e 100%);
-  border-radius:var(--radius-xl);
-  overflow:hidden;margin:16px 20px;
-  border:1px solid rgba(99,102,241,.16);
-  box-shadow:
-    0 8px 40px rgba(0,0,0,.3),
-    0 2px 8px rgba(0,0,0,.18),
-    inset 0 1px 0 rgba(255,255,255,.04);
-  transition:box-shadow .28s ease,border-color .28s ease,transform .22s ease;
+  border-radius:var(--radius-lg);
+  overflow:hidden;margin:16px 36px;
+  border:1px solid rgba(99,102,241,.14);
+  box-shadow:0 4px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.04);
+  transition:box-shadow .28s ease,border-color .28s ease;
 }
 .code-block:hover{
   border-color:rgba(139,92,246,.32);
@@ -1587,11 +1584,11 @@ code:not(.code-block code):not(pre code):hover{
 ════════════════════════════════════════════════════ */
 .topic-section table{
   margin:4px 0 22px;
-  width:100%;
-  border-radius:var(--radius-xl);
+  width:calc(100% - 0px);
+  border-radius:var(--radius-lg);
   overflow:hidden;
-  border:1.5px solid var(--border);
-  box-shadow:var(--shadow-sm);
+  border:1px solid var(--border);
+  box-shadow:none;
 }
 .topic-section table th{
   background:linear-gradient(135deg,#0f1729 0%,#1a2040 55%,#1e1050 100%) !important;

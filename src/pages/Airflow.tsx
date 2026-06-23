@@ -8,18 +8,18 @@ interface Props { completed: Set<string>; onComplete: () => void }
 
 const SECTIONS = [
   { title: 'Level 9 - Apache Airflow', items: [
-    { id: 'airflow-intro',          label: 'What is Airflow?' },
-    { id: 'airflow-dag',            label: 'DAG Fundamentals' },
-    { id: 'airflow-operators',      label: 'Core Operators' },
-    { id: 'airflow-spark',          label: 'Spark & Databricks Operators' },
+    { id: 'airflow-intro',          label: 'Intro' },
+    { id: 'airflow-dag',            label: 'DAG Basics' },
+    { id: 'airflow-operators',      label: 'Operators' },
+    { id: 'airflow-spark',          label: 'Spark Operators' },
     { id: 'airflow-sensors',        label: 'Sensors' },
     { id: 'airflow-taskflow',       label: 'TaskFlow API' },
     { id: 'airflow-xcoms',          label: 'XComs' },
-    { id: 'airflow-connections',    label: 'Connections & Hooks' },
-    { id: 'airflow-k8s',            label: 'Kubernetes Executor' },
-    { id: 'airflow-cicd',           label: 'CI/CD & Testing' },
-    { id: 'airflow-monitoring',     label: 'Monitoring & Alerting' },
-    { id: 'airflow-vs-databricks',  label: 'Airflow vs Databricks vs ADF' },
+    { id: 'airflow-connections',    label: 'Connections' },
+    { id: 'airflow-k8s',            label: 'K8s Executor' },
+    { id: 'airflow-cicd',           label: 'CI/CD' },
+    { id: 'airflow-monitoring',     label: 'Monitoring' },
+    { id: 'airflow-vs-databricks',  label: 'Comparisons' },
   ]},
 ]
 
