@@ -1411,9 +1411,9 @@ spark.sql("""
 """)
 
 # Grant privileges (Unity Catalog RBAC)
-spark.sql("GRANT SELECT ON TABLE prod_catalog.silver.events TO `data-analysts-group`")
-spark.sql("GRANT MODIFY ON TABLE prod_catalog.silver.events TO `data-engineers-group`")
-spark.sql("GRANT ALL PRIVILEGES ON SCHEMA prod_catalog.silver TO `data-engineers-group`")
+spark.sql("GRANT SELECT ON TABLE prod_catalog.silver.events TO \`data-analysts-group\`")
+spark.sql("GRANT MODIFY ON TABLE prod_catalog.silver.events TO \`data-engineers-group\`")
+spark.sql("GRANT ALL PRIVILEGES ON SCHEMA prod_catalog.silver TO \`data-engineers-group\`")
 
 # Row-level security with row filters
 spark.sql("""
@@ -2906,9 +2906,9 @@ print(token.token[:20], "...", "expires:", token.expires_on)`}</CodeBlock>
 # steps:
 #   - uses: azure/login@v2
 #     with:
-#       client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#       tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#       subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#       client-id: \${{ secrets.AZURE_CLIENT_ID }}
+#       tenant-id: \${{ secrets.AZURE_TENANT_ID }}
+#       subscription-id: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
 #       # No client-secret needed! Uses OIDC token exchange
 
 # App Registration vs Service Principal
@@ -3627,7 +3627,7 @@ jobs:
           subscription-id: \${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - run: terraform init \
-          -backend-config="storage_account_name=tfstate${{ vars.ENV }}" \
+          -backend-config="storage_account_name=tfstate\${{ vars.ENV }}" \
           -backend-config="container_name=tfstate" \
           -backend-config="key=de-platform.tfstate"
 

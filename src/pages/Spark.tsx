@@ -34,6 +34,14 @@ const SECTIONS = [
     { id: 'spark-ui',               label: 'Spark UI Navigation' },
     { id: 'spark-delta',            label: 'Spark + Delta Lake Integration' },
   ]},
+  { title: 'Kafka + Streaming Internals', items: [
+    { id: 'kafka-arch',         label: 'Kafka Architecture (Brokers, Partitions, ISR)' },
+    { id: 'kafka-python',       label: 'Kafka Python Producer / Consumer API' },
+    { id: 'kafka-eos',          label: 'Kafka Exactly-Once Semantics' },
+    { id: 'kafka-connect',      label: 'Kafka Connect + Debezium CDC' },
+    { id: 'kafka-schema',       label: 'Schema Registry + Avro' },
+    { id: 'kafka-vs-eventhub',  label: 'Kafka vs Azure Event Hub' },
+  ]},
 ]
 
 const MC_BTN = {
@@ -2963,6 +2971,628 @@ changes = spark.read.format("delta") \
             },
           ]} />
           <button onClick={mc('spark-delta')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── KAFKA ARCHITECTURE ─────────────────────────────────────────── */}
+        <section id="kafka-arch" ref={ref('kafka-arch')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Kafka + Streaming Internals</div>
+            <h1 className="topic-title">Kafka Architecture (Brokers, Partitions, ISR)</h1>
+            <p className="topic-desc">
+              Apache Kafka is a distributed commit log — an append-only, ordered, immutable sequence of records. A Kafka <strong>cluster</strong> is formed by multiple <strong>brokers</strong> (servers). <strong>Topics</strong> are logical channels divided into <strong>partitions</strong>. Each partition is an ordered, immutable log replicated across brokers. The <strong>leader</strong> partition handles all reads and writes; <strong>ISR (In-Sync Replicas)</strong> are the set of replicas caught up with the leader. If the leader fails, a new leader is elected from the ISR. Historically Kafka used ZooKeeper for cluster metadata — from Kafka 3.3+ the <strong>KRaft</strong> mode replaces ZooKeeper with a built-in Raft consensus protocol. <strong>Consumer groups</strong> allow horizontal scaling: each partition is consumed by exactly one consumer per group. <strong>Offsets</strong> track the consumer's position in each partition. Retention can be time-based (<code>retention.ms</code>), size-based (<code>retention.bytes</code>), or log compaction (keeps only the latest value per key — ideal for changelog topics).
+            </p>
+          </div>
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Partition count is permanent:</strong> You can increase partitions after creation but never decrease them without recreating the topic. Plan partition count carefully — more partitions = more parallelism but also more overhead. A common rule: partitions ≈ max desired consumer instances.
+            </div>
+          </div>
+          <CodeBlock lang="python">{`# ── Key Kafka configuration parameters ────────────────────────────────
+# Topic-level:
+# replication.factor        = 3       # copies of each partition across brokers
+# min.insync.replicas       = 2       # min ISR for acks=all to succeed
+# retention.ms              = 604800000  # 7 days (default)
+# retention.bytes           = -1      # unlimited (per-partition)
+# cleanup.policy            = delete  # 'delete' or 'compact'
+# max.message.bytes         = 1048576 # 1 MB default
+
+# ── Create topic via Kafka CLI ─────────────────────────────────────────
+# kafka-topics.sh --bootstrap-server broker:9092 \\
+#   --create --topic orders \\
+#   --partitions 12 \\
+#   --replication-factor 3 \\
+#   --config retention.ms=604800000 \\
+#   --config min.insync.replicas=2
+
+# ── Consumer group concepts ────────────────────────────────────────────
+# Group of 3 consumers, topic with 12 partitions:
+#   Consumer A → partitions 0,1,2,3
+#   Consumer B → partitions 4,5,6,7
+#   Consumer C → partitions 8,9,10,11
+# If Consumer A dies → its partitions rebalanced to B and C (rebalance)
+# More consumers than partitions → some consumers idle
+
+# ── Log compaction (for CDC / changelog topics) ────────────────────────
+# cleanup.policy=compact: Kafka retains only the LATEST record per key.
+# Deleted records use a tombstone (null value).
+# Use case: database change events, config updates, user profile changes.
+# kafka-configs.sh --bootstrap-server broker:9092 \\
+#   --entity-type topics --entity-name user-profiles \\
+#   --alter --add-config cleanup.policy=compact
+
+# ── KRaft mode (Kafka 3.3+, ZooKeeper replacement) ────────────────────
+# Built-in Raft consensus — no ZooKeeper cluster needed.
+# Benefits: simpler ops, faster startup, 10x more partitions per cluster.
+# Migration: kafka-storage.sh format --cluster-id <UUID> --config server.properties`}
+          </CodeBlock>
+          <Quiz topicId="kafka-arch" questions={[
+            {
+              question: "What is the ISR (In-Sync Replicas) in Kafka?",
+              options: [
+                "The set of consumer groups that are actively reading a topic",
+                "The set of replicas that are fully caught up with the leader partition. When the leader fails, a new leader is elected from the ISR. min.insync.replicas controls the minimum ISR size required for a produce to succeed with acks=all.",
+                "The index of offsets stored on each broker",
+                "The list of brokers running in KRaft mode"
+              ],
+              correct: 1
+            },
+            {
+              question: "In a consumer group with 3 consumers and a topic with 12 partitions, what happens when one consumer crashes?",
+              options: [
+                "The 12 partitions pause until the consumer restarts",
+                "A group rebalance is triggered — the crashed consumer's partitions are redistributed among the remaining 2 consumers. Processing resumes from the last committed offset.",
+                "Kafka replays all messages from the beginning",
+                "The other consumers skip the crashed consumer's partitions"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is log compaction and when should you use it?",
+              options: [
+                "Gzip compression applied to Kafka partition files",
+                "A retention policy (cleanup.policy=compact) that keeps only the latest record per key. Use it for changelog topics (CDC, user state, config) where you need a full current snapshot but not full history.",
+                "A process that merges small partition segments into larger files",
+                "Reducing partition count to save disk space"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('kafka-arch')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── KAFKA PYTHON API ────────────────────────────────────────────── */}
+        <section id="kafka-python" ref={ref('kafka-python')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Kafka + Streaming Internals</div>
+            <h1 className="topic-title">Kafka Python Producer / Consumer API</h1>
+            <p className="topic-desc">
+              The <strong>confluent-kafka</strong> Python library is the production-grade client for Kafka (based on librdkafka). The <strong>Producer</strong> sends messages asynchronously — configure <code>bootstrap.servers</code>, <code>acks='all'</code> for durability, and <code>enable.idempotence=True</code> for safe retries. A <strong>delivery report callback</strong> confirms each message was committed. The <strong>Consumer</strong> joins a consumer group via <code>group.id</code>, sets <code>auto.offset.reset='earliest'</code> to start from the beginning, and uses <code>enable.auto.commit=False</code> with manual commits — offsets are committed only after successful processing, preventing data loss on crashes.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
+import json
+
+# ── Producer ──────────────────────────────────────────────────────────
+producer_conf = {
+    'bootstrap.servers':    'broker1:9092,broker2:9092,broker3:9092',
+    'acks':                 'all',            # wait for all ISR acknowledgements
+    'enable.idempotence':   True,             # deduplicates retried produces
+    'retries':              5,
+    'max.in.flight.requests.per.connection': 1,
+    'compression.type':     'snappy',
+    'linger.ms':            5,
+    'batch.size':           65536,
+}
+
+producer = Producer(producer_conf)
+
+def delivery_report(err, msg):
+    if err is not None:
+        print(f"Delivery failed for {msg.key()}: {err}")
+    else:
+        print(f"Delivered → topic={msg.topic()} partition={msg.partition()} offset={msg.offset()}")
+
+orders = [
+    {'order_id': 'ord-001', 'amount': 99.99,  'customer_id': 'cust-42'},
+    {'order_id': 'ord-002', 'amount': 149.50, 'customer_id': 'cust-17'},
+]
+
+for order in orders:
+    producer.produce(
+        topic    = 'orders',
+        key      = order['order_id'].encode('utf-8'),
+        value    = json.dumps(order).encode('utf-8'),
+        callback = delivery_report,
+    )
+    producer.poll(0)   # trigger delivery report callbacks (non-blocking)
+
+producer.flush()   # wait for all in-flight messages to be delivered
+
+# ── Consumer ──────────────────────────────────────────────────────────
+consumer_conf = {
+    'bootstrap.servers':    'broker1:9092,broker2:9092',
+    'group.id':             'orders-processor-v1',
+    'auto.offset.reset':    'earliest',
+    'enable.auto.commit':   False,        # CRITICAL: manual commit after processing
+    'max.poll.interval.ms': 300000,
+    'session.timeout.ms':   30000,
+}
+
+consumer = Consumer(consumer_conf)
+consumer.subscribe(['orders'])
+
+try:
+    while True:
+        msg = consumer.poll(timeout=1.0)
+        if msg is None:
+            continue
+        if msg.error():
+            if msg.error().code() == KafkaError._PARTITION_EOF:
+                continue
+            raise KafkaException(msg.error())
+
+        order = json.loads(msg.value().decode('utf-8'))
+        print(f"Processing order: {order['order_id']}")
+
+        # Commit AFTER successful processing — prevents data loss on crash
+        consumer.commit(message=msg, asynchronous=False)
+
+except KeyboardInterrupt:
+    pass
+finally:
+    consumer.close()`}
+          </CodeBlock>
+          <Quiz topicId="kafka-python" questions={[
+            {
+              question: "Why use enable.auto.commit=False with manual commits in a Kafka consumer?",
+              options: [
+                "Auto-commit is faster and should always be enabled",
+                "Auto-commit advances the offset on a timer regardless of whether processing succeeded. If the consumer crashes after auto-commit but before processing completes, the message is lost. Manual commit after processing ensures at-least-once delivery.",
+                "Auto-commit doesn't work with the confluent-kafka library",
+                "Manual commit reduces Kafka broker load"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does enable.idempotence=True do on the Kafka Producer?",
+              options: [
+                "Prevents sending duplicate keys to the same topic",
+                "Assigns each producer a unique Producer ID and sequence number per partition. If the broker receives a duplicate (e.g., after a retry on network timeout), it deduplicates it using the sequence number — ensuring exactly-once delivery at the producer level.",
+                "Compresses messages to reduce duplication",
+                "Ensures messages are delivered in alphabetical order"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the purpose of the delivery report callback in the Producer?",
+              options: [
+                "It filters messages before they are sent to the broker",
+                "It is called asynchronously for each message after the broker acknowledges or rejects it — allowing you to log failures, trigger retries, or update metrics. Without it you have no visibility into whether produces succeeded.",
+                "It compresses the message payload",
+                "It controls which partition the message is sent to"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('kafka-python')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── KAFKA EXACTLY-ONCE SEMANTICS ───────────────────────────────── */}
+        <section id="kafka-eos" ref={ref('kafka-eos')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Kafka + Streaming Internals</div>
+            <h1 className="topic-title">Kafka Exactly-Once Semantics</h1>
+            <p className="topic-desc">
+              Exactly-once processing requires three things: <strong>idempotent source reads</strong> (re-reading from offset doesn't create duplicates), <strong>idempotent transformations</strong> (running the same computation twice produces the same result), and <strong>atomic sink writes</strong> (writes either fully succeed or fully fail). In Kafka, <strong>idempotent producers</strong> use a Producer ID + per-partition sequence number to deduplicate retried sends. <strong>Transactions</strong> extend this: <code>begin_transaction</code> → produce messages → <code>commit_transaction</code> (or <code>abort_transaction</code>) atomically across multiple partitions. In Spark Structured Streaming, exactly-once is achieved by combining checkpoint-based offset tracking with a Delta Lake ACID sink — Spark generates unique batch IDs and Delta's transaction log rejects duplicate writes.
+            </p>
+          </div>
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>The three delivery guarantees:</strong> At-most-once (messages may be lost, never duplicated), At-least-once (no messages lost, duplicates possible on retry — most common default), Exactly-once (no loss, no duplicates — requires idempotent producer + transactional writes + ACID sink). EOS has a performance cost; use it only when required.
+            </div>
+          </div>
+          <CodeBlock lang="python">{`# ── Transactional Producer (Kafka EOS) ────────────────────────────────
+from confluent_kafka import Producer
+import json
+
+transactional_conf = {
+    'bootstrap.servers':  'broker1:9092,broker2:9092',
+    'transactional.id':   'orders-producer-1',   # unique per producer instance
+    'enable.idempotence': True,
+    'acks':               'all',
+}
+
+producer = Producer(transactional_conf)
+producer.init_transactions()
+
+def send_with_transaction(orders: list):
+    producer.begin_transaction()
+    try:
+        for order in orders:
+            producer.produce(
+                topic  = 'orders-processed',
+                key    = order['order_id'].encode(),
+                value  = json.dumps(order).encode(),
+            )
+        producer.commit_transaction()   # atomic: all messages visible at once
+    except Exception as e:
+        producer.abort_transaction()    # rollback: no messages visible
+        raise
+
+# ── Spark Structured Streaming + Delta Lake EOS ────────────────────────
+# 1. Checkpointing: Spark records consumed Kafka offsets. On restart,
+#    Spark resumes from the last committed offset — no message is skipped.
+# 2. Delta ACID sink: Each micro-batch has a unique batchId. Delta's
+#    transaction log deduplicates any batch written more than once.
+
+from pyspark.sql import SparkSession
+from delta.tables import DeltaTable
+from pyspark.sql.functions import col, from_json
+
+spark = SparkSession.builder.getOrCreate()
+
+stream_df = spark.readStream \\
+    .format("kafka") \\
+    .option("kafka.bootstrap.servers", "broker1:9092") \\
+    .option("subscribe", "orders") \\
+    .option("startingOffsets", "latest") \\
+    .load()
+
+def process_batch(batch_df, batch_id):
+    order_schema = "order_id STRING, customer_id STRING, amount DOUBLE, status STRING"
+    parsed = batch_df.select(
+        col("key").cast("string").alias("order_id"),
+        from_json(col("value").cast("string"), order_schema).alias("d")
+    ).select("order_id", "d.*")
+
+    DeltaTable.forName(spark, "silver.orders").alias("t") \\
+        .merge(parsed.alias("s"), "t.order_id = s.order_id") \\
+        .whenMatchedUpdateAll() \\
+        .whenNotMatchedInsertAll() \\
+        .execute()
+
+stream_df.writeStream \\
+    .foreachBatch(process_batch) \\
+    .option("checkpointLocation", "abfss://checkpoints@lake.dfs.core.windows.net/orders") \\
+    .trigger(processingTime="1 minute") \\
+    .start() \\
+    .awaitTermination()
+
+# ✅ Idempotent source:      Kafka offset checkpointing
+# ✅ Idempotent transforms:  Deterministic Spark transformations
+# ✅ Atomic sink:            Delta Lake ACID transactions (batch_id dedup)`}
+          </CodeBlock>
+          <Quiz topicId="kafka-eos" questions={[
+            {
+              question: "What are the three requirements for exactly-once stream processing?",
+              options: [
+                "Fast network, SSD storage, and low latency brokers",
+                "Idempotent source reads, idempotent transformations, and atomic sink writes. Missing any one breaks exactly-once guarantees.",
+                "enable.idempotence=True, acks=all, and compression",
+                "Kafka transactions, Spark checkpointing, and ZooKeeper"
+              ],
+              correct: 1
+            },
+            {
+              question: "How does Spark Structured Streaming achieve exactly-once with a Delta Lake sink?",
+              options: [
+                "By using enable.idempotence on the Kafka consumer",
+                "Spark's checkpoint records the last committed Kafka offset so restarts resume exactly where they stopped. Each micro-batch has a unique batchId, and Delta Lake's transaction log deduplicates any batch written more than once — making foreachBatch + Delta inherently idempotent.",
+                "By setting spark.sql.streaming.exactlyOnce=true",
+                "Delta Lake automatically deduplicates all incoming data by primary key"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the role of transactional.id in a Kafka transactional producer?",
+              options: [
+                "It is a human-readable label for the topic",
+                "It is a unique identifier that persists across producer restarts. The broker uses it to recover or abort any in-flight transaction from a previous instance — ensuring no partial transaction is ever visible to consumers, even after a crash.",
+                "It sets the transaction timeout duration",
+                "It routes all messages to the same partition"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('kafka-eos')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── KAFKA CONNECT + DEBEZIUM ────────────────────────────────────── */}
+        <section id="kafka-connect" ref={ref('kafka-connect')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Kafka + Streaming Internals</div>
+            <h1 className="topic-title">Kafka Connect + Debezium CDC</h1>
+            <p className="topic-desc">
+              <strong>Kafka Connect</strong> is a scalable framework for streaming data between Kafka and external systems without writing custom producers/consumers. <strong>Source connectors</strong> pull data into Kafka (databases, object storage, APIs). <strong>Sink connectors</strong> push Kafka data to destinations (data lakes, databases, Elasticsearch). Connectors are deployed as JSON configuration — no custom code for standard integrations. <strong>Debezium</strong> is the leading CDC (Change Data Capture) source connector — it tails database transaction logs (MySQL binlog, PostgreSQL WAL, SQL Server CDC) and streams every INSERT/UPDATE/DELETE as a Kafka event. Topics follow the naming convention <code>server.database.table</code>. The <strong>dead letter queue (DLQ)</strong> captures records that fail to process, enabling debugging without blocking the main pipeline.
+            </p>
+          </div>
+          <CodeBlock lang="json">{`// ── Debezium PostgreSQL CDC Connector config ──────────────────────────
+// PUT http://kafka-connect:8083/connectors/postgres-cdc/config
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "tasks.max": "1",
+  "database.hostname": "postgres.internal",
+  "database.port": "5432",
+  "database.user": "debezium",
+  "database.password": "secret",
+  "database.dbname": "ecommerce",
+  "database.server.name": "ecommerce-prod",
+  "table.include.list": "public.orders,public.customers",
+  "plugin.name": "pgoutput",
+  "publication.name": "dbz_publication",
+  "slot.name": "debezium_slot",
+  "topic.prefix": "ecommerce-prod",
+  "key.converter": "io.confluent.kafka.serializers.KafkaAvroSerializer",
+  "key.converter.schema.registry.url": "http://schema-registry:8081",
+  "value.converter": "io.confluent.kafka.serializers.KafkaAvroSerializer",
+  "value.converter.schema.registry.url": "http://schema-registry:8081",
+  "transforms": "unwrap",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+  "transforms.unwrap.drop.tombstones": "false",
+  "transforms.unwrap.delete.handling.mode": "rewrite",
+  "errors.tolerance": "all",
+  "errors.deadletterqueue.topic.name": "dlq.ecommerce-prod.orders",
+  "errors.deadletterqueue.topic.replication.factor": "3",
+  "errors.deadletterqueue.context.headers.enable": "true"
+}
+
+// ── Topics created ────────────────────────────────────────────────────
+// ecommerce-prod.public.orders    ← INSERT/UPDATE/DELETE on orders
+// ecommerce-prod.public.customers
+
+// ── Debezium CDC event structure (raw envelope) ───────────────────────
+// { "before": { "order_id": 1, "status": "pending" },
+//   "after":  { "order_id": 1, "status": "shipped" },
+//   "op": "u",   // c=create, u=update, d=delete, r=snapshot read
+//   "ts_ms": 1718000000000,
+//   "source": { "db": "ecommerce", "table": "orders", "lsn": 12345678 } }
+
+// ── After ExtractNewRecordState (flattened for easy consumption) ──────
+// { "order_id": 1, "status": "shipped",
+//   "__op": "u", "__ts_ms": 1718000000000, "__deleted": "false" }`}
+          </CodeBlock>
+          <Quiz topicId="kafka-connect" questions={[
+            {
+              question: "How does Debezium CDC capture database changes?",
+              options: [
+                "It runs SELECT queries on the source table every few seconds (polling)",
+                "It tails the database's transaction log (MySQL binlog, PostgreSQL WAL, SQL Server CDC) — capturing every change in commit order with low latency and no impact on source database performance.",
+                "It uses database triggers to write changes to a staging table",
+                "It compares table snapshots taken at regular intervals"
+              ],
+              correct: 1
+            },
+            {
+              question: "What is the dead letter queue (DLQ) in Kafka Connect?",
+              options: [
+                "A topic where Kafka stores old messages past their retention period",
+                "A separate topic where Kafka Connect routes messages that fail to process (e.g., deserialization errors, schema mismatches). errors.tolerance=all prevents a bad message from halting the connector — it goes to the DLQ instead, keeping the pipeline running.",
+                "A queue for messages that were intentionally deleted",
+                "The DLQ stores connector configuration backups"
+              ],
+              correct: 1
+            },
+            {
+              question: "What does the Debezium ExtractNewRecordState transform do?",
+              options: [
+                "It extracts the schema from the Schema Registry",
+                "It flattens the Debezium envelope (before/after/op/source) into a flat record with only the 'after' state plus metadata fields (__op, __ts_ms). This makes CDC events easier to consume with Spark or standard Kafka consumers.",
+                "It filters out DELETE events from the CDC stream",
+                "It converts Avro messages to JSON"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('kafka-connect')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── SCHEMA REGISTRY + AVRO ─────────────────────────────────────── */}
+        <section id="kafka-schema" ref={ref('kafka-schema')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Kafka + Streaming Internals</div>
+            <h1 className="topic-title">Schema Registry + Avro</h1>
+            <p className="topic-desc">
+              The <strong>Confluent Schema Registry</strong> is a central repository for Avro, Protobuf, and JSON Schema definitions. Producers register a schema before publishing; the Registry returns a schema ID that is embedded in each message (4 bytes). Consumers look up the schema by ID to deserialize — this decouples schema management from application code. Schemas are versioned by <strong>subject</strong> (typically <code>topic-value</code> or <code>topic-key</code>). <strong>Compatibility modes</strong> enforce evolution rules: <strong>BACKWARD</strong> (new schema can read data written with old schema — add optional fields), <strong>FORWARD</strong> (old schema can read data written with new schema — remove fields), <strong>FULL</strong> (both directions — safest). This prevents producers from breaking consumers with incompatible schema changes.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`# ── Avro Producer with Schema Registry ───────────────────────────────
+from confluent_kafka import Producer
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+from confluent_kafka.serialization import SerializationContext, MessageField
+
+order_schema_str = """
+{
+  "type": "record", "name": "Order",
+  "namespace": "com.company.ecommerce",
+  "fields": [
+    {"name": "order_id",    "type": "string"},
+    {"name": "customer_id", "type": "string"},
+    {"name": "amount",      "type": "double"},
+    {"name": "status",      "type": "string"},
+    {"name": "created_at",  "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "region",      "type": ["null", "string"], "default": null}
+  ]
+}
+"""
+
+schema_registry_client = SchemaRegistryClient({'url': 'http://schema-registry:8081'})
+
+avro_serializer = AvroSerializer(
+    schema_registry_client = schema_registry_client,
+    schema_str             = order_schema_str,
+    to_dict                = lambda obj, ctx: obj,
+)
+
+producer = Producer({'bootstrap.servers': 'broker1:9092'})
+
+order = {'order_id': 'ord-001', 'customer_id': 'cust-42',
+         'amount': 99.99, 'status': 'pending', 'created_at': 1718000000000, 'region': 'EU'}
+
+producer.produce(
+    topic  = 'orders',
+    key    = order['order_id'],
+    value  = avro_serializer(order, SerializationContext('orders', MessageField.VALUE)),
+)
+producer.flush()
+
+# ── Avro Consumer with Schema Registry ───────────────────────────────
+from confluent_kafka import Consumer
+from confluent_kafka.schema_registry.avro import AvroDeserializer
+
+avro_deserializer = AvroDeserializer(
+    schema_registry_client = schema_registry_client,
+    schema_str             = order_schema_str,
+    from_dict              = lambda obj, ctx: obj,
+)
+
+consumer = Consumer({'bootstrap.servers': 'broker1:9092',
+                     'group.id': 'orders-avro-consumer', 'auto.offset.reset': 'earliest'})
+consumer.subscribe(['orders'])
+
+while True:
+    msg = consumer.poll(1.0)
+    if msg is None: continue
+    order = avro_deserializer(msg.value(), SerializationContext('orders', MessageField.VALUE))
+    print(order)   # → {'order_id': 'ord-001', 'customer_id': 'cust-42', ...}
+
+# ── Compatibility modes ────────────────────────────────────────────────
+# BACKWARD  → add optional fields (with default). Consumers upgraded first.
+# FORWARD   → remove fields. Producers upgraded first.
+# FULL      → only add optional fields or remove fields with defaults. Safest.
+# NONE      → no compatibility checking. Never use in production.
+
+# Set compatibility: PUT http://schema-registry:8081/config/orders-value
+#   {"compatibility": "FULL"}`}
+          </CodeBlock>
+          <Quiz topicId="kafka-schema" questions={[
+            {
+              question: "What does BACKWARD compatibility mean in Schema Registry?",
+              options: [
+                "Old schema versions can still be registered",
+                "A new schema version can read data written by the old schema version. You can safely add optional fields with defaults — existing consumers that haven't upgraded can still deserialize messages produced with the new schema.",
+                "The schema is compatible with older Kafka broker versions",
+                "Consumers can read from older partition offsets"
+              ],
+              correct: 1
+            },
+            {
+              question: "Why does Schema Registry store schemas centrally instead of embedding the full schema in each message?",
+              options: [
+                "To reduce message size — each message contains only a 4-byte schema ID. Consumers look up the schema by ID from the Registry. This also enforces schema governance: incompatible schema changes are rejected at registration time before any bad data is produced.",
+                "Because Avro schemas are too large to fit in a message header",
+                "For backward compatibility with older Kafka versions",
+                "So that schemas can be automatically applied to the data lake"
+              ],
+              correct: 0
+            },
+            {
+              question: "What happens when a producer tries to register a schema that violates the configured compatibility mode?",
+              options: [
+                "The schema is registered but flagged with a warning",
+                "The Schema Registry returns a 409 Conflict error, rejecting the registration. The producer cannot publish messages with the incompatible schema — proactively preventing broken consumers before any bad data is produced.",
+                "The incompatible messages are sent to the dead letter queue",
+                "The compatibility mode is automatically updated to NONE"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('kafka-schema')} style={MC_BTN}>Mark Complete ✓</button>
+        </section>
+
+        {/* ─── KAFKA VS AZURE EVENT HUB ───────────────────────────────────── */}
+        <section id="kafka-vs-eventhub" ref={ref('kafka-vs-eventhub')} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Kafka + Streaming Internals</div>
+            <h1 className="topic-title">Kafka vs Azure Event Hub</h1>
+            <p className="topic-desc">
+              Azure Event Hub is a fully managed, Kafka-compatible streaming service. It exposes the Kafka protocol — most Kafka clients work against Event Hub with only a <code>bootstrap.servers</code> change. Key differences: Event Hub has a maximum retention of 90 days (long-term retention requires Blob Capture); partitions are fixed at namespace creation and cannot be increased; Kafka protocol is available on Event Hub Premium. Event Hub integrates natively with the Azure ecosystem (Auto Loader, ADF, Stream Analytics). Self-managed Kafka offers more flexibility: unlimited retention, dynamic partition increases, the full Kafka Connect ecosystem, Kafka Streams, and multi-cloud deployments. Choose Event Hub for Azure-native low-ops platforms. Choose Kafka when you need the full ecosystem, multi-cloud, or complex routing.
+            </p>
+          </div>
+          <CodeBlock lang="python">{`# ── Connecting an existing Kafka client to Azure Event Hub ────────────
+# Only bootstrap.servers and security config change.
+from confluent_kafka import Producer
+
+event_hub_conf = {
+    'bootstrap.servers':  'my-namespace.servicebus.windows.net:9093',
+    'security.protocol':  'SASL_SSL',
+    'sasl.mechanism':     'PLAIN',
+    'sasl.username':      '$ConnectionString',
+    'sasl.password':      ('Endpoint=sb://my-namespace.servicebus.windows.net/;'
+                           'SharedAccessKeyName=RootManageSharedAccessKey;'
+                           'SharedAccessKey=<key>'),
+    'group.id':           'orders-consumer-group',
+    'auto.offset.reset':  'earliest',
+}
+# All other Producer/Consumer code is identical to standard Kafka.
+
+# ── Event Hub Capture → Auto Loader → Delta Lake ──────────────────────
+# Event Hub Capture writes Avro files to ADLS Gen2.
+# Auto Loader picks them up incrementally:
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+
+df = spark.readStream \\
+    .format("cloudFiles") \\
+    .option("cloudFiles.format", "avro") \\
+    .option("cloudFiles.schemaLocation", "/checkpoints/eventhub-schema") \\
+    .load("abfss://eventhub-capture@mystorageaccount.dfs.core.windows.net/my-namespace/orders/")
+
+df.writeStream \\
+    .format("delta") \\
+    .option("checkpointLocation", "/checkpoints/eventhub-orders") \\
+    .outputMode("append") \\
+    .table("bronze.orders_raw")
+
+# ── Feature comparison ────────────────────────────────────────────────
+# Feature                  Kafka (self-managed)       Azure Event Hub
+# ─────────────────────────────────────────────────────────────────────
+# Retention                Unlimited (disk-bound)     7–90 days (Capture → Blob)
+# Partition change         Increase at any time       Fixed at namespace creation
+# Protocol                 Kafka native               Kafka + AMQP (Premium tier)
+# Kafka Connect            Full OSS ecosystem         Not natively included
+# Consumer groups          Unlimited                  Up to 20 (Standard tier)
+# Schema Registry          Confluent / Apicurio       Not natively included
+# Ops overhead             High (self-managed)        Zero (fully managed)
+# Azure integration        Requires connectors        Native (Auto Loader, ADF)
+# Cost model               Infrastructure + ops       Per throughput-unit
+# Multi-cloud              Yes                        Azure only`}
+          </CodeBlock>
+          <Quiz topicId="kafka-vs-eventhub" questions={[
+            {
+              question: "What is the main operational advantage of Azure Event Hub over self-managed Kafka?",
+              options: [
+                "Event Hub supports more partitions per topic",
+                "Event Hub is fully managed — no brokers, ZooKeeper, or KRaft cluster to provision, monitor, or patch. The tradeoff is less flexibility: fixed partitions at creation, 90-day max retention, and no native Kafka Connect ecosystem.",
+                "Event Hub is cheaper than Kafka in all scenarios",
+                "Event Hub supports unlimited consumer groups"
+              ],
+              correct: 1
+            },
+            {
+              question: "How does an existing Kafka application connect to Azure Event Hub?",
+              options: [
+                "You must rewrite the application using the Azure SDK",
+                "Change only bootstrap.servers to the Event Hub namespace endpoint and add SASL_SSL authentication. Event Hub implements the Kafka protocol — existing confluent-kafka producers and consumers work without code changes.",
+                "Install the Azure Event Hub Kafka adapter library",
+                "Event Hub does not support the Kafka protocol"
+              ],
+              correct: 1
+            },
+            {
+              question: "When should you choose self-managed Kafka over Azure Event Hub?",
+              options: [
+                "When you want to avoid infrastructure overhead",
+                "When you need the full Kafka Connect ecosystem (Debezium, JDBC, S3 sink), unlimited retention, dynamic partition increases, Kafka Streams, multi-cloud streaming, or more than 20 consumer groups.",
+                "When you are running entirely on Azure",
+                "When your team has no Kafka expertise"
+              ],
+              correct: 1
+            },
+          ]} />
+          <button onClick={mc('kafka-vs-eventhub')} style={MC_BTN}>Mark Complete ✓</button>
         </section>
 
       </main>

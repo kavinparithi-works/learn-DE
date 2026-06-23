@@ -971,30 +971,30 @@ crontab -e                           # edit cron jobs
 # 0 2 * * * /opt/pipelines/daily.sh  # run at 2am every day`}</CodeBlock>
 
           <h3 style={{ marginBottom: 12, marginTop: 24 }}>Shell Scripting Best Practices</h3>
-          <CodeBlock lang="bash">{`#!/usr/bin/env bash
+          <CodeBlock lang="bash" code={`#!/usr/bin/env bash
 set -euo pipefail   # exit on error, unset variable = error, pipe fails propagate
-IFS=$'\n\t'         # safer word splitting
+IFS=\$'\\n\\t'       # safer word splitting
 
 # Variables
 DATA_DIR="/mnt/adls/raw"
-DATE=$(date +%Y-%m-%d)
-LOGFILE="/var/log/pipeline_${DATE}.log"
+DATE=\$(date +%Y-%m-%d)
+LOGFILE="/var/log/pipeline_\${DATE}.log"
 
 # Functions
-log() { echo "[$(date +%T)] $*" | tee -a "$LOGFILE"; }
-die() { log "ERROR: $*"; exit 1; }
+log() { echo "[\$(date +%T)] \$*" | tee -a "\$LOGFILE"; }
+die() { log "ERROR: \$*"; exit 1; }
 
 # Check dependencies
 command -v python3 &>/dev/null || die "python3 not found"
 
 # Process files
-log "Starting pipeline for $DATE"
-for file in "${DATA_DIR}"/*.csv; do
-    [[ -f "$file" ]] || continue
-    log "Processing: $file"
-    python3 process.py "$file" || die "Failed on $file"
+log "Starting pipeline for \$DATE"
+for file in "\${DATA_DIR}"/*.csv; do
+    [[ -f "\$file" ]] || continue
+    log "Processing: \$file"
+    python3 process.py "\$file" || die "Failed on \$file"
 done
-log "Pipeline complete"`}</CodeBlock>
+log "Pipeline complete"`} />
 
           <Quiz topicId="linux" questions={[
             { question: "What does 'set -euo pipefail' do in a bash script?", options: ["Sets environment variables", "Makes the script exit on errors, treat unset variables as errors, and propagate pipe failures", "Enables verbose mode", "Sets file permissions"], correct: 1 },

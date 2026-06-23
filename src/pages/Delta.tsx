@@ -67,6 +67,7 @@ export default function Delta({ completed, onComplete }: Props) {
             <h1 className="topic-title">Delta Lake Fundamentals</h1>
             <p className="topic-desc">Delta Lake is an open-source storage layer that brings ACID transactions, scalable metadata handling, and unified streaming/batch processing to data lakes. Built on top of Parquet files, Delta adds a transaction log that makes your data lake reliable and queryable.</p>
           </div>
+          <DeltaLogAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -438,6 +439,7 @@ new_events.write \
             <h1 className="topic-title">MERGE Deep Dive</h1>
             <p className="topic-desc">MERGE is Delta Lake's most powerful DML operation — it upserts, deletes, and inserts in a single atomic pass. Mastering MERGE is essential for CDC ingestion, SCD Type 1/2 patterns, and efficient Silver layer refreshes.</p>
           </div>
+          <MergeAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -746,6 +748,7 @@ print(dt.toDF().schema.simpleString())`}</CodeBlock>
             <h1 className="topic-title">Time Travel</h1>
             <p className="topic-desc">Delta Lake retains the full history of your table through its transaction log. Time travel lets you query, compare, or restore any previous version — invaluable for auditing, debugging bad pipelines, and disaster recovery.</p>
           </div>
+          <TimelineAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1848,33 +1851,33 @@ WHERE target_table_full_name = 'production.silver.customers';`}</CodeBlock>
 -- Principals: user email, group name, service principal app ID
 
 -- To query a table, user needs ALL THREE:
-GRANT USE CATALOG ON CATALOG production              TO `data-engineers`;
-GRANT USE SCHEMA  ON SCHEMA production.silver        TO `data-engineers`;
-GRANT SELECT      ON TABLE production.silver.orders  TO `data-engineers`;
+GRANT USE CATALOG ON CATALOG production              TO \`data-engineers\`;
+GRANT USE SCHEMA  ON SCHEMA production.silver        TO \`data-engineers\`;
+GRANT SELECT      ON TABLE production.silver.orders  TO \`data-engineers\`;
 
 -- MODIFY privilege: INSERT, UPDATE, DELETE, MERGE
-GRANT MODIFY      ON TABLE production.silver.orders  TO `etl-service-principal`;
+GRANT MODIFY      ON TABLE production.silver.orders  TO \`etl-service-principal\`;
 
 -- CREATE privilege: create new objects in a schema
-GRANT CREATE TABLE ON SCHEMA production.silver        TO `data-engineers`;
-GRANT CREATE SCHEMA ON CATALOG production             TO `catalog-admins`;
+GRANT CREATE TABLE ON SCHEMA production.silver        TO \`data-engineers\`;
+GRANT CREATE SCHEMA ON CATALOG production             TO \`catalog-admins\`;
 
 -- ALL PRIVILEGES on a schema
-GRANT ALL PRIVILEGES ON SCHEMA production.gold        TO `gold-owners`;
+GRANT ALL PRIVILEGES ON SCHEMA production.gold        TO \`gold-owners\`;
 
 -- Grant on VOLUME (for file access)
-GRANT READ VOLUME  ON VOLUME production.bronze.raw_files TO `analysts`;
-GRANT WRITE VOLUME ON VOLUME production.bronze.raw_files TO `data-engineers`;
+GRANT READ VOLUME  ON VOLUME production.bronze.raw_files TO \`analysts\`;
+GRANT WRITE VOLUME ON VOLUME production.bronze.raw_files TO \`data-engineers\`;
 
 -- REVOKE
-REVOKE SELECT ON TABLE production.silver.customers FROM `contractors`;
+REVOKE SELECT ON TABLE production.silver.customers FROM \`contractors\`;
 
 -- SHOW grants
 SHOW GRANTS ON TABLE production.silver.orders;
-SHOW GRANTS TO `data-engineers`;
+SHOW GRANTS TO \`data-engineers\`;
 
 -- Service principals (used for jobs and pipelines)
-GRANT SELECT  ON TABLE production.silver.events  TO `job-sp-app-id-12345`;
+GRANT SELECT  ON TABLE production.silver.events  TO \`job-sp-app-id-12345\`;
 
 -- Key privilege types:
 -- SELECT:          read table data
@@ -2310,34 +2313,34 @@ targets:
 resources:
   pipelines:
     bronze_ingestion:
-      name: Bronze Ingestion - ${var.catalog}
-      target: ${var.catalog}.bronze
-      catalog: ${var.catalog}
+      name: Bronze Ingestion - \${var.catalog}
+      target: \${var.catalog}.bronze
+      catalog: \${var.catalog}
       libraries:
         - notebook:
             path: ./src/pipelines/bronze_ingestion.py
       configuration:
-        catalog: ${var.catalog}
-      development: ${bundle.target == "dev"}
+        catalog: \${var.catalog}
+      development: \${bundle.target == "dev"}
 
   jobs:
     gold_pipeline:
-      name: Gold Pipeline - ${var.catalog}
+      name: Gold Pipeline - \${var.catalog}
       schedule:
         quartz_cron_expression: "0 30 2 * * ?"
         timezone_id: UTC
       tasks:
         - task_key: run_bronze_dlt
           pipeline_task:
-            pipeline_id: ${resources.pipelines.bronze_ingestion.id}
+            pipeline_id: \${resources.pipelines.bronze_ingestion.id}
         - task_key: compute_gold
           depends_on:
             - task_key: run_bronze_dlt
           notebook_task:
             notebook_path: ./src/notebooks/compute_gold.py
             base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
+              catalog: \${var.catalog}
+              schema: \${var.schema}
           job_cluster_key: default_cluster
       job_clusters:
         - job_cluster_key: default_cluster
