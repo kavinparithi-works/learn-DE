@@ -444,14 +444,17 @@ export default function Home({ completed }: Props) {
           </div>
 
           <div style={{ display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap',marginBottom:56 }}>
-            <Link to="/foundations" style={{
-              padding:'14px 32px',borderRadius:'9999px',
-              background:'linear-gradient(135deg,#4f8ef7,#8b5cf6,#ec4899)',
-              color:'white',fontSize:'1rem',fontWeight:700,
-              textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,
-              boxShadow:'0 4px 28px rgba(139,92,246,.45)',
-              letterSpacing:'-.01em',fontFamily:'var(--font-display)',
-            }}>▶ Start Learning</Link>
+            <button
+              onClick={() => document.getElementById('learning-path')?.scrollIntoView({ behavior:'smooth' })}
+              style={{
+                padding:'14px 32px',borderRadius:'9999px',
+                background:'linear-gradient(135deg,#4f8ef7,#8b5cf6,#ec4899)',
+                color:'white',fontSize:'1rem',fontWeight:700,
+                border:'none',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:8,
+                boxShadow:'0 4px 28px rgba(139,92,246,.45)',
+                letterSpacing:'-.01em',fontFamily:'var(--font-display)',
+              }}
+            >▶ Start Learning</button>
             <Link to="/interview" style={{
               padding:'14px 32px',borderRadius:'9999px',
               background:'rgba(255,255,255,.08)',
@@ -498,7 +501,7 @@ export default function Home({ completed }: Props) {
       </section>
 
       {/* ── LEVEL CARDS ─────────────────────── */}
-      <section style={{ padding:'80px 48px',background:'var(--bg)' }}>
+      <section id="learning-path" style={{ padding:'80px 48px',background:'var(--bg)' }}>
         <div style={{ textAlign:'center',marginBottom:56 }}>
           <div style={{
             display:'inline-flex',alignItems:'center',gap:6,
