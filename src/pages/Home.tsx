@@ -357,6 +357,45 @@ export default function Home({ completed }: Props) {
             From Zero to Senior<br />Azure Data Engineer
           </h1>
 
+          {/* Creator byline — attention-grabbing */}
+          <div style={{
+            display:'inline-flex', alignItems:'center', gap:10,
+            marginBottom:22, marginTop:4,
+          }}>
+            <div style={{ height:1, width:40, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.25))' }}/>
+            <a
+              href="https://www.linkedin.com/in/kavinparithi"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display:'inline-flex', alignItems:'center', gap:7,
+                textDecoration:'none',
+                fontFamily:'var(--font-display)',
+                fontSize:'clamp(.85rem,2vw,1rem)',
+                fontWeight:800,
+                letterSpacing:'-.01em',
+                background:'linear-gradient(135deg,#93c5fd 0%,#c4b5fd 50%,#f9a8d4 100%)',
+                backgroundSize:'200% 200%',
+                animation:'gradientShift 4s ease infinite',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+                transition:'filter .25s ease',
+              }}
+              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.filter='brightness(1.25) drop-shadow(0 0 12px rgba(196,181,253,.6))'}
+              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.filter='none'}
+            >
+              <span style={{
+                display:'inline-flex', alignItems:'center', justifyContent:'center',
+                width:26, height:26, borderRadius:'50%', flexShrink:0,
+                background:'linear-gradient(135deg,#4f8ef7,#8b5cf6)',
+                fontSize:'.78rem', fontWeight:900, color:'white',
+                WebkitTextFillColor:'white',
+                boxShadow:'0 0 14px rgba(139,92,246,.55)',
+              }}>K</span>
+              Kavin Parithi Sivasamy
+            </a>
+            <div style={{ height:1, width:40, background:'linear-gradient(90deg,rgba(255,255,255,.25),transparent)' }}/>
+          </div>
+
           <p style={{
             fontSize:'1.08rem',color:'rgba(255,255,255,.6)',
             maxWidth:580,margin:'0 auto 40px',lineHeight:1.75,
