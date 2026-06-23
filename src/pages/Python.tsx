@@ -8,14 +8,26 @@ interface Props { completed: Set<string>; onComplete: () => void }
 
 const SECTIONS = [
   { title: 'Level 5 - Python for DE', items: [
-    { id: 'py-execution', label: 'Python Execution Model and GIL' },
-    { id: 'py-structures', label: 'Data Structures and Comprehensions' },
-    { id: 'py-functions', label: 'Functions, Generators, Decorators' },
-    { id: 'py-oop', label: 'OOP and Design Patterns' },
-    { id: 'py-errors', label: 'Error Handling and Logging' },
-    { id: 'py-pandas', label: 'pandas for Data Engineering' },
-    { id: 'py-linux', label: 'Linux and Shell Scripting' },
-    { id: 'py-git', label: 'Git for Data Engineers' },
+    { id: 'py-execution', label: 'Python Execution Model & GIL' },
+    { id: 'py-types', label: 'Type System & Type Hints' },
+    { id: 'py-structures', label: 'Data Structures & Big-O' },
+    { id: 'py-comprehensions', label: 'Comprehensions & Generators Intro' },
+    { id: 'py-functions', label: 'Functions, args/kwargs, functools' },
+    { id: 'py-generators', label: 'Generators & itertools' },
+    { id: 'py-decorators', label: 'Decorators' },
+    { id: 'py-oop', label: 'OOP, ABC, Protocol, dataclasses' },
+    { id: 'py-context', label: 'Context Managers' },
+    { id: 'py-errors', label: 'Error Handling & Logging' },
+    { id: 'py-async', label: 'Async Programming & asyncio' },
+    { id: 'py-io', label: 'File I/O & Config' },
+    { id: 'py-regex', label: 'Regular Expressions' },
+    { id: 'py-testing', label: 'Testing with pytest' },
+    { id: 'py-packages', label: 'Package Management' },
+    { id: 'py-pandas', label: 'pandas Deep Dive' },
+    { id: 'py-db', label: 'Database Connections' },
+    { id: 'py-http', label: 'HTTP Clients' },
+    { id: 'py-linux', label: 'Linux & Shell Scripting' },
+    { id: 'py-git', label: 'Git Deep Dive' },
   ]},
 ]
 
@@ -43,344 +55,2513 @@ export default function Python({ completed, onComplete }: Props) {
       <Sidebar sections={SECTIONS} activeId={activeId} completed={completed} totalTopics={totalTopics} onItemClick={scrollTo} />
       <main className="main-content">
 
+        {/* ── py-execution ─────────────────────────────────────────────── */}
         <section id="py-execution" ref={el => { if (el) sectionRefs.current['py-execution'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Python Execution Model and the GIL</h1>
-            <p className="topic-desc">Python's execution model is unique. Understanding the GIL (Global Interpreter Lock) explains why Python uses multiprocessing for CPU-bound tasks and how PySpark bypasses this limitation entirely.</p>
+            <h1 className="topic-title">Python Execution Model & the GIL</h1>
+            <p className="topic-desc">Python's execution model is unique among mainstream languages. Understanding the GIL (Global Interpreter Lock) explains why Python threads don't parallelize CPU work, why data engineers default to multiprocessing or asyncio, and how PySpark bypasses these constraints entirely by running in the JVM.</p>
           </div>
 
           <PythonGilAnimation />
 
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
-            <div className="callout-body"><strong>The GIL:</strong> CPython's Global Interpreter Lock allows only ONE thread to execute Python bytecode at a time. Threads are useful for I/O-bound work (network, disk) but NOT CPU-bound (parsing, computation). PySpark runs in the JVM - the GIL doesn't apply to Spark's distributed execution.</div>
+            <div className="callout-body">
+              <strong>The GIL in one sentence:</strong> CPython's Global Interpreter Lock allows only ONE thread to execute Python bytecode at a time — even on multi-core machines. Threads help for I/O-bound work (network, disk) because the GIL is released during blocking I/O. For CPU-bound work (parsing, hashing, computation) you need <code>multiprocessing</code> or offload to a compiled extension. PySpark runs transformations in the JVM — the GIL is irrelevant to Spark's distributed execution.
+            </div>
           </div>
 
-          <CodeBlock lang="python">{`import threading, multiprocessing, concurrent.futures
+          <CodeBlock lang="python">{`import threading
+import multiprocessing
+import concurrent.futures
+import asyncio
 import time
 
-# I/O-bound: threads work fine (GIL released during I/O)
-def fetch_url(url):
-    import urllib.request
-    return urllib.request.urlopen(url).read()
+# ── 1. I/O-bound: ThreadPoolExecutor (GIL released during I/O) ────────────
+# Pattern: ingest files from ADLS, call REST APIs, query SQL concurrently
+import urllib.request
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
-    results = list(ex.map(fetch_url, urls))  # parallel I/O
+def download_partition(url: str) -> bytes:
+    with urllib.request.urlopen(url, timeout=30) as resp:
+        return resp.read()
 
-# CPU-bound: use multiprocessing (bypasses GIL, separate processes)
-def compute_heavy(n):
-    return sum(i * i for i in range(n))
+partition_urls = [
+    "https://storage.blob.core.windows.net/raw/part-00000.parquet",
+    "https://storage.blob.core.windows.net/raw/part-00001.parquet",
+    "https://storage.blob.core.windows.net/raw/part-00002.parquet",
+]
 
-with multiprocessing.Pool(processes=4) as pool:
-    results = pool.map(compute_heavy, [10**7, 10**7, 10**7, 10**7])
+with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+    futures = {executor.submit(download_partition, u): u for u in partition_urls}
+    for future in concurrent.futures.as_completed(futures):
+        url = futures[future]
+        try:
+            data = future.result()
+            print(f"Downloaded {len(data):,} bytes from {url}")
+        except Exception as exc:
+            print(f"Failed {url}: {exc}")
 
-# asyncio: single-threaded async I/O (event loop)
-import asyncio, aiohttp
+# ── 2. CPU-bound: multiprocessing (separate processes, no GIL) ────────────
+# Pattern: parallel file parsing, JSON validation, hash computation
+import hashlib, json
 
-async def fetch(session, url):
-    async with session.get(url) as resp:
-        return await resp.json()
+def validate_and_hash_file(filepath: str) -> dict:
+    """Parse JSON lines file and compute SHA-256 — CPU-heavy work."""
+    with open(filepath, "rb") as f:
+        raw = f.read()
+    records = [json.loads(line) for line in raw.splitlines() if line.strip()]
+    checksum = hashlib.sha256(raw).hexdigest()
+    return {"file": filepath, "records": len(records), "sha256": checksum}
 
-async def main():
-    async with aiohttp.ClientSession() as session:
-        tasks = [fetch(session, url) for url in urls]
-        results = await asyncio.gather(*tasks)
+files = ["/data/raw/events_2024_01.jsonl", "/data/raw/events_2024_02.jsonl"]
 
-asyncio.run(main())`}</CodeBlock>
+with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+    results = pool.map(validate_and_hash_file, files)
+
+for r in results:
+    print(f"{r['file']}: {r['records']} records, SHA256={r['sha256'][:12]}…")
+
+# ── 3. asyncio: single-threaded cooperative async I/O ────────────────────
+# Pattern: high-throughput API ingestion without spawning many threads
+import aiohttp
+
+async def fetch_page(session: aiohttp.ClientSession, url: str, page: int) -> list:
+    async with session.get(url, params={"page": page, "size": 500}) as resp:
+        resp.raise_for_status()
+        payload = await resp.json()
+        return payload["data"]
+
+async def ingest_api(base_url: str, total_pages: int) -> list:
+    all_records = []
+    async with aiohttp.ClientSession(
+        headers={"Authorization": "Bearer $TOKEN"},
+        timeout=aiohttp.ClientTimeout(total=60),
+    ) as session:
+        tasks = [fetch_page(session, base_url, p) for p in range(1, total_pages + 1)]
+        pages = await asyncio.gather(*tasks, return_exceptions=True)
+        for page in pages:
+            if isinstance(page, Exception):
+                print(f"Page failed: {page}")
+            else:
+                all_records.extend(page)
+    return all_records
+
+# records = asyncio.run(ingest_api("https://api.example.com/events", total_pages=20))`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── Bytecode & .pyc files ────────────────────────────────────────────────
+# Python compiles .py → bytecode (.pyc in __pycache__) before execution.
+# The CPython interpreter (virtual machine) executes bytecode, not raw text.
+import dis, sys
+
+def transform_row(row: dict) -> dict:
+    return {k: v.strip().lower() if isinstance(v, str) else v for k, v in row.items()}
+
+# Inspect bytecode to understand what Python actually runs:
+dis.dis(transform_row)
+# >>> LOAD_FAST, BUILD_MAP, etc. — these are the instructions the GIL guards
+
+print(f"Python {sys.version}")
+print(f"CPython implementation: {sys.implementation.name}")  # cpython
+
+# ── Free-threaded Python (3.13+, experimental) ──────────────────────────
+# Python 3.13 ships an optional no-GIL build:
+#   python3.13t  (the 't' suffix = free-threaded)
+# Still experimental; most C extensions not yet compatible.
+# For now, multiprocessing + asyncio remain the production patterns.`}</CodeBlock>
 
           <Quiz topicId="py-execution" questions={[
-            { question: "What is the Python GIL?", options: ["A garbage collector", "A lock that prevents multiple threads from executing Python bytecode simultaneously", "A network interface", "A type system"], correct: 1 },
-            { question: "For CPU-bound tasks in Python, you should use:", options: ["threading", "asyncio", "multiprocessing", "coroutines"], correct: 2 },
-            { question: "Why does PySpark not suffer from Python's GIL?", options: ["PySpark uses PyPy", "Spark computations run in the JVM (Java/Scala), not CPython", "PySpark disables the GIL", "PySpark uses asyncio"], correct: 1 },
+            { question: "The Python GIL means that even on a 16-core machine, CPython threads can:", options: ["Execute Python bytecode fully in parallel across all cores", "Execute only one thread's Python bytecode at a time", "Execute I/O and CPU code in parallel simultaneously", "Never be used — only processes are allowed"], correct: 1 },
+            { question: "For a CPU-bound pipeline task (e.g., parsing 10 GB of JSON files), the correct Python parallelism tool is:", options: ["threading.Thread — fastest for all tasks", "asyncio.gather — best for computation", "multiprocessing.Pool — bypasses the GIL with separate processes", "concurrent.futures.ThreadPoolExecutor — releases the GIL for CPU work"], correct: 2 },
+            { question: "Why does PySpark not suffer from Python's GIL during data transformations?", options: ["PySpark uses PyPy which has no GIL", "PySpark automatically disables the GIL at startup", "Spark transformations execute in the JVM (Java/Scala workers) — Python only drives the driver logic", "PySpark uses asyncio internally"], correct: 2 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-execution'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
+        {/* ── py-types ──────────────────────────────────────────────────── */}
+        <section id="py-types" ref={el => { if (el) sectionRefs.current['py-types'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">Type System & Type Hints</h1>
+            <p className="topic-desc">Python is dynamically typed at runtime but supports static type annotations checked by tools like mypy and Pyright. In production data pipelines, type hints are not optional — they prevent entire classes of bugs, make IDE auto-complete reliable, and serve as living documentation for schema contracts.</p>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Type hints are zero-cost at runtime.</strong> Python ignores annotations during execution — they exist purely for static analysis tools (mypy, Pyright, Ruff) and IDEs. Use <code>from __future__ import annotations</code> at the top of files to make all annotations lazy strings (faster import, allows forward references).
+            </div>
+          </div>
+
+          <CodeBlock lang="python">{`from __future__ import annotations
+from typing import TypeVar, Generic, Callable, Literal, Union, Any
+from typing import TypedDict, Protocol, overload
+from collections.abc import Iterator, Sequence, Mapping
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+
+# ── Basic type hints ────────────────────────────────────────────────────
+def read_parquet(
+    path: str | Path,
+    columns: list[str] | None = None,
+    partition_filter: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Read a Parquet file and return rows as dicts."""
+    import pyarrow.parquet as pq
+    table = pq.read_table(str(path), columns=columns)
+    return table.to_pydict()  # type: ignore[return-value]
+
+# ── TypedDict: schema contracts for dict-based records ──────────────────
+class RawEvent(TypedDict):
+    event_id: str
+    user_id: int
+    event_type: str
+    timestamp: str
+    properties: dict[str, Any]
+
+class EnrichedEvent(TypedDict):
+    event_id: str
+    user_id: int
+    event_type: str
+    occurred_at: datetime
+    properties: dict[str, Any]
+    user_country: str       # enriched field
+    session_id: str | None  # may be absent
+
+def enrich_event(raw: RawEvent, user_lookup: dict[int, str]) -> EnrichedEvent:
+    return EnrichedEvent(
+        event_id=raw["event_id"],
+        user_id=raw["user_id"],
+        event_type=raw["event_type"],
+        occurred_at=datetime.fromisoformat(raw["timestamp"]),
+        properties=raw["properties"],
+        user_country=user_lookup.get(raw["user_id"], "unknown"),
+        session_id=raw["properties"].get("session_id"),
+    )
+
+# ── dataclass: typed, auto-generated __init__/__repr__/__eq__ ──────────
+@dataclass
+class PipelineConfig:
+    source_path: Path
+    target_path: Path
+    partition_cols: list[str]
+    batch_size: int = 50_000
+    overwrite: bool = False
+    tags: dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # Validate after construction
+        if self.batch_size <= 0:
+            raise ValueError(f"batch_size must be positive, got {self.batch_size}")
+        self.source_path = Path(self.source_path)   # coerce str → Path
+        self.target_path = Path(self.target_path)
+
+@dataclass(frozen=True)          # immutable — safe as dict key or set member
+class PartitionKey:
+    year: int
+    month: int
+    region: str
+
+    def to_path_fragment(self) -> str:
+        return f"year={self.year}/month={self.month:02d}/region={self.region}"
+
+# ── Protocol: structural subtyping ("duck typing" with type safety) ──────
+class DataWriter(Protocol):
+    """Any object with these methods satisfies DataWriter — no inheritance needed."""
+    def write(self, records: list[dict[str, Any]], destination: str) -> int: ...
+    def flush(self) -> None: ...
+
+class DeltaWriter:
+    def write(self, records: list[dict[str, Any]], destination: str) -> int:
+        import pyarrow as pa, pyarrow.parquet as pq
+        table = pa.Table.from_pylist(records)
+        pq.write_to_dataset(table, destination, partition_cols=["year", "month"])
+        return len(records)
+
+    def flush(self) -> None:
+        pass  # Delta handles commits atomically
+
+def run_pipeline(config: PipelineConfig, writer: DataWriter) -> None:
+    records = read_parquet(config.source_path)
+    written = writer.write(records, str(config.target_path))
+    writer.flush()
+    print(f"Wrote {written:,} records to {config.target_path}")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── Generics: reusable typed containers ─────────────────────────────────
+from typing import TypeVar, Generic
+
+T = TypeVar("T")
+R = TypeVar("R")
+
+class PipelineResult(Generic[T]):
+    """Typed result monad — avoids returning (data, error) tuples."""
+    def __init__(self, value: T | None, error: Exception | None = None) -> None:
+        self._value = value
+        self._error = error
+
+    @classmethod
+    def ok(cls, value: T) -> PipelineResult[T]:
+        return cls(value)
+
+    @classmethod
+    def fail(cls, error: Exception) -> PipelineResult[T]:
+        return cls(None, error)
+
+    def unwrap(self) -> T:
+        if self._error is not None:
+            raise self._error
+        assert self._value is not None
+        return self._value
+
+    def map(self, fn: Callable[[T], R]) -> PipelineResult[R]:
+        if self._error:
+            return PipelineResult.fail(self._error)
+        return PipelineResult.ok(fn(self.unwrap()))
+
+# ── Literal types: constrain string parameters ───────────────────────────
+WriteMode = Literal["overwrite", "append", "merge", "error"]
+FileFormat = Literal["parquet", "delta", "csv", "json"]
+
+def write_dataset(
+    df: Any,
+    path: str,
+    mode: WriteMode = "append",
+    fmt: FileFormat = "delta",
+) -> None:
+    df.write.format(fmt).mode(mode).save(path)
+
+# ── mypy usage (run in CI, not at runtime) ───────────────────────────────
+# mypy src/ --strict --ignore-missing-imports
+# Key flags:
+#   --strict          → enables all optional checks
+#   --disallow-any-explicit  → ban bare Any
+#   --warn-return-any → warn when function returns Any
+#   --no-implicit-optional → None must be explicit (x: str | None)
+
+# pyproject.toml:
+# [tool.mypy]
+# python_version = "3.11"
+# strict = true
+# plugins = ["pydantic.mypy"]`}</CodeBlock>
+
+          <Quiz topicId="py-types" questions={[
+            { question: "In Python, type hints like 'def fn(x: int) -> str' are:", options: ["Enforced at runtime — TypeError raised if violated", "Purely for static analysis tools (mypy/Pyright) and IDEs — ignored at runtime", "Compiled to C checks for performance", "Only valid in Python 3.12+"], correct: 1 },
+            { question: "Which typing construct is best for defining the exact shape of a dictionary (like a JSON schema) with static checking?", options: ["dict[str, Any] — most flexible", "TypedDict — key names and value types are statically checked", "dataclass — required for dict-like objects", "NamedTuple — always use instead of TypedDict"], correct: 1 },
+            { question: "A Protocol in Python's typing system enables:", options: ["Multiple inheritance without MRO issues", "Structural subtyping — any class with matching methods satisfies the Protocol, no explicit inheritance needed", "Runtime interface enforcement like Java interfaces", "Abstract method enforcement identical to ABC"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-types'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        {/* ── py-structures ─────────────────────────────────────────────── */}
         <section id="py-structures" ref={el => { if (el) sectionRefs.current['py-structures'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Data Structures and Comprehensions</h1>
+            <h1 className="topic-title">Data Structures & Big-O</h1>
+            <p className="topic-desc">Choosing the right data structure is a multiplier on pipeline performance. A membership test that costs O(n) in a list costs O(1) in a set. A priority queue implemented with a sorted list costs O(n log n) per insert; heapq costs O(log n). These differences dominate at pipeline scale.</p>
           </div>
-          <CodeBlock lang="python">{`# List - ordered, mutable, O(1) append, O(n) search
-events = ['click', 'view', 'purchase']
-events.append('refund')
 
-# Dict - key-value, O(1) lookup (hash table)
-user = {'id': 1, 'name': 'Alice', 'active': True}
-user.get('email', 'unknown')  # safe get with default
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', fontFamily: 'var(--font-mono)' }}>
+              <thead>
+                <tr style={{ background: 'var(--gray-100)', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-1)' }}>Structure</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-1)' }}>Access</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-1)' }}>Search</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-1)' }}>Insert</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--text-1)' }}>Delete</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-1)' }}>Best for</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: 'list', access: 'O(1)', search: 'O(n)', insert: 'O(1) tail', del: 'O(n)', use: 'Ordered sequences, iteration, append' },
+                  { name: 'dict', access: 'O(1)', search: 'O(1)', insert: 'O(1)', del: 'O(1)', use: 'Key lookups, grouping, caches' },
+                  { name: 'set', access: '—', search: 'O(1)', insert: 'O(1)', del: 'O(1)', use: 'Dedup, membership tests, set ops' },
+                  { name: 'deque', access: 'O(1) ends', search: 'O(n)', insert: 'O(1) ends', del: 'O(1) ends', use: 'Queues, sliding windows, BFS' },
+                  { name: 'heapq', access: 'O(1) min', search: 'O(n)', insert: 'O(log n)', del: 'O(log n)', use: 'Priority queues, top-K, merge' },
+                ].map((row, i) => (
+                  <tr key={row.name} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--gray-50)', borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '7px 12px', fontWeight: 700, color: 'var(--blue-500)' }}>{row.name}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: 'var(--text-2)' }}>{row.access}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: 'var(--text-2)' }}>{row.search}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: 'var(--text-2)' }}>{row.insert}</td>
+                    <td style={{ padding: '7px 12px', textAlign: 'center', color: 'var(--text-2)' }}>{row.del}</td>
+                    <td style={{ padding: '7px 12px', color: 'var(--text-3)', fontSize: '.78rem' }}>{row.use}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-# Set - unique values, O(1) membership check
-unique_users = {row['user_id'] for row in events_df}
-active_users = set(df_active['user_id'].tolist())
-new_users = active_users - existing_users  # set difference
+          <CodeBlock lang="python">{`from collections import deque, defaultdict, Counter, OrderedDict
+import heapq
+from typing import Any
 
-# Tuple - immutable, useful as dict keys or namedtuples
-from collections import namedtuple
-Record = namedtuple('Record', ['id', 'value', 'ts'])
+# ── list: ordered buffer for pipeline batches ───────────────────────────
+batch: list[dict[str, Any]] = []
 
-# Comprehensions - Pythonic and fast
-squares = [x**2 for x in range(1000)]
-even_map = {x: x**2 for x in range(100) if x % 2 == 0}
+def flush_to_delta(batch: list[dict], target: str) -> None:
+    import pyarrow as pa, pyarrow.parquet as pq
+    table = pa.Table.from_pylist(batch)
+    pq.write_to_dataset(table, table_path=target, partition_cols=["date"])
 
-# defaultdict - auto-creates missing keys
-from collections import defaultdict
-word_count = defaultdict(int)
-for word in text.split(): word_count[word] += 1
+for event in event_stream:
+    batch.append(event)
+    if len(batch) >= 10_000:
+        flush_to_delta(batch, "/mnt/delta/events")
+        batch.clear()   # O(1) clear vs re-creating the list
 
-# Counter - frequency counting
-from collections import Counter
-top10 = Counter(words).most_common(10)
+# ── dict: O(1) lookup — use for enrichment joins ────────────────────────
+# Build lookup dict from a "small" dimension table (fits in driver memory)
+import pandas as pd
 
-# deque - efficient queue (O(1) both ends vs list's O(n) front pop)
+dim_df = pd.read_parquet("/mnt/adls/dim_users.parquet", columns=["user_id", "country", "tier"])
+user_lookup: dict[int, dict] = {
+    row["user_id"]: {"country": row["country"], "tier": row["tier"]}
+    for _, row in dim_df.iterrows()
+}   # 10M rows → ~800 MB RAM but O(1) per lookup in the hot loop
+
+def enrich(event: dict) -> dict:
+    meta = user_lookup.get(event["user_id"], {"country": "unknown", "tier": "free"})
+    return {**event, **meta}
+
+# ── set: O(1) membership — dedup and existence checks ────────────────────
+processed_ids: set[str] = set()
+
+for record in incoming_records:
+    if record["id"] in processed_ids:     # O(1) — not O(n) like a list
+        continue
+    processed_ids.add(record["id"])
+    process(record)
+
+# Set algebra for pipeline reconciliation:
+expected = set(pd.read_csv("expected_ids.csv")["id"])
+actual   = set(pd.read_parquet("output.parquet")["id"])
+missing  = expected - actual          # in expected but not written
+extra    = actual - expected          # written but not in expected
+print(f"Missing: {len(missing)}, Extra: {len(extra)}")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── deque: O(1) at both ends — sliding windows & work queues ────────────
 from collections import deque
-queue = deque(maxlen=1000)  # sliding window`}</CodeBlock>
+
+# Sliding window: keep last N events per user for anomaly detection
+WINDOW = 100
+user_event_windows: dict[int, deque] = defaultdict(lambda: deque(maxlen=WINDOW))
+
+for event in stream:
+    uid = event["user_id"]
+    user_event_windows[uid].append(event["amount"])
+    if len(user_event_windows[uid]) == WINDOW:
+        avg = sum(user_event_windows[uid]) / WINDOW
+        if event["amount"] > avg * 5:
+            flag_anomaly(uid, event)
+
+# ── heapq: O(log n) priority — top-K and merge sorted streams ───────────
+import heapq
+
+# Top-10 highest-revenue customers from a large stream
+heap: list[tuple[float, int]] = []   # (revenue, customer_id)
+
+for row in revenue_stream:
+    heapq.heappush(heap, (row["revenue"], row["customer_id"]))
+    if len(heap) > 10:
+        heapq.heappop(heap)   # drop the smallest
+
+top10 = sorted(heap, reverse=True)
+
+# Merge N sorted partition files without loading all into memory:
+import pyarrow.parquet as pq
+
+def merge_sorted_partitions(paths: list[str], sort_col: str) -> list[dict]:
+    readers = [pq.open_file(p).iter_batches(batch_size=1000) for p in paths]
+    return list(heapq.merge(*readers, key=lambda row: row[sort_col]))
+
+# ── defaultdict: auto-init missing keys ─────────────────────────────────
+# Group pipeline errors by type without if-key-exists boilerplate
+errors: defaultdict[str, list] = defaultdict(list)
+
+for exc in pipeline_exceptions:
+    errors[type(exc).__name__].append(str(exc))
+
+for error_type, messages in errors.items():
+    print(f"{error_type}: {len(messages)} occurrences")
+
+# ── Counter: frequency analysis in one line ──────────────────────────────
+from collections import Counter
+
+event_types = Counter(e["event_type"] for e in events)
+print(event_types.most_common(5))
+# [('page_view', 42100), ('click', 18300), ('purchase', 4210), ...]
+
+# Combine two counters (union of counts):
+today_counts = Counter(today_events)
+yesterday_counts = Counter(yesterday_events)
+combined = today_counts + yesterday_counts`}</CodeBlock>
+
           <Quiz topicId="py-structures" questions={[
-            { question: "What is the time complexity of dictionary key lookup in Python?", options: ["O(n)", "O(log n)", "O(1) average case (hash table)", "O(n log n)"], correct: 2 },
-            { question: "Why use a set instead of a list for membership testing?", options: ["Sets are ordered", "Sets use O(1) hash lookup vs O(n) linear scan for lists", "Sets allow duplicates", "Sets are smaller in memory"], correct: 1 },
+            { question: "You need to check whether a user_id has already been processed (deduplication in a pipeline loop with 50M records). Which structure gives O(1) lookup?", options: ["list — simple and readable", "set — O(1) average-case hash lookup", "sorted list with bisect — O(log n)", "tuple — immutable so faster"], correct: 1 },
+            { question: "You need to maintain the top-100 highest-value orders seen so far in a streaming pipeline without sorting the entire stream. The right structure is:", options: ["A sorted list — always O(1) access", "heapq (min-heap of size 100) — O(log 100) per insert, O(1) peek at min", "Counter.most_common() — designed for top-K", "deque(maxlen=100) — automatically evicts old items"], correct: 1 },
+            { question: "collections.defaultdict(list) vs a plain dict: what problem does defaultdict solve?", options: ["defaultdict is faster for all operations", "defaultdict auto-initialises missing keys with the factory value, eliminating if-key-not-in-dict boilerplate", "defaultdict allows non-hashable keys", "defaultdict is thread-safe; plain dict is not"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-structures'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
-        <section id="py-functions" ref={el => { if (el) sectionRefs.current['py-functions'] = el }} className="topic-section">
+        {/* ── py-comprehensions ─────────────────────────────────────────── */}
+        <section id="py-comprehensions" ref={el => { if (el) sectionRefs.current['py-comprehensions'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Functions, Generators, and Decorators</h1>
+            <h1 className="topic-title">Comprehensions & Generators Intro</h1>
+            <p className="topic-desc">Comprehensions are Python's most idiomatic feature for building collections. They're faster than equivalent for-loops because the iteration is implemented in C inside the interpreter. Generator expressions look identical but produce values lazily — critical when processing files or streams that don't fit in memory.</p>
           </div>
-          <CodeBlock lang="python">{`# Generators - lazy evaluation, memory-efficient for large datasets
-def read_large_csv(filepath, chunksize=10_000):
-    """Yields chunks of a large file without loading all into memory."""
-    import pandas as pd
-    for chunk in pd.read_csv(filepath, chunksize=chunksize):
-        yield chunk
 
-for chunk in read_large_csv('/data/10gb_file.csv'):
-    process(chunk)  # only chunksize rows in memory at once
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>Rule of thumb:</strong> Use a <em>list comprehension</em> when you need the full collection in memory (e.g., passing to a function). Use a <em>generator expression</em> when you're immediately iterating or aggregating (e.g., <code>sum()</code>, <code>max()</code>, writing to a file row-by-row). Never use a list comprehension just to feed it into <code>for x in [...]</code>.
+            </div>
+          </div>
 
-# Generator expression (lazy list comprehension)
-total = sum(row['amount'] for row in db.query("SELECT amount FROM orders"))
+          <CodeBlock lang="python">{`# ── List comprehensions ─────────────────────────────────────────────────
+# Transform and filter in one expression — cleaner than for+append
+raw_paths = [
+    "/mnt/raw/events_2024-01.jsonl",
+    "/mnt/raw/events_2024-02.jsonl",
+    "/mnt/raw/.DS_Store",            # junk file — filter out
+    "/mnt/raw/events_2024-03.jsonl",
+]
 
-# Decorators - wrap functions without modifying them
-import functools, time, logging
+# Filter + transform: keep only .jsonl, extract filename stem
+import os
+valid_files = [
+    os.path.basename(p).replace(".jsonl", "")
+    for p in raw_paths
+    if p.endswith(".jsonl")
+]
+# ['events_2024-01', 'events_2024-02', 'events_2024-03']
 
-def retry(max_attempts=3, delay=1):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_attempts):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    if attempt == max_attempts - 1: raise
-                    time.sleep(delay * (2 ** attempt))  # exponential backoff
-        return wrapper
-    return decorator
+# Nested comprehension: flatten partitioned records from multiple tables
+from pathlib import Path
+import json
 
-def timer(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        t = time.perf_counter()
-        result = func(*args, **kwargs)
-        logging.info(f"{func.__name__} took {time.perf_counter()-t:.2f}s")
-        return result
-    return wrapper
+all_records = [
+    record
+    for partition_file in Path("/mnt/landing/orders").glob("**/*.jsonl")
+    for record in map(json.loads, partition_file.read_text().splitlines())
+    if record.get("status") != "cancelled"
+]
 
-@retry(max_attempts=3)
-@timer
-def fetch_api_data(endpoint: str) -> dict:
-    import requests
-    return requests.get(endpoint, timeout=10).json()`}</CodeBlock>
+# Comprehension with complex expression:
+def normalize_col(name: str) -> str:
+    return name.strip().lower().replace(" ", "_").replace("-", "_")
+
+schema_map = {col: normalize_col(col) for col in raw_df.columns}
+# {'User ID': 'user_id', 'Event-Type': 'event_type', ' Amount ': 'amount'}
+
+renamed_df = raw_df.rename(columns=schema_map)
+
+# ── Dict comprehensions ──────────────────────────────────────────────────
+# Invert a lookup table (swap keys ↔ values)
+country_code = {"US": "United States", "GB": "United Kingdom", "DE": "Germany"}
+code_by_name  = {v: k for k, v in country_code.items()}
+
+# Build partition stats from a list of row dicts:
+import statistics
+from collections import defaultdict
+
+rows = load_rows("/mnt/silver/sales.parquet")
+revenue_by_region: dict[str, float] = {
+    region: sum(r["amount"] for r in group)
+    for region, group in groupby_key(rows, "region").items()
+}
+
+# ── Set comprehensions ───────────────────────────────────────────────────
+# Unique event types seen in today's load — for schema validation
+seen_event_types: set[str] = {row["event_type"] for row in rows}
+
+EXPECTED_EVENTS = {"page_view", "click", "purchase", "refund"}
+unexpected = seen_event_types - EXPECTED_EVENTS
+if unexpected:
+    raise ValueError(f"Unexpected event types: {unexpected}")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`# ── Generator expressions: lazy evaluation ──────────────────────────────
+import csv, gzip, json
+from pathlib import Path
+
+# Reading a 20 GB gzipped JSONL file — generator never loads it all into RAM
+def iter_jsonl_gz(path: str):
+    """Yield one parsed dict per line from a gzipped JSONL file."""
+    with gzip.open(path, "rt", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                yield json.loads(line)
+
+# Aggregate with generator — only one record in memory at a time:
+total_revenue = sum(
+    row["amount"]
+    for row in iter_jsonl_gz("/mnt/raw/transactions_2024.jsonl.gz")
+    if row["currency"] == "USD" and row["status"] == "completed"
+)
+
+# Count lines in a huge file without reading into memory:
+line_count = sum(1 for _ in open("/mnt/raw/bigfile.csv"))
+
+# Generator pipeline — chain transformations lazily:
+def parse_csv_rows(path: str):
+    with open(path, newline="") as f:
+        reader = csv.DictReader(f)
+        yield from reader   # yield from delegates to the inner iterator
+
+def clean_row(row: dict) -> dict:
+    return {k: v.strip() for k, v in row.items() if v.strip()}
+
+def validate_row(row: dict) -> bool:
+    return bool(row.get("user_id")) and bool(row.get("event_type"))
+
+# Compose pipeline — nothing executes until we consume:
+raw   = parse_csv_rows("/mnt/landing/events.csv")
+clean = (clean_row(r) for r in raw)
+valid = (r for r in clean if validate_row(r))
+
+# Consume — only now does data flow through all stages:
+BATCH_SIZE = 5_000
+batch = []
+for record in valid:
+    batch.append(record)
+    if len(batch) >= BATCH_SIZE:
+        write_to_delta(batch, "/mnt/silver/events")
+        batch.clear()
+if batch:
+    write_to_delta(batch, "/mnt/silver/events")   # flush remainder
+
+# ── Performance: comprehension vs for-loop ───────────────────────────────
+import timeit
+
+# List comp: CPython executes the loop in C (faster bytecode path)
+t_comp  = timeit.timeit("[x**2 for x in range(100_000)]", number=100)
+
+# Equivalent for-loop: slower due to Python bytecode overhead per iteration
+t_loop  = timeit.timeit(
+    "result = []\nfor x in range(100_000):\n    result.append(x**2)",
+    number=100
+)
+
+print(f"Comprehension: {t_comp:.3f}s  |  For-loop: {t_loop:.3f}s")
+# Comprehension: 0.83s  |  For-loop: 1.21s  (~30–40% faster typical)
+
+# Generator expression: no list allocation at all — best for aggregation
+t_gen = timeit.timeit("sum(x**2 for x in range(100_000))", number=100)
+# Slightly slower than list comp for sum() due to generator overhead,
+# but uses O(1) memory vs O(n) — the right trade-off for large data.`}</CodeBlock>
+
+          <Quiz topicId="py-comprehensions" questions={[
+            { question: "You need to compute the sum of a column across a 10 GB JSONL file that doesn't fit in RAM. Which approach is correct?", options: ["[row['amount'] for row in iter_file(path)] then sum() — fast because list comp is optimised", "sum(row['amount'] for row in iter_file(path)) — generator expression never materialises the full list", "pd.read_json(path)['amount'].sum() — pandas always handles large files efficiently", "map(lambda r: r['amount'], iter_file(path)) then sum() — map is lazy so identical"], correct: 1 },
+            { question: "A list comprehension is generally faster than an equivalent for-loop + append because:", options: ["The Python interpreter optimises list comps with multi-threading", "The iteration loop executes in C within CPython, avoiding per-iteration Python bytecode overhead", "List comps are compiled to native machine code at parse time", "CPython pre-allocates the list at a fixed size to avoid reallocation"], correct: 1 },
+            { question: "What is the key difference between [x*2 for x in data] and (x*2 for x in data)?", options: ["Brackets vs parentheses is purely stylistic — behaviour is identical", "The list comprehension builds the full list in memory immediately; the generator expression yields values one at a time lazily", "Generator expressions are always faster than list comprehensions", "List comprehensions support filtering with if; generator expressions do not"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-comprehensions'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-functions" ref={el => { if (el) sectionRefs.current['py-functions'] = el }} className="topic-section">
+          <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Functions, args/kwargs, closures, functools</h1><p className="topic-desc">Python functions are first-class objects. Mastering args/kwargs, closures, functools.partial, and lru_cache is essential for building flexible, reusable pipeline components.</p></div>
+
+          <CodeBlock lang="python">{`from typing import Any, Callable
+import functools
+
+# *args and **kwargs - accept any positional/keyword arguments
+def log_pipeline_step(step_name: str, *metrics, **metadata) -> None:
+    """Log pipeline step with arbitrary metrics and metadata."""
+    import logging
+    logger = logging.getLogger(__name__)
+    metrics_str = ", ".join(str(m) for m in metrics)
+    meta_str = ", ".join(f"{k}={v}" for k, v in metadata.items())
+    logger.info(f"[{step_name}] metrics=({metrics_str}) {meta_str}")
+
+log_pipeline_step("ingest", 10_000, 0.98, source="s3", table="events", duration_ms=342)
+
+# Keyword-only arguments (after *) - must be passed by name
+def read_parquet(path: str, *, columns: list[str] | None = None,
+                  filters: list | None = None, row_limit: int | None = None):
+    import pyarrow.parquet as pq
+    return pq.read_table(path, columns=columns, filters=filters).to_pandas()
+
+df = read_parquet("s3://bucket/data.parquet", columns=["user_id", "amount"], row_limit=1000)
+
+# Closures - function that captures outer scope variables
+def make_validator(schema: dict[str, type]) -> Callable[[dict], bool]:
+    """Returns a validator function that closes over the schema."""
+    def validate(record: dict) -> bool:
+        for field, expected_type in schema.items():
+            if field not in record:
+                raise ValueError(f"Missing field: {field}")
+            if not isinstance(record[field], expected_type):
+                raise TypeError(f"{field} expected {expected_type.__name__}")
+        return True
+    return validate  # validate closes over 'schema'
+
+validate_event = make_validator({"user_id": int, "event_type": str, "ts": float})
+validate_event({"user_id": 42, "event_type": "click", "ts": 1700000000.0})  # True
+
+# functools.partial - pre-fill arguments to create specialized functions
+import functools
+
+def write_to_gcs(df, bucket: str, path: str, format: str = "parquet") -> None:
+    df.to_parquet(f"gs://{bucket}/{path}")
+
+# Specialized writers with bucket pre-filled
+write_raw   = functools.partial(write_to_gcs, bucket="my-raw-bucket")
+write_curated = functools.partial(write_to_gcs, bucket="my-curated-bucket", format="parquet")
+
+write_raw(df, path="events/2024-01-01/data.parquet")
+write_curated(df, path="orders/daily/2024-01-01.parquet")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`import functools
+from typing import TypeVar
+
+# lru_cache - memoize expensive lookups (dimension tables, configs)
+@functools.lru_cache(maxsize=1024)
+def get_customer_tier(customer_id: int) -> str:
+    """Cached DB lookup - same customer_id returns cached result."""
+    result = db.execute(
+        "SELECT tier FROM customers WHERE id = %s", (customer_id,)
+    ).fetchone()
+    return result["tier"] if result else "unknown"
+
+# Cache info: hits, misses, maxsize, currsize
+print(get_customer_tier.cache_info())  # CacheInfo(hits=847, misses=153, ...)
+
+# functools.reduce - fold a sequence into a single value
+from functools import reduce
+
+# Merge multiple DataFrames with reduce
+import pandas as pd
+dfs = [pd.read_parquet(p) for p in parquet_files]
+merged = reduce(lambda left, right: pd.merge(left, right, on="id", how="inner"), dfs)
+
+# Apply pipeline stages functionally
+pipeline_stages = [clean_nulls, normalize_schema, add_audit_cols, deduplicate]
+result = reduce(lambda df, fn: fn(df), pipeline_stages, raw_df)
+
+# singledispatch - method overloading based on type
+@functools.singledispatch
+def serialize(obj) -> str:
+    raise NotImplementedError(f"Cannot serialize {type(obj)}")
+
+@serialize.register(dict)
+def _(obj: dict) -> str:
+    import json
+    return json.dumps(obj)
+
+@serialize.register(pd.DataFrame)
+def _(obj: pd.DataFrame) -> str:
+    return obj.to_csv(index=False)`}</CodeBlock>
+
           <Quiz topicId="py-functions" questions={[
-            { question: "What is the key advantage of Python generators for large datasets?", options: ["They are faster", "They produce values lazily - only one item in memory at a time", "They run in parallel", "They avoid the GIL"], correct: 1 },
-            { question: "What does @functools.wraps(func) do in a decorator?", options: ["Speeds up the function", "Preserves the original function's name and docstring metadata", "Adds type checking", "Makes the function a generator"], correct: 1 },
+            { question: "What is the difference between *args and **kwargs?", options: ["*args captures keyword args; **kwargs captures positional args", "*args captures extra positional args as a tuple; **kwargs captures extra keyword args as a dict", "*args and **kwargs are identical", "*args is for integers; **kwargs is for strings"], correct: 1 },
+            { question: "What does functools.lru_cache do?", options: ["Runs functions in parallel", "Memoizes function results — returns cached output for repeated identical inputs", "Converts a function to a generator", "Adds retry logic to a function"], correct: 1 },
+            { question: "What does functools.partial do?", options: ["Partially evaluates a function and returns a generator", "Creates a new function with some arguments pre-filled", "Splits a function into multiple steps", "Makes a function thread-safe"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-functions'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
-        <section id="py-oop" ref={el => { if (el) sectionRefs.current['py-oop'] = el }} className="topic-section">
-          <div className="topic-header">
-            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">OOP and Design Patterns</h1>
-          </div>
-          <CodeBlock lang="python">{`from abc import ABC, abstractmethod
+        <section id="py-generators" ref={el => { if (el) sectionRefs.current['py-generators'] = el }} className="topic-section">
+          <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Generators &amp; itertools</h1><p className="topic-desc">Generators are the cornerstone of memory-efficient data pipelines in Python. itertools provides lazy, composable building blocks for data stream processing.</p></div>
+
+          <CodeBlock lang="python">{`from typing import Iterator, Generator
+import itertools
+
+# Generator function - yields values lazily
+def stream_s3_records(bucket: str, prefix: str) -> Iterator[dict]:
+    """Stream records from many S3 objects without loading all into memory."""
+    import boto3, json
+    s3 = boto3.client("s3")
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            response = s3.get_object(Bucket=bucket, Key=obj["Key"])
+            for line in response["Body"].iter_lines():
+                yield json.loads(line)
+
+# Memory footprint: constant regardless of dataset size
+for record in stream_s3_records("my-bucket", "events/2024/"):
+    process(record)
+
+# yield from - delegate to sub-generator (flattens one level)
+def stream_all_sources(sources: list[str]) -> Iterator[dict]:
+    for source in sources:
+        yield from stream_s3_records("my-bucket", source)
+
+# Generator with send() - two-way communication
+def running_average() -> Generator[float, float, str]:
+    """Coroutine: send values in, get running average back."""
+    total, count = 0.0, 0
+    while True:
+        value = yield total / count if count else 0.0
+        if value is None:
+            return f"Final average: {total/count:.2f}"
+        total += value
+        count += 1
+
+avg = running_average()
+next(avg)          # prime the coroutine
+avg.send(10.0)     # → 10.0
+avg.send(20.0)     # → 15.0
+avg.send(30.0)     # → 20.0
+
+# Chaining generators into a pipeline (lazy, memory efficient)
+def read_jsonl(path: str) -> Iterator[dict]:
+    import gzip, json
+    opener = gzip.open if path.endswith(".gz") else open
+    with opener(path, "rt") as f:
+        for line in f:
+            yield json.loads(line.strip())
+
+def filter_records(records: Iterator[dict], field: str, value) -> Iterator[dict]:
+    return (r for r in records if r.get(field) == value)
+
+def transform_record(records: Iterator[dict]) -> Iterator[dict]:
+    for r in records:
+        yield {**r, "amount_usd": r["amount"] / 100, "processed": True}
+
+# Compose the pipeline - nothing runs until you consume it
+pipeline = transform_record(
+    filter_records(read_jsonl("events.jsonl.gz"), "type", "purchase")
+)
+for record in pipeline:
+    load_to_db(record)`}</CodeBlock>
+
+          <CodeBlock lang="python">{`import itertools
+from collections import defaultdict
+
+# itertools.chain - concatenate multiple iterables lazily
+jan_records = stream_s3_records("bucket", "events/2024-01/")
+feb_records = stream_s3_records("bucket", "events/2024-02/")
+all_records = itertools.chain(jan_records, feb_records)
+
+# itertools.islice - take first N records (useful for sampling/testing)
+sample = list(itertools.islice(stream_s3_records("bucket", "events/"), 1000))
+
+# itertools.groupby - group consecutive records by key (must be sorted first!)
+sorted_events = sorted(events, key=lambda e: e["user_id"])
+for user_id, user_events in itertools.groupby(sorted_events, key=lambda e: e["user_id"]):
+    events_list = list(user_events)
+    print(f"User {user_id}: {len(events_list)} events")
+
+# itertools.batched (Python 3.12+) / manual batching for DB inserts
+def batched(iterable, n: int):
+    """Yield successive n-sized batches."""
+    it = iter(iterable)
+    while batch := list(itertools.islice(it, n)):
+        yield batch
+
+for batch in batched(stream_s3_records("bucket", "events/"), n=500):
+    db.executemany("INSERT INTO events VALUES (%s, %s, %s)", batch)
+
+# itertools.combinations / permutations - for feature engineering
+columns = ["age", "income", "score"]
+feature_pairs = list(itertools.combinations(columns, 2))
+# [('age', 'income'), ('age', 'score'), ('income', 'score')]
+
+# itertools.product - Cartesian product for parameter grids
+regions = ["us-east", "eu-west", "ap-south"]
+dates = pd.date_range("2024-01-01", "2024-01-07").strftime("%Y-%m-%d").tolist()
+jobs = list(itertools.product(regions, dates))
+# [('us-east', '2024-01-01'), ('us-east', '2024-01-02'), ...]
+
+# itertools.accumulate - running totals
+import operator
+daily_sales = [1200, 850, 2100, 670, 1900]
+cumulative = list(itertools.accumulate(daily_sales, operator.add))
+# [1200, 2050, 4150, 4820, 6720]`}</CodeBlock>
+
+          <Quiz topicId="py-generators" questions={[
+            { question: "Why are generator functions preferred over returning a list for large dataset streaming?", options: ["Generators are always faster", "Generators yield one item at a time using O(1) memory; returning a list requires O(n) memory for the full dataset", "Generators run in parallel automatically", "Generators bypass the GIL"], correct: 1 },
+            { question: "What does itertools.islice do?", options: ["Slices a list in place", "Lazily takes the first N items from any iterator without consuming the rest", "Creates a slice object for numpy arrays", "Splits an iterator into N equal parts"], correct: 1 },
+            { question: "What requirement must be met before using itertools.groupby to group records?", options: ["Records must be stored in a dict", "Records must be sorted by the grouping key first — groupby only groups consecutive equal keys", "Records must be unique", "itertools.groupby has no requirements"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-generators'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-decorators" ref={el => { if (el) sectionRefs.current['py-decorators'] = el }} className="topic-section">
+          <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Decorators</h1><p className="topic-desc">Decorators let you wrap functions with cross-cutting concerns (logging, retry, timing, caching) without modifying business logic. They are the backbone of clean, DRY pipeline code.</p></div>
+
+          <CodeBlock lang="python">{`import functools, time, logging, threading
+from typing import TypeVar, Callable, Any
+
+F = TypeVar("F", bound=Callable[..., Any])
+logger = logging.getLogger(__name__)
+
+# Parametric retry decorator with exponential backoff
+def retry(
+    max_attempts: int = 3,
+    delay: float = 1.0,
+    backoff: float = 2.0,
+    exceptions: tuple[type[Exception], ...] = (Exception,),
+) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exc: Exception | None = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exc = e
+                    wait = delay * (backoff ** (attempt - 1))
+                    logger.warning(
+                        f"{func.__name__} attempt {attempt}/{max_attempts} failed: {e}. "
+                        f"Retrying in {wait:.1f}s..."
+                    )
+                    if attempt < max_attempts:
+                        time.sleep(wait)
+            raise last_exc  # type: ignore[misc]
+        return wrapper  # type: ignore[return-value]
+    return decorator
+
+# Timer decorator
+def timer(func: F) -> F:
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        elapsed = time.perf_counter() - start
+        logger.info(f"{func.__name__} completed in {elapsed:.3f}s")
+        return result
+    return wrapper  # type: ignore[return-value]
+
+# Rate limiter (token bucket style) - for API calls
+def rate_limit(calls_per_second: float) -> Callable[[F], F]:
+    min_interval = 1.0 / calls_per_second
+    lock = threading.Lock()
+    last_call: list[float] = [0.0]
+
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            with lock:
+                elapsed = time.time() - last_call[0]
+                if elapsed < min_interval:
+                    time.sleep(min_interval - elapsed)
+                last_call[0] = time.time()
+            return func(*args, **kwargs)
+        return wrapper  # type: ignore[return-value]
+    return decorator
+
+# Stacking decorators (applied bottom-up, executed top-down)
+@retry(max_attempts=3, delay=2.0, exceptions=(ConnectionError, TimeoutError))
+@timer
+@rate_limit(calls_per_second=10.0)
+def fetch_api_page(endpoint: str, page: int, token: str) -> dict:
+    import httpx
+    resp = httpx.get(
+        endpoint,
+        params={"page": page, "per_page": 100},
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=30.0,
+    )
+    resp.raise_for_status()
+    return resp.json()`}</CodeBlock>
+
+          <CodeBlock lang="python">{`import functools
 from dataclasses import dataclass
-from typing import Protocol
 
-# Abstract base class - forces subclasses to implement interface
+# Class-based decorator - maintains state across calls
+class Memoize:
+    """Decorator class with configurable TTL-based cache."""
+    def __init__(self, ttl_seconds: float = 300.0):
+        self.ttl = ttl_seconds
+        self.cache: dict = {}
+        self.timestamps: dict = {}
+
+    def __call__(self, func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            key = (args, tuple(sorted(kwargs.items())))
+            now = time.time()
+            if key in self.cache and (now - self.timestamps[key]) < self.ttl:
+                return self.cache[key]
+            result = func(*args, **kwargs)
+            self.cache[key] = result
+            self.timestamps[key] = now
+            return result
+        wrapper.cache_clear = lambda: (self.cache.clear(), self.timestamps.clear())
+        return wrapper
+
+@Memoize(ttl_seconds=60.0)
+def get_dimension_table(table_name: str) -> dict:
+    """Refresh dimension lookup at most once per minute."""
+    rows = db.execute(f"SELECT id, value FROM {table_name}").fetchall()
+    return {row["id"]: row["value"] for row in rows}
+
+# Decorator for schema validation at function boundary
+def validate_input(**field_types):
+    """Validate dict argument field types at runtime."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(record: dict, *args, **kwargs):
+            for field, expected in field_types.items():
+                if field not in record:
+                    raise ValueError(f"Missing required field: {field}")
+                if not isinstance(record[field], expected):
+                    raise TypeError(
+                        f"Field '{field}': expected {expected.__name__}, "
+                        f"got {type(record[field]).__name__}"
+                    )
+            return func(record, *args, **kwargs)
+        return wrapper
+    return decorator
+
+@validate_input(user_id=int, event_type=str, amount=float)
+def process_event(record: dict) -> dict:
+    return {**record, "amount_usd": record["amount"] / 100}`}</CodeBlock>
+
+          <Quiz topicId="py-decorators" questions={[
+            { question: "Why is @functools.wraps(func) important when writing decorators?", options: ["It speeds up the wrapped function", "It copies the original function's __name__, __doc__, and __module__ to the wrapper — without it, introspection and debugging break", "It makes the decorator re-entrant", "It enables the decorator to accept arguments"], correct: 1 },
+            { question: "When decorators are stacked as @A @B @C def func(), in what order are they applied?", options: ["A first, then B, then C (top to bottom)", "C first, then B, then A (bottom to top — C wraps func, B wraps that, A wraps that)", "All three are applied simultaneously", "Order depends on function signature"], correct: 1 },
+            { question: "What advantage does a class-based decorator have over a function-based decorator?", options: ["Class decorators are faster", "Class decorators can maintain state (instance variables) across multiple calls", "Class decorators don't need functools.wraps", "Class decorators can decorate classes but not functions"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-decorators'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-oop" ref={el => { if (el) sectionRefs.current['py-oop'] = el }} className="topic-section">
+          <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">OOP, ABC, Protocol, dataclasses, __slots__</h1><p className="topic-desc">Python's OOP supports multiple inheritance, abstract base classes, structural typing via Protocol, and zero-boilerplate value objects with dataclasses. Understanding MRO and __dunder__ methods is critical for building reusable DE frameworks.</p></div>
+
+          <CodeBlock lang="python">{`from abc import ABC, abstractmethod
+from typing import Protocol, runtime_checkable
+
+# Abstract Base Class - nominal subtyping (must explicitly inherit)
 class DataSource(ABC):
-    @abstractmethod
-    def read(self, path: str): ...
-    @abstractmethod
-    def write(self, df, path: str): ...
+    """All data sources must implement read() and schema()."""
 
-class AzureDataLakeSource(DataSource):
-    def __init__(self, storage_account: str, access_key: str):
-        self.account = storage_account
-        self.key = access_key
+    @abstractmethod
+    def read(self, path: str) -> "DataFrame": ...
+
+    @abstractmethod
+    def write(self, df: "DataFrame", path: str) -> None: ...
+
+    @abstractmethod
+    def schema(self) -> dict[str, str]: ...
+
+    def validate(self, df: "DataFrame") -> bool:
+        """Non-abstract: shared logic all subclasses can use."""
+        return len(df) > 0
+
+class S3ParquetSource(DataSource):
+    def __init__(self, bucket: str, region: str = "us-east-1"):
+        self.bucket = bucket
+        self.region = region
 
     def read(self, path: str):
-        from pyspark.sql import SparkSession
-        return SparkSession.getActiveSession().read.parquet(path)
+        import pyarrow.parquet as pq
+        return pq.read_table(f"s3://{self.bucket}/{path}").to_pandas()
 
     def write(self, df, path: str):
-        df.write.format("delta").mode("overwrite").save(path)
+        df.to_parquet(f"s3://{self.bucket}/{path}", index=False)
 
-# Dataclass - clean value objects (no boilerplate)
+    def schema(self) -> dict[str, str]:
+        return {"user_id": "int64", "event_type": "string", "ts": "timestamp"}
+
+# Protocol - structural subtyping (duck typing with type safety)
+@runtime_checkable
+class Closeable(Protocol):
+    def close(self) -> None: ...
+
+class Connectable(Protocol):
+    def connect(self, dsn: str) -> None: ...
+    def close(self) -> None: ...
+    def execute(self, sql: str, params=()) -> list: ...
+
+def run_query(conn: Connectable, sql: str) -> list:
+    """Works with any object that has connect/close/execute — no inheritance needed."""
+    return conn.execute(sql)
+
+# Multiple inheritance + MRO (Method Resolution Order)
+class Loggable:
+    def log(self, msg: str): print(f"[{self.__class__.__name__}] {msg}")
+
+class Retryable:
+    def with_retry(self, fn, attempts=3):
+        for i in range(attempts):
+            try: return fn()
+            except Exception as e:
+                if i == attempts - 1: raise
+                self.log(f"Retry {i+1}: {e}")  # type: ignore
+
+class RobustSource(S3ParquetSource, Loggable, Retryable):
+    def read(self, path: str):
+        self.log(f"Reading {path}")
+        return self.with_retry(lambda: super().read(path))
+
+# MRO determines method lookup order (C3 linearisation)
+print(RobustSource.__mro__)
+# (RobustSource, S3ParquetSource, DataSource, Loggable, Retryable, ABC, object)`}</CodeBlock>
+
+          <CodeBlock lang="python">{`from dataclasses import dataclass, field, KW_ONLY
+from typing import ClassVar
+
+# Dataclass - auto-generates __init__, __repr__, __eq__
 @dataclass
 class PipelineConfig:
     source_path: str
     target_path: str
-    partition_cols: list[str]
+    partition_cols: list[str] = field(default_factory=list)
     batch_size: int = 10_000
+    max_retries: int = 3
+    _: KW_ONLY           # all remaining fields must be keyword-only
+    dry_run: bool = False
 
-# Context manager - resource management
-class DatabaseConnection:
-    def __enter__(self):
-        self.conn = connect_to_db()
-        return self.conn
+    # ClassVar is NOT included in __init__
+    VERSION: ClassVar[str] = "1.0.0"
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.conn.close()
-        return False  # don't suppress exceptions
+    def __post_init__(self):
+        if not self.source_path.startswith(("s3://", "abfss://", "gs://")):
+            raise ValueError(f"source_path must use a cloud URI: {self.source_path}")
+        if self.batch_size <= 0:
+            raise ValueError("batch_size must be positive")
 
-with DatabaseConnection() as conn:
-    conn.execute("SELECT 1")`}</CodeBlock>
+# frozen=True → immutable, hashable (usable as dict keys, set members)
+@dataclass(frozen=True)
+class PartitionKey:
+    year: int
+    month: int
+    region: str
+
+# __slots__ - skip __dict__, reduces memory by ~40% for many instances
+@dataclass
+class EventRecord:
+    __slots__ = ("user_id", "event_type", "ts", "amount")
+    user_id: int
+    event_type: str
+    ts: float
+    amount: float
+
+# Custom __dunder__ methods
+class DataPipeline:
+    def __init__(self, name: str, stages: list):
+        self.name = name
+        self.stages = stages
+
+    def __repr__(self) -> str:
+        return f"DataPipeline(name={self.name!r}, stages={len(self.stages)})"
+
+    def __len__(self) -> int:
+        return len(self.stages)
+
+    def __iter__(self):
+        return iter(self.stages)
+
+    def __or__(self, other: "DataPipeline") -> "DataPipeline":
+        """Pipe operator: pipeline1 | pipeline2 → merged pipeline."""
+        return DataPipeline(
+            name=f"{self.name}|{other.name}",
+            stages=self.stages + other.stages,
+        )
+
+ingest   = DataPipeline("ingest", [read_s3, validate, normalize])
+enrich   = DataPipeline("enrich", [join_dims, add_metrics])
+full_etl = ingest | enrich   # DataPipeline(name='ingest|enrich', stages=6)`}</CodeBlock>
+
           <Quiz topicId="py-oop" questions={[
-            { question: "What is the purpose of an abstract base class in Python?", options: ["Improve performance", "Force subclasses to implement required methods (interface contract)", "Enable multiple inheritance", "Auto-generate __init__ methods"], correct: 1 },
-            { question: "What does __exit__ return True mean in a context manager?", options: ["The resource was released", "Suppress any exception that occurred in the with block", "The connection is still open", "Exit immediately"], correct: 1 },
+            { question: "What is the difference between ABC (Abstract Base Class) and Protocol in Python?", options: ["They are identical", "ABC requires explicit inheritance (nominal typing); Protocol uses structural/duck typing — any class with the right methods satisfies it", "Protocol requires explicit inheritance; ABC uses duck typing", "ABC is faster; Protocol is for type checking only"], correct: 1 },
+            { question: "What does @dataclass(frozen=True) do?", options: ["Prevents the dataclass from being serialized", "Makes the dataclass immutable and hashable (raises FrozenInstanceError on assignment)", "Freezes all class variables to their defaults", "Prevents subclassing"], correct: 1 },
+            { question: "What is the purpose of __slots__ in a dataclass?", options: ["Enables multiple inheritance", "Replaces __dict__ with a fixed-size slot array, reducing per-instance memory by ~40% — important when creating millions of record objects", "Allows the class to be used as a context manager", "Enables the class to be iterated"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-oop'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
-        <section id="py-errors" ref={el => { if (el) sectionRefs.current['py-errors'] = el }} className="topic-section">
-          <div className="topic-header">
-            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Error Handling and Logging</h1>
-          </div>
-          <CodeBlock lang="python">{`import logging, sys
-from typing import Optional
+        <section id="py-context" ref={el => { if (el) sectionRefs.current['py-context'] = el }} className="topic-section">
+          <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Context Managers</h1><p className="topic-desc">Context managers guarantee resource cleanup even when exceptions occur. __enter__/__exit__, contextlib.contextmanager, suppress, and ExitStack are essential for robust database connections, file handles, and distributed locks.</p></div>
 
-# Structured logging for data pipelines
-logging.basicConfig(
-    format='%(asctime)s %(levelname)s %(name)s %(message)s',
-    level=logging.INFO,
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+          <CodeBlock lang="python">{`from contextlib import contextmanager, suppress, ExitStack
+import time, logging
+
 logger = logging.getLogger(__name__)
 
-# Custom exceptions for domain errors
-class PipelineError(Exception): pass
-class DataQualityError(PipelineError): pass
-class SchemaEvolutionError(PipelineError): pass
+# Class-based context manager
+class DatabaseTransaction:
+    """Wraps a DB connection in a transaction — auto-rollback on error."""
+    def __init__(self, dsn: str):
+        self.dsn = dsn
+        self.conn = None
 
-def process_batch(df, batch_id: int):
-    logger.info(f"Processing batch {batch_id} with {df.count()} rows")
+    def __enter__(self):
+        import psycopg2
+        self.conn = psycopg2.connect(self.dsn)
+        self.conn.autocommit = False
+        logger.debug("Transaction started")
+        return self.conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.conn.commit()
+            logger.debug("Transaction committed")
+        else:
+            self.conn.rollback()
+            logger.warning(f"Transaction rolled back due to {exc_type.__name__}: {exc_val}")
+        self.conn.close()
+        return False  # re-raise exception if one occurred
+
+DSN = "postgresql://user:pass@localhost:5432/warehouse"
+with DatabaseTransaction(DSN) as conn:
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO events SELECT * FROM staging_events")
+    cursor.execute("UPDATE pipeline_runs SET status='done' WHERE id = %s", (run_id,))
+# Commits here; on exception, auto-rollbacks and re-raises
+
+# Timer context manager
+class Timer:
+    def __enter__(self):
+        self._start = time.perf_counter()
+        return self
+
+    def __exit__(self, *args):
+        self.elapsed = time.perf_counter() - self._start
+        logger.info(f"Block took {self.elapsed:.3f}s")
+        return False
+
+    @property
+    def ms(self) -> float:
+        return self.elapsed * 1000
+
+with Timer() as t:
+    df = pd.read_parquet("s3://bucket/large_table.parquet")
+print(f"Read took {t.ms:.0f}ms")`}</CodeBlock>
+
+          <CodeBlock lang="python">{`from contextlib import contextmanager, suppress, ExitStack
+import tempfile, os
+
+# @contextmanager - generator-based (simpler than class)
+@contextmanager
+def temp_staging_table(conn, table_name: str):
+    """Creates a temp table, yields it, always drops it on exit."""
+    conn.execute(f"CREATE TEMP TABLE {table_name} (LIKE events INCLUDING ALL)")
+    logger.info(f"Created temp table {table_name}")
     try:
-        null_count = df.filter(df['key'].isNull()).count()
-        if null_count > 0:
-            raise DataQualityError(f"Batch {batch_id}: {null_count} null keys")
-        result = transform(df)
-        logger.info(f"Batch {batch_id} complete")
-        return result
-    except DataQualityError:
-        logger.error(f"DQ failure batch {batch_id}", exc_info=True)
-        raise
-    except Exception as e:
-        logger.critical(f"Unexpected error batch {batch_id}: {e}", exc_info=True)
-        raise PipelineError(f"Batch {batch_id} failed") from e
+        yield table_name
     finally:
-        logger.debug(f"Batch {batch_id} cleanup complete")`}</CodeBlock>
+        conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+        logger.info(f"Dropped temp table {table_name}")
+
+with DatabaseTransaction(DSN) as conn:
+    with temp_staging_table(conn, "stg_events_20240101") as stg:
+        conn.execute(f"COPY {stg} FROM '/tmp/events.csv' CSV HEADER")
+        conn.execute(f"INSERT INTO events SELECT * FROM {stg} ON CONFLICT DO NOTHING")
+
+# suppress - silently ignore specific exceptions
+with suppress(FileNotFoundError):
+    os.remove("/tmp/stale_lock_file")  # OK if it doesn't exist
+
+# ExitStack - manage a dynamic number of context managers
+def process_partition_files(file_paths: list[str]) -> None:
+    """Open all files, process them together, close all on exit."""
+    with ExitStack() as stack:
+        handles = [
+            stack.enter_context(open(path, "rt", encoding="utf-8"))
+            for path in file_paths
+        ]
+        # All files guaranteed to close even if an exception occurs mid-way
+        for lines in zip(*handles):
+            process_aligned_lines(lines)
+
+# Combining context managers for robust pipeline stages
+@contextmanager
+def pipeline_stage(name: str, conn):
+    logger.info(f"Starting stage: {name}")
+    start = time.perf_counter()
+    try:
+        yield
+        elapsed = time.perf_counter() - start
+        conn.execute(
+            "INSERT INTO pipeline_log (stage, status, duration_ms) VALUES (%s, %s, %s)",
+            (name, "success", int(elapsed * 1000))
+        )
+    except Exception as e:
+        conn.execute(
+            "INSERT INTO pipeline_log (stage, status, error) VALUES (%s, %s, %s)",
+            (name, "failed", str(e))
+        )
+        raise`}</CodeBlock>
+
+          <Quiz topicId="py-context" questions={[
+            { question: "What does __exit__ returning False (or None) mean in a context manager?", options: ["The context manager failed", "The exception (if any) is re-raised after __exit__ runs — returning True would suppress it", "The resource was not released", "The context manager will retry"], correct: 1 },
+            { question: "What is the advantage of @contextlib.contextmanager over writing a full class?", options: ["It is always faster", "It lets you write a context manager as a generator function with a single yield — much less boilerplate", "It supports async operations automatically", "It allows multiple yields"], correct: 1 },
+            { question: "When should you use contextlib.ExitStack?", options: ["When you need to suppress all exceptions", "When the number of context managers to open is determined at runtime — ExitStack manages an arbitrary dynamic list of them", "When you need nested transactions", "When context managers don't have __exit__"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-context'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-errors" ref={el => { if (el) sectionRefs.current['py-errors'] = el }} className="topic-section">
+          <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Error Handling, Custom Exceptions &amp; Logging</h1><p className="topic-desc">Robust pipelines need structured error handling with custom exception hierarchies, exception chaining (raise X from Y), and structured logging. structlog and Python's logging module are the standard tools.</p></div>
+
+          <CodeBlock lang="python">{`import logging
+import sys
+from typing import Optional
+
+# Custom exception hierarchy for a data pipeline
+class PipelineError(Exception):
+    """Base class for all pipeline errors."""
+    def __init__(self, message: str, stage: Optional[str] = None, **context):
+        super().__init__(message)
+        self.stage = stage
+        self.context = context
+
+    def __str__(self) -> str:
+        ctx = ", ".join(f"{k}={v!r}" for k, v in self.context.items())
+        base = super().__str__()
+        return f"[{self.stage}] {base} | {ctx}" if self.stage else f"{base} | {ctx}"
+
+class DataQualityError(PipelineError):
+    """Raised when data fails validation rules."""
+
+class SchemaEvolutionError(PipelineError):
+    """Raised when source schema doesn't match expected schema."""
+
+class UpstreamAPIError(PipelineError):
+    """Raised when an upstream API returns an unexpected response."""
+
+class IdempotencyError(PipelineError):
+    """Raised when a pipeline run would produce duplicate results."""
+
+# Exception chaining — preserve original cause
+def load_config(path: str) -> dict:
+    import json
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except FileNotFoundError as e:
+        raise PipelineError(
+            f"Config file not found: {path}",
+            stage="init",
+            config_path=path,
+        ) from e  # chains original FileNotFoundError as __cause__
+    except json.JSONDecodeError as e:
+        raise PipelineError(
+            f"Invalid JSON in config: {e.msg} at line {e.lineno}",
+            stage="init",
+        ) from e
+
+# Catching by hierarchy
+def run_pipeline(config_path: str):
+    try:
+        config = load_config(config_path)
+        df = extract(config)
+        df = transform(df)
+        load(df)
+    except DataQualityError as e:
+        logger.error(f"DQ failure: {e}", extra={"stage": e.stage, **e.context})
+        send_alert("dq_failure", str(e))
+        raise  # re-raise for orchestrator to handle
+    except PipelineError as e:
+        logger.critical(f"Pipeline failed: {e}", exc_info=True)
+        mark_run_failed(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.critical(f"Unexpected error: {e}", exc_info=True)
+        raise PipelineError("Unexpected pipeline failure") from e`}</CodeBlock>
+
+          <CodeBlock lang="python">{`import logging
+import logging.handlers
+import sys
+
+# Production logging setup
+def configure_logging(level: str = "INFO", json_output: bool = False) -> None:
+    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+
+    if json_output:
+        # JSON logging for cloud environments (Datadog, CloudWatch)
+        try:
+            import structlog
+            structlog.configure(
+                processors=[
+                    structlog.stdlib.add_log_level,
+                    structlog.stdlib.add_logger_name,
+                    structlog.processors.TimeStamper(fmt="iso"),
+                    structlog.processors.StackInfoRenderer(),
+                    structlog.processors.format_exc_info,
+                    structlog.processors.JSONRenderer(),
+                ],
+                wrapper_class=structlog.BoundLogger,
+                context_class=dict,
+                logger_factory=structlog.PrintLoggerFactory(),
+            )
+        except ImportError:
+            formatter = logging.Formatter(
+                '{"ts":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s"}'
+            )
+            handlers[0].setFormatter(formatter)
+
+    logging.basicConfig(
+        level=getattr(logging, level.upper()),
+        handlers=handlers,
+        force=True,
+    )
+
+# Contextual logging — bind pipeline context once, use everywhere
+logger = logging.getLogger(__name__)
+
+class PipelineLogger:
+    """Wraps standard logger with pipeline context."""
+    def __init__(self, pipeline_id: str, run_id: str):
+        self._logger = logging.getLogger(pipeline_id)
+        self._extra = {"pipeline_id": pipeline_id, "run_id": run_id}
+
+    def info(self, msg: str, **kwargs):
+        self._logger.info(msg, extra={**self._extra, **kwargs})
+
+    def warning(self, msg: str, **kwargs):
+        self._logger.warning(msg, extra={**self._extra, **kwargs})
+
+    def error(self, msg: str, exc_info=False, **kwargs):
+        self._logger.error(msg, exc_info=exc_info, extra={**self._extra, **kwargs})
+
+    def audit(self, action: str, rows_affected: int, **kwargs):
+        self._logger.info(
+            f"AUDIT: {action}",
+            extra={**self._extra, "rows_affected": rows_affected, **kwargs},
+        )
+
+# Usage
+log = PipelineLogger(pipeline_id="sales_daily", run_id="2024-01-15T02:00:00")
+log.info("Pipeline started", source="s3://bucket/sales/")
+log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</CodeBlock>
+
           <Quiz topicId="py-errors" questions={[
-            { question: "What does raise X from Y do in Python?", options: ["Raises X and suppresses Y", "Raises X and chains it to Y (exception context)", "Reraises Y", "Logs Y and raises X"], correct: 1 },
-            { question: "When does the finally block execute?", options: ["Only on success", "Only on exception", "Always, whether exception occurred or not", "Only if the except block runs"], correct: 2 },
+            { question: "What is the purpose of 'raise NewException from original_exception' in Python?", options: ["It suppresses the original exception", "It raises a new exception while explicitly chaining the original as __cause__, preserving the full error context", "It logs both exceptions", "It retries the operation after the original exception"], correct: 1 },
+            { question: "Why define a custom exception hierarchy (e.g. DataQualityError inheriting PipelineError) instead of using generic Exception?", options: ["Custom exceptions are always faster", "A hierarchy allows callers to catch at different granularities — catch DataQualityError for DQ issues, PipelineError for any pipeline failure, Exception as last resort", "Python requires custom exceptions for logging", "Generic exceptions cannot be re-raised"], correct: 1 },
+            { question: "When does the finally block execute in a try/except/finally?", options: ["Only when no exception is raised", "Only when an exception is raised", "Always — whether an exception was raised, caught, or not raised at all", "Only after the except block completes"], correct: 2 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-errors'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-async" ref={el => { if (el) sectionRefs.current['py-async'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">Async Programming & asyncio</h1>
+            <p className="topic-desc">asyncio enables high-throughput I/O-bound pipelines — concurrent API calls, database queries, and file operations on a single thread. async/await, gather, aiohttp, and asyncpg are the core primitives.</p>
+          </div>
+          <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body"><strong>Concurrency vs Parallelism:</strong> asyncio is single-threaded cooperative concurrency — ideal for I/O-bound work (network, DB). For CPU-bound work, use multiprocessing or concurrent.futures.ProcessPoolExecutor instead.</div></div>
+          <AsyncAnimation />
+          <CodeBlock lang="python">{`import asyncio
+import aiohttp
+import asyncpg
+from typing import AsyncIterator
+
+# Async function basics
+async def fetch_json(session: aiohttp.ClientSession, url: str) -> dict:
+    async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+        resp.raise_for_status()
+        return await resp.json()
+
+# asyncio.gather - run coroutines concurrently (not sequentially)
+async def ingest_all_endpoints(endpoints: list[str]) -> list[dict]:
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_json(session, url) for url in endpoints]
+        # All requests fire concurrently; gather waits for all
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    records = []
+    for url, result in zip(endpoints, results):
+        if isinstance(result, Exception):
+            logging.error(f"Failed {url}: {result}")
+        else:
+            records.append(result)
+    return records
+
+# Run with: asyncio.run(ingest_all_endpoints(urls))
+
+# Semaphore - limit concurrency (avoid overwhelming APIs)
+async def fetch_with_semaphore(
+    session: aiohttp.ClientSession,
+    url: str,
+    sem: asyncio.Semaphore,
+) -> dict:
+    async with sem:  # only N concurrent requests at a time
+        return await fetch_json(session, url)
+
+async def ingest_paginated_api(base_url: str, total_pages: int) -> list[dict]:
+    sem = asyncio.Semaphore(20)  # max 20 concurrent requests
+    async with aiohttp.ClientSession() as session:
+        tasks = [
+            fetch_with_semaphore(session, f"{base_url}?page={p}", sem)
+            for p in range(1, total_pages + 1)
+        ]
+        pages = await asyncio.gather(*tasks, return_exceptions=True)
+    return [r for page in pages if isinstance(page, list) for r in page]
+
+# asyncio.Queue - producer/consumer pattern for streaming pipelines
+async def producer(queue: asyncio.Queue, urls: list[str]):
+    async with aiohttp.ClientSession() as session:
+        for url in urls:
+            record = await fetch_json(session, url)
+            await queue.put(record)
+    await queue.put(None)  # sentinel to signal completion
+
+async def consumer(queue: asyncio.Queue, db_pool):
+    batch = []
+    while True:
+        record = await queue.get()
+        if record is None:
+            break
+        batch.append(record)
+        if len(batch) >= 500:
+            await db_pool.executemany("INSERT INTO events VALUES ($1,$2,$3)", batch)
+            batch.clear()
+        queue.task_done()
+    if batch:
+        await db_pool.executemany("INSERT INTO events VALUES ($1,$2,$3)", batch)
+
+async def run_pipeline(urls: list[str]):
+    queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
+    pool = await asyncpg.create_pool("postgresql://user:pass@localhost/db", min_size=5)
+    await asyncio.gather(producer(queue, urls), consumer(queue, pool))
+    await pool.close()`}</CodeBlock>
+          <CodeBlock lang="python">{`import asyncpg
+import asyncio
+
+# asyncpg - async PostgreSQL driver (faster than psycopg2 for async workloads)
+async def bulk_load_records(records: list[dict]) -> int:
+    pool = await asyncpg.create_pool(
+        "postgresql://user:pass@localhost:5432/warehouse",
+        min_size=2,
+        max_size=10,
+    )
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.executemany(
+                "INSERT INTO events(user_id, type, ts, amount) VALUES($1,$2,$3,$4)"
+                " ON CONFLICT (user_id, ts) DO NOTHING",
+                [(r["user_id"], r["type"], r["ts"], r["amount"]) for r in records],
+            )
+    await pool.close()
+    return len(records)
+
+# Async generator - stream from DB without loading all rows
+async def stream_large_table(
+    pool: asyncpg.Pool,
+    table: str,
+    batch_size: int = 5000,
+) -> AsyncIterator[list[dict]]:
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            cursor = await conn.cursor(f"SELECT * FROM {table} ORDER BY id")
+            while True:
+                rows = await cursor.fetch(batch_size)
+                if not rows:
+                    break
+                yield [dict(row) for row in rows]
+
+async def export_to_parquet(table: str, output_path: str):
+    import pandas as pd
+    pool = await asyncpg.create_pool("postgresql://...")
+    frames = []
+    async for batch in stream_large_table(pool, table):
+        frames.append(pd.DataFrame(batch))
+    pd.concat(frames).to_parquet(output_path, index=False)
+    await pool.close()
+
+# asyncio.timeout (Python 3.11+) — cancel slow operations
+async def fetch_with_timeout(url: str) -> dict | None:
+    try:
+        async with asyncio.timeout(10.0):
+            async with aiohttp.ClientSession() as s:
+                return await fetch_json(s, url)
+    except TimeoutError:
+        logging.warning(f"Timed out fetching {url}")
+        return None`}</CodeBlock>
+          <Quiz topicId="py-async" questions={[
+            { question: "What does asyncio.gather() do?", options: ["Runs coroutines sequentially one by one", "Runs multiple coroutines concurrently on the event loop and waits for all to finish", "Creates a thread pool for async tasks", "Converts async functions to synchronous ones"], correct: 1 },
+            { question: "Why use asyncio.Semaphore when making concurrent API requests?", options: ["To make requests sequential", "To cap the number of concurrent requests — prevents overwhelming the API server with too many simultaneous connections", "To retry failed requests automatically", "To add authentication headers"], correct: 1 },
+            { question: "What is the difference between asyncio concurrency and multiprocessing?", options: ["asyncio uses multiple CPU cores; multiprocessing uses one", "asyncio is single-threaded cooperative concurrency for I/O-bound tasks; multiprocessing spawns separate processes for CPU-bound work", "asyncio is faster for all workloads", "multiprocessing is for I/O; asyncio is for CPU tasks"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-async'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-io" ref={el => { if (el) sectionRefs.current['py-io'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">File I/O, pathlib, CSV, JSON, YAML, TOML & Config</h1>
+            <p className="topic-desc">Data engineers read and write files constantly. pathlib provides modern OS-agnostic path handling. Parsing CSV, JSON, YAML, TOML, and .env files correctly is fundamental for building configurable, portable pipeline code.</p>
+          </div>
+          <CodeBlock lang="python">{`from pathlib import Path
+import json, csv, gzip, io
+
+# pathlib - modern, OS-agnostic path handling
+data_dir = Path("/data/pipeline")
+raw_dir = data_dir / "raw"
+processed_dir = data_dir / "processed"
+
+# Create directories (no error if they exist)
+processed_dir.mkdir(parents=True, exist_ok=True)
+
+# Glob for files
+parquet_files = sorted(raw_dir.glob("**/*.parquet"))
+todays_csvs = list(raw_dir.glob("events_2024-01-15*.csv.gz"))
+
+# Path operations
+for p in parquet_files:
+    print(p.stem)           # "events_2024-01-15" (no extension)
+    print(p.suffix)         # ".parquet"
+    print(p.parent)         # /data/pipeline/raw
+    print(p.stat().st_size) # file size in bytes
+
+# Rename processed files
+for src in todays_csvs:
+    dest = processed_dir / src.name
+    src.rename(dest)
+
+# Read/write JSON (newline-delimited JSONL for large datasets)
+def read_jsonl(path: Path) -> list[dict]:
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+def write_jsonl(records: list[dict], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    opener = gzip.open if str(path).endswith(".gz") else open
+    with opener(path, "wt", encoding="utf-8") as f:
+        for record in records:
+            f.write(json.dumps(record, default=str) + "\\n")
+
+# CSV with DictReader/DictWriter
+def read_csv_typed(path: Path, int_cols: list[str], float_cols: list[str]) -> list[dict]:
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        records = []
+        for row in reader:
+            for col in int_cols:
+                row[col] = int(row[col]) if row[col] else None
+            for col in float_cols:
+                row[col] = float(row[col]) if row[col] else None
+            records.append(row)
+    return records
+
+def write_csv(records: list[dict], path: Path) -> None:
+    if not records:
+        return
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=records[0].keys())
+        writer.writeheader()
+        writer.writerows(records)`}</CodeBlock>
+          <CodeBlock lang="python">{`import os
+from pathlib import Path
+
+# YAML config (pip install pyyaml)
+def load_yaml_config(path: str | Path) -> dict:
+    import yaml
+    with open(path) as f:
+        return yaml.safe_load(f)  # safe_load prevents arbitrary code execution
+
+# Example pipeline_config.yaml:
+# pipeline:
+#   source: s3://my-bucket/raw/
+#   target: abfss://container@storage.dfs.core.windows.net/processed/
+#   batch_size: 10000
+#   tables:
+#     - orders
+#     - customers
+
+config = load_yaml_config("config/pipeline_config.yaml")
+batch_size = config["pipeline"]["batch_size"]
+
+# TOML config (Python 3.11+ built-in, or pip install tomli for older)
+def load_toml_config(path: str | Path) -> dict:
+    import sys
+    if sys.version_info >= (3, 11):
+        import tomllib
+        with open(path, "rb") as f:
+            return tomllib.load(f)
+    else:
+        import tomli
+        with open(path, "rb") as f:
+            return tomli.load(f)
+
+# Environment variables + .env files (python-dotenv)
+from dotenv import load_dotenv
+
+load_dotenv(".env")  # loads KEY=VALUE from .env file into os.environ
+
+DB_HOST     = os.environ["DB_HOST"]          # raises if missing
+DB_PASSWORD = os.environ.get("DB_PASSWORD")  # returns None if missing
+MAX_WORKERS = int(os.environ.get("MAX_WORKERS", "4"))
+
+# configparser for .ini-style configs (legacy systems)
+import configparser
+
+config = configparser.ConfigParser()
+config.read("airflow.cfg")
+sql_alchemy_conn = config["database"]["sql_alchemy_conn"]
+
+# Atomic file writes — write to temp then rename to avoid partial reads
+import tempfile
+
+def atomic_write_json(data: dict, path: Path) -> None:
+    """Write JSON atomically — readers never see a partially written file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(".tmp")
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=str)
+        tmp_path.rename(path)  # atomic on POSIX systems
+    except Exception:
+        tmp_path.unlink(missing_ok=True)
+        raise`}</CodeBlock>
+          <Quiz topicId="py-io" questions={[
+            { question: "Why use yaml.safe_load() instead of yaml.load() for config files?", options: ["safe_load is faster", "yaml.load() can execute arbitrary Python code embedded in YAML; safe_load restricts to safe types only", "safe_load supports more YAML features", "yaml.load() is deprecated"], correct: 1 },
+            { question: "What advantage does pathlib.Path have over os.path string manipulation?", options: ["pathlib is faster than os.path", "pathlib provides an object-oriented API with / operator for joining, .stem/.suffix/.parent properties, and cross-platform path handling", "pathlib supports cloud paths natively", "pathlib paths are immutable"], correct: 1 },
+            { question: "Why use load_dotenv() for environment variables in pipelines?", options: ["It encrypts environment variables", "It loads key=value pairs from a .env file into os.environ, enabling local development without setting system env vars — the .env file is gitignored", "It validates environment variable types", "It synchronizes env vars across machines"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-io'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-regex" ref={el => { if (el) sectionRefs.current['py-regex'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">Regular Expressions (re module)</h1>
+            <p className="topic-desc">Regular expressions are essential for parsing log files, extracting data from unstructured text, validating formats, and transforming messy strings in ETL pipelines.</p>
+          </div>
+          <CodeBlock lang="python">{`import re
+
+# Basic patterns — compile for reuse in loops
+EMAIL_RE    = re.compile(r"[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}")
+PHONE_RE    = re.compile(r"\\+?1?\\s*\\(?(\\d{3})\\)?[\\s.\\-]?(\\d{3})[\\s.\\-]?(\\d{4})")
+ISO_DATE_RE = re.compile(r"(\\d{4})-(\\d{2})-(\\d{2})")
+S3_URI_RE   = re.compile(r"s3://(?P<bucket>[^/]+)/(?P<key>.+)")
+
+# Groups — extract specific parts
+def parse_s3_uri(uri: str) -> tuple[str, str]:
+    m = S3_URI_RE.match(uri)
+    if not m:
+        raise ValueError(f"Invalid S3 URI: {uri}")
+    return m.group("bucket"), m.group("key")  # named groups
+
+bucket, key = parse_s3_uri("s3://my-data-lake/events/2024/01/data.parquet")
+
+# Extract all emails from a log dump
+def extract_emails(text: str) -> list[str]:
+    return EMAIL_RE.findall(text)
+
+# Non-greedy matching — important for nested structures
+# Greedy:     r"<.*>"   matches entire "<a>text</a>" as one match
+# Non-greedy: r"<.*?>"  matches "<a>" then "</a>" separately
+log_line = "2024-01-15T10:32:01Z [ERROR] user_id=42 msg='Invalid token for user@example.com'"
+STRUCTURED_LOG_RE = re.compile(
+    r"(?P<ts>\\d{4}-\\d{2}-\\d{2}T[\\d:]+Z)\\s+"
+    r"\\[(?P<level>\\w+)\\]\\s+"
+    r"user_id=(?P<user_id>\\d+)\\s+"
+    r"msg='(?P<msg>.*?)'"  # non-greedy for msg
+)
+
+def parse_log_line(line: str) -> dict | None:
+    m = STRUCTURED_LOG_RE.match(line)
+    return m.groupdict() if m else None
+
+parsed = parse_log_line(log_line)
+# {'ts': '2024-01-15T10:32:01Z', 'level': 'ERROR', 'user_id': '42', 'msg': 'Invalid token for user@example.com'}`}</CodeBlock>
+          <CodeBlock lang="python">{`import re
+
+# Lookahead and lookbehind — assert context without consuming characters
+PRICE_RE = re.compile(r"(?<=\\$)[\\d,]+\\.?\\d*")  # lookbehind: find number after $
+prices = PRICE_RE.findall("Total: $1,234.56 and $89.00")
+# ['1,234.56', '89.00']
+
+WORD_BEFORE_ERROR = re.compile(r"\\w+(?=\\s+error)", re.IGNORECASE)  # lookahead
+
+# Substitution — clean messy pipeline data
+def normalize_phone(phone: str) -> str | None:
+    """Normalize any phone format to +1XXXXXXXXXX."""
+    digits = re.sub(r"\\D", "", phone)  # remove all non-digits
+    if len(digits) == 10:
+        return f"+1{digits}"
+    elif len(digits) == 11 and digits[0] == "1":
+        return f"+{digits}"
+    return None
+
+# re.sub with a function — complex replacements
+TEMPLATE_VAR_RE = re.compile(r"\\{\\{(\\w+)\\}\\}")
+
+def render_template(template: str, context: dict) -> str:
+    def replacer(match: re.Match) -> str:
+        key = match.group(1)
+        return str(context.get(key, f"{{{{MISSING:{key}}}}}"))
+    return TEMPLATE_VAR_RE.sub(replacer, template)
+
+sql_template = "SELECT * FROM {{table}} WHERE date = '{{run_date}}' AND region = '{{region}}'"
+sql = render_template(sql_template, {"table": "orders", "run_date": "2024-01-15", "region": "us-east"})
+
+# Split with groups — keep delimiters
+parts = re.split(r"(\\s*,\\s*)", "a, b,c ,  d")
+# ['a', ', ', 'b', ',', 'c', ' ,', '  d']
+
+# Multiline flag — ^ and $ match start/end of each line
+LOG_BLOCK_RE = re.compile(r"^ERROR.*$", re.MULTILINE)
+errors = LOG_BLOCK_RE.findall(multiline_log_text)
+
+# Validate pipeline table names (prevent SQL injection)
+TABLE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]{0,62}$")
+def validate_table_name(name: str) -> str:
+    if not TABLE_NAME_RE.match(name):
+        raise ValueError(f"Invalid table name: {name!r}")
+    return name`}</CodeBlock>
+          <Quiz topicId="py-regex" questions={[
+            { question: "What is the difference between re.match() and re.search()?", options: ["They are identical", "re.match() only matches at the beginning of the string; re.search() scans the entire string for a match", "re.search() is faster than re.match()", "re.match() returns all matches; re.search() returns the first only"], correct: 1 },
+            { question: "Why use re.compile() when applying a pattern inside a loop?", options: ["compile() makes the pattern case-insensitive", "Compiled patterns are parsed once and reused — avoids re-parsing the regex string on every iteration", "compile() is required for group extraction", "compile() enables multiline matching"], correct: 1 },
+            { question: "What does the non-greedy quantifier *? do differently from *?", options: ["*? matches zero occurrences; * matches one or more", "*? matches as few characters as possible; * is greedy and matches as many as possible", "*? is case-insensitive; * is case-sensitive", "They are identical"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-regex'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-testing" ref={el => { if (el) sectionRefs.current['py-testing'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">Testing with pytest — fixtures, parametrize, mocking</h1>
+            <p className="topic-desc">Quality data pipelines need automated tests. pytest fixtures provide reusable test setup, parametrize covers edge cases efficiently, and unittest.mock patches external dependencies so tests run without real DBs or APIs.</p>
+          </div>
+          <CodeBlock lang="python">{`# tests/test_pipeline.py
+import pytest
+import pandas as pd
+from unittest.mock import patch, MagicMock, call
+from pathlib import Path
+
+# The functions under test (from our pipeline module)
+from pipeline.transform import normalize_events, validate_schema, deduplicate
+from pipeline.load import write_to_postgres
+
+# Fixtures - reusable test setup/teardown
+@pytest.fixture
+def sample_events_df() -> pd.DataFrame:
+    """Create a minimal events DataFrame for testing."""
+    return pd.DataFrame({
+        "user_id": [1, 2, 2, 3],
+        "event_type": ["click", "purchase", "purchase", "view"],
+        "amount": [0.0, 99.99, 99.99, 0.0],
+        "ts": ["2024-01-15T10:00:00", "2024-01-15T10:01:00",
+               "2024-01-15T10:01:00", "2024-01-15T10:02:00"],
+    })
+
+@pytest.fixture
+def expected_schema() -> dict[str, str]:
+    return {"user_id": "int64", "event_type": "object", "amount": "float64"}
+
+@pytest.fixture(scope="session")
+def db_connection():
+    """Session-scoped: one real DB connection for the entire test session."""
+    import psycopg2
+    conn = psycopg2.connect("postgresql://test:test@localhost:5432/test_db")
+    yield conn
+    conn.close()  # cleanup after all tests in session
+
+# Basic tests
+def test_normalize_events_adds_columns(sample_events_df):
+    result = normalize_events(sample_events_df)
+    assert "processed_at" in result.columns
+    assert "amount_usd" in result.columns
+
+def test_validate_schema_passes(sample_events_df, expected_schema):
+    assert validate_schema(sample_events_df, expected_schema) is True
+
+def test_validate_schema_fails_missing_column():
+    df = pd.DataFrame({"user_id": [1]})  # missing event_type and amount
+    with pytest.raises(ValueError, match="Missing columns"):
+        validate_schema(df, {"user_id": "int64", "event_type": "object"})
+
+def test_deduplicate_removes_duplicates(sample_events_df):
+    result = deduplicate(sample_events_df, keys=["user_id", "ts"])
+    assert len(result) == 3  # row 2 and 3 are duplicates on user_id+ts`}</CodeBlock>
+          <CodeBlock lang="python">{`import pytest
+from unittest.mock import patch, MagicMock, AsyncMock
+
+# Parametrize - test multiple inputs with one test function
+@pytest.mark.parametrize("amount,currency,expected_usd", [
+    (100.0, "USD", 100.0),
+    (100.0, "EUR", 110.0),   # assume 1.10 exchange rate
+    (100.0, "GBP", 127.0),   # assume 1.27 exchange rate
+    (0.0,   "USD", 0.0),
+    (-50.0, "USD", -50.0),   # negative amounts (refunds)
+])
+def test_convert_to_usd(amount, currency, expected_usd):
+    from pipeline.transform import convert_to_usd
+    result = convert_to_usd(amount, currency, exchange_rates={"EUR": 1.10, "GBP": 1.27})
+    assert abs(result - expected_usd) < 0.01
+
+# Mocking - replace external dependencies with controlled fakes
+@patch("pipeline.load.psycopg2.connect")
+def test_write_to_postgres_executes_correct_sql(mock_connect):
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_connect.return_value.__enter__.return_value = mock_conn
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+
+    import pandas as pd
+    df = pd.DataFrame({"id": [1, 2], "value": ["a", "b"]})
+    write_to_postgres(df, table="events", dsn="postgresql://...")
+
+    mock_cursor.executemany.assert_called_once()
+    call_args = mock_cursor.executemany.call_args
+    assert "INSERT INTO events" in call_args[0][0]
+
+# Mocking HTTP calls
+@patch("pipeline.http.httpx.get")
+def test_fetch_api_handles_rate_limit(mock_get):
+    mock_get.side_effect = [
+        MagicMock(status_code=429, headers={"Retry-After": "1"}),
+        MagicMock(status_code=200, json=lambda: {"data": [{"id": 1}]}),
+    ]
+    from pipeline.http import fetch_page
+    result = fetch_page("https://api.example.com/events", page=1)
+    assert result == [{"id": 1}]
+    assert mock_get.call_count == 2  # retried after 429
+
+# Async test with pytest-asyncio
+@pytest.mark.asyncio
+async def test_async_pipeline():
+    with patch("pipeline.async_load.asyncpg.create_pool") as mock_pool_factory:
+        mock_pool = AsyncMock()
+        mock_pool_factory.return_value = mock_pool
+        mock_conn = AsyncMock()
+        mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
+
+        from pipeline.async_load import bulk_load_async
+        await bulk_load_async([{"id": 1, "val": "x"}])
+        mock_conn.executemany.assert_awaited_once()
+
+# conftest.py - shared fixtures across test files
+# (place in tests/ directory)`}</CodeBlock>
+          <Quiz topicId="py-testing" questions={[
+            { question: "What is a pytest fixture and why use it?", options: ["A hard-coded test value", "A reusable setup/teardown function that pytest injects into test functions — enables DRY test code and proper resource cleanup", "A test assertion helper", "A way to skip tests conditionally"], correct: 1 },
+            { question: "What does @pytest.mark.parametrize do?", options: ["Marks a test as expected to fail", "Runs the same test function with multiple different input/output combinations — reduces duplicate test code", "Skips the test in CI", "Runs tests in parallel"], correct: 1 },
+            { question: "When mocking with unittest.mock.patch, what does the mock replace?", options: ["The test function itself", "The named object in the module under test for the duration of the test, then restores the original", "All functions in the test file", "Only the return value of the patched function"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-testing'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-packages" ref={el => { if (el) sectionRefs.current['py-packages'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">Package Management — pip, venv, poetry, pyproject.toml</h1>
+            <p className="topic-desc">Reproducible Python environments are critical for data pipelines. Understanding virtual environments, pyproject.toml, poetry, and conda prevents the "works on my machine" problem and enables reliable CI/CD deployments.</p>
+          </div>
+          <CodeBlock lang="bash">{`# Virtual environments — isolate project dependencies
+python -m venv .venv
+source .venv/bin/activate        # Linux/macOS
+.venv\\Scripts\\activate           # Windows
+
+# pip basics
+pip install pandas==2.1.4 pyarrow>=14.0
+pip install -r requirements.txt
+pip freeze > requirements.txt    # pin exact versions
+pip list --outdated              # check for updates
+
+# requirements.txt best practices for pipelines
+# requirements.txt (production - pinned)
+# pandas==2.1.4
+# pyarrow==14.0.0
+# psycopg2-binary==2.9.9
+# python-dotenv==1.0.0
+
+# requirements-dev.txt (dev only)
+# -r requirements.txt
+# pytest==7.4.4
+# pytest-asyncio==0.23.2
+# mypy==1.8.0
+# ruff==0.1.9
+
+# pip-tools for dependency management
+pip install pip-tools
+pip-compile requirements.in      # generates pinned requirements.txt from abstract deps
+pip-sync requirements.txt        # install exactly what's in requirements.txt`}</CodeBlock>
+          <CodeBlock lang="toml">{`# pyproject.toml — modern Python project config (PEP 518/621)
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "de-pipeline"
+version = "1.0.0"
+description = "Data Engineering Pipeline"
+authors = ["Team <team@company.com>"]
+python = "^3.11"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.1.4"
+pyarrow = "^14.0"
+psycopg2-binary = "^2.9.9"
+aiohttp = "^3.9.1"
+asyncpg = "^0.29.0"
+python-dotenv = "^1.0.0"
+pyyaml = "^6.0.1"
+structlog = "^24.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+pytest-asyncio = "^0.23.2"
+mypy = "^1.8.0"
+ruff = "^0.1.9"
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]`}</CodeBlock>
+          <CodeBlock lang="bash">{`# Poetry workflow
+poetry new de-pipeline          # create project
+poetry init                     # add pyproject.toml to existing project
+poetry add pandas pyarrow       # add dependencies
+poetry add --group dev pytest   # add dev dependency
+poetry install                  # install all deps
+poetry run python pipeline.py   # run in venv
+
+# Poetry lock file — deterministic installs
+poetry lock          # update poetry.lock from pyproject.toml
+poetry install --no-root  # CI: install deps only (skip the package itself)
+
+# conda — better for scientific libraries with C extensions
+conda create -n pipeline python=3.11
+conda activate pipeline
+conda install -c conda-forge pandas pyarrow psycopg2
+conda env export > environment.yml
+
+# Docker for fully reproducible builds (eliminates env differences entirely)
+# Dockerfile:
+# FROM python:3.11-slim
+# WORKDIR /app
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
+# COPY . .
+# CMD ["python", "pipeline.py"]`}</CodeBlock>
+          <Quiz topicId="py-packages" questions={[
+            { question: "What is the purpose of a virtual environment in Python?", options: ["To run Python faster", "To isolate project dependencies from the system Python and other projects — prevents version conflicts", "To enable async programming", "To compile Python to bytecode"], correct: 1 },
+            { question: "What does 'pip freeze > requirements.txt' do and when should you use it?", options: ["Installs packages from requirements.txt", "Saves a snapshot of all currently installed packages with exact versions — use before committing to pin a reproducible environment", "Updates all packages to latest versions", "Checks for conflicting dependencies"], correct: 1 },
+            { question: "What advantage does poetry have over plain pip + requirements.txt?", options: ["poetry is faster at installing packages", "poetry manages a lock file with transitive dependencies, handles virtual environments automatically, and separates dev/prod dependency groups in pyproject.toml", "poetry supports conda packages", "poetry automatically publishes to PyPI"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-packages'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
         <section id="py-pandas" ref={el => { if (el) sectionRefs.current['py-pandas'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">pandas for Data Engineering</h1>
+            <h1 className="topic-title">pandas Deep Dive for Data Engineering</h1>
+            <p className="topic-desc">pandas is the workhorse of Python-based data pipelines. Mastering dtype optimization, vectorized operations, groupby, merge, pivot_table, memory management, and chunked reading is essential for handling real-world datasets efficiently.</p>
           </div>
+          <PythonMemoryAnimation />
           <CodeBlock lang="python">{`import pandas as pd
 import numpy as np
+from pathlib import Path
 
-# Read with explicit dtypes (avoid inferSchema guessing wrong)
-df = pd.read_csv('data.csv', dtype={
-    'user_id': 'int32',
-    'amount': 'float64',
-    'status': 'category'   # saves memory for low-cardinality strings
-})
+# Read with explicit dtypes — avoid pandas' expensive type inference
+df = pd.read_csv("events.csv", dtype={
+    "user_id":    "int32",      # int64 by default — int32 saves 50% memory
+    "session_id": "string",     # nullable string (better than object for NA)
+    "event_type": "category",   # 4-byte int per row vs full string — huge saving
+    "amount":     "float32",    # 8 bytes → 4 bytes for financial data
+}, parse_dates=["ts"], date_format="%Y-%m-%d %H:%M:%S")
 
-# Vectorized operations (fast, avoid row-by-row loops)
-df['revenue'] = df['price'] * df['quantity']
-df['date'] = pd.to_datetime(df['date_str'])
-df['month'] = df['date'].dt.to_period('M')
+# Check memory usage
+print(df.memory_usage(deep=True).sum() / 1024**2, "MB")
 
-# GroupBy + aggregation
-summary = df.groupby(['region', 'month']).agg(
-    total_revenue=('amount', 'sum'),
-    order_count=('order_id', 'count'),
-    avg_amount=('amount', 'mean')
+# Chunked reading — process files that don't fit in RAM
+def process_large_file(path: str, chunksize: int = 100_000) -> pd.DataFrame:
+    results = []
+    for chunk in pd.read_csv(path, chunksize=chunksize, dtype={"user_id": "int32"}):
+        # Filter and aggregate each chunk
+        filtered = chunk[chunk["event_type"] == "purchase"]
+        aggregated = filtered.groupby("user_id")["amount"].sum()
+        results.append(aggregated)
+    return pd.concat(results).groupby(level=0).sum()
+
+# Vectorized operations — NEVER use .apply() for arithmetic
+# BAD:  df["revenue"] = df.apply(lambda r: r["price"] * r["quantity"], axis=1)
+# GOOD: vectorized, runs in C
+df["revenue"]      = df["price"] * df["quantity"]
+df["discount_pct"] = (df["original_price"] - df["price"]) / df["original_price"] * 100
+df["is_high_value"]= df["amount"] > df["amount"].quantile(0.95)
+
+# String vectorization — .str accessor (runs in C, not Python loop)
+df["email_domain"] = df["email"].str.split("@").str[1].str.lower()
+df["clean_name"]   = df["name"].str.strip().str.title()
+df["has_promo"]    = df["description"].str.contains(r"promo|discount", case=False, regex=True)
+
+# Datetime vectorization
+df["ts"] = pd.to_datetime(df["ts_str"])
+df["date"]          = df["ts"].dt.date
+df["hour"]          = df["ts"].dt.hour
+df["day_of_week"]   = df["ts"].dt.day_name()
+df["week"]          = df["ts"].dt.to_period("W")
+df["days_since_reg"]= (df["ts"] - df["registration_date"]).dt.days`}</CodeBlock>
+          <CodeBlock lang="python">{`import pandas as pd
+
+# GroupBy — aggregation with named outputs
+daily_summary = df.groupby(["region", pd.Grouper(key="ts", freq="D")]).agg(
+    total_revenue   = ("amount",   "sum"),
+    order_count     = ("order_id", "nunique"),
+    avg_order_value = ("amount",   "mean"),
+    p95_amount      = ("amount",   lambda x: x.quantile(0.95)),
 ).reset_index()
 
-# merge (JOIN equivalent)
-result = pd.merge(orders, customers, on='customer_id', how='left')
+# GroupBy transform — broadcast aggregation back to original rows
+df["user_total"]   = df.groupby("user_id")["amount"].transform("sum")
+df["pct_of_total"] = df["amount"] / df["user_total"] * 100
 
-# Apply with progress (use sparingly - slow on large dfs)
-from tqdm import tqdm
-tqdm.pandas()
-df['category'] = df['description'].progress_apply(classify_text)
+# merge (JOIN equivalent) — explicit how= is safer than default inner
+result = (
+    pd.merge(orders, customers, on="customer_id", how="left", suffixes=("_ord", "_cust"))
+    .merge(products, on="product_id", how="left")
+    .merge(dim_date, left_on="order_date", right_on="date_key", how="left")
+)
 
-# Convert to Spark (when data outgrows pandas)
-spark_df = spark.createDataFrame(df)
-# Or use Arrow-optimized conversion
-spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
-spark_df = spark.createDataFrame(df)`}</CodeBlock>
+# pivot_table — create summary matrices
+pivot = pd.pivot_table(
+    df,
+    values="revenue",
+    index="region",
+    columns="product_category",
+    aggfunc="sum",
+    fill_value=0,
+    margins=True,       # add row/column totals
+    margins_name="Total",
+)
+
+# When .apply() IS justified: row-wise logic with branching
+def classify_order(row: pd.Series) -> str:
+    if row["amount"] > 1000 and row["is_business"]:
+        return "enterprise"
+    elif row["amount"] > 100:
+        return "standard"
+    return "micro"
+
+# Use vectorized alternative with np.select when possible
+conditions = [
+    (df["amount"] > 1000) & df["is_business"],
+    df["amount"] > 100,
+]
+choices = ["enterprise", "standard"]
+df["tier"] = np.select(conditions, choices, default="micro")
+
+# Memory optimization — downcast after arithmetic
+df["amount"]   = pd.to_numeric(df["amount"], downcast="float")
+df["user_id"]  = pd.to_numeric(df["user_id"], downcast="integer")
+
+# Write parquet with compression
+df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=False)`}</CodeBlock>
           <Quiz topicId="py-pandas" questions={[
-            { question: "Why should you specify dtype when reading CSV with pandas?", options: ["Faster file reading", "Prevents incorrect type inference (e.g., numeric IDs read as floats)", "Required by the API", "Enables parallel reading"], correct: 1 },
-            { question: "What pandas dtype saves memory for low-cardinality string columns?", options: ["object", "string", "category", "varchar"], correct: 2 },
+            { question: "Why use dtype='category' for a column like event_type in pandas?", options: ["It enables sorting", "It stores unique string values once and uses integer codes internally — reduces memory from O(n strings) to O(unique strings + n ints)", "It speeds up merge operations", "It enables SQL-style queries"], correct: 1 },
+            { question: "What is the key reason to avoid df.apply(lambda row: ..., axis=1) for arithmetic?", options: ["apply() has a bug with lambda functions", "apply() runs a Python function per row in a Python loop — vectorized pandas/numpy ops run in C and are 10-100x faster", "apply() doesn't support arithmetic", "apply() produces incorrect results with float columns"], correct: 1 },
+            { question: "What does pd.read_csv(path, chunksize=100_000) return?", options: ["A DataFrame with the first 100,000 rows", "A TextFileReader iterator that yields DataFrames of 100,000 rows at a time — enables processing files larger than RAM", "A list of 100,000 DataFrames", "An error if the file has more than 100,000 rows"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-pandas'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-db" ref={el => { if (el) sectionRefs.current['py-db'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">Database Connections — psycopg2, SQLAlchemy, Connection Pooling</h1>
+            <p className="topic-desc">Proper database connection management prevents connection leaks, ensures transactional integrity, and maximizes throughput. psycopg2 for direct Postgres, SQLAlchemy for ORM/abstraction, and connection pooling for high-concurrency workloads.</p>
+          </div>
+          <CodeBlock lang="python">{`import psycopg2
+import psycopg2.extras
+from contextlib import contextmanager
+import logging
+
+logger = logging.getLogger(__name__)
+
+DSN = "postgresql://pipeline:secret@db-host:5432/warehouse"
+
+# Context manager for connections — always closes, rollbacks on error
+@contextmanager
+def get_connection(dsn: str = DSN):
+    conn = psycopg2.connect(dsn)
+    conn.autocommit = False
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+# Bulk insert with execute_values (much faster than executemany)
+def load_events_batch(records: list[dict]) -> int:
+    sql = """
+        INSERT INTO fact_events (user_id, event_type, amount, ts, region)
+        VALUES %s
+        ON CONFLICT (user_id, ts) DO UPDATE
+            SET amount = EXCLUDED.amount,
+                updated_at = NOW()
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            psycopg2.extras.execute_values(
+                cur,
+                sql,
+                [(r["user_id"], r["event_type"], r["amount"], r["ts"], r["region"])
+                 for r in records],
+                template=None,
+                page_size=1000,
+            )
+            return cur.rowcount
+
+# COPY FROM for maximum ingest throughput (fastest Postgres load method)
+def bulk_copy_from_csv(filepath: str, table: str) -> None:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            with open(filepath, "r") as f:
+                cur.copy_expert(
+                    f"COPY {table} FROM STDIN WITH (FORMAT csv, HEADER true)",
+                    f,
+                )
+            logger.info(f"COPY loaded {cur.rowcount} rows into {table}")
+
+# DictCursor — rows as dicts instead of tuples
+def fetch_dim_table(table: str) -> dict[int, dict]:
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(f"SELECT * FROM {table}")
+            rows = cur.fetchall()
+    return {row["id"]: dict(row) for row in rows}`}</CodeBlock>
+          <CodeBlock lang="python">{`from sqlalchemy import create_engine, text, event
+from sqlalchemy.orm import Session
+from sqlalchemy.pool import QueuePool
+import pandas as pd
+
+# SQLAlchemy engine with connection pool
+engine = create_engine(
+    "postgresql+psycopg2://pipeline:secret@db-host:5432/warehouse",
+    poolclass=QueuePool,
+    pool_size=10,         # maintain 10 persistent connections
+    max_overflow=20,      # allow up to 20 extra connections under load
+    pool_pre_ping=True,   # test connection health before use (avoids stale conn errors)
+    pool_recycle=3600,    # recycle connections every hour
+    echo=False,           # set True for SQL logging in dev
+)
+
+# Add event listeners for observability
+@event.listens_for(engine, "connect")
+def on_connect(dbapi_conn, connection_record):
+    logger.debug("New DB connection established")
+
+@event.listens_for(engine, "checkout")
+def on_checkout(dbapi_conn, connection_record, connection_proxy):
+    logger.debug("Connection checked out from pool")
+
+# Use engine with pandas (very convenient for read/write)
+def read_table_to_df(table: str, where: str | None = None) -> pd.DataFrame:
+    query = f"SELECT * FROM {table}"
+    if where:
+        query += f" WHERE {where}"
+    return pd.read_sql(query, engine)
+
+def write_df_to_table(df: pd.DataFrame, table: str, if_exists: str = "append") -> None:
+    df.to_sql(
+        table,
+        engine,
+        if_exists=if_exists,
+        index=False,
+        method="multi",     # batch inserts
+        chunksize=10_000,
+    )
+
+# Raw SQL with parameterized queries (prevent SQL injection)
+def run_upsert(records: list[dict], table: str) -> int:
+    sql = text(f"""
+        INSERT INTO {table} (user_id, amount, ts)
+        VALUES (:user_id, :amount, :ts)
+        ON CONFLICT (user_id, ts) DO UPDATE
+            SET amount = EXCLUDED.amount
+    """)
+    with engine.begin() as conn:   # engine.begin() = auto-commit transaction
+        result = conn.execute(sql, records)
+        return result.rowcount`}</CodeBlock>
+          <Quiz topicId="py-db" questions={[
+            { question: "What is the advantage of psycopg2.extras.execute_values over executemany?", options: ["execute_values is the standard API; executemany is deprecated", "execute_values sends all rows in one or few SQL statements; executemany sends one statement per row — execute_values is typically 10-100x faster for bulk loads", "execute_values supports transactions; executemany does not", "execute_values works with any database; executemany is PostgreSQL-only"], correct: 1 },
+            { question: "What does pool_pre_ping=True do in SQLAlchemy?", options: ["Pings the DB to measure latency before each query", "Tests each connection for liveness before checking it out from the pool — prevents 'connection already closed' errors after network drops", "Limits the number of connections to the pool size", "Enables connection compression"], correct: 1 },
+            { question: "Why use parameterized queries (text() with :param) instead of string formatting for SQL?", options: ["Parameterized queries are faster", "String formatting creates SQL injection vulnerabilities — parameterized queries safely escape user input", "Parameterized queries support more SQL features", "String formatting doesn't work with SQLAlchemy"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-db'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
+        </section>
+
+        <section id="py-http" ref={el => { if (el) sectionRefs.current['py-http'] = el }} className="topic-section">
+          <div className="topic-header">
+            <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
+            <h1 className="topic-title">HTTP Clients — requests, httpx, retry, pagination, rate limiting</h1>
+            <p className="topic-desc">Data engineers constantly pull data from REST APIs. Handling pagination, rate limits, OAuth, retry with backoff, and session management correctly is critical for reliable API ingestion pipelines.</p>
+          </div>
+          <CodeBlock lang="python">{`import requests
+import time
+import logging
+from urllib.parse import urljoin
+
+logger = logging.getLogger(__name__)
+
+class APIClient:
+    """Reusable API client with session, retry, and rate limiting."""
+
+    def __init__(
+        self,
+        base_url: str,
+        api_key: str,
+        max_retries: int = 3,
+        rate_limit_rps: float = 10.0,
+    ):
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.session.headers.update({
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "de-pipeline/1.0",
+        })
+        self.max_retries = max_retries
+        self._min_interval = 1.0 / rate_limit_rps
+        self._last_call = 0.0
+
+    def _rate_limit(self):
+        elapsed = time.time() - self._last_call
+        if elapsed < self._min_interval:
+            time.sleep(self._min_interval - elapsed)
+        self._last_call = time.time()
+
+    def get(self, path: str, **params) -> dict:
+        url = urljoin(self.base_url, path)
+        last_exc = None
+        for attempt in range(1, self.max_retries + 1):
+            self._rate_limit()
+            try:
+                resp = self.session.get(url, params=params, timeout=30)
+                if resp.status_code == 429:
+                    wait = int(resp.headers.get("Retry-After", 60))
+                    logger.warning(f"Rate limited. Waiting {wait}s...")
+                    time.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                return resp.json()
+            except (requests.ConnectionError, requests.Timeout) as e:
+                last_exc = e
+                wait = 2 ** attempt
+                logger.warning(f"Attempt {attempt} failed: {e}. Retrying in {wait}s")
+                time.sleep(wait)
+        raise last_exc  # type: ignore
+
+    def paginate(self, path: str, page_size: int = 100):
+        """Yield all records across all pages."""
+        page = 1
+        while True:
+            data = self.get(path, page=page, per_page=page_size)
+            records = data.get("data", data.get("results", []))
+            if not records:
+                break
+            yield from records
+            if len(records) < page_size:
+                break  # last page
+            page += 1
+
+# Usage
+client = APIClient("https://api.salesplatform.com/v2/", api_key="sk-...")
+all_orders = list(client.paginate("orders", page_size=500))`}</CodeBlock>
+          <CodeBlock lang="python">{`import httpx
+import asyncio
+import time
+from base64 import b64encode
+
+# OAuth2 client credentials flow
+class OAuthClient:
+    def __init__(self, token_url: str, client_id: str, client_secret: str):
+        self.token_url = token_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self._token: str | None = None
+        self._expires_at: float = 0.0
+
+    def get_token(self) -> str:
+        if self._token and time.time() < self._expires_at - 60:
+            return self._token  # reuse valid token (with 60s buffer)
+        resp = requests.post(
+            self.token_url,
+            data={"grant_type": "client_credentials"},
+            headers={
+                "Authorization": "Basic " + b64encode(
+                    f"{self.client_id}:{self.client_secret}".encode()
+                ).decode()
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        token_data = resp.json()
+        self._token = token_data["access_token"]
+        self._expires_at = time.time() + token_data.get("expires_in", 3600)
+        return self._token
+
+# httpx async client — for high-throughput concurrent API ingestion
+async def fetch_all_pages_async(
+    base_url: str,
+    endpoints: list[str],
+    max_concurrent: int = 20,
+) -> dict[str, list]:
+    results: dict[str, list] = {}
+    sem = asyncio.Semaphore(max_concurrent)
+
+    async def fetch_one(client: httpx.AsyncClient, endpoint: str):
+        async with sem:
+            resp = await client.get(endpoint, timeout=30.0)
+            resp.raise_for_status()
+            results[endpoint] = resp.json().get("data", [])
+
+    async with httpx.AsyncClient(
+        base_url=base_url,
+        headers={"Authorization": f"Bearer {token}"},
+        limits=httpx.Limits(max_connections=50, max_keepalive_connections=20),
+    ) as client:
+        await asyncio.gather(*[fetch_one(client, ep) for ep in endpoints])
+
+    return results
+
+# Cursor-based pagination (more reliable than page numbers for large datasets)
+async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
+    all_records = []
+    cursor = None
+    while True:
+        params = {"limit": 500}
+        if cursor:
+            params["cursor"] = cursor
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        all_records.extend(data["records"])
+        cursor = data.get("next_cursor")
+        if not cursor:
+            break
+    return all_records`}</CodeBlock>
+          <Quiz topicId="py-http" questions={[
+            { question: "Why use a requests.Session() instead of requests.get() for repeated API calls?", options: ["Session is asynchronous; requests.get is synchronous", "Session reuses TCP connections (keep-alive), shares headers/cookies across requests, and manages cookies — much more efficient for many calls to the same host", "Session automatically handles retries", "requests.get() doesn't support authentication"], correct: 1 },
+            { question: "What is cursor-based pagination and when is it preferred over page-number pagination?", options: ["Cursor pagination uses a database cursor", "Cursor pagination uses an opaque pointer to the next page position — it handles insertions/deletions correctly and is preferred for large, frequently-updated datasets where page numbers can skip or duplicate records", "Cursor pagination is faster for small datasets", "Page-number pagination always returns duplicate records"], correct: 1 },
+            { question: "What HTTP status code indicates rate limiting and how should your client handle it?", options: ["404 — retry immediately", "429 Too Many Requests — read the Retry-After header and sleep for that duration before retrying", "500 — switch to a different endpoint", "401 — refresh the OAuth token"], correct: 1 },
+          ]} />
+          <button onClick={async () => { await markTopicComplete('py-http'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
 
         <section id="py-linux" ref={el => { if (el) sectionRefs.current['py-linux'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Linux and Shell Scripting</h1>
+            <h1 className="topic-title">Linux & Shell Scripting for Data Engineers</h1>
+            <p className="topic-desc">Data engineers work in Linux environments daily — managing file systems, scheduling jobs with cron, monitoring processes, piping data between commands, and writing robust shell scripts for pipeline orchestration.</p>
           </div>
           <CodeBlock lang="bash">{`#!/bin/bash
-set -euo pipefail  # exit on error, unset vars, pipe failures
+# Robust pipeline shell script
+set -euo pipefail   # -e: exit on error, -u: error on unset vars, -o pipefail: catch pipe errors
 
-# Data pipeline shell script
-LOG_DIR="/var/log/pipelines"
-DATE=$(date +%Y-%m-%d)
-LOG_FILE="$LOG_DIR/pipeline_$DATE.log"
+readonly LOG_DIR="/var/log/pipelines"
+readonly DATA_DIR="/data"
+readonly DATE="\${1:-$(date +%Y-%m-%d)}"   # use arg or today's date
+readonly LOG_FILE="\${LOG_DIR}/pipeline_\${DATE}.log"
 
-log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
+# Ensure log directory exists
+mkdir -p "$LOG_DIR"
 
-log "Starting pipeline for $DATE"
-
-# Process files in parallel
-process_file() {
-    local f="$1"
-    python3 ingest.py --file "$f" >> "$LOG_FILE" 2>&1
-    log "Processed: $f"
+# Logging function
+log() {
+    echo "[\$(date '+%Y-%m-%d %H:%M:%S')] [$$] $*" | tee -a "$LOG_FILE"
 }
-export -f process_file log LOG_FILE
 
-ls /data/incoming/*.parquet | xargs -P 4 -I{} bash -c 'process_file "$@"' _ {}
+log_error() {
+    echo "[\$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] $*" | tee -a "$LOG_FILE" >&2
+}
 
-# Cleanup files older than 30 days
-find /data/archive -name "*.parquet" -mtime +30 -delete
+# Trap: run cleanup on exit (success or failure)
+cleanup() {
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        log_error "Pipeline failed with exit code $exit_code"
+        # Send alert (e.g., via curl to Slack webhook)
+    fi
+    log "Pipeline finished. Exit: $exit_code"
+}
+trap cleanup EXIT
 
-log "Pipeline complete"
+log "Starting pipeline for date: $DATE"
 
-# Cron: run daily at 2 AM
-# 0 2 * * * /opt/pipelines/run_daily.sh`}</CodeBlock>
+# File system operations
+ls -lh "\${DATA_DIR}/incoming/"           # list files with sizes
+du -sh "\${DATA_DIR}/raw/"                # directory size
+df -h /data                             # disk space check
+
+# Find and process files
+find "\${DATA_DIR}/incoming" -name "*.csv.gz" -newer "\${DATA_DIR}/last_run" -print0 \\
+    | xargs -0 -P 4 -I{} bash -c 'python3 /opt/pipelines/ingest.py --file "$1"' _ {}
+# -P 4: 4 parallel processes; -0: null-delimited (handles spaces in filenames)
+
+# Pipe chaining — transform data without temp files
+zcat "\${DATA_DIR}/events.jsonl.gz" \\
+    | python3 /opt/pipelines/filter.py --type purchase \\
+    | python3 /opt/pipelines/enrich.py \\
+    | gzip > "\${DATA_DIR}/processed/purchases_\${DATE}.jsonl.gz"
+
+# Check exit code of previous command
+if [[ $? -ne 0 ]]; then
+    log_error "Filter/enrich pipeline failed"
+    exit 1
+fi
+
+# Cleanup old files (older than 30 days)
+find "\${DATA_DIR}/archive" -name "*.parquet" -mtime +30 -delete
+log "Cleaned up files older than 30 days"
+
+# Cron job: run daily at 2 AM
+# 0 2 * * * /opt/pipelines/run_daily.sh >> /var/log/pipelines/cron.log 2>&1`}</CodeBlock>
+          <CodeBlock lang="bash">{`# Process management
+ps aux | grep python3              # find running python processes
+kill -TERM $(pgrep -f "pipeline.py")   # graceful shutdown
+lsof -i :5432                     # what's using PostgreSQL port
+netstat -tlnp | grep LISTEN       # all listening ports
+
+# File permissions for pipeline security
+chmod 750 /opt/pipelines/          # owner: rwx, group: r-x, others: none
+chmod 640 /opt/pipelines/.env      # protect credentials
+chown -R pipeline:dataeng /opt/pipelines/
+
+# systemd service for persistent pipeline daemon
+# /etc/systemd/system/de-pipeline.service:
+# [Unit]
+# Description=Data Engineering Pipeline
+# After=network.target postgresql.service
+#
+# [Service]
+# Type=simple
+# User=pipeline
+# WorkingDirectory=/opt/pipelines
+# ExecStart=/opt/pipelines/.venv/bin/python pipeline.py
+# Restart=on-failure
+# RestartSec=30
+# EnvironmentFile=/opt/pipelines/.env
+#
+# [Install]
+# WantedBy=multi-user.target
+
+# Manage the service
+systemctl enable de-pipeline
+systemctl start de-pipeline
+systemctl status de-pipeline
+journalctl -u de-pipeline -f      # follow logs
+
+# Environment variables
+export PIPELINE_ENV=production
+export DB_HOST=db-prod.internal
+source /opt/pipelines/.env         # load .env file in bash
+
+# Useful pipeline monitoring commands
+tail -f /var/log/pipelines/*.log   # follow all pipeline logs
+grep -E "ERROR|CRITICAL" /var/log/pipelines/pipeline_2024-01-15.log
+wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</CodeBlock>
           <Quiz topicId="py-linux" questions={[
-            { question: "What does 'set -euo pipefail' do in a bash script?", options: ["Sets environment variables", "Exit on error (-e), error on unset variables (-u), catch pipe failures (-o pipefail)", "Enables debug mode", "Sets file permissions"], correct: 1 },
-            { question: "How do you run 4 shell commands in parallel with xargs?", options: ["xargs --parallel 4", "xargs -P 4", "xargs -t 4", "parallel 4 xargs"], correct: 1 },
+            { question: "What does 'set -euo pipefail' do at the top of a bash script?", options: ["Sets environment variables", "-e exits on any error, -u treats unset variables as errors, -o pipefail catches errors in pipes — together they prevent silent failures", "Sets file permissions", "Enables debug output"], correct: 1 },
+            { question: "What does 'xargs -P 4' do in a shell pipeline?", options: ["Limits file size to 4MB", "Runs up to 4 parallel processes of the given command — enables parallel file processing", "Sets process priority to 4", "Retries failed commands 4 times"], correct: 1 },
+            { question: "Why use 'trap cleanup EXIT' in a shell script?", options: ["It logs all commands", "It registers a function to run when the script exits — whether normally or due to an error — ensuring cleanup always happens", "It prevents the script from exiting on errors", "It sends an exit signal to child processes"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-linux'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -388,39 +2569,132 @@ log "Pipeline complete"
         <section id="py-git" ref={el => { if (el) sectionRefs.current['py-git'] = el }} className="topic-section">
           <div className="topic-header">
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
-            <h1 className="topic-title">Git for Data Engineers</h1>
+            <h1 className="topic-title">Git Deep Dive for Data Engineers</h1>
+            <p className="topic-desc">Git is not just version control — it's the backbone of CI/CD, code review, and collaborative development. Data engineers need fluency in branching strategies, rebase vs merge, cherry-pick, bisect, hooks, and GitHub Actions for pipeline automation.</p>
           </div>
-          <CodeBlock lang="bash">{`# Core git workflow for data engineering teams
-git init && git remote add origin https://github.com/org/de-pipeline.git
+          <CodeBlock lang="bash">{`# Branching strategy: GitHub Flow for data engineering teams
+# main → always deployable
+# feature/xxx → short-lived feature branches
+# hotfix/xxx → urgent production fixes
 
-# Feature branch workflow
-git checkout -b feature/add-silver-layer
+git checkout main && git pull origin main
+git checkout -b feature/add-silver-transformations
+
+# Work, commit often with semantic messages
 git add src/transformations/silver.py tests/test_silver.py
-git commit -m "feat: add silver layer transformation with deduplication"
-git push origin feature/add-silver-layer
+git commit -m "feat(silver): add deduplication with window functions"
+git add src/transformations/silver.py
+git commit -m "fix(silver): handle null user_id in dedup key"
+git commit -m "test(silver): add edge case for empty partition"
 
-# Fixing mistakes
-git reset --soft HEAD~1   # undo last commit, keep changes staged
-git reset --hard HEAD~1   # undo last commit AND changes (destructive!)
-git revert abc123          # create new commit that undoes abc123 (safe for main)
+# Before PR: rebase to clean up commits and get latest main
+git fetch origin
+git rebase origin/main            # replay your commits on top of latest main
+# If conflicts: git add <resolved_files> && git rebase --continue
 
-# Stash work in progress
-git stash push -m "WIP: refactoring pipeline config"
-git stash pop
+# Interactive rebase — squash/reword commits before PR
+git rebase -i HEAD~3
+# In editor: pick/squash/reword/drop commits
+# squash: merge into previous commit
+# reword: edit commit message
 
-# Interactive rebase to clean up commits before PR
-git rebase -i HEAD~3       # squash/edit last 3 commits
+# Push and create PR
+git push origin feature/add-silver-transformations
+gh pr create --title "feat(silver): add deduplication with window functions" \\
+             --body "Adds SCD2-style dedup using row_number() partitioned by user_id+date"
 
-# Useful aliases for data engineers
-git log --oneline --graph --all    # visual branch history
-git diff HEAD src/                 # what changed in src/ since last commit
-git blame src/pipeline.py          # who changed each line and when
+# cherry-pick — apply specific commit to another branch (e.g., hotfix to main)
+git checkout main
+git cherry-pick abc1234           # apply commit abc1234 to main
+git push origin main
 
-# .gitignore for data projects
-# .env, credentials.json, *.parquet, /data/raw/, __pycache__/`}</CodeBlock>
+# bisect — find which commit introduced a bug
+git bisect start
+git bisect bad HEAD               # current commit is bad
+git bisect good v1.2.0            # this tag was good
+# git bisect tests commits automatically:
+git bisect run python -m pytest tests/test_silver.py -x  # automated bisect
+git bisect reset                  # clean up after finding the bad commit`}</CodeBlock>
+          <CodeBlock lang="yaml">{`# .github/workflows/pipeline-ci.yml
+# GitHub Actions CI for data engineering pipelines
+
+name: Pipeline CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  lint-and-type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: \${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dev dependencies
+        run: |
+          pip install ruff mypy
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: ruff check src/ tests/
+
+      - name: Type check with mypy
+        run: mypy src/ --strict
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint-and-type-check
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: \${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: test
+          DB_PASSWORD: test
+          DB_NAME: test_db
+        run: pytest tests/ -v --tb=short --cov=src --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4`}</CodeBlock>
           <Quiz topicId="py-git" questions={[
-            { question: "What is the difference between git reset --soft and --hard?", options: ["No difference", "--soft undoes commit but keeps changes staged; --hard discards changes entirely", "--hard is safer", "--soft only works on branches"], correct: 1 },
-            { question: "Why use git revert instead of git reset on a shared branch?", options: ["revert is faster", "revert creates a new commit undoing changes (safe); reset rewrites history (dangerous for shared branches)", "revert keeps the branch name", "reset cannot undo merges"], correct: 1 },
+            { question: "What is the difference between git rebase and git merge when integrating feature branches?", options: ["They are identical", "merge creates a merge commit preserving branch history; rebase replays your commits on top of the target branch creating a linear history — rebase is cleaner but rewrites commit hashes", "rebase is safer for shared branches; merge rewrites history", "merge is faster; rebase is more accurate"], correct: 1 },
+            { question: "When should you use git cherry-pick?", options: ["When you want to merge entire branches", "When you need to apply a specific commit (e.g., a hotfix) to another branch without merging all commits from the source branch", "When you want to undo a commit", "When bisecting to find a bug"], correct: 1 },
+            { question: "What does 'git bisect run <test-command>' do?", options: ["Runs tests on the current branch only", "Automates the bisect process — git checks out commits and runs the test command; the exit code (0=good, non-zero=bad) tells git which direction to bisect until the offending commit is found", "Bisects the codebase into modules for parallel testing", "Runs all commits in parallel"], correct: 1 },
           ]} />
           <button onClick={async () => { await markTopicComplete('py-git'); onComplete() }} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}>Mark Complete ✓</button>
         </section>
@@ -437,31 +2711,134 @@ function PythonGilAnimation() {
     return () => clearInterval(t)
   }, [])
 
-  const threads = ['Thread 1', 'Thread 2', 'Thread 3']
+  const threads = ['Thread 1 (I/O)', 'Thread 2 (CPU)', 'Thread 3 (CPU)']
   const active = tick % 3
 
   return (
     <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 16, fontSize: '.9rem' }}>CPython GIL - Only 1 thread executes at a time</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython GIL — Only 1 thread executes Python bytecode at a time</div>
+      <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Even with 3 threads, CPU work is serialized. I/O releases the GIL allowing other threads to run.</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {threads.map((t, i) => (
           <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ minWidth: 80, fontSize: '.8rem', fontWeight: 600 }}>{t}</div>
-            <div style={{ flex: 1, height: 24, background: 'white', border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
+            <div style={{ minWidth: 120, fontSize: '.8rem', fontWeight: 600 }}>{t}</div>
+            <div style={{ flex: 1, height: 28, background: 'white', border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
               <div style={{
                 position: 'absolute', left: 0, top: 0, bottom: 0,
-                background: i === active ? '#4f8ef7' : '#e2e8f0',
-                width: i === active ? '100%' : '0%',
-                transition: 'all 0.4s ease',
-                display: 'flex', alignItems: 'center', paddingLeft: 8,
+                background: i === active ? (i === 0 ? '#22c55e' : '#4f8ef7') : '#e2e8f0',
+                width: i === active ? '100%' : '12%',
+                transition: 'all 0.5s cubic-bezier(0.4,0,0.2,1)',
+                display: 'flex', alignItems: 'center', paddingLeft: 10,
               }}>
-                <span style={{ fontSize: '.72rem', fontWeight: 700, color: i === active ? 'white' : 'var(--text-4)' }}>
-                  {i === active ? '▶ Running (GIL acquired)' : 'Waiting for GIL'}
+                <span style={{ fontSize: '.72rem', fontWeight: 700, color: i === active ? 'white' : '#94a3b8', whiteSpace: 'nowrap' }}>
+                  {i === active ? '▶ GIL acquired — executing' : '⏸ Waiting for GIL'}
                 </span>
               </div>
             </div>
           </div>
         ))}
+      </div>
+      <div style={{ marginTop: 12, fontSize: '.75rem', color: 'var(--text-4)' }}>
+        💡 Use <strong>multiprocessing</strong> for CPU-bound work (bypasses GIL) · <strong>asyncio</strong> for I/O-bound work (single-threaded, cooperative)
+      </div>
+    </div>
+  )
+}
+
+function PythonMemoryAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => (n + 1) % 4), 1200)
+    return () => clearInterval(t)
+  }, [])
+
+  const objects = [
+    { name: 'df: DataFrame', refcount: tick < 2 ? 2 : 1, size: '128 MB', alive: true },
+    { name: 'chunk: DataFrame', refcount: tick === 1 ? 1 : 0, size: '10 MB', alive: tick === 1 },
+    { name: 'config: dict', refcount: 3, size: '< 1 KB', alive: true },
+    { name: 'stale_ref', refcount: tick > 2 ? 0 : 1, size: '2 MB', alive: tick <= 2 },
+  ]
+
+  return (
+    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>CPython Memory Model — Reference Counting Garbage Collection</div>
+      <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Objects are freed immediately when refcount hits 0. Cyclic references require the cyclic GC.</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        {objects.map((obj) => (
+          <div key={obj.name} style={{
+            padding: '10px 14px',
+            borderRadius: 8,
+            border: `1px solid ${obj.alive ? (obj.refcount === 0 ? '#f87171' : '#4ade80') : '#e2e8f0'}`,
+            background: obj.alive ? (obj.refcount === 0 ? '#fef2f2' : '#f0fdf4') : '#f8fafc',
+            opacity: obj.alive ? 1 : 0.4,
+            transition: 'all 0.5s ease',
+          }}>
+            <div style={{ fontSize: '.8rem', fontWeight: 700, marginBottom: 4 }}>{obj.name}</div>
+            <div style={{ fontSize: '.75rem', color: 'var(--text-3)' }}>size: {obj.size}</div>
+            <div style={{ fontSize: '.75rem', marginTop: 4, fontWeight: 600, color: obj.refcount === 0 ? '#ef4444' : '#16a34a' }}>
+              refcount: {obj.refcount} {obj.refcount === 0 ? '→ GC freed ♻' : '→ alive'}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AsyncAnimation() {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 600)
+    return () => clearInterval(t)
+  }, [])
+
+  const tasks = [
+    { name: 'fetch /orders (API)', phases: ['waiting', 'io', 'io', 'done', 'done', 'done'] },
+    { name: 'fetch /customers (API)', phases: ['waiting', 'waiting', 'io', 'io', 'done', 'done'] },
+    { name: 'query postgres (DB)', phases: ['io', 'io', 'io', 'waiting', 'done', 'done'] },
+    { name: 'write S3 (I/O)', phases: ['waiting', 'waiting', 'waiting', 'io', 'io', 'done'] },
+  ]
+
+  const phase = tick % 6
+
+  const phaseColor: Record<string, string> = {
+    waiting: '#e2e8f0',
+    io: '#818cf8',
+    done: '#4ade80',
+  }
+  const phaseLabel: Record<string, string> = {
+    waiting: '⏳ Waiting',
+    io: '⚡ I/O Running',
+    done: '✓ Done',
+  }
+
+  return (
+    <div style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24, marginBottom: 24 }}>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8, fontSize: '.9rem' }}>asyncio Event Loop — Single Thread, Concurrent I/O</div>
+      <div style={{ fontSize: '.78rem', color: 'var(--text-3)', marginBottom: 16 }}>Event loop switches between tasks when they await I/O — no threads, no GIL contention.</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {tasks.map((task) => {
+          const currentPhase = task.phases[phase]
+          return (
+            <div key={task.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ minWidth: 180, fontSize: '.78rem', fontWeight: 600 }}>{task.name}</div>
+              <div style={{
+                flex: 1, height: 26, borderRadius: 4, overflow: 'hidden',
+                background: phaseColor[currentPhase],
+                border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', paddingLeft: 10,
+                transition: 'background 0.4s ease',
+              }}>
+                <span style={{ fontSize: '.72rem', fontWeight: 700, color: currentPhase === 'waiting' ? '#94a3b8' : 'white' }}>
+                  {phaseLabel[currentPhase]}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ marginTop: 12, fontSize: '.75rem', color: 'var(--text-4)' }}>
+        💡 All 4 tasks run on <strong>1 thread</strong> — asyncio.gather() fires them concurrently, event loop resumes each when I/O completes
       </div>
     </div>
   )
