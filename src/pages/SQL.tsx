@@ -88,6 +88,630 @@ function JoinVennDiagram() {
   )
 }
 
+// ─────────────────────────────────────────────────── SQL DIAGRAM COMPONENTS ──
+
+function SelectOrderDiagram() {
+  const steps = [
+    {n:'1','label':'FROM / JOIN','color':'#4f8ef7'},
+    {n:'2','label':'WHERE','color':'#8b5cf6'},
+    {n:'3','label':'GROUP BY','color':'#f59e0b'},
+    {n:'4','label':'HAVING','color':'#ef4444'},
+    {n:'5','label':'SELECT','color':'#22c55e'},
+    {n:'6','label':'DISTINCT','color':'#ec4899'},
+    {n:'7','label':'ORDER BY','color':'#06b6d4'},
+    {n:'8','label':'LIMIT / OFFSET','color':'#64748b'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 50" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">SQL Logical Execution Order</text>
+        {steps.map((s,i)=>(
+          <g key={s.n}>
+            <rect x={4+i*64} y="18" width="58" height="24" rx="5" fill={s.color} opacity=".18" stroke={s.color} strokeWidth="1.5"/>
+            <text x={33+i*64} y="27" fontSize="7.5" fontWeight="700" fill={s.color} textAnchor="middle">{s.n}</text>
+            <text x={33+i*64} y="37" fontSize="7" fill="#1e293b" textAnchor="middle">{s.label}</text>
+            {i<steps.length-1&&<polygon points={`${62+i*64},30 ${62+i*64},26 ${67+i*64},30`} fill={s.color} opacity=".7"/>}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DistinctDiagram() {
+  const before = ['NY','NY','CA','TX','CA','NY','TX']
+  const after = ['NY','CA','TX']
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 400 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DISTINCT — Remove Duplicates</text>
+        {before.map((v,i)=>(
+          <g key={i}>
+            <rect x={4+i*36} y="18" width="30" height="20" rx="3" fill={after.includes(v)&&before.indexOf(v)===i?'#4f8ef7':'#ef4444'} opacity=".18" stroke={after.includes(v)&&before.indexOf(v)===i?'#4f8ef7':'#ef4444'} strokeWidth="1"/>
+            <text x={19+i*36} y="32" fontSize="9" fill="#1e293b" textAnchor="middle">{v}</text>
+          </g>
+        ))}
+        <text x="4" y="55" fontSize="8" fill="#ef4444">Red = duplicate removed</text>
+        <text x="4" y="68" fontSize="8" fill="#64748b">After DISTINCT:</text>
+        {after.map((v,i)=>(
+          <g key={v}>
+            <rect x={90+i*40} y="58" width="34" height="18" rx="3" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1.2"/>
+            <text x={107+i*40} y="71" fontSize="9" fill="#1e293b" textAnchor="middle">{v}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function NullsDiagram() {
+  const rows = [
+    {a:'TRUE',b:'NULL',and:'NULL',or:'TRUE'},
+    {a:'FALSE',b:'NULL',and:'FALSE',or:'NULL'},
+    {a:'NULL',b:'NULL',and:'NULL',or:'NULL'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 400 95" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Three-Valued Logic with NULL</text>
+        {['A','B','A AND B','A OR B'].map((h,i)=><text key={h} x={10+i*95} y="26" fontSize="9" fontWeight="700" fill="#475569">{h}</text>)}
+        <line x1="4" y1="30" x2="396" y2="30" stroke="#e2e8f0" strokeWidth="1"/>
+        {rows.map((r,ri)=>(
+          <g key={ri}>
+            {[r.a,r.b,r.and,r.or].map((v,ci)=>(
+              <text key={ci} x={10+ci*95} y={44+ri*17} fontSize="9" fontFamily="monospace"
+                fill={v==='NULL'?'#ef4444':v==='TRUE'?'#16a34a':'#64748b'}>{v}</text>
+            ))}
+          </g>
+        ))}
+        <text x="4" y="90" fontSize="8" fill="#94a3b8">NULL = unknown — always use IS NULL / IS NOT NULL, never = NULL</text>
+      </svg>
+    </div>
+  )
+}
+
+function CaseDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 110" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">CASE Expression — Decision Tree</text>
+        <rect x="195" y="18" width="90" height="20" rx="4" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="240" y="32" fontSize="9" fill="#1e293b" textAnchor="middle">CASE input</text>
+        {[{cond:'score >= 90',val:"'A'",x:80,color:'#22c55e'},{cond:'score >= 70',val:"'B'",x:240,color:'#f59e0b'},{cond:'ELSE',val:"'F'",x:390,color:'#ef4444'}].map(b=>(
+          <g key={b.cond}>
+            <line x1="240" y1="38" x2={b.x} y2="58" stroke="#94a3b8" strokeWidth="1"/>
+            <rect x={b.x-55} y="58" width="110" height="18" rx="4" fill={b.color} opacity=".18" stroke={b.color} strokeWidth="1.2"/>
+            <text x={b.x} y="65" fontSize="7.5" fill="#64748b" textAnchor="middle">{b.cond}</text>
+            <text x={b.x} y="73" fontSize="8" fontWeight="700" fill={b.color} textAnchor="middle">→ {b.val}</text>
+            <rect x={b.x-30} y="82" width="60" height="16" rx="3" fill={b.color} opacity=".25" stroke={b.color} strokeWidth="1"/>
+            <text x={b.x} y="93" fontSize="9" fontWeight="700" fill={b.color} textAnchor="middle">{b.val}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function StringsDiagram() {
+  const ops = [
+    {fn:'UPPER()',input:'"hello"',out:'"HELLO"',color:'#4f8ef7'},
+    {fn:'TRIM()',input:'"  hi  "',out:'"hi"',color:'#8b5cf6'},
+    {fn:'LENGTH()',input:'"data"',out:'4',color:'#22c55e'},
+    {fn:'REPLACE()',input:'"a-b","−","_"',out:'"a_b"',color:'#f59e0b'},
+    {fn:'SUBSTRING(1,3)',input:'"pipeline"',out:'"pip"',color:'#ef4444'},
+    {fn:'CONCAT()',input:'"foo","bar"',out:'"foobar"',color:'#ec4899'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 115" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">String Functions</text>
+        {ops.map((o,i)=>(
+          <g key={o.fn}>
+            <rect x={4+(i%3)*172} y={18+Math.floor(i/3)*44} width="165" height="36" rx="5" fill={o.color} opacity=".1" stroke={o.color} strokeWidth="1.2"/>
+            <text x={12+(i%3)*172} y={34+Math.floor(i/3)*44} fontSize="9" fontWeight="700" fontFamily="monospace" fill={o.color}>{o.fn}</text>
+            <text x={12+(i%3)*172} y={46+Math.floor(i/3)*44} fontSize="8" fill="#64748b">{o.input} → <tspan fontWeight="700" fill="#1e293b">{o.out}</tspan></text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DatesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Date Functions</text>
+        {[
+          {fn:'DATE_TRUNC("month", d)',input:'2024-07-15',out:'2024-07-01',color:'#4f8ef7'},
+          {fn:'EXTRACT(YEAR FROM d)',input:'2024-07-15',out:'2024',color:'#8b5cf6'},
+          {fn:'DATEDIFF(d1, d2)',input:'2024-01-15, 2024-01-01',out:'14 days',color:'#22c55e'},
+          {fn:'DATE_FORMAT(d, "MM/dd")',input:'2024-07-15',out:'"07/15"',color:'#f59e0b'},
+          {fn:'CURRENT_DATE()',input:'(no input)',out:'today\'s date',color:'#ef4444'},
+          {fn:'ADD_MONTHS(d, 3)',input:'2024-01-15',out:'2024-04-15',color:'#ec4899'},
+        ].map((o,i)=>(
+          <g key={o.fn}>
+            <rect x={4+(i%3)*172} y={18+Math.floor(i/3)*38} width="165" height="30" rx="4" fill={o.color} opacity=".1" stroke={o.color} strokeWidth="1.1"/>
+            <text x={12+(i%3)*172} y={32+Math.floor(i/3)*38} fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={o.color}>{o.fn}</text>
+            <text x={12+(i%3)*172} y={43+Math.floor(i/3)*38} fontSize="7.5" fill="#64748b">{o.input} → <tspan fontWeight="700" fill="#1e293b">{o.out}</tspan></text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function AggDiagram() {
+  const vals = [100,200,null,300,150]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 110" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Aggregate Functions</text>
+        {vals.map((v,i)=>(
+          <g key={i}>
+            <rect x={4+i*50} y="18" width="44" height="22" rx="3" fill={v===null?'#ef4444':'#4f8ef7'} opacity=".18" stroke={v===null?'#ef4444':'#4f8ef7'} strokeWidth="1"/>
+            <text x={26+i*50} y="33" fontSize="10" fill={v===null?'#ef4444':'#1e293b'} textAnchor="middle">{v===null?'NULL':v}</text>
+          </g>
+        ))}
+        <text x="4" y="55" fontSize="8" fill="#ef4444">NULL is ignored by SUM/AVG/MIN/MAX but counted by COUNT(*)</text>
+        {[
+          {fn:'COUNT(*)',result:'5',color:'#4f8ef7'},
+          {fn:'COUNT(col)',result:'4',color:'#8b5cf6'},
+          {fn:'SUM',result:'750',color:'#22c55e'},
+          {fn:'AVG',result:'187.5',color:'#f59e0b'},
+          {fn:'MIN',result:'100',color:'#ef4444'},
+          {fn:'MAX',result:'300',color:'#ec4899'},
+        ].map((a,i)=>(
+          <g key={a.fn}>
+            <rect x={4+i*78} y="62" width="72" height="20" rx="3" fill={a.color} opacity=".15" stroke={a.color} strokeWidth="1"/>
+            <text x={40+i*78} y="70" fontSize="7.5" fontWeight="700" fill={a.color} textAnchor="middle">{a.fn}</text>
+            <text x={40+i*78} y="79" fontSize="9" fontWeight="800" fill="#1e293b" textAnchor="middle">{a.result}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function GroupByDiagram() {
+  const rows = [{r:'NY',amt:100},{r:'CA',amt:200},{r:'NY',amt:150},{r:'CA',amt:300},{r:'TX',amt:250}]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">GROUP BY — Bucket → Aggregate</text>
+        {rows.map((r,i)=>(
+          <g key={i}>
+            <rect x={4+i*52} y="18" width="46" height="22" rx="3" fill={r.r==='NY'?'#4f8ef7':r.r==='CA'?'#8b5cf6':'#22c55e'} opacity=".18" stroke={r.r==='NY'?'#4f8ef7':r.r==='CA'?'#8b5cf6':'#22c55e'} strokeWidth="1"/>
+            <text x={27+i*52} y="27" fontSize="8" fill="#64748b" textAnchor="middle">{r.r}</text>
+            <text x={27+i*52} y="36" fontSize="9" fontWeight="700" fill="#1e293b" textAnchor="middle">{r.amt}</text>
+          </g>
+        ))}
+        <text x="4" y="56" fontSize="8" fill="#94a3b8">↓ GROUP BY region → SUM(amount)</text>
+        {[{r:'NY',sum:250,color:'#4f8ef7'},{r:'CA',sum:500,color:'#8b5cf6'},{r:'TX',sum:250,color:'#22c55e'}].map((g,i)=>(
+          <g key={g.r}>
+            <rect x={4+i*100} y="62" width="90" height="26" rx="4" fill={g.color} opacity=".2" stroke={g.color} strokeWidth="1.5"/>
+            <text x={49+i*100} y="72" fontSize="9" fontWeight="700" fill={g.color} textAnchor="middle">{g.r}</text>
+            <text x={49+i*100} y="83" fontSize="10" fontWeight="800" fill="#1e293b" textAnchor="middle">SUM={g.sum}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function JoinsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">SQL JOIN Types</text>
+        {[
+          {type:'INNER',lFill:'#4f8ef7',rFill:'#4f8ef7',oFill:'#4f8ef7',lOp:.08,rOp:.08,oOp:.5,x:30},
+          {type:'LEFT',lFill:'#22c55e',rFill:'#22c55e',oFill:'#22c55e',lOp:.5,rOp:.08,oOp:.5,x:150},
+          {type:'RIGHT',lFill:'#f59e0b',rFill:'#f59e0b',oFill:'#f59e0b',lOp:.08,rOp:.5,oOp:.5,x:270},
+          {type:'FULL',lFill:'#8b5cf6',rFill:'#8b5cf6',oFill:'#8b5cf6',lOp:.5,rOp:.5,oOp:.5,x:390},
+        ].map(j=>(
+          <g key={j.type}>
+            <ellipse cx={j.x+26} cy="60" rx="26" ry="22" fill={j.lFill} opacity={j.lOp} stroke={j.lFill} strokeWidth="1.5"/>
+            <ellipse cx={j.x+46} cy="60" rx="26" ry="22" fill={j.rFill} opacity={j.rOp} stroke={j.rFill} strokeWidth="1.5"/>
+            <text x={j.x+36} y="96" fontSize="8" fontWeight="700" fill={j.lFill} textAnchor="middle">{j.type}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function AntiJoinDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 380 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Anti-Join — Rows in A NOT IN B</text>
+        <ellipse cx="120" cy="52" rx="55" ry="32" fill="#ef4444" opacity=".25" stroke="#ef4444" strokeWidth="2"/>
+        <text x="90" y="48" fontSize="9" fontWeight="700" fill="#ef4444">Table A</text>
+        <text x="90" y="60" fontSize="7.5" fill="#475569">unmatched rows</text>
+        <ellipse cx="220" cy="52" rx="55" ry="32" fill="#4f8ef7" opacity=".1" stroke="#4f8ef7" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <text x="230" y="52" fontSize="9" fill="#4f8ef7">Table B</text>
+        <text x="230" y="62" fontSize="7" fill="#94a3b8">(excluded)</text>
+        <text x="4" y="86" fontSize="8" fill="#64748b">Result: rows from A where the join key has NO match in B</text>
+      </svg>
+    </div>
+  )
+}
+
+function SubqueriesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 110" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Subquery Nesting</text>
+        <rect x="10" y="20" width="420" height="80" rx="6" fill="#4f8ef7" opacity=".06" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="20" y="35" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">SELECT * FROM (</text>
+        <rect x="40" y="40" width="350" height="44" rx="5" fill="#8b5cf6" opacity=".1" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="52" y="55" fontSize="8.5" fontFamily="monospace" fill="#8b5cf6">  SELECT region, SUM(amount) FROM (</text>
+        <rect x="70" y="60" width="290" height="18" rx="4" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+        <text x="82" y="72" fontSize="8" fontFamily="monospace" fill="#22c55e">    SELECT * FROM raw_events WHERE dt = '2024'</text>
+        <text x="52" y="84" fontSize="8.5" fontFamily="monospace" fill="#8b5cf6">  ) t GROUP BY region</text>
+        <text x="20" y="96" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">) outer WHERE sum_amount &gt; 1000</text>
+      </svg>
+    </div>
+  )
+}
+
+function SetOpsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Set Operations</text>
+        {[
+          {op:'UNION ALL',desc:'Stack A + B (keep dups)',color:'#4f8ef7',x:10},
+          {op:'UNION',desc:'Stack A + B (dedup)',color:'#8b5cf6',x:170},
+          {op:'INTERSECT',desc:'Rows in both A and B',color:'#22c55e',x:330},
+        ].map(s=>(
+          <g key={s.op}>
+            <rect x={s.x} y="20" width="150" height="56" rx="6" fill={s.color} opacity=".1" stroke={s.color} strokeWidth="1.5"/>
+            <text x={s.x+75} y="36" fontSize="9" fontWeight="700" fill={s.color} textAnchor="middle">{s.op}</text>
+            <text x={s.x+75} y="50" fontSize="7.5" fill="#475569" textAnchor="middle">{s.desc}</text>
+            <text x={s.x+75} y="66" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Must have same columns</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function CTEDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">CTE Chain — WITH Clauses</text>
+        {[
+          {name:'raw',query:'SELECT * FROM events',color:'#4f8ef7',x:10},
+          {name:'cleaned',query:'SELECT … FROM raw WHERE …',color:'#8b5cf6',x:170},
+          {name:'agg',query:'SELECT … FROM cleaned GROUP BY …',color:'#22c55e',x:340},
+        ].map((c,i)=>(
+          <g key={c.name}>
+            <rect x={c.x} y="20" width="150" height="52" rx="5" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.5"/>
+            <text x={c.x+10} y="34" fontSize="8" fontWeight="700" fill={c.color}>WITH {c.name} AS (</text>
+            <text x={c.x+10} y="48" fontSize="7.5" fill="#475569">{c.query}</text>
+            <text x={c.x+10} y="62" fontSize="8" fill={c.color}>)</text>
+            {i<2&&<polygon points={`${c.x+155},46 ${c.x+163},42 ${c.x+163},50`} fill={c.color} opacity=".7"/>}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function WindowFuncDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 105" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Window Function Structure</text>
+        {['user_1 | 100','user_1 | 200','user_2 | 150','user_2 | 300','user_2 | 50'].map((r,i)=>(
+          <g key={i}>
+            <rect x="10" y={18+i*14} width="150" height="12" rx="2" fill={i<2?'#4f8ef7':'#8b5cf6'} opacity={.12+i*.04}/>
+            <text x="16" y={28+i*14} fontSize="8" fontFamily="monospace" fill="#1e293b">{r}</text>
+          </g>
+        ))}
+        <rect x="8" y="16" width="154" height="28" rx="3" fill="none" stroke="#4f8ef7" strokeWidth="2" strokeDasharray="4 2"/>
+        <text x="168" y="28" fontSize="7.5" fill="#4f8ef7">PARTITION BY user</text>
+        <rect x="8" y="44" width="154" height="42" rx="3" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="4 2"/>
+        <text x="168" y="58" fontSize="7.5" fill="#8b5cf6">partition 2</text>
+        <text x="200" y="76" fontSize="8" fill="#f59e0b">ORDER BY amount DESC</text>
+        <text x="4" y="96" fontSize="8" fill="#64748b">fn() OVER (PARTITION BY col ORDER BY col ROWS BETWEEN …)</text>
+      </svg>
+    </div>
+  )
+}
+
+function FramesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Window Frames — ROWS BETWEEN</text>
+        {[10,20,30,40,50].map((v,i)=>(
+          <g key={i}>
+            <rect x={10+i*72} y="20" width="60" height="36" rx="4" fill={i===2?'#f59e0b':i===1||i===3?'#4f8ef7':'#e2e8f0'} opacity={i===2?'.35':i===1||i===3?'.2':'.15'} stroke={i===2?'#f59e0b':i===1||i===3?'#4f8ef7':'#94a3b8'} strokeWidth={i===2?2:1}/>
+            <text x={40+i*72} y="35" fontSize="9" fill="#1e293b" textAnchor="middle">row {i+1}</text>
+            <text x={40+i*72} y="47" fontSize="10" fontWeight="700" fill="#1e293b" textAnchor="middle">{v}</text>
+          </g>
+        ))}
+        <rect x="82" y="18" width="204" height="40" rx="4" fill="none" stroke="#4f8ef7" strokeWidth="2" strokeDasharray="5 2"/>
+        <text x="184" y="72" fontSize="8" fill="#4f8ef7" textAnchor="middle">ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING</text>
+        <text x="40+72*2" y="85" fontSize="8" fill="#f59e0b" textAnchor="middle">CURRENT ROW</text>
+        <text x="4" y="99" fontSize="7.5" fill="#64748b">Frame = rows included in each calculation relative to current row</text>
+      </svg>
+    </div>
+  )
+}
+
+function PivotDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 105" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">PIVOT — Rows to Columns</text>
+        {/* Before */}
+        <text x="10" y="26" fontSize="8.5" fontWeight="700" fill="#64748b">Before:</text>
+        {[['region','year','sales'],['NY','2023','100'],['NY','2024','150'],['CA','2023','200'],['CA','2024','250']].map((r,i)=>(
+          <g key={i}>
+            {r.map((c,j)=>(
+              <g key={j}>
+                <rect x={10+j*55} y={30+i*12} width="52" height="11" rx="1" fill={i===0?'#1e293b':'white'} opacity={i===0?.8:.9}/>
+                <text x={36+j*55} y={39+i*12} fontSize="7.5" fill={i===0?'white':'#1e293b'} textAnchor="middle">{c}</text>
+              </g>
+            ))}
+          </g>
+        ))}
+        <polygon points="190,60 200,55 200,65" fill="#f59e0b"/>
+        <text x="206" y="63" fontSize="8" fill="#f59e0b">PIVOT</text>
+        {/* After */}
+        {[['region','2023','2024'],['NY','100','150'],['CA','200','250']].map((r,i)=>(
+          <g key={i}>
+            {r.map((c,j)=>(
+              <g key={j}>
+                <rect x={250+j*68} y={30+i*16} width="64" height="13" rx="1" fill={i===0?'#1e293b':'white'} opacity={i===0?.8:.9}/>
+                <text x={282+j*68} y={41+i*16} fontSize="8" fill={i===0?'white':'#1e293b'} textAnchor="middle">{c}</text>
+              </g>
+            ))}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function JSONSQLDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 115" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">JSON — Nested Document Tree</text>
+        <rect x="10" y="20" width="440" height="86" rx="6" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1"/>
+        <text x="20" y="36" fontSize="8.5" fontFamily="monospace" fill="#f59e0b">{'{'}</text>
+        <text x="30" y="50" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">  "order_id": <tspan fill="#22c55e">1</tspan>,</text>
+        <text x="30" y="63" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">  "customer": {'{'}<tspan fill="#8b5cf6">"id": 42, "name": "Alice"</tspan>{'}'}</text>
+        <text x="30" y="76" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">  "items": [{'{'}<tspan fill="#ef4444">"sku":"A","qty":2</tspan>{'}'}, {'{'}<tspan fill="#ef4444">"sku":"B","qty":1</tspan>{'}'}]</text>
+        <text x="20" y="90" fontSize="8.5" fontFamily="monospace" fill="#f59e0b">{'}'}</text>
+        <text x="4" y="112" fontSize="8" fill="#64748b">Access: order:customer.name  order:items[0].sku  (Spark) or -&gt;&gt; (Postgres)</text>
+      </svg>
+    </div>
+  )
+}
+
+function DMLDiagram() {
+  const ops = [
+    {op:'INSERT',desc:'Add new rows',color:'#22c55e',icon:'+'},
+    {op:'UPDATE',desc:'Modify existing rows',color:'#f59e0b',icon:'✎'},
+    {op:'DELETE',desc:'Remove rows',color:'#ef4444',icon:'✕'},
+    {op:'MERGE',desc:'Upsert: insert+update+delete in one',color:'#8b5cf6',icon:'⇄'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DML Operations</text>
+        {ops.map((o,i)=>(
+          <g key={o.op}>
+            <rect x={4+i*113} y="18" width="108" height="42" rx="6" fill={o.color} opacity=".12" stroke={o.color} strokeWidth="1.5"/>
+            <text x={58+i*113} y="35" fontSize="14" fill={o.color} textAnchor="middle">{o.icon}</text>
+            <text x={58+i*113} y="48" fontSize="9" fontWeight="700" fill={o.color} textAnchor="middle">{o.op}</text>
+            <text x={58+i*113} y="58" fontSize="7.5" fill="#475569" textAnchor="middle">{o.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DDLDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 110" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DDL Object Hierarchy</text>
+        <rect x="175" y="20" width="110" height="18" rx="4" fill="#1e293b" opacity=".08" stroke="#1e293b" strokeWidth="1.2"/>
+        <text x="230" y="33" fontSize="9" fontWeight="700" fill="#1e293b" textAnchor="middle">Database / Catalog</text>
+        <line x1="230" y1="38" x2="230" y2="50" stroke="#4f8ef7" strokeWidth="1.2"/>
+        <rect x="155" y="50" width="150" height="18" rx="4" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.2"/>
+        <text x="230" y="63" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Schema / Namespace</text>
+        <line x1="230" y1="68" x2="230" y2="80" stroke="#8b5cf6" strokeWidth="1.2"/>
+        {['Table','View','Index','Function'].map((o,i)=>(
+          <g key={o}>
+            <rect x={10+i*110} y="80" width="98" height="18" rx="4" fill="#8b5cf6" opacity=".12" stroke="#8b5cf6" strokeWidth="1"/>
+            <text x={59+i*110} y="93" fontSize="8.5" fill="#8b5cf6" textAnchor="middle">{o}</text>
+            <line x1="230" y1="80" x2={59+i*110} y2="80" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3 2"/>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ViewsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Views — Stored Query, Not Data</text>
+        <rect x="10" y="20" width="100" height="50" rx="5" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="60" y="38" fontSize="8.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Base Table</text>
+        <text x="60" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">raw_orders</text>
+        <text x="60" y="60" fontSize="7.5" fill="#94a3b8" textAnchor="middle">1M rows</text>
+        <line x1="110" y1="45" x2="150" y2="45" stroke="#f59e0b" strokeWidth="2"/>
+        <polygon points="147,41 155,45 147,49" fill="#f59e0b"/>
+        <rect x="155" y="28" width="120" height="34" rx="5" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="5 2"/>
+        <text x="215" y="43" fontSize="8.5" fontWeight="700" fill="#f59e0b" textAnchor="middle">VIEW: active_orders</text>
+        <text x="215" y="55" fontSize="7.5" fill="#475569" textAnchor="middle">WHERE status='active'</text>
+        <line x1="275" y1="45" x2="315" y2="45" stroke="#22c55e" strokeWidth="2"/>
+        <polygon points="312,41 320,45 312,49" fill="#22c55e"/>
+        <rect x="320" y="28" width="110" height="34" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="375" y="43" fontSize="8.5" fontWeight="700" fill="#22c55e" textAnchor="middle">Query runs</text>
+        <text x="375" y="55" fontSize="7.5" fill="#475569" textAnchor="middle">on base table</text>
+        <text x="4" y="86" fontSize="8" fill="#64748b">Materialized view = results stored; regular view = query rewritten at runtime</text>
+      </svg>
+    </div>
+  )
+}
+
+function TransactionsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Transaction Lifecycle</text>
+        {['BEGIN','op 1','op 2','op 3','COMMIT'].map((s,i)=>(
+          <g key={s}>
+            <rect x={10+i*88} y="20" width="76" height="28" rx="5" fill={s==='BEGIN'?'#4f8ef7':s==='COMMIT'?'#22c55e':'#f8fafc'} opacity={s==='BEGIN'||s==='COMMIT'?.25:.8} stroke={s==='BEGIN'?'#4f8ef7':s==='COMMIT'?'#22c55e':'#e2e8f0'} strokeWidth="1.5"/>
+            <text x={48+i*88} y="38" fontSize="9" fontWeight="700" fill={s==='BEGIN'?'#4f8ef7':s==='COMMIT'?'#22c55e':'#475569'} textAnchor="middle">{s}</text>
+            {i<4&&<line x1={86+i*88} y1="34" x2={98+i*88} y2="34" stroke="#22c55e" strokeWidth="1.5"/>}
+            {i<4&&<polygon points={`${95+i*88},30 ${103+i*88},34 ${95+i*88},38`} fill="#22c55e"/>}
+          </g>
+        ))}
+        <text x="10" y="62" fontSize="8" fill="#22c55e">Success path: all ops succeed → COMMIT persists atomically</text>
+        <text x="10" y="75" fontSize="8" fill="#ef4444">Failure path: any op fails → ROLLBACK undoes all ops</text>
+      </svg>
+    </div>
+  )
+}
+
+function NormalizationDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Normalization — 1NF → 2NF → 3NF</text>
+        {[
+          {label:'1NF',desc:'Atomic values\nNo repeating groups',color:'#f59e0b',x:10},
+          {label:'2NF',desc:'No partial dependencies\non composite key',color:'#4f8ef7',x:175},
+          {label:'3NF',desc:'No transitive deps\nbetween non-key cols',color:'#22c55e',x:340},
+        ].map((n,i)=>(
+          <g key={n.label}>
+            <rect x={n.x} y="20" width="150" height="55" rx="6" fill={n.color} opacity=".12" stroke={n.color} strokeWidth="1.5"/>
+            <text x={n.x+75} y="36" fontSize="11" fontWeight="800" fill={n.color} textAnchor="middle">{n.label}</text>
+            {n.desc.split('\n').map((d,j)=><text key={j} x={n.x+75} y={50+j*14} fontSize="7.5" fill="#475569" textAnchor="middle">{d}</text>)}
+            {i<2&&<polygon points={`${n.x+155},47 ${n.x+163},43 ${n.x+163},51`} fill={n.color} opacity=".7"/>}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function IndexesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 115" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">B-Tree Index Structure</text>
+        {/* Root */}
+        <rect x="175" y="18" width="110" height="20" rx="4" fill="#4f8ef7" opacity=".25" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="230" y="32" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Root [50 | 150]</text>
+        {/* Branch nodes */}
+        {[{label:'Branch [20|40]',x:80},{label:'Branch [80|120]',x:230},{label:'Branch [200|250]',x:360}].map((b)=>(
+          <g key={b.label}>
+            <line x1="230" y1="38" x2={b.x+55} y2="55" stroke="#4f8ef7" strokeWidth="1" strokeDasharray="3 2"/>
+            <rect x={b.x} y="55" width="110" height="18" rx="3" fill="#8b5cf6" opacity=".18" stroke="#8b5cf6" strokeWidth="1.2"/>
+            <text x={b.x+55} y="67" fontSize="8" fill="#8b5cf6" textAnchor="middle">{b.label}</text>
+          </g>
+        ))}
+        {/* Leaf nodes */}
+        <text x="4" y="90" fontSize="8" fill="#64748b">Leaf nodes → row pointers (heap tuples)</text>
+        {[10,20,30,40,50,60,70].map((v,i)=>(
+          <g key={v}>
+            <rect x={4+i*62} y="95" width="56" height="14" rx="2" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+            <text x={32+i*62} y="106" fontSize="7.5" fontFamily="monospace" fill="#1e293b" textAnchor="middle">key={v}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ExecutionPlanDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 120" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Query Execution Plan Tree</text>
+        {[
+          {label:'Result',cost:'cost=0',x:175,y:18,color:'#22c55e'},
+          {label:'Sort (order_date)',cost:'cost=520',x:175,y:46,color:'#4f8ef7'},
+          {label:'Hash Aggregate',cost:'cost=480',x:175,y:74,color:'#8b5cf6'},
+          {label:'Hash Join',cost:'cost=320',x:175,y:100,color:'#f59e0b'},
+        ].map((n,i)=>(
+          <g key={n.label}>
+            <rect x={n.x} y={n.y} width="150" height="18" rx="4" fill={n.color} opacity=".18" stroke={n.color} strokeWidth="1.2"/>
+            <text x={n.x+75} y={n.y+11} fontSize="8.5" fontWeight="600" fill="#1e293b" textAnchor="middle">{n.label}</text>
+            <text x={n.x+148} y={n.y+11} fontSize="7.5" fill="#64748b">{n.cost}</text>
+            {i<3&&<line x1={n.x+75} y1={n.y+18} x2={n.x+75} y2={n.y+28} stroke={n.color} strokeWidth="1" strokeDasharray="3 2"/>}
+          </g>
+        ))}
+        {[{label:'Seq Scan orders',x:60},{label:'Index Scan users',x:310}].map(s=>(
+          <g key={s.label}>
+            <rect x={s.x} y="100" width="120" height="15" rx="3" fill="#ef4444" opacity=".15" stroke="#ef4444" strokeWidth="1"/>
+            <text x={s.x+60} y="111" fontSize="7.5" fill="#ef4444" textAnchor="middle">{s.label}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function PatternsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">SCD Type 2 — Row Lifecycle</text>
+        {[['id','name','city','valid_from','valid_to','current'],['1','Alice','NY','2022-01-01','2024-03-15','false'],['2','Alice','Boston','2024-03-15','9999-12-31','true']].map((r,i)=>(
+          <g key={i}>
+            {r.map((c,j)=>(
+              <g key={j}>
+                <rect x={4+j*78} y={16+i*22} width="74" height="18" rx="2" fill={i===0?'#1e293b':i===2?'#22c55e':'#f8fafc'} opacity={i===0?.8:i===2?.18:.9}/>
+                <text x={41+j*78} y={29+i*22} fontSize="7.5" fontFamily="monospace" fill={i===0?'white':i===1?'#94a3b8':'#1e293b'} textAnchor="middle">{c}</text>
+              </g>
+            ))}
+          </g>
+        ))}
+        <text x="4" y="78" fontSize="8" fill="#94a3b8">Row 1 closed (valid_to set) when Alice moved. Row 2 is current.</text>
+        <text x="4" y="90" fontSize="8" fill="#64748b">Surrogate key (sk) + natural key + validity dates = full history</text>
+      </svg>
+    </div>
+  )
+}
+
+function PerformanceSQLDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Scan Strategies — Cost Comparison</text>
+        {[
+          {label:'Sequential Scan',pages:'all 1000 pages',cost:'High',color:'#ef4444'},
+          {label:'Index Scan',pages:'3–10 pages via B-tree',cost:'Low',color:'#22c55e'},
+          {label:'Bitmap Heap Scan',pages:'batch of index pages',cost:'Medium',color:'#f59e0b'},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x="8" y={18+i*18} width="200" height="14" rx="3" fill={s.color} opacity=".15" stroke={s.color} strokeWidth="1.2"/>
+            <text x="14" y={29+i*18} fontSize="8.5" fontWeight="600" fill="#1e293b">{s.label}</text>
+            <text x="215" y={29+i*18} fontSize="8" fill="#64748b">{s.pages}</text>
+            <text x="415" y={29+i*18} fontSize="8.5" fontWeight="700" fill={s.color} textAnchor="end">Cost: {s.cost}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 // ─── Strings animation ───────────────────────────────────────────────────────
 function StringsAnimation() {
   const [input, setInput] = useState('  Hello World  ')
@@ -989,6 +1613,7 @@ export default function SQL({ completed, onComplete, onUnmark }: Props) {
             <span className="topic-tag">Level 3</span>
             <h2>SELECT, WHERE, ORDER BY, LIMIT</h2>
           </div>
+          <SelectOrderDiagram />
           <SelectOrderAnimation />
           <p>The SELECT statement is the foundation of all SQL queries. <code>SELECT</code> chooses columns, <code>FROM</code> specifies the table, <code>WHERE</code> filters rows before aggregation, <code>ORDER BY</code> sorts results, and <code>LIMIT</code>/<code>OFFSET</code> paginates. Column aliases with <code>AS</code> rename output columns. The <code>*</code> wildcard selects all columns but should be avoided in production  -  always name columns explicitly for resilience against schema changes.</p>
           <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body">Logical processing order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT. SELECT is evaluated late, so you cannot use a SELECT alias in WHERE.</div></div>
@@ -1032,6 +1657,7 @@ ORDER BY started_at DESC;`} />
         {/* ── DISTINCT ── */}
         <section id="sql-distinct" ref={ref('sql-distinct')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>DISTINCT and Deduplication</h2></div>
+          <DistinctDiagram />
           <DistinctAnimation />
           <p>DISTINCT eliminates duplicate rows from query results. It operates on the full selected row, not just one column. For large tables, DISTINCT is expensive  -  it requires a sort or hash operation across all selected columns. In data engineering, deduplication is often better handled with window functions (ROW_NUMBER) or QUALIFY (Spark SQL / Snowflake), which give you control over which duplicate to keep.</p>
           <CodeBlock language="sql" code={`-- Basic DISTINCT
@@ -1065,6 +1691,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY updated_at DESC) = 
         {/* ── NULLS ── */}
         <section id="sql-nulls" ref={ref('sql-nulls')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>NULL Handling</h2></div>
+          <NullsDiagram />
           <NullAnimation />
           <p>NULL represents the absence of a value  -  it is not zero, not an empty string, and not false. NULL comparisons always return UNKNOWN, not TRUE or FALSE. This means <code>col = NULL</code> never matches anything; you must use <code>IS NULL</code> or <code>IS NOT NULL</code>. Aggregate functions ignore NULLs except COUNT(*). Understanding NULL propagation is critical for correct results in joins, aggregations, and CASE expressions.</p>
           <CodeBlock language="sql" code={`-- NULL comparisons
@@ -1110,6 +1737,7 @@ SELECT NVL(discount, 0)    FROM orders;          -- Oracle / Spark SQL`} />
         {/* ── CASE ── */}
         <section id="sql-case" ref={ref('sql-case')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>CASE WHEN Expressions</h2></div>
+          <CaseDiagram />
           <CaseAnimation />
           <p>CASE WHEN is SQL's conditional expression. It comes in two forms: searched CASE (evaluates boolean conditions) and simple CASE (compares a value against options). CASE is used in SELECT for derived columns, in ORDER BY for custom sort orders, in GROUP BY for custom bucketing, and inside aggregate functions for conditional aggregation (a pivot-like pattern without PIVOT syntax).</p>
           <CodeBlock language="sql" code={`-- Searched CASE WHEN
@@ -1165,6 +1793,7 @@ ORDER BY
         {/* ── STRINGS ── */}
         <section id="sql-strings" ref={ref('sql-strings')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>String Functions</h2></div>
+          <StringsDiagram />
           <StringsAnimation />
           <p>String manipulation is essential for data cleaning, standardization, and parsing. Different databases use slightly different function names but the logic is the same. In data engineering you frequently clean source data: trim whitespace, standardize case, extract substrings, replace characters, and parse structured strings like emails, URLs, or delimited fields.</p>
           <CodeBlock language="sql" code={`-- Case manipulation
@@ -1227,6 +1856,7 @@ SELECT CHARINDEX('.', email)   AS dot_pos FROM customers; -- SQL Server`} />
         {/* ── DATES ── */}
         <section id="sql-dates" ref={ref('sql-dates')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>Date / Time Functions</h2></div>
+          <DatesDiagram />
           <DateAnimation />
           <p>Date and time handling is a core data engineering skill  -  event timestamps, partitioning by date, time-series aggregations, and SLA calculations all require mastery of date functions. Key concepts: always store timestamps in UTC, convert to local time at query time; understand the difference between DATE, TIMESTAMP, and TIMESTAMP WITH TIME ZONE; use DATE_TRUNC for period bucketing rather than extracting year/month/day separately.</p>
           <CodeBlock language="sql" code={`-- Current date and time
@@ -1288,6 +1918,7 @@ WHERE cal_date BETWEEN start_date AND end_date
         {/* ── AGGREGATIONS ── */}
         <section id="sql-agg" ref={ref('sql-agg')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>Aggregations</h2></div>
+          <AggDiagram />
           <AggAnimation />
           <p>Aggregate functions collapse multiple rows into a single value. The standard functions (COUNT, SUM, AVG, MIN, MAX) are available everywhere. Statistical functions (STDDEV, VARIANCE, PERCENTILE_CONT, PERCENTILE_DISC) vary by database. All aggregates except COUNT(*) ignore NULLs. Understanding the difference between PERCENTILE_CONT (interpolated) and PERCENTILE_DISC (actual data point) matters for SLA analysis.</p>
           <CodeBlock language="sql" code={`-- Standard aggregations
@@ -1338,6 +1969,7 @@ FROM pipeline_runs;`} />
         {/* ── GROUP BY ── */}
         <section id="sql-groupby" ref={ref('sql-groupby')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 3</span><h2>GROUP BY, HAVING, ROLLUP, CUBE, GROUPING SETS</h2></div>
+          <GroupByDiagram />
           <GroupByAnimation />
           <p>GROUP BY collapses rows sharing the same key into a single group for aggregation. HAVING filters groups after aggregation (WHERE filters rows before). Advanced grouping  -  ROLLUP, CUBE, GROUPING SETS  -  produce subtotals and grand totals in a single query, replacing multiple UNION ALLs. ROLLUP generates a hierarchy of subtotals; CUBE generates all possible combinations; GROUPING SETS gives you explicit control.</p>
           <CodeBlock language="sql" code={`-- GROUP BY with HAVING
@@ -1399,6 +2031,7 @@ GROUP BY ROLLUP (region);`} />
         <section id="sql-joins" ref={ref('sql-joins')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>JOINs (Animated Venn Diagrams)</h2></div>
           <p>JOINs combine rows from two or more tables based on a related column. The join type determines how non-matching rows are handled. INNER JOIN returns only matched rows. LEFT JOIN returns all rows from the left table plus matches. RIGHT JOIN is LEFT JOIN with tables swapped. FULL OUTER JOIN returns all rows from both tables. CROSS JOIN produces a Cartesian product. SELF JOIN joins a table to itself for hierarchical or comparison queries.</p>
+          <JoinsDiagram />
           <JoinVennDiagram />
           <CodeBlock language="sql" code={`-- INNER JOIN: only matching rows
 SELECT o.order_id, c.name, o.total_amount
@@ -1458,6 +2091,7 @@ WHERE  o.status = 'completed';`} />
         {/* ── ANTI-JOINS ── */}
         <section id="sql-antijoin" ref={ref('sql-antijoin')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Anti-joins and Semi-joins</h2></div>
+          <AntiJoinDiagram />
           <AntiSemiAnimation />
           <p>A semi-join returns rows from the left table where a match EXISTS in the right table (but does not include right-table columns). An anti-join returns rows from the left table where NO match exists in the right table. These patterns are common in data engineering: finding unprocessed records, detecting orphaned data, and incremental load logic.</p>
           <CodeBlock language="sql" code={`-- SEMI-JOIN: orders that have at least one item (3 equivalent forms)
@@ -1511,6 +2145,7 @@ AND r.status = 'completed';`} />
         {/* ── SUBQUERIES ── */}
         <section id="sql-subqueries" ref={ref('sql-subqueries')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Subqueries (scalar, correlated, EXISTS)</h2></div>
+          <SubqueriesDiagram />
           <SubqueryCTEAnimation />
           <p>A subquery is a SELECT nested inside another query. Scalar subqueries return exactly one value. Inline views (derived tables) in FROM return a set of rows. Correlated subqueries reference the outer query and re-execute for each outer row  -  they can be slow but are sometimes necessary. Understanding when to use a subquery vs a JOIN vs a CTE is key to writing maintainable, performant SQL.</p>
           <CodeBlock language="sql" code={`-- Scalar subquery in SELECT
@@ -1571,6 +2206,7 @@ WHERE revenue_rank <= 10;`} />
         {/* ── SET OPS ── */}
         <section id="sql-setops" ref={ref('sql-setops')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>SET Operations (UNION, INTERSECT, EXCEPT)</h2></div>
+          <SetOpsDiagram />
           <SetOpsAnimation />
           <p>SET operations combine results of two queries with compatible column lists. UNION removes duplicates (expensive); UNION ALL keeps all rows (fast  -  no dedup). INTERSECT returns rows in both queries. EXCEPT (MINUS in Oracle) returns rows in the first query that are not in the second. In data engineering, UNION ALL is heavily used for combining daily partitions, EXCEPT is great for finding data discrepancies between systems.</p>
           <CodeBlock language="sql" code={`-- UNION ALL (keeps duplicates, faster  -  preferred in data engineering)
@@ -1617,6 +2253,7 @@ ORDER BY order_id;   -- applies to combined result`} />
         {/* ── CTEs ── */}
         <section id="sql-cte" ref={ref('sql-cte')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>CTEs and Recursive CTEs</h2></div>
+          <CTEDiagram />
           <CTEAnimation />
           <p>A Common Table Expression (CTE) is a named temporary result set defined with WITH. CTEs make complex queries readable by breaking them into named steps. They can be referenced multiple times in the same query. Recursive CTEs use WITH RECURSIVE to traverse hierarchical data (org charts, folder trees, bill of materials). In most databases CTEs are not materialized by default  -  they are inlined like subqueries, though some support MATERIALIZED hints.</p>
           <CodeBlock language="sql" code={`-- Basic CTE: clean up a complex subquery chain
@@ -1690,6 +2327,7 @@ SELECT d FROM date_spine;`} />
         {/* ── WINDOW FUNCTIONS ── */}
         <section id="sql-window" ref={ref('sql-window')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Window Functions</h2></div>
+          <WindowFuncDiagram />
           <WindowAnimation />
           <p>Window functions perform calculations across a set of rows related to the current row without collapsing them into one (unlike GROUP BY). The OVER() clause defines the window: PARTITION BY groups rows, ORDER BY determines order within the partition. Window functions are evaluated after WHERE, GROUP BY, and HAVING  -  so you can window-aggregate over filtered/grouped results.</p>
           <CodeBlock language="sql" code={`-- Ranking functions
@@ -1759,6 +2397,7 @@ SELECT * FROM (
         {/* ── FRAMES ── */}
         <section id="sql-frames" ref={ref('sql-frames')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 4</span><h2>Window Frames (ROWS / RANGE BETWEEN)</h2></div>
+          <FramesDiagram />
           <FrameAnimation />
           <p>The frame clause inside OVER() restricts which rows are included in the window calculation. ROWS mode counts physical rows; RANGE mode includes all rows with the same ORDER BY value. Common frames: UNBOUNDED PRECEDING to CURRENT ROW (running total), N PRECEDING to CURRENT ROW (rolling N-period window), UNBOUNDED PRECEDING to UNBOUNDED FOLLOWING (full partition). The default frame when ORDER BY is present is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW.</p>
           <CodeBlock language="sql" code={`-- 7-day rolling average (ROWS mode: exactly 7 preceding rows)
@@ -1815,6 +2454,7 @@ FROM orders;
         {/* ── PIVOT ── */}
         <section id="sql-pivot" ref={ref('sql-pivot')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>PIVOT / UNPIVOT / Conditional Aggregation</h2></div>
+          <PivotDiagram />
           <PivotAnimation />
           <p>PIVOT rotates rows into columns  -  transforming long/narrow tables to wide/flat. UNPIVOT does the reverse. Most databases support conditional aggregation (CASE + SUM) as a portable PIVOT equivalent. Snowflake, SQL Server, and Oracle have native PIVOT syntax. Spark SQL supports PIVOT in SELECT. Knowing both approaches makes you portable across engines.</p>
           <CodeBlock language="sql" code={`-- Conditional aggregation PIVOT (portable, works everywhere)
@@ -1867,6 +2507,7 @@ UNPIVOT (amount FOR category IN (electronics, clothing, books)) unpvt;`} />
         {/* ── JSON ── */}
         <section id="sql-json" ref={ref('sql-json')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>JSON Functions in SQL</h2></div>
+          <JSONSQLDiagram />
           <JSONSQLAnimation />
           <p>Modern data often arrives as semi-structured JSON. SQL engines can parse, query, and generate JSON natively. Spark SQL and Databricks handle JSON extensively  -  from_json() and to_json() are daily tools. PostgreSQL has rich JSON operators. BigQuery uses JSON_EXTRACT. Knowing how to shred JSON columns into structured data is essential for Bronze-to-Silver transformations.</p>
           <CodeBlock language="sql" code={`-- Spark SQL: parse JSON string column
@@ -1920,6 +2561,7 @@ SELECT row_to_json(t) FROM orders t;  -- PostgreSQL`} />
         {/* ── DML ── */}
         <section id="sql-dml" ref={ref('sql-dml')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>DML: INSERT, UPDATE, DELETE, MERGE</h2></div>
+          <DMLDiagram />
           <DMLAnimation />
           <p>Data Manipulation Language (DML) modifies table data. MERGE (also called UPSERT) is the most powerful  -  it conditionally inserts, updates, or deletes in a single atomic statement. In Delta Lake, MERGE is central to SCD Type 2 and incremental loads. Understanding DML atomicity and how it interacts with transactions is critical for data integrity.</p>
           <CodeBlock language="sql" code={`-- INSERT variants
@@ -1982,6 +2624,7 @@ WHEN NOT MATCHED BY SOURCE THEN
         {/* ── DDL ── */}
         <section id="sql-ddl" ref={ref('sql-ddl')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>DDL: CREATE, ALTER, DROP, TRUNCATE</h2></div>
+          <DDLDiagram />
           <DDLAnimation />
           <p>Data Definition Language (DDL) manages table structures and schema. CREATE TABLE defines columns, types, and constraints. ALTER TABLE modifies existing structures. DROP removes objects permanently. TRUNCATE deletes all rows faster than DELETE (no row-level logging). In cloud warehouses (Databricks, Snowflake, BigQuery), DDL is mostly SQL  -  understanding CREATE TABLE AS SELECT (CTAS) and CREATE OR REPLACE TABLE is essential for pipeline work.</p>
           <CodeBlock language="sql" code={`-- CREATE TABLE with constraints
@@ -2041,6 +2684,7 @@ TBLPROPERTIES ('delta.autoOptimize.optimizeWrite' = 'true');`} />
         {/* ── VIEWS ── */}
         <section id="sql-views" ref={ref('sql-views')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Views and Materialized Views</h2></div>
+          <ViewsDiagram />
           <ViewsAnimation />
           <p>A view is a named saved query  -  it does not store data. Every time the view is queried, the underlying SQL runs. Views provide security (hide columns), abstraction (stable interface over changing schema), and reuse. Materialized views (or materialized tables in Databricks) store query results physically, dramatically speeding up expensive aggregations at the cost of staleness. They must be refreshed periodically.</p>
           <CodeBlock language="sql" code={`-- Regular view (no data stored)
@@ -2095,6 +2739,7 @@ SELECT ... FROM silver.customers JOIN silver.orders USING (customer_id);`} />
         {/* ── TRANSACTIONS ── */}
         <section id="sql-transactions" ref={ref('sql-transactions')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Transactions, ACID, Isolation Levels</h2></div>
+          <TransactionsDiagram />
           <TransactionAnimation />
           <p>A transaction is a unit of work that is either fully committed or fully rolled back. ACID guarantees: Atomicity (all or nothing), Consistency (valid state before and after), Isolation (concurrent transactions do not interfere), Durability (committed data survives crashes). Isolation levels trade off between performance and correctness. Understanding concurrency anomalies (dirty read, non-repeatable read, phantom read) is critical for data engineers building reliable pipelines.</p>
           <CodeBlock language="sql" code={`-- Basic transaction
@@ -2152,6 +2797,7 @@ COMMIT;
         <section id="sql-normalization" ref={ref('sql-normalization')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Normalization (1NF  -  BCNF)</h2></div>
           <p>Normalization organizes relational data to eliminate redundancy and anomalies. Each normal form adds a rule on top of the previous. In data engineering, OLTP databases are typically 3NF (minimize write anomalies), while OLAP/warehouse schemas are intentionally denormalized (star/snowflake schema) to minimize JOINs at query time. Understanding when to normalize vs denormalize is a design decision, not a rule.</p>
+          <NormalizationDiagram />
           <NormalizationAnimation />
           <CodeBlock language="sql" code={`-- 1NF: Each column holds atomic (indivisible) values, no repeating groups
 -- VIOLATION: products column contains 'Laptop,Mouse' (multi-valued)
@@ -2190,6 +2836,7 @@ COMMIT;
         <section id="sql-indexes" ref={ref('sql-indexes')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Indexes Deep Dive</h2></div>
           <p>Indexes accelerate reads at the cost of slower writes and extra storage. The B-tree index is the default for equality and range queries. Hash indexes are only for equality. Composite indexes support queries on multiple columns  -  column order matters. A covering index includes all columns needed by a query, eliminating table lookups. Partial indexes index only a subset of rows. Understanding when the optimizer will use or skip an index is key to tuning.</p>
+          <IndexesDiagram />
           <IndexAnimation />
           <CodeBlock language="sql" code={`-- B-tree index (default): equality and range queries
 CREATE INDEX idx_orders_date ON orders (order_date);
@@ -2236,6 +2883,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;
         {/* ── EXECUTION PLANS ── */}
         <section id="sql-execution" ref={ref('sql-execution')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Execution Plans and EXPLAIN</h2></div>
+          <ExecutionPlanDiagram />
           <ExplainAnimation />
           <p>The query optimizer converts SQL into an execution plan  -  a tree of physical operations. EXPLAIN shows the estimated plan; EXPLAIN ANALYZE actually executes the query and shows real statistics. Key nodes to understand: Seq Scan (full table scan), Index Scan (B-tree lookup), Bitmap Index Scan (multiple index ranges), Nested Loop (good for small sets), Hash Join (good for large sets with hash-able join), Merge Join (good for pre-sorted data). The optimizer makes decisions based on table statistics  -  outdated stats lead to bad plans.</p>
           <CodeBlock language="sql" code={`-- PostgreSQL EXPLAIN ANALYZE
@@ -2287,6 +2935,7 @@ ANALYZE TABLE orders COMPUTE STATISTICS;   -- Spark SQL
         {/* ── PATTERNS ── */}
         <section id="sql-patterns" ref={ref('sql-patterns')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Common SQL Patterns</h2></div>
+          <PatternsDiagram />
           <SQLPatternsAnimation />
           <p>Mastering these recurring patterns separates intermediate from senior SQL practitioners. These patterns appear in data engineering interviews and real pipeline code constantly: deduplication, running totals, year-over-year comparison, gaps and islands, top-N per group, sessionization, median, and pivoting arbitrary categories.</p>
           <CodeBlock language="sql" code={`-- 1. Top N per group (top 3 products per category)
@@ -2369,6 +3018,7 @@ SELECT * FROM ranked WHERE rn = 1;`} />
         {/* ── PERFORMANCE ── */}
         <section id="sql-performance" ref={ref('sql-performance')} className="topic-section">
           <div className="topic-header"><span className="topic-tag">Level 5</span><h2>Query Performance Tuning</h2></div>
+          <PerformanceSQLDiagram />
           <PerformanceAnimation />
           <p>Query performance optimization is a systematic process: identify slow queries, understand the execution plan, check for missing indexes, rewrite non-sargable predicates, eliminate unnecessary work, and verify statistics are fresh. The most impactful changes are usually: adding the right index, fixing a non-sargable predicate, avoiding SELECT *, and moving filtering as early as possible.</p>
           <CodeBlock language="sql" code={`-- 1. Sargability: predicates that CAN use an index (Search ARGument ABLE)
