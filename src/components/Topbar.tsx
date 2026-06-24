@@ -56,7 +56,6 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
         transition: 'box-shadow 300ms ease',
       }}
     >
-      {/* Reading progress bar */}
       <div className="reading-progress" aria-hidden="true">
         <div className="reading-progress-fill" style={{ width: `${readPct}%` }} />
       </div>
