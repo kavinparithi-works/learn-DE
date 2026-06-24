@@ -75,7 +75,8 @@ export default function Delta({ completed, onComplete, onUnmark }: Props) {
             <h1 className="topic-title">Delta Lake Fundamentals</h1>
             <p className="topic-desc">Delta Lake is an open-source storage layer that brings ACID transactions, scalable metadata handling, and unified streaming/batch processing to data lakes. Built on top of Parquet files, Delta adds a transaction log that makes your data lake reliable and queryable.</p>
           </div>
-          <DeltaLogAnimation />
+          <DeltaLogDiagram />
+              <DeltaLogAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -185,7 +186,8 @@ spark.sql("DESCRIBE DETAIL delta.\`/mnt/datalake/bronze/users\`").show(vertical=
             <h1 className="topic-title">ACID Transactions</h1>
             <p className="topic-desc">Delta Lake provides full ACID guarantees on cloud object stores. Understanding how each property is implemented helps you reason about concurrent workloads, failure modes, and data consistency in production pipelines.</p>
           </div>
-          <ACIDAnimation />
+          <ACIDDiagram />
+              <ACIDAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -293,7 +295,8 @@ spark.sql("""
             <h1 className="topic-title">Write Operations</h1>
             <p className="topic-desc">Delta Lake supports a rich set of write patterns  -  from simple appends to selective partition overwrites. Choosing the right write mode avoids data duplication, minimises file churn, and keeps downstream consumers consistent.</p>
           </div>
-          <WriteModesAnimation />
+          <WriteModesDiagram />
+              <WriteModesAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -449,7 +452,8 @@ new_events.write \
             <h1 className="topic-title">MERGE Deep Dive</h1>
             <p className="topic-desc">MERGE is Delta Lake's most powerful DML operation  -  it upserts, deletes, and inserts in a single atomic pass. Mastering MERGE is essential for CDC ingestion, SCD Type 1/2 patterns, and efficient Silver layer refreshes.</p>
           </div>
-          <MergeAnimation />
+          <MergeDiagram />
+              <MergeAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -628,7 +632,8 @@ spark.sql("""
             <h1 className="topic-title">Schema Enforcement &amp; Evolution</h1>
             <p className="topic-desc">Delta Lake enforces schema on write by default  -  mismatched columns raise an error before any data lands. Schema evolution options let you safely add columns and adapt to upstream changes without rewriting the entire table.</p>
           </div>
-          <SchemaEvolutionAnimation />
+          <SchemaEvolutionDiagram />
+              <SchemaEvolutionAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -759,7 +764,8 @@ print(dt.toDF().schema.simpleString())`}</CodeBlock>
             <h1 className="topic-title">Time Travel</h1>
             <p className="topic-desc">Delta Lake retains the full history of your table through its transaction log. Time travel lets you query, compare, or restore any previous version  -  invaluable for auditing, debugging bad pipelines, and disaster recovery.</p>
           </div>
-          <TimelineAnimation />
+          <TimeTravelDiagram />
+              <TimelineAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -901,7 +907,8 @@ spark.sql("""
             <h1 className="topic-title">Change Data Feed</h1>
             <p className="topic-desc">Change Data Feed (CDF) lets you efficiently read only the rows that changed between two versions of a Delta table  -  inserts, updates, and deletes. This powers incremental propagation patterns from Bronze all the way to Gold without full table scans.</p>
           </div>
-          <CDFAnimation />
+          <CDFDiagram />
+              <CDFAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1064,7 +1071,8 @@ query.awaitTermination()`}</CodeBlock>
             <h1 className="topic-title">OPTIMIZE</h1>
             <p className="topic-desc">Frequent writes  -  especially streaming micro-batches  -  create many small Parquet files that degrade read performance. OPTIMIZE compacts them into larger files through bin-packing, dramatically reducing file-open overhead and improving query speed.</p>
           </div>
-          <OptimizeAnimation />
+          <OptimizeDiagram />
+              <OptimizeAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1179,7 +1187,8 @@ print("OPTIMIZE is safe to run in production on live tables.")`}</CodeBlock>
             <h1 className="topic-title">Z-ORDER Clustering</h1>
             <p className="topic-desc">Z-ORDER co-locates related rows in the same Parquet files based on the values of one or more columns. Combined with Delta's column statistics in the transaction log, this enables aggressive data skipping  -  reading only the files that could contain your query's rows.</p>
           </div>
-          <ZOrderAnimation />
+          <ZOrderDiagram />
+              <ZOrderAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1320,7 +1329,8 @@ spark.sql("""
             <h1 className="topic-title">VACUUM</h1>
             <p className="topic-desc">Delta Lake accumulates obsolete Parquet files over time  -  files removed by UPDATE, DELETE, MERGE, OPTIMIZE, or overwrites. VACUUM permanently deletes these unreferenced files to reclaim storage. It is safe for concurrent readers because Delta's snapshot isolation guarantees they always see a consistent version.</p>
           </div>
-          <VacuumAnimation />
+          <VacuumDiagram />
+              <VacuumAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1444,7 +1454,8 @@ except Exception as e:
             <h1 className="topic-title">Liquid Clustering</h1>
             <p className="topic-desc">Liquid Clustering is the next-generation replacement for Hive-style partitioning and Z-ORDER. It uses flexible, incremental clustering without rewriting the entire table. Available in Databricks Runtime 13.3+.</p>
           </div>
-          <LiquidClusteringAnimation />
+          <LiquidClusteringDiagram />
+              <LiquidClusteringAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -1502,7 +1513,8 @@ dt.optimize().executeCompaction()  # incremental clustering
             <h1 className="topic-title">Table Constraints</h1>
             <p className="topic-desc">Delta Lake supports NOT NULL and CHECK constraints that enforce data quality at write time. Any write that violates a constraint is rejected with an error before data lands in the table.</p>
           </div>
-          <ConstraintsAnimation />
+          <ConstraintsDiagram />
+              <ConstraintsAnimation />
           <CodeBlock lang="sql">{`-- NOT NULL constraint (defined at column level)
 CREATE TABLE production.silver.orders (
   order_id    BIGINT NOT NULL,
@@ -1553,7 +1565,8 @@ ALTER TABLE production.silver.orders
             <h1 className="topic-title">Table Properties</h1>
             <p className="topic-desc">Delta table properties control retention, automatic optimization, change data feed, and column mapping. They are stored in the transaction log and can be set at table creation or altered later.</p>
           </div>
-          <TablePropsAnimation />
+          <TablePropsDiagram />
+              <TablePropsAnimation />
           <CodeBlock lang="sql">{`-- Set properties at CREATE time
 CREATE TABLE production.silver.events
 USING DELTA
@@ -1604,7 +1617,8 @@ UNSET TBLPROPERTIES ('delta.autoOptimize.autoCompact');`}</CodeBlock>
             <h1 className="topic-title">Partitioning Strategy</h1>
             <p className="topic-desc">Partitioning physically organizes data into subdirectories by column value. Good partition design dramatically improves query performance by eliminating entire directory scans. Bad partition design creates thousands of tiny files and slows everything down.</p>
           </div>
-          <PartitioningDeltaAnimation />
+          <PartitioningDeltaDiagram />
+              <PartitioningDeltaAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -1685,7 +1699,8 @@ spark.sql("ALTER TABLE production.silver.events CLUSTER BY (event_date, region)"
             <h1 className="topic-title">Delta Performance Tuning</h1>
             <p className="topic-desc">Delta Lake has multiple performance levers beyond OPTIMIZE and Z-ORDER: column statistics for data skipping, Bloom filters for high-cardinality lookups, disk caching on Databricks, and the Photon vectorized engine.</p>
           </div>
-          <DeltaPerformanceAnimation />
+          <DeltaPerformanceDiagram />
+              <DeltaPerformanceAnimation />
           <CodeBlock lang="python">{`# 1. DATA SKIPPING with column statistics
 # Delta auto-collects min/max/null counts for the first 32 columns
 # These stats live in the transaction log JSON files  -  no extra scan needed
@@ -1751,7 +1766,8 @@ spark.sql("ANALYZE TABLE production.silver.events COMPUTE STATISTICS FOR ALL COL
             <h1 className="topic-title">Databricks Platform Overview</h1>
             <p className="topic-desc">Databricks is the lakehouse platform built on Apache Spark. It provides managed clusters, notebooks, workflows, SQL warehouses, and Unity Catalog  -  all on top of customer cloud storage (ADLS Gen2, S3, GCS).</p>
           </div>
-          <DatabricksPlatformAnimation />
+          <DatabricksPlatformDiagram />
+              <DatabricksPlatformAnimation />
           <CodeBlock lang="python">{`# Databricks Runtime (DBR) version controls Spark version + optimizations
 # DBR 14.3 LTS = Spark 3.5, Python 3.11, long-term support (recommended for production)
 # DBR 15.x = Spark 3.5 + latest Databricks features (cutting edge)
@@ -1808,7 +1824,8 @@ policy_example = {
             <h1 className="topic-title">Unity Catalog Deep Dive</h1>
             <p className="topic-desc">Unity Catalog (UC) is Databricks' unified governance layer. A single metastore per region governs all workspaces. The three-level namespace (catalog.schema.table) replaces the old two-level (database.table) model.</p>
           </div>
-          <UCNamespaceAnimation />
+          <UCNamespaceDiagram />
+              <UCNamespaceAnimation />
           <CodeBlock lang="sql">{`-- Unity Catalog three-level namespace
 -- metastore (1 per region, spans all workspaces)
 --   catalog (e.g., production, development, sandbox)
@@ -1868,7 +1885,8 @@ WHERE target_table_full_name = 'production.silver.customers';`}</CodeBlock>
             <h1 className="topic-title">Unity Catalog Permissions</h1>
             <p className="topic-desc">Unity Catalog uses an additive permission model  -  there is no DENY. Permissions cascade down the hierarchy (catalog → schema → table). Groups are the recommended way to manage access at scale.</p>
           </div>
-          <UCPermissionsAnimation />
+          <UCPermissionsDiagram />
+              <UCPermissionsAnimation />
           <CodeBlock lang="sql">{`-- GRANT syntax: GRANT <privilege> ON <securable_type> <name> TO <principal>
 -- Principals: user email, group name, service principal app ID
 
@@ -1929,7 +1947,8 @@ GRANT SELECT  ON TABLE production.silver.events  TO \`job-sp-app-id-12345\`;
             <h1 className="topic-title">Row Filters and Column Masking</h1>
             <p className="topic-desc">Unity Catalog row filters restrict which rows a user can see. Column masks dynamically transform column values (e.g., mask PII for non-privileged users). Both are implemented as SQL functions and attached to tables.</p>
           </div>
-          <RowColFilterAnimation />
+          <RowColFilterDiagram />
+              <RowColFilterAnimation />
           <CodeBlock lang="sql">{`-- ROW FILTERS: restrict rows visible to each user/group
 -- Step 1: Create the filter function
 CREATE FUNCTION production.silver.filter_by_region(region STRING)
@@ -1988,7 +2007,8 @@ DESCRIBE TABLE EXTENDED production.silver.customers;
             <h1 className="topic-title">Delta Live Tables (DLT)</h1>
             <p className="topic-desc">DLT is Databricks' declarative ETL framework. You declare WHAT the data should look like; DLT handles execution order, retries, monitoring, lineage, and schema evolution. Pipelines run in Triggered (batch) or Continuous (streaming) mode.</p>
           </div>
-          <DLTPipelineAnimation />
+          <DLTPipelineDiagram />
+              <DLTPipelineAnimation />
           <CodeBlock lang="python">{`import dlt
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col, to_timestamp, current_timestamp
@@ -2095,7 +2115,8 @@ def cancelled_orders_view():
             <h1 className="topic-title">Auto Loader (cloudFiles)</h1>
             <p className="topic-desc">Auto Loader incrementally and efficiently processes new files from cloud storage. It tracks which files have been processed using a checkpoint, supports two file discovery modes, and handles schema inference and evolution automatically.</p>
           </div>
-          <AutoloaderAnimation />
+          <AutoloaderDiagram />
+              <AutoloaderAnimation />
           <CodeBlock lang="python">{`# Auto Loader  -  production-ready configuration
 from pyspark.sql import functions as F
 
@@ -2171,7 +2192,8 @@ query.awaitTermination()
             <h1 className="topic-title">Databricks Workflows / Lakeflow</h1>
             <p className="topic-desc">Databricks Workflows (branded as Lakeflow Orchestration) is the native orchestration engine. It supports complex DAGs of tasks with dependencies, retry policies, alerting, and dynamic parameter passing.</p>
           </div>
-          <WorkflowsAnimation />
+          <WorkflowsDiagram />
+              <WorkflowsAnimation />
           <CodeBlock lang="json">{`{
   "name": "Production Gold Layer  -  Daily",
   "schedule": {
@@ -2292,7 +2314,8 @@ query.awaitTermination()
             <h1 className="topic-title">Databricks Asset Bundles (DAB)</h1>
             <p className="topic-desc">Databricks Asset Bundles (DAB) is the Infrastructure-as-Code solution for Databricks. Define jobs, pipelines, notebooks, and cluster configs in YAML, then deploy to dev/staging/prod with a single CLI command.</p>
           </div>
-          <DABAnimation />
+          <DABDiagram />
+              <DABAnimation />
           <CodeBlock lang="yaml">{`# bundle.yml  -  root configuration file
 bundle:
   name: gold-layer-pipeline
@@ -2423,7 +2446,8 @@ databricks bundle destroy --target dev
             <h1 className="topic-title">Databricks SQL</h1>
             <p className="topic-desc">Databricks SQL is the SQL analytics layer  -  SQL warehouses for BI tools, query history and profiling, alerts, and dashboards. Serverless warehouses start instantly and auto-scale with zero management.</p>
           </div>
-          <DatabricksSQLAnimation />
+          <DatabricksSQLDiagram />
+              <DatabricksSQLAnimation />
           <CodeBlock lang="sql">{`-- SQL WAREHOUSES: two types
 -- 1. Serverless: instant start (<5 sec), auto-scale, fully managed, higher cost/DBU
 -- 2. Classic (Pro/Standard): manual cluster management, slower start, lower cost/DBU
@@ -2498,7 +2522,8 @@ AS SELECT * FROM STREAM(production.bronze.events_landing);
             <h1 className="topic-title">Delta Sharing</h1>
             <p className="topic-desc">Delta Sharing is an open protocol for sharing live data securely across organizations without copying or moving data. Recipients can access shared tables using any supported platform (Databricks, Spark, pandas, Power BI, etc.).</p>
           </div>
-          <DeltaSharingAnimation />
+          <DeltaSharingDiagram />
+              <DeltaSharingAnimation />
           <CodeBlock lang="sql">{`-- Delta Sharing: provider side (you share data FROM this side)
 
 -- Step 1: Create a share (logical container for shared objects)
@@ -2577,7 +2602,8 @@ ORDER BY event_time DESC;`}</CodeBlock>
             <h1 className="topic-title">Apache Iceberg Architecture</h1>
             <p className="topic-desc">Apache Iceberg is an open table format for huge analytic datasets. Unlike Hive which tracks data at the partition directory level, Iceberg tracks files at the table level  -  enabling hidden partitioning, partition evolution, and snapshot isolation. The metadata layer (manifest files → manifest lists → table metadata JSON) is completely decoupled from the data files (Parquet/ORC/Avro), and a catalog (Hive/Glue/REST/Nessie) stores just a pointer to the current metadata file.</p>
           </div>
-          <IcebergIntroAnimation />
+          <IcebergIntroDiagram />
+              <IcebergIntroAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2700,7 +2726,8 @@ spark.sql("""
             <h1 className="topic-title">Iceberg: Hidden Partitioning + Time Travel</h1>
             <p className="topic-desc">Iceberg's hidden partitioning is one of its most powerful innovations  -  partition transforms (identity, bucket, truncate, year/month/day/hour) are applied automatically by the engine. Queries never need to know the physical partition layout. Combined with schema evolution, partition evolution, and time travel, Iceberg provides a full table management lifecycle without ever rewriting all your data.</p>
           </div>
-          <IcebergFeaturesAnimation />
+          <IcebergFeaturesDiagram />
+              <IcebergFeaturesAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2840,7 +2867,8 @@ spark.read.option("tag", "monthly_snapshot_jan_2024").table("glue_catalog.db.eve
             <h1 className="topic-title">Apache Hudi (COW vs MOR)</h1>
             <p className="topic-desc">Apache Hudi (Hadoop Upserts and Incremental Deletes) was built by Uber for record-level upserts on data lakes  -  a problem Delta and Iceberg solve differently. Hudi's defining architectural choice is its two table types: Copy-On-Write (COW) rewrites Parquet files on every write, while Merge-On-Read (MOR) appends delta log files and merges at read time. Every Hudi operation is recorded on the Hudi Timeline, providing a complete operational history.</p>
           </div>
-          <HudiAnimation />
+          <HudiDiagram />
+              <HudiAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2972,7 +3000,8 @@ delete_df.write \
             <h1 className="topic-title">Delta vs Iceberg vs Hudi Comparison</h1>
             <p className="topic-desc">Delta Lake, Apache Iceberg, and Apache Hudi all solve the same core problem  -  ACID transactions and reliable upserts on cloud data lakes  -  but with different architectural trade-offs, ecosystem alignments, and strengths. Understanding when to choose each format is critical for modern data platform design.</p>
           </div>
-          <FormatComparisonAnimation />
+          <FormatComparisonDiagram />
+              <FormatComparisonAnimation />
 
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3113,6 +3142,627 @@ hudi_df_incr = spark.read.format("hudi") \
 
 // ============================================================
 // ANIMATION COMPONENTS
+// ============================================================
+// ─────────────────────────────────────────────── DELTA DIAGRAM COMPONENTS ───
+
+function DeltaLogDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Lake — _delta_log Transaction Log</text>
+        <rect x="10" y="18" width="100" height="48" rx="5" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="60" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Parquet</text>
+        <text x="60" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">Data files</text>
+        <text x="60" y="57" fontSize="7.5" fill="#94a3b8" textAnchor="middle">part-0.snappy</text>
+        <rect x="130" y="18" width="340" height="48" rx="5" fill="#f59e0b" opacity=".1" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="175" y="30" fontSize="8.5" fontWeight="700" fill="#f59e0b">_delta_log/</text>
+        {['00000.json (commitInfo, add/remove)', '00001.json (WRITE, schema)', '00002.json (MERGE, stats)', '00000.checkpoint.parquet'].map((f,i)=>(
+          <text key={f} x="140" y={42+i*10} fontSize="7.5" fontFamily="monospace" fill="#1e293b">{f}</text>
+        ))}
+        <text x="4" y="80" fontSize="8" fill="#64748b">Every write appends a JSON commit. Checkpoint every 10 commits for fast reads.</text>
+      </svg>
+    </div>
+  )
+}
+
+function ACIDDiagram() {
+  const props = [
+    {letter:'A',name:'Atomicity',desc:'All-or-nothing write',color:'#4f8ef7'},
+    {letter:'C',name:'Consistency',desc:'Valid state always',color:'#22c55e'},
+    {letter:'I',name:'Isolation',desc:'Serializable concurrency',color:'#8b5cf6'},
+    {letter:'D',name:'Durability',desc:'Survives crashes',color:'#f59e0b'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">ACID Properties</text>
+        {props.map((p,i)=>(
+          <g key={p.letter}>
+            <rect x={4+i*113} y="18" width="107" height="36" rx="5" fill={p.color} opacity=".14" stroke={p.color} strokeWidth="1.5"/>
+            <text x={57+i*113} y="33" fontSize="12" fontWeight="900" fill={p.color} textAnchor="middle">{p.letter}</text>
+            <text x={57+i*113} y="44" fontSize="7.5" fill="#475569" textAnchor="middle">{p.name}: {p.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function WriteModesDiagram() {
+  const modes = [
+    {mode:'append',desc:'Add rows to existing table',color:'#22c55e'},
+    {mode:'overwrite',desc:'Replace all data',color:'#ef4444'},
+    {mode:'ignore',desc:'Skip if table exists',color:'#64748b'},
+    {mode:'error',desc:'Fail if table exists',color:'#f59e0b'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 60" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Write Modes</text>
+        {modes.map((m,i)=>(
+          <g key={m.mode}>
+            <rect x={4+i*113} y="18" width="107" height="30" rx="4" fill={m.color} opacity=".12" stroke={m.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="30" fontSize="9" fontWeight="700" fontFamily="monospace" fill={m.color} textAnchor="middle">{m.mode}</text>
+            <text x={57+i*113} y="42" fontSize="7.5" fill="#475569" textAnchor="middle">{m.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function MergeDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">MERGE INTO — Upsert Logic</text>
+        <rect x="10" y="18" width="120" height="48" rx="5" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="70" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Source</text>
+        <text x="70" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">new/changed</text>
+        <text x="70" y="57" fontSize="7.5" fill="#475569" textAnchor="middle">rows</text>
+        <line x1="132" y1="42" x2="162" y2="42" stroke="#94a3b8" strokeWidth="2"/>
+        <polygon points="158,38 166,42 158,46" fill="#94a3b8"/>
+        <rect x="168" y="14" width="110" height="56" rx="5" fill="#f59e0b" opacity=".12" stroke="#f59e0b" strokeWidth="2"/>
+        <text x="223" y="30" fontSize="8.5" fontWeight="700" fill="#f59e0b" textAnchor="middle">MERGE</text>
+        <text x="223" y="43" fontSize="7.5" fill="#475569" textAnchor="middle">MATCHED → UPDATE</text>
+        <text x="223" y="55" fontSize="7.5" fill="#475569" textAnchor="middle">NOT MATCHED → INSERT</text>
+        <text x="223" y="65" fontSize="7.5" fill="#475569" textAnchor="middle">DELETE (optional)</text>
+        <line x1="278" y1="42" x2="308" y2="42" stroke="#22c55e" strokeWidth="2"/>
+        <polygon points="304,38 312,42 304,46" fill="#22c55e"/>
+        <rect x="314" y="18" width="120" height="48" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="374" y="38" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Target</text>
+        <text x="374" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">Delta Table</text>
+      </svg>
+    </div>
+  )
+}
+
+function SchemaEvolutionDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Schema Evolution — mergeSchema vs overwriteSchema</text>
+        <rect x="10" y="18" width="200" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="110" y="32" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">mergeSchema = true</text>
+        <text x="110" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">Adds new columns, preserves existing</text>
+        <text x="110" y="52" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Safe for additive changes</text>
+        <rect x="250" y="18" width="200" height="40" rx="5" fill="#ef4444" opacity=".12" stroke="#ef4444" strokeWidth="1.5"/>
+        <text x="350" y="32" fontSize="9" fontWeight="700" fill="#ef4444" textAnchor="middle">overwriteSchema = true</text>
+        <text x="350" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">Replaces schema entirely</text>
+        <text x="350" y="52" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Use with caution!</text>
+      </svg>
+    </div>
+  )
+}
+
+function TimeTravelDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Time Travel — Version History</text>
+        {[0,1,2,3,4].map(v=>(
+          <g key={v}>
+            <circle cx={40+v*90} cy="40" r="18" fill={v===4?'#4f8ef7':'#e2e8f0'} opacity={v===4?.3:.6} stroke={v===4?'#4f8ef7':'#94a3b8'} strokeWidth={v===4?2:1}/>
+            <text x={40+v*90} y="37" fontSize="8" fontWeight="700" fill={v===4?'#4f8ef7':'#64748b'} textAnchor="middle">v{v}</text>
+            <text x={40+v*90} y="48" fontSize="7" fill="#94a3b8" textAnchor="middle">{v===4?'latest':v===0?'CREATE':v===1?'WRITE':'MERGE'}</text>
+            {v<4&&<line x1={58+v*90} y1="40" x2={22+(v+1)*90} y2="40" stroke="#94a3b8" strokeWidth="1.5"/>}
+          </g>
+        ))}
+        <text x="4" y="68" fontSize="8" fill="#64748b">df.read.format("delta").option("versionAsOf",2).load(path)</text>
+        <text x="260" y="68" fontSize="8" fill="#64748b">or TIMESTAMP AS OF '2024-01-15'</text>
+      </svg>
+    </div>
+  )
+}
+
+function CDFDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Change Data Feed (CDF) — Row-Level Changes</text>
+        {[
+          {op:'insert',color:'#22c55e',count:120},
+          {op:'update_preimage',color:'#f59e0b',count:45},
+          {op:'update_postimage',color:'#4f8ef7',count:45},
+          {op:'delete',color:'#ef4444',count:30},
+        ].map((c,i)=>(
+          <g key={c.op}>
+            <rect x={4+i*113} y="18" width="107" height="36" rx="4" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="32" fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={c.color} textAnchor="middle">{c.op}</text>
+            <text x={57+i*113} y="44" fontSize="8" fill="#475569" textAnchor="middle">{c.count} rows</text>
+          </g>
+        ))}
+        <text x="4" y="64" fontSize="8" fill="#64748b">TBLPROPERTIES ('delta.enableChangeDataFeed' = 'true') → read_change_feed()</text>
+      </svg>
+    </div>
+  )
+}
+
+function OptimizeDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">OPTIMIZE — Compact Small Files</text>
+        <text x="4" y="26" fontSize="8.5" fill="#64748b">Before: many small Parquet files</text>
+        {[1,2,3,4,5,6,7,8].map((n,i)=>(
+          <rect key={n} x={10+i*26} y="30" width="22" height="16" rx="2" fill="#ef4444" opacity=".2" stroke="#ef4444" strokeWidth="1"/>
+        ))}
+        <polygon points="225,38 235,34 235,42" fill="#22c55e"/>
+        <polygon points="230,38 240,34 240,42" fill="#22c55e"/>
+        <text x="248" y="26" fontSize="8.5" fill="#64748b">After OPTIMIZE: 1 large file</text>
+        <rect x="250" y="30" width="200" height="16" rx="3" fill="#22c55e" opacity=".2" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="42" fontSize="8" fill="#22c55e" textAnchor="middle">~128 MB target file size</text>
+        <text x="4" y="62" fontSize="8" fill="#64748b">OPTIMIZE also triggers Z-ORDER if specified. Rewrites files in background.</text>
+      </svg>
+    </div>
+  )
+}
+
+function ZOrderDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Z-ORDER — Co-locate Related Data</text>
+        <text x="4" y="26" fontSize="8.5" fill="#64748b">Z-ORDER BY (country, date) clusters files so filters skip more files</text>
+        {[['US','2024-01'],['US','2024-02'],['DE','2024-01'],['DE','2024-02']].map((r,i)=>(
+          <g key={r[0]+r[1]}>
+            <rect x={10+i*110} y="32" width="104" height="26" rx="4" fill={r[0]==='US'?'#4f8ef7':'#22c55e'} opacity={.15+i*.05} stroke={r[0]==='US'?'#4f8ef7':'#22c55e'} strokeWidth="1.2"/>
+            <text x={62+i*110} y="44" fontSize="8.5" fontWeight="600" fill={r[0]==='US'?'#4f8ef7':'#22c55e'} textAnchor="middle">{r[0]}</text>
+            <text x={62+i*110} y="53" fontSize="7.5" fill="#475569" textAnchor="middle">{r[1]}</text>
+          </g>
+        ))}
+        <text x="4" y="70" fontSize="8" fill="#64748b">Min/max stats per file → WHERE country='US' skips DE files entirely (data skipping)</text>
+      </svg>
+    </div>
+  )
+}
+
+function VacuumDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">VACUUM — Remove Old Files</text>
+        <text x="4" y="26" fontSize="8.5" fill="#64748b">Files unreferenced by delta log older than retentionDuration get deleted</text>
+        {[
+          {file:'part-0000.snappy (v0)',age:'14 days',keep:false},
+          {file:'part-0001.snappy (v1)',age:'14 days',keep:false},
+          {file:'part-0002.snappy (v3)',age:'2 days',keep:true},
+          {file:'part-0003.snappy (v5)',age:'1 hour',keep:true},
+        ].map((f,i)=>(
+          <g key={f.file}>
+            <rect x={4+i*113} y="30" width="107" height="22" rx="3" fill={f.keep?'#22c55e':'#ef4444'} opacity=".12" stroke={f.keep?'#22c55e':'#ef4444'} strokeWidth="1"/>
+            <text x={57+i*113} y="40" fontSize="7" fontFamily="monospace" fill="#1e293b" textAnchor="middle">{f.file}</text>
+            <text x={57+i*113} y="49" fontSize="7.5" fontWeight="700" fill={f.keep?'#22c55e':'#ef4444'} textAnchor="middle">{f.keep?'KEEP':'DELETE'}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function LiquidClusteringDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Liquid Clustering vs Hive Partitioning</text>
+        <rect x="10" y="18" width="200" height="40" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="31" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Hive Partition</text>
+        <text x="110" y="43" fontSize="7.5" fill="#475569" textAnchor="middle">Requires re-partition for column change</text>
+        <text x="110" y="53" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Static, small files risk</text>
+        <rect x="250" y="18" width="200" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="31" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Liquid Clustering</text>
+        <text x="350" y="43" fontSize="7.5" fill="#475569" textAnchor="middle">Change cluster keys without rewrite</text>
+        <text x="350" y="53" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Incremental CLUSTER BY</text>
+      </svg>
+    </div>
+  )
+}
+
+function ConstraintsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 55" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Constraints</text>
+        {[
+          {type:'NOT NULL',example:'amount IS NOT NULL',color:'#4f8ef7'},
+          {type:'CHECK',example:'amount > 0 AND status IN ("a","b")',color:'#22c55e'},
+        ].map((c,i)=>(
+          <g key={c.type}>
+            <rect x={4+i*228} y="18" width="220" height="26" rx="4" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.2"/>
+            <text x={14+i*228} y="29" fontSize="9" fontWeight="700" fill={c.color}>{c.type}</text>
+            <text x={14+i*228} y="40" fontSize="8" fontFamily="monospace" fill="#475569">{c.example}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function TablePropsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 60" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Table Properties (TBLPROPERTIES)</text>
+        {[
+          {key:'delta.enableChangeDataFeed',val:'true',color:'#22c55e'},
+          {key:'delta.logRetentionDuration',val:'interval 30 days',color:'#4f8ef7'},
+          {key:'delta.autoOptimize.optimizeWrite',val:'true',color:'#8b5cf6'},
+          {key:'delta.dataSkippingNumIndexedCols',val:'32',color:'#f59e0b'},
+        ].map((p,i)=>(
+          <g key={p.key}>
+            <text x={14+(i%2)*230} y={24+Math.floor(i/2)*20} fontSize="8" fontFamily="monospace" fill={p.color}>{p.key}</text>
+            <text x={14+(i%2)*230} y={34+Math.floor(i/2)*20} fontSize="7.5" fill="#475569">= {p.val}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function PartitioningDeltaDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Partitioning Strategy</text>
+        {[
+          {advice:'Partition by DATE for time-series queries',good:true},
+          {advice:'Avoid high-cardinality columns (user_id, UUID)',good:false},
+          {advice:'Target &gt;1 GB per partition after compaction',good:true},
+          {advice:'Combine with Z-ORDER for additional filtering',good:true},
+          {advice:'Prefer Liquid Clustering for changing access patterns',good:true},
+        ].map((a,i)=>(
+          <g key={a.advice}>
+            <rect x="8" y={18+i*10} width="444" height="8" rx="1" fill={a.good?'#22c55e':'#ef4444'} opacity=".1"/>
+            <text x="14" y={26+i*10} fontSize="7.5" fill={a.good?'#22c55e':'#ef4444'}>{a.good?'✓':'✗'} {a.advice}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DeltaPerformanceDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Performance Tuning Checklist</text>
+        {[
+          {tip:'OPTIMIZE + ZORDER before analytics queries',color:'#4f8ef7'},
+          {tip:'VACUUM regularly (but keep 7-day default)',color:'#22c55e'},
+          {tip:'Use Predictive IO (DBR 12+) for faster reads',color:'#8b5cf6'},
+          {tip:'Enable autoOptimize.optimizeWrite for streaming',color:'#f59e0b'},
+          {tip:'Cache frequently read Delta tables',color:'#ef4444'},
+        ].map((t,i)=>(
+          <g key={t.tip}>
+            <rect x="8" y={18+i*10} width="444" height="8" rx="1" fill={t.color} opacity=".12"/>
+            <text x="14" y={26+i*10} fontSize="7.5" fill={t.color}>→ {t.tip}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DatabricksPlatformDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Databricks Lakehouse Platform</text>
+        {[
+          {name:'Unity Catalog',desc:'Governance layer',color:'#4f8ef7'},
+          {name:'Delta Live Tables',desc:'Declarative ETL',color:'#22c55e'},
+          {name:'Databricks SQL',desc:'BI warehouse',color:'#8b5cf6'},
+          {name:'MLflow',desc:'ML lifecycle',color:'#f59e0b'},
+        ].map((c,i)=>(
+          <g key={c.name}>
+            <rect x={4+i*118} y="18" width="112" height="38" rx="5" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.2"/>
+            <text x={60+i*118} y="32" fontSize="9" fontWeight="700" fill={c.color} textAnchor="middle">{c.name}</text>
+            <text x={60+i*118} y="44" fontSize="7.5" fill="#475569" textAnchor="middle">{c.desc}</text>
+          </g>
+        ))}
+        <rect x="4" y="60" width="472" height="10" rx="3" fill="#1e293b" opacity=".06" stroke="#1e293b" strokeWidth="1"/>
+        <text x="240" y="68" fontSize="8" fontWeight="700" fill="#64748b" textAnchor="middle">Delta Lake + Apache Spark (runtime)</text>
+      </svg>
+    </div>
+  )
+}
+
+function UCNamespaceDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Unity Catalog — 3-Level Namespace</text>
+        <rect x="175" y="18" width="110" height="16" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="230" y="30" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Metastore</text>
+        <line x1="230" y1="34" x2="230" y2="44" stroke="#4f8ef7" strokeWidth="1.2"/>
+        <rect x="155" y="44" width="150" height="14" rx="3" fill="#22c55e" opacity=".18" stroke="#22c55e" strokeWidth="1.2"/>
+        <text x="230" y="55" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Catalog</text>
+        <line x1="230" y1="58" x2="230" y2="68" stroke="#22c55e" strokeWidth="1.2"/>
+        {[{name:'Schema (DB)',x:100},{name:'External Location',x:250},{name:'Storage Cred',x:380}].map(s=>(
+          <g key={s.name}>
+            <line x1="230" y1="68" x2={s.x+55} y2="68" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 1"/>
+            <rect x={s.x} y="68" width="110" height="14" rx="3" fill="#8b5cf6" opacity=".15" stroke="#8b5cf6" strokeWidth="1"/>
+            <text x={s.x+55} y="78" fontSize="7.5" fill="#8b5cf6" textAnchor="middle">{s.name}</text>
+          </g>
+        ))}
+        <text x="4" y="90" fontSize="8" fill="#64748b">catalog.schema.table → fully qualified 3-part name</text>
+      </svg>
+    </div>
+  )
+}
+
+function UCPermissionsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Unity Catalog — GRANT Privileges</text>
+        {[
+          {priv:'USE CATALOG',scope:'Catalog',color:'#4f8ef7'},
+          {priv:'USE SCHEMA',scope:'Schema',color:'#22c55e'},
+          {priv:'SELECT',scope:'Table/View',color:'#8b5cf6'},
+          {priv:'MODIFY',scope:'Table',color:'#f59e0b'},
+          {priv:'ALL PRIVILEGES',scope:'Any',color:'#ef4444'},
+        ].map((p,i)=>(
+          <g key={p.priv}>
+            <rect x={4+i*90} y="18" width="84" height="32" rx="4" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.2"/>
+            <text x={46+i*90} y="30" fontSize="8.5" fontWeight="700" fill={p.color} textAnchor="middle">{p.priv}</text>
+            <text x={46+i*90} y="42" fontSize="7.5" fill="#475569" textAnchor="middle">on {p.scope}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">GRANT privilege ON object TO principal (user/group/SP)</text>
+      </svg>
+    </div>
+  )
+}
+
+function RowColFilterDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">UC Row/Column Filters</text>
+        <rect x="10" y="18" width="200" height="36" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="30" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Row Filter</text>
+        <text x="110" y="42" fontSize="7.5" fill="#475569" textAnchor="middle">USING region = current_region()</text>
+        <text x="110" y="50" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Each user sees their region only</text>
+        <rect x="250" y="18" width="200" height="36" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="30" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Column Mask</text>
+        <text x="350" y="42" fontSize="7.5" fill="#475569" textAnchor="middle">USING FUNCTION mask_ssn(ssn)</text>
+        <text x="350" y="50" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Non-privileged → redacted value</text>
+      </svg>
+    </div>
+  )
+}
+
+function DLTPipelineDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Live Tables — Declarative Pipeline</text>
+        {[
+          {name:'@dlt.table\nBronze: raw_events',color:'#f59e0b',x:10},
+          {name:'@dlt.table\nSilver: clean_events',color:'#4f8ef7',x:165},
+          {name:'@dlt.table\nGold: daily_agg',color:'#22c55e',x:320},
+        ].map((t,i)=>(
+          <g key={t.name}>
+            <rect x={t.x} y="18" width="140" height="44" rx="5" fill={t.color} opacity=".12" stroke={t.color} strokeWidth="1.5"/>
+            {t.name.split('\n').map((l,j)=><text key={j} x={t.x+70} y={35+j*14} fontSize={j===0?8:9} fontWeight={j===0?'400':'700'} fill={j===0?'#64748b':t.color} textAnchor="middle">{l}</text>)}
+            {i<2&&<polygon points={`${t.x+144},40 ${t.x+163},36 ${t.x+163},44`} fill={t.color} opacity=".6"/>}
+          </g>
+        ))}
+        <text x="4" y="72" fontSize="8" fill="#64748b">DLT manages lineage, retries, data quality expectations (@dlt.expect) automatically</text>
+      </svg>
+    </div>
+  )
+}
+
+function AutoloaderDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Autoloader — Incremental File Ingestion</text>
+        <rect x="10" y="18" width="100" height="36" rx="4" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="60" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">ADLS/S3</text>
+        <text x="60" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">new files</text>
+        <polygon points="112,36 122,32 122,40" fill="#4f8ef7"/>
+        <rect x="124" y="18" width="120" height="36" rx="4" fill="#f59e0b" opacity=".12" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="184" y="32" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Autoloader</text>
+        <text x="184" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">cloudFiles source</text>
+        <polygon points="246,36 256,32 256,40" fill="#22c55e"/>
+        <rect x="258" y="18" width="120" height="36" rx="4" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="318" y="32" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Delta Table</text>
+        <text x="318" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">Bronze layer</text>
+        <text x="4" y="62" fontSize="8" fill="#64748b">Exactly-once ingestion. Schema inference + evolution. Checkpoint-based progress.</text>
+      </svg>
+    </div>
+  )
+}
+
+function WorkflowsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Databricks Workflows — Job DAG</text>
+        {[
+          {name:'ingest_raw',color:'#4f8ef7',x:10,y:18},
+          {name:'transform_silver',color:'#22c55e',x:150,y:18},
+          {name:'build_gold',color:'#8b5cf6',x:290,y:18},
+          {name:'run_dq_checks',color:'#f59e0b',x:150,y:46},
+        ].map(t=>(
+          <g key={t.name}>
+            <rect x={t.x} y={t.y} width="130" height="18" rx="4" fill={t.color} opacity=".15" stroke={t.color} strokeWidth="1.2"/>
+            <text x={t.x+65} y={t.y+12} fontSize="8.5" fontWeight="600" fill={t.color} textAnchor="middle">{t.name}</text>
+          </g>
+        ))}
+        <line x1="140" y1="27" x2="150" y2="27" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <line x1="280" y1="27" x2="290" y2="27" stroke="#22c55e" strokeWidth="1.5"/>
+        <line x1="215" y1="36" x2="215" y2="46" stroke="#22c55e" strokeWidth="1" strokeDasharray="3 1"/>
+        <text x="4" y="72" fontSize="8" fill="#64748b">Tasks: Notebook / Python / JAR / SQL / DLT pipeline. Conditional retries, on-failure tasks.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DABDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Databricks Asset Bundles (DAB) — CI/CD</text>
+        {['databricks.yml\n(bundle config)','bundle validate\n(dry run)','bundle deploy\n(to workspace)','bundle run\n(execute job)'].map((s,i)=>(
+          <g key={s}>
+            <rect x={4+i*113} y="18" width="107" height="34" rx="4" fill="#4f8ef7" opacity={.1+i*.05} stroke="#4f8ef7" strokeWidth="1.2"/>
+            {s.split('\n').map((l,j)=><text key={j} x={57+i*113} y={29+j*12} fontSize={j===0?8.5:7.5} fontWeight={j===0?'700':'400'} fill={j===0?'#4f8ef7':'#475569'} textAnchor="middle">{l}</text>)}
+            {i<3&&<polygon points={`${113+i*113},35 ${117+i*113},31 ${117+i*113},39`} fill="#4f8ef7" opacity=".7"/>}
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">YAML-defined bundle → Git-tracked infra → deploy to dev/staging/prod targets</text>
+      </svg>
+    </div>
+  )
+}
+
+function DatabricksSQLDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 60" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Databricks SQL — Warehouse Types</text>
+        {[
+          {type:'Classic',desc:'Always-on, manual scaling',color:'#64748b'},
+          {type:'Pro',desc:'Photon engine, enhanced caching',color:'#4f8ef7'},
+          {type:'Serverless',desc:'Instant start, managed infra',color:'#22c55e'},
+        ].map((w,i)=>(
+          <g key={w.type}>
+            <rect x={4+i*153} y="18" width="147" height="28" rx="4" fill={w.color} opacity=".12" stroke={w.color} strokeWidth="1.2"/>
+            <text x={77+i*153} y="30" fontSize="9.5" fontWeight="700" fill={w.color} textAnchor="middle">{w.type}</text>
+            <text x={77+i*153} y="40" fontSize="7.5" fill="#475569" textAnchor="middle">{w.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DeltaSharingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Sharing — Cross-Platform Data Share</text>
+        <rect x="10" y="18" width="110" height="36" rx="5" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="65" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Provider</text>
+        <text x="65" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">Databricks / Delta</text>
+        <polygon points="122,36 132,32 132,40" fill="#94a3b8"/>
+        <rect x="135" y="18" width="110" height="36" rx="5" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="190" y="32" fontSize="8.5" fontWeight="700" fill="#f59e0b" textAnchor="middle">Share</text>
+        <text x="190" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">REST protocol</text>
+        {['pandas','Spark','Power BI'].map((r,i)=>(
+          <g key={r}>
+            <polygon points={`${247+i*4},36 ${257+i*4},32 ${257+i*4},40`} fill="#22c55e" opacity=".5"/>
+            <rect x={260+i*60} y={22+i*8} width="80" height="14" rx="3" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1"/>
+            <text x={300+i*60} y={33+i*8} fontSize="7.5" fill="#22c55e" textAnchor="middle">{r} Recipient</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function IcebergIntroDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Iceberg — Metadata Layers</text>
+        {[
+          {label:'Catalog (name → pointer)',color:'#4f8ef7'},
+          {label:'Metadata file (current snapshot)',color:'#22c55e'},
+          {label:'Manifest list (snapshot files)',color:'#8b5cf6'},
+          {label:'Manifest files (data file stats)',color:'#f59e0b'},
+          {label:'Data files (Parquet/ORC/Avro)',color:'#64748b'},
+        ].map((l,i)=>(
+          <g key={l.label}>
+            <rect x={10+i*4} y={18+i*11} width={440-i*8} height="10" rx="2" fill={l.color} opacity=".15" stroke={l.color} strokeWidth="1"/>
+            <text x={16+i*4} y={27+i*11} fontSize="7.5" fill={l.color}>{l.label}</text>
+          </g>
+        ))}
+        <text x="4" y="76" fontSize="8" fill="#64748b">Hidden partitioning — partition info stored in metadata, invisible to queries</text>
+      </svg>
+    </div>
+  )
+}
+
+function IcebergFeaturesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Iceberg Features vs Delta Lake</text>
+        {[['Feature','Iceberg','Delta'],['Time Travel','Yes (snapshots)','Yes (log versions)'],['Schema Evolution','Yes + hidden parts','Yes (mergeSchema)'],['Partition Evolution','Change w/o rewrite','Liquid Clustering'],['Multi-engine','Spark/Flink/Trino','Spark-native, Photon'],['Catalogs','Hive/Glue/REST/Nessie','Unity Catalog / HMS']].map((r,i)=>(
+          <g key={r[0]+i}>
+            <rect x="8" y={14+i*9} width="444" height="8" rx="1" fill={i===0?'#1e293b':i%2===0?'#f8fafc':'white'} opacity={i===0?.08:.5}/>
+            <text x="14" y={22+i*9} fontSize="7.5" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#1e293b'}>{r[0]}</text>
+            <text x="170" y={22+i*9} fontSize="7.5" fill="#4f8ef7">{r[1]}</text>
+            <text x="330" y={22+i*9} fontSize="7.5" fill="#f59e0b">{r[2]}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function HudiDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Apache Hudi — Table Types</text>
+        <rect x="10" y="18" width="200" height="40" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="31" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Copy-on-Write (CoW)</text>
+        <text x="110" y="43" fontSize="7.5" fill="#475569" textAnchor="middle">Rewrites entire file on update</text>
+        <text x="110" y="53" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Fast reads, slower writes</text>
+        <rect x="250" y="18" width="200" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="31" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Merge-on-Read (MoR)</text>
+        <text x="350" y="43" fontSize="7.5" fill="#475569" textAnchor="middle">Appends delta logs</text>
+        <text x="350" y="53" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Fast writes, slower reads</text>
+      </svg>
+    </div>
+  )
+}
+
+function FormatComparisonDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Open Table Format Comparison</text>
+        {[['','Delta Lake','Iceberg','Hudi'],['Best with','Databricks/Spark','Trino/Flink/Spark','Kafka/Spark CDC'],['Time travel','Versions','Snapshots','Timeline'],['Multi-engine','Growing','Best','Good'],['DML perf','Excellent','Good','Good']].map((r,i)=>(
+          <g key={r[0]+i}>
+            <rect x="4" y={14+i*13} width="472" height="11" rx="1" fill={i===0?'#1e293b':i%2===0?'#f8fafc':'white'} opacity={i===0?.08:.4}/>
+            <text x="10" y={24+i*13} fontSize="8" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#1e293b'}>{r[0]}</text>
+            <text x="140" y={24+i*13} fontSize="8" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#f59e0b'}>{r[1]}</text>
+            <text x="280" y={24+i*13} fontSize="8" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#4f8ef7'}>{r[2]}</text>
+            <text x="390" y={24+i*13} fontSize="8" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#22c55e'}>{r[3]}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 // ============================================================
 
 function ACIDAnimation() {
