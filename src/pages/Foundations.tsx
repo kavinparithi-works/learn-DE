@@ -2385,7 +2385,7 @@ function CPUDiagram() {
   let y = 10
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 480 170" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 480 205" width="100%" style={{display:'block'}}>
         <text x="8" y="12" fontSize="11" fontWeight="700" fill="#1e293b">Memory Hierarchy — Latency Pyramid</text>
         {layers.map((l,i)=>{
           const w=80+i*55; const x=(480-w)/2; const top=y; y+=l.h+5
@@ -2397,7 +2397,7 @@ function CPUDiagram() {
             </g>
           )
         })}
-        <text x="8" y="168" fontSize="8" fill="#94a3b8">Faster + smaller ↑    Slower + larger ↓</text>
+        <text x="8" y="198" fontSize="8" fill="#94a3b8">Faster + smaller ↑    Slower + larger ↓</text>
       </svg>
     </div>
   )
@@ -2471,7 +2471,7 @@ function OSDiagram() {
   ]
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 500 130" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 500 140" width="100%" style={{display:'block'}}>
         <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Operating System Layers</text>
         {layers.map((l,i)=>(
           <g key={l.label}>
@@ -2480,7 +2480,7 @@ function OSDiagram() {
           </g>
         ))}
         <line x1="250" y1="115" x2="250" y2="125" stroke="#94a3b8" strokeWidth="1" markerEnd="url(#arr)"/>
-        <text x="250" y="128" fontSize="8" fill="#94a3b8" textAnchor="middle">syscall crosses user↔kernel boundary</text>
+        <text x="250" y="136" fontSize="8" fill="#94a3b8" textAnchor="middle">syscall crosses user↔kernel boundary</text>
       </svg>
     </div>
   )
@@ -2818,7 +2818,7 @@ function DataGovernanceDiagram() {
         <line x1="250" y1="106" x2="250" y2="118" stroke="#f59e0b" strokeWidth="1.2"/>
         <rect x="90" y="118" width="320" height="18" rx="4" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.2"/>
         <text x="250" y="130" fontSize="8.5" fontWeight="600" fill="#22c55e" textAnchor="middle">Data Consumers (analysts, scientists, engineers)</text>
-        <text x="8" y="148" fontSize="8" fill="#94a3b8">Policies flow top-down; access requests flow bottom-up</text>
+        <text x="8" y="146" fontSize="8" fill="#94a3b8">Policies flow top-down; access requests flow bottom-up</text>
       </svg>
     </div>
   )

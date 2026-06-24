@@ -3490,7 +3490,7 @@ function DatabricksPlatformDiagram() {
 function UCNamespaceDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 104" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Unity Catalog — 3-Level Namespace</text>
         <rect x="175" y="18" width="110" height="16" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1.5"/>
         <text x="230" y="30" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Metastore</text>
@@ -3505,7 +3505,7 @@ function UCNamespaceDiagram() {
             <text x={s.x+55} y="78" fontSize="7.5" fill="#8b5cf6" textAnchor="middle">{s.name}</text>
           </g>
         ))}
-        <text x="4" y="90" fontSize="8" fill="#64748b">catalog.schema.table → fully qualified 3-part name</text>
+        <text x="4" y="97" fontSize="8" fill="#64748b">catalog.schema.table → fully qualified 3-part name</text>
       </svg>
     </div>
   )
@@ -3556,7 +3556,7 @@ function RowColFilterDiagram() {
 function DLTPipelineDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 480 82" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Live Tables — Declarative Pipeline</text>
         {[
           {name:'@dlt.table\nBronze: raw_events',color:'#f59e0b',x:10},
@@ -3569,7 +3569,7 @@ function DLTPipelineDiagram() {
             {i<2&&<polygon points={`${t.x+144},40 ${t.x+163},36 ${t.x+163},44`} fill={t.color} opacity=".6"/>}
           </g>
         ))}
-        <text x="4" y="72" fontSize="8" fill="#64748b">DLT manages lineage, retries, data quality expectations (@dlt.expect) automatically</text>
+        <text x="4" y="78" fontSize="8" fill="#64748b">DLT manages lineage, retries, data quality expectations (@dlt.expect) automatically</text>
       </svg>
     </div>
   )
@@ -3578,7 +3578,7 @@ function DLTPipelineDiagram() {
 function AutoloaderDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 72" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Autoloader — Incremental File Ingestion</text>
         <rect x="10" y="18" width="100" height="36" rx="4" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
         <text x="60" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">ADLS/S3</text>
@@ -3591,7 +3591,7 @@ function AutoloaderDiagram() {
         <rect x="258" y="18" width="120" height="36" rx="4" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
         <text x="318" y="32" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Delta Table</text>
         <text x="318" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">Bronze layer</text>
-        <text x="4" y="62" fontSize="8" fill="#64748b">Exactly-once ingestion. Schema inference + evolution. Checkpoint-based progress.</text>
+        <text x="4" y="68" fontSize="8" fill="#64748b">Exactly-once ingestion. Schema inference + evolution. Checkpoint-based progress.</text>
       </svg>
     </div>
   )
@@ -3600,7 +3600,7 @@ function AutoloaderDiagram() {
 function WorkflowsDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 480 82" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Databricks Workflows — Job DAG</text>
         {[
           {name:'ingest_raw',color:'#4f8ef7',x:10,y:18},
@@ -3616,7 +3616,7 @@ function WorkflowsDiagram() {
         <line x1="140" y1="27" x2="150" y2="27" stroke="#4f8ef7" strokeWidth="1.5"/>
         <line x1="280" y1="27" x2="290" y2="27" stroke="#22c55e" strokeWidth="1.5"/>
         <line x1="215" y1="36" x2="215" y2="46" stroke="#22c55e" strokeWidth="1" strokeDasharray="3 1"/>
-        <text x="4" y="72" fontSize="8" fill="#64748b">Tasks: Notebook / Python / JAR / SQL / DLT pipeline. Conditional retries, on-failure tasks.</text>
+        <text x="4" y="78" fontSize="8" fill="#64748b">Tasks: Notebook / Python / JAR / SQL / DLT pipeline. Conditional retries, on-failure tasks.</text>
       </svg>
     </div>
   )

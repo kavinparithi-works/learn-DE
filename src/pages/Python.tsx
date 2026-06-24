@@ -4215,7 +4215,7 @@ function MemoryProfileDiagram() {
 function DBConnectionDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 95" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DB Connection Layers</text>
         {[
           {name:'Application',color:'#4f8ef7',y:18},
@@ -4358,7 +4358,7 @@ function DockerPyDiagram() {
 function K8sDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 100" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 110" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Kubernetes Object Hierarchy</text>
         <rect x="160" y="18" width="140" height="18" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1.5"/>
         <text x="230" y="31" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Cluster</text>
@@ -4372,7 +4372,7 @@ function K8sDiagram() {
             <text x={o.x+50} y="84" fontSize="8" fill="#22c55e" textAnchor="middle">{o.label}</text>
           </g>
         ))}
-        <text x="4" y="98" fontSize="8" fill="#64748b">Pod = one or more containers. ReplicaSet = desired pod count. Deployment = rolling update controller.</text>
+        <text x="4" y="105" fontSize="8" fill="#64748b">Pod = one or more containers. ReplicaSet = desired pod count. Deployment = rolling update controller.</text>
       </svg>
     </div>
   )

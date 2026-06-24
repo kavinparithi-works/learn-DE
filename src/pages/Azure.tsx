@@ -73,7 +73,7 @@ function ADLSDiagram() {
             <text x={45+i*74} y="66" fontSize="7.5" fill="#4f8ef7" textAnchor="middle">{d}</text>
           </g>
         ))}
-        <text x="4" y="82" fontSize="8" fill="#64748b">HNS enables atomic directory ops, ACLs at folder level, 3× faster than Blob for big data analytics</text>
+        <text x="4" y="80" fontSize="8" fill="#64748b">HNS enables atomic directory ops, ACLs at folder level, 3× faster than Blob for big data analytics</text>
       </svg>
     </div>
   )

@@ -123,13 +123,13 @@ function CiCdDiagram() {
 function TestingDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 74" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Engineering Testing Pyramid</text>
         <polygon points="230,16 430,54 30,54" fill="#1e293b" opacity=".04" stroke="#1e293b" strokeWidth="1"/>
         <text x="230" y="28" fontSize="8" fontWeight="700" fill="#ef4444" textAnchor="middle">E2E / Integration</text>
         <text x="230" y="39" fontSize="8" fontWeight="700" fill="#f59e0b" textAnchor="middle">Component / Contract Tests</text>
         <text x="230" y="50" fontSize="8.5" fontWeight="700" fill="#22c55e" textAnchor="middle">Unit Tests (transformations, helpers)</text>
-        <text x="4" y="63" fontSize="8" fill="#64748b">pytest + great_expectations / soda for DQ. Mock external connections in unit tests.</text>
+        <text x="4" y="70" fontSize="8" fill="#64748b">pytest + great_expectations / soda for DQ. Mock external connections in unit tests.</text>
       </svg>
     </div>
   )
@@ -382,7 +382,7 @@ function InterviewProjectDiagram() {
 function StarSchemaDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 92" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Star Schema</text>
         <rect x="175" y="26" width="110" height="28" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="2"/>
         <text x="230" y="44" fontSize="9.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Fact Table</text>
@@ -393,7 +393,7 @@ function StarSchemaDiagram() {
             <line x1={d.x>200?d.x:d.x+110} y1={d.y+11} x2={d.x>200?340:175} y2="40" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
           </g>
         ))}
-        <text x="4" y="82" fontSize="8" fill="#64748b">Fact = FK refs + measures. Dim = descriptive attributes. Simple joins, fast BI queries.</text>
+        <text x="4" y="88" fontSize="8" fill="#64748b">Fact = FK refs + measures. Dim = descriptive attributes. Simple joins, fast BI queries.</text>
       </svg>
     </div>
   )

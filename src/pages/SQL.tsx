@@ -426,7 +426,7 @@ function WindowFuncDiagram() {
 function FramesDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 440 100" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 440 110" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Window Frames — ROWS BETWEEN</text>
         {[10,20,30,40,50].map((v,i)=>(
           <g key={i}>
@@ -438,7 +438,7 @@ function FramesDiagram() {
         <rect x="82" y="18" width="204" height="40" rx="4" fill="none" stroke="#4f8ef7" strokeWidth="2" strokeDasharray="5 2"/>
         <text x="184" y="72" fontSize="8" fill="#4f8ef7" textAnchor="middle">ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING</text>
         <text x="40+72*2" y="85" fontSize="8" fill="#f59e0b" textAnchor="middle">CURRENT ROW</text>
-        <text x="4" y="99" fontSize="7.5" fill="#64748b">Frame = rows included in each calculation relative to current row</text>
+        <text x="4" y="104" fontSize="7.5" fill="#64748b">Frame = rows included in each calculation relative to current row</text>
       </svg>
     </div>
   )
@@ -490,7 +490,7 @@ function JSONSQLDiagram() {
         <text x="30" y="63" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">  "customer": {'{'}<tspan fill="#8b5cf6">"id": 42, "name": "Alice"</tspan>{'}'}</text>
         <text x="30" y="76" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7">  "items": [{'{'}<tspan fill="#ef4444">"sku":"A","qty":2</tspan>{'}'}, {'{'}<tspan fill="#ef4444">"sku":"B","qty":1</tspan>{'}'}]</text>
         <text x="20" y="90" fontSize="8.5" fontFamily="monospace" fill="#f59e0b">{'}'}</text>
-        <text x="4" y="112" fontSize="8" fill="#64748b">Access: order:customer.name  order:items[0].sku  (Spark) or -&gt;&gt; (Postgres)</text>
+        <text x="4" y="111" fontSize="8" fill="#64748b">Access: order:customer.name  order:items[0].sku  (Spark) or -&gt;&gt; (Postgres)</text>
       </svg>
     </div>
   )

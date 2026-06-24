@@ -3961,7 +3961,7 @@ function SkewDiagram() {
 function SparkMemoryDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 100" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark Executor Memory Layout</text>
         <rect x="10" y="18" width="440" height="14" rx="3" fill="#1e293b" opacity=".08" stroke="#1e293b" strokeWidth="1"/>
         <text x="16" y="29" fontSize="8.5" fontWeight="700" fill="#1e293b">--executor-memory 4g (JVM heap)</text>
@@ -3975,8 +3975,8 @@ function SparkMemoryDiagram() {
         <text x="144" y="59" fontSize="7" fill="#8b5cf6" textAnchor="middle">Storage (cache)</text>
         <rect x="190" y="50" width="86" height="10" rx="2" fill="#f59e0b" opacity=".25"/>
         <text x="233" y="59" fontSize="7" fill="#f59e0b" textAnchor="middle">Execution (shuffle)</text>
-        <text x="4" y="76" fontSize="8" fill="#64748b">spark.memory.fraction=0.6  spark.memory.storageFraction=0.5</text>
-        <text x="4" y="88" fontSize="8" fill="#94a3b8">Storage evicts if Execution needs more space (unified pool)</text>
+        <text x="4" y="78" fontSize="8" fill="#64748b">spark.memory.fraction=0.6  spark.memory.storageFraction=0.5</text>
+        <text x="4" y="92" fontSize="8" fill="#94a3b8">Storage evicts if Execution needs more space (unified pool)</text>
       </svg>
     </div>
   )
@@ -4068,7 +4068,7 @@ function SparkSQLDiagram() {
 function StreamingDiagram() {
   return (
     <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
-      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
         <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Structured Streaming — Micro-batch Model</text>
         {[0,1,2,3].map(i=>(
           <g key={i}>
@@ -4078,8 +4078,8 @@ function StreamingDiagram() {
             {i<3&&<polygon points={`${108+i*108},33 ${114+i*108},29 ${114+i*108},37`} fill="#94a3b8"/>}
           </g>
         ))}
-        <text x="4" y="62" fontSize="8" fill="#64748b">trigger(processingTime="1 min") — or Trigger.Once(), Trigger.Continuous("1 second")</text>
-        <text x="4" y="72" fontSize="8" fill="#94a3b8">Output modes: append / complete / update. Checkpoint dir stores offset + state.</text>
+        <text x="4" y="63" fontSize="8" fill="#64748b">trigger(processingTime="1 min") — or Trigger.Once(), Trigger.Continuous("1 second")</text>
+        <text x="4" y="77" fontSize="8" fill="#94a3b8">Output modes: append / complete / update. Checkpoint dir stores offset + state.</text>
       </svg>
     </div>
   )
