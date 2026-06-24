@@ -28,11 +28,13 @@ export default function AuthModal({ open, onClose }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
 
   const reset = (t: 'signin' | 'signup') => {
     setTab(t)
     setError('')
+    setInfo('')
     setEmail('')
     setPassword('')
   }
@@ -60,6 +62,22 @@ export default function AuthModal({ open, onClose }: Props) {
       await signInEmail(email, password)
       onClose()
     } catch (e: any) {
+      if (e.code === 'auth/google-only') {
+        setError('')
+        setInfo(`${email} is linked to Google. Signing you in with Google…`)
+        setLoading(true)
+        try {
+          await signInGoogle()
+          onClose()
+        } catch (ge: any) {
+          setInfo('')
+          const msg = friendlyError(ge.code)
+          if (msg) setError(msg)
+        } finally {
+          setLoading(false)
+        }
+        return
+      }
       setError(friendlyError(e.code))
     } finally {
       setLoading(false)
@@ -110,6 +128,16 @@ export default function AuthModal({ open, onClose }: Props) {
         </button>
 
         <div className="modal-divider">or</div>
+        {info && (
+          <div style={{
+            background: 'rgba(99,102,241,.08)', border: '1px solid rgba(99,102,241,.22)',
+            borderRadius: 10, padding: '10px 14px', marginBottom: 10,
+            fontSize: '.82rem', color: '#4f46e5', fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span>ℹ️</span> {info}
+          </div>
+        )}
         <div className="modal-error">{error}</div>
 
         <input
