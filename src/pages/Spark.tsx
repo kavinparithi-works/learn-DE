@@ -92,8 +92,52 @@ export default function Spark({ completed, onComplete, onUnmark, onSignInNeeded 
               Spark is a distributed compute engine built on a master-worker model. The <strong>Driver</strong> is the JVM process that hosts your application, creates the SparkContext/SparkSession, builds the logical plan, and coordinates execution. <strong>Executors</strong> are JVM processes on worker nodes that run tasks and cache data. A <strong>Cluster Manager</strong> (Standalone, YARN, or Kubernetes) allocates resources. Understanding this hierarchy is essential for debugging OOM errors, task failures, and performance tuning.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "Walk me through what happens when you call spark-submit." / "What is the difference between the Driver and an Executor?" / "How does Spark allocate resources on YARN vs Kubernetes?" / "What does deploy-mode cluster mean?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand the <em>separation of concerns</em>: Driver owns the plan (DAG, scheduling, coordination), Executors own the compute (tasks, cache). Senior candidates explain deploy-mode tradeoffs and why cluster mode is preferred in production.
+            </div>
+          </div>
+
+          <p>The <strong>Driver</strong> is a single JVM process that runs your <code>main()</code>, creates the <code>SparkSession</code>, builds the logical plan, and coordinates execution via the DAG Scheduler and Task Scheduler. It never touches actual data  —  it sends serialised task closures to Executors. The <strong>Executor</strong> JVMs run those tasks, cache intermediate results, and report back. The <strong>Cluster Manager</strong> (YARN, Kubernetes, or Standalone) only allocates containers  —  it does not understand Spark jobs.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Driver role</td><td>Hosts SparkSession, builds DAG, schedules tasks, collects results</td></tr>
+              <tr><td>Executor role</td><td>Runs tasks, stores cached partitions, reports metrics</td></tr>
+              <tr><td>Cluster Manager role</td><td>Allocates containers/nodes — agnostic to Spark semantics</td></tr>
+              <tr><td>Client vs Cluster deploy mode</td><td>Client: driver on submitting machine (dev). Cluster: driver on cluster node (prod, survives shell exit)</td></tr>
+              <tr><td>SparkSession vs SparkContext</td><td>SparkSession (2.0+) wraps SparkContext and adds DataFrame/SQL; always use SparkSession</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> On Databricks/Azure Synapse, the Driver runs on the cluster's driver node. On YARN in cluster mode, the Driver runs inside an ApplicationMaster container. Resource requests (executor.memory, executor.cores, num-executors) are set via spark-submit flags or cluster policies, not hardcoded in your script.
+            </div>
+          </div>
+
           <SparkArchDiagram />
           <SparkArchAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Driver runs the code, executors do the work"</td><td>Explains Driver memory allocation (driver.memory vs driver.maxResultSize), deploy-mode implications for cluster stability, and why the Driver is a SPOF</td></tr>
+              <tr><td>Uses SparkSession.builder with default config</td><td>Sets executor.memoryOverhead for Python workers, uses dynamic allocation with shuffleTracking, sets job descriptions for Spark UI visibility</td></tr>
+            </tbody>
+          </table>
+
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -171,6 +215,26 @@ print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
               correct: 3
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use cluster deploy-mode in production</li>
+                <li>Set executor.memoryOverhead for Python workloads</li>
+                <li>Use dynamic allocation for bursty jobs</li>
+                <li>Set meaningful sc.setJobDescription() for UI visibility</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run driver in client mode for long production jobs (shell death = job death)</li>
+                <li>Forget to set driver.maxResultSize (default 1g — collect() can OOM driver)</li>
+                <li>Over-provision executors without dynamic allocation on shared clusters</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-arch')} style={MC_BTN(completed.has('spark-arch'))}>{completed.has('spark-arch') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -183,8 +247,52 @@ print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
               Every Spark job is represented as a Directed Acyclic Graph (DAG) of stages. <strong>Narrow transformations</strong> (map, filter, withColumn) pipeline within a stage  -  each partition is processed independently with no data movement. <strong>Wide transformations</strong> (groupBy, join, repartition) require a <strong>shuffle</strong>  -  data is written to disk, transferred across the network, and re-read  -  creating a new stage boundary. Each stage is divided into <strong>tasks</strong>, one per partition, and tasks are serialized and sent to executor slots.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is a stage boundary in Spark?" / "What is the difference between a narrow and wide transformation?" / "How many tasks are created per stage?" / "What happens during a shuffle?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you can read a DAG, identify shuffle boundaries, and explain the cost of a shuffle (disk write + network transfer + disk read). Senior candidates add: how to minimise shuffle stages using broadcast joins, filter-early patterns, and AQE.
+            </div>
+          </div>
+
+          <p>Every Spark action triggers execution of a <strong>DAG</strong> (Directed Acyclic Graph). Spark divides the DAG into <strong>stages</strong> at each <em>shuffle boundary</em>  —  where data must be redistributed across the network. Within a stage, all transformations are <strong>narrow</strong> (each partition processed independently). Across a stage boundary, Spark writes shuffle data to disk, transfers it over the network, and reads it on the other side. Each stage is then split into <strong>tasks</strong>  —  one task per input partition. Tasks are serialised and sent to Executor slots.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Narrow transformation</td><td>No data movement. filter, select, withColumn, map. Single stage.</td></tr>
+              <tr><td>Wide transformation</td><td>Requires shuffle: groupBy, join, distinct, repartition. Creates new stage.</td></tr>
+              <tr><td>Shuffle cost</td><td>Write to disk → network transfer → read from disk. Most expensive operation in Spark.</td></tr>
+              <tr><td>Task count</td><td>1 task per input partition in the stage. After shuffle: spark.sql.shuffle.partitions tasks.</td></tr>
+              <tr><td>Stage visibility</td><td>Spark UI → Jobs → DAG Visualization. Blue = done, orange = running, grey = skipped (cached).</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A typical medallion pipeline has: Stage 0 (read + filter + withColumn), Stage 1 (groupBy agg — shuffle), Stage 2 (join dim table — another shuffle), Stage 3 (write). Each shuffle adds minutes to a job. Broadcast the dim table to eliminate Stage 2's shuffle entirely.
+            </div>
+          </div>
+
           <DagDiagram />
           <DagAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"groupBy creates a new stage because data has to move"</td><td>Explains that the shuffle creates map-side files written to executor local disk, then reduce tasks pull them over the network — and that this is why OOM and spill happen during aggregations</td></tr>
+              <tr><td>Knows filter/select are narrow, groupBy is wide</td><td>Explains how AQE reads actual shuffle partition sizes post-map to coalesce or split, and uses explain() to verify stage boundaries before running a job</td></tr>
+            </tbody>
+          </table>
+
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
             <div className="callout-body">
@@ -261,6 +369,26 @@ df.rdd.map(lambda row: bc.value.get(row.key))
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Call explain() before running to count shuffle stages</li>
+                <li>Filter early to reduce data before shuffle boundaries</li>
+                <li>Use broadcast() for small dimension tables to eliminate joins</li>
+                <li>Enable AQE to auto-coalesce post-shuffle partitions</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Chain multiple groupBy/join operations without checking shuffle cost</li>
+                <li>Capture large objects in task closures (sent to every task)</li>
+                <li>Ignore the Spark UI DAG — it shows exactly where time is spent</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-dag')} style={MC_BTN(completed.has('spark-dag'))}>{completed.has('spark-dag') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -273,8 +401,52 @@ df.rdd.map(lambda row: bc.value.get(row.key))
               Spark does <em>nothing</em> when you call a transformation. It records the operation in the logical plan. Only when you call an <strong>action</strong> (count, collect, show, write, save) does Spark hand the full logical plan to Catalyst for optimization, generate a physical plan, and execute. This lazy model enables optimizations impossible in eager systems: Catalyst can push filters down to the data source, prune columns before reading, reorder joins, and fold constants  -  all because it sees the <em>complete</em> query before touching any data.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is lazy evaluation in Spark?" / "What is the difference between a transformation and an action?" / "If I call show() then count() on the same DataFrame, how many times does the DAG execute?" / "How does lazy evaluation enable Catalyst's optimizations?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to catch candidates who don't realise that every action re-executes the full DAG. Senior candidates explain that lazy evaluation lets Catalyst see the complete query plan before execution, enabling cross-operation optimisations that eager systems cannot do.
+            </div>
+          </div>
+
+          <p>Spark records transformations in a logical plan but executes <em>nothing</em> until an <strong>action</strong> is called. This laziness is not just a performance trick  —  it is what allows Catalyst to optimise the <em>entire</em> query at once. When you call an action (<code>count</code>, <code>show</code>, <code>write</code>), Spark hands the complete logical plan to Catalyst, which applies predicate pushdown, column pruning, join reordering, and constant folding before generating a physical plan. Without laziness, Catalyst would see only one operator at a time.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Transformations</td><td>Lazy. Build logical plan. filter, select, groupBy, join, withColumn. No computation.</td></tr>
+              <tr><td>Actions</td><td>Trigger execution. count(), show(), collect(), write(), foreach(). Full DAG runs.</td></tr>
+              <tr><td>Multiple actions = multiple runs</td><td>df.show() then df.count() runs the DAG twice. Cache before multiple actions.</td></tr>
+              <tr><td>Lineage / fault tolerance</td><td>Spark stores the transformation chain. If an executor dies, it replays the lineage for lost partitions only.</td></tr>
+              <tr><td>explain()</td><td>Shows the 4-phase plan without executing. Use before any large job.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A common mistake is calling count() to validate a DataFrame, then show() to sample it, then write() to persist it  —  three full DAG executions. The fix: cache() after the first action, then all subsequent actions serve from cache. Or pipeline into a single write and sample from the output.
+            </div>
+          </div>
+
           <LazyEvalDiagram />
           <LazyEvalAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Transformations don't run immediately, only actions do"</td><td>Explains that lazy evaluation enables Catalyst to see the full plan — enabling cross-stage optimisations like filter pushdown past joins, which an eager system executing operator-by-operator could never do</td></tr>
+              <tr><td>Caches before multiple actions</td><td>Uses explain(extended=True) to verify that Catalyst actually pushed predicates and pruned columns, not just assumes it did</td></tr>
+            </tbody>
+          </table>
+
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -360,6 +532,25 @@ df4.explain(True)
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Cache a DataFrame before calling multiple actions on it</li>
+                <li>Call explain() before running expensive jobs to verify Catalyst optimizations</li>
+                <li>Use a single write action as the final step in a pipeline</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Call count() just to "check" data — it triggers a full scan every time</li>
+                <li>Chain show() + count() + write() without caching — 3x compute cost</li>
+                <li>Assume collect() is lazy — it is an action that pulls all data to the driver</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-lazy')} style={MC_BTN(completed.has('spark-lazy'))}>{completed.has('spark-lazy') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -372,8 +563,52 @@ df4.explain(True)
               Spark has three abstraction layers. <strong>RDDs</strong> (Resilient Distributed Datasets) are the low-level API  -  typed, unstructured partitions of JVM objects with no schema. <strong>DataFrames</strong> are distributed tables with a named schema, optimised by Catalyst and Tungsten  -  the right choice for 95% of work. <strong>Datasets</strong> are typed DataFrames available only in Scala/Java (Python has no Dataset API  -  PySpark DataFrames behave like untyped Datasets[Row]). In practice: always use DataFrames; drop to RDD only when you need low-level partition-level control unavailable in the DataFrame API.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "When would you use an RDD instead of a DataFrame?" / "Why are DataFrames faster than RDDs?" / "What is the Dataset API and does Python support it?" / "When would you use foreachPartition?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see that you strongly prefer DataFrames and can clearly articulate <em>why</em>: Catalyst optimisation, Tungsten binary execution, columnar storage. They also want to know you can drop to RDD for legitimate use cases like <code>foreachPartition</code>.
+            </div>
+          </div>
+
+          <p>Spark has three abstraction layers. <strong>RDDs</strong> (pre-1.3) are unstructured partitions of JVM objects with no schema — Catalyst cannot optimise them and Tungsten's columnar encoding does not apply. <strong>DataFrames</strong> (1.3+) are distributed tables with a named schema — Catalyst rewrites the plan, Tungsten stores data in compact off-heap binary format. <strong>Datasets</strong> add compile-time type safety in Scala/Java, but Python has no Dataset API — PySpark DataFrames behave like <code>Dataset[Row]</code>.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>RDD use cases</td><td>Unstructured text/binary, custom serialisation, foreachPartition for connection pools, legacy code</td></tr>
+              <tr><td>DataFrame use cases</td><td>Everything else — structured data, SQL, joins, aggregations. Always prefer.</td></tr>
+              <tr><td>Dataset use cases</td><td>Scala/Java only — type-safe domain objects with encoder-based serialisation</td></tr>
+              <tr><td>foreachPartition pattern</td><td>Open a DB/API connection once per partition, process all rows, close — avoid per-row overhead</td></tr>
+              <tr><td>Python has no Dataset</td><td>PySpark DataFrame = Dataset[Row] under the hood. No compile-time type safety in Python.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> The only legitimate RDD use in modern PySpark is <code>foreachPartition</code> when writing to a system that requires a connection per partition (JDBC, Redis, legacy APIs). For everything else — reads, transforms, aggregations — the DataFrame API with Catalyst is faster, simpler, and more maintainable.
+            </div>
+          </div>
+
           <RDDDiagram />
           <RDDAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"RDDs are the old API, DataFrames are better"</td><td>Explains exactly why: RDDs bypass Catalyst (no predicate pushdown, no column pruning) and Tungsten (Java heap objects with 16-byte headers vs compact binary off-heap UnsafeRow), resulting in 5-10x more memory and 2-5x slower execution</td></tr>
+              <tr><td>Knows foreachPartition exists</td><td>Uses foreachPartition for connection pooling: one JDBC/Redis connection opened per partition, processes all rows, closes cleanly — avoiding the overhead of one connection per row in a Python UDF</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
 
@@ -461,6 +696,25 @@ result_df.rdd.foreachPartition(process_partition)
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use DataFrames with explicit schemas for all structured data</li>
+                <li>Use foreachPartition when writing to external systems that require connections</li>
+                <li>Define schemas explicitly — never use inferSchema=True in production</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use RDD map/filter when the DataFrame API can express the same logic</li>
+                <li>Convert DataFrame to RDD just to use Python lambdas — use Pandas UDFs instead</li>
+                <li>Expect Dataset API in PySpark — it doesn't exist</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-rdd')} style={MC_BTN(completed.has('spark-rdd'))}>{completed.has('spark-rdd') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -473,8 +727,52 @@ result_df.rdd.foreachPartition(process_partition)
               Spark can read from virtually any source. Understanding format-specific options  -  especially <code>inferSchema</code> vs explicit schema, <code>header</code>, <code>multiLine</code>, and predicate pushdown support  -  is critical for building reliable ingestion pipelines. Always define schemas explicitly in production; <code>inferSchema=True</code> triggers a full scan just to determine types.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the problem with inferSchema=True in production?" / "How do you read Parquet with schema evolution?" / "How does Spark parallelise a JDBC read?" / "How do you read from Kafka in batch mode?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want format-specific knowledge (inferSchema cost, DROPMALFORMED vs FAILFAST, JDBC parallelism, Delta time travel) and to see you always define explicit schemas in production code.
+            </div>
+          </div>
+
+          <p>Spark reads from virtually any source via the <code>DataFrameReader</code> (<code>spark.read.format(...).options(...).load()</code>). The most important rule: <strong>always define an explicit schema</strong>. <code>inferSchema=True</code> scans the entire dataset just to determine types — on a 100GB CSV this wastes minutes every job run. Parquet and Delta support predicate pushdown and column pruning at the file level — Spark reads only the columns and row groups you need. JDBC reads can be parallelised by specifying a numeric partition column, lower/upper bounds, and numPartitions.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Always explicit schema</td><td>inferSchema triggers full scan. Define StructType or DDL string schema for all production readers.</td></tr>
+              <tr><td>CSV: DROPMALFORMED vs FAILFAST</td><td>DROPMALFORMED silently drops bad rows; FAILFAST aborts job. PERMISSIVE (default) loads bad rows with nulls.</td></tr>
+              <tr><td>Parquet: predicate pushdown</td><td>Filters on partition columns skip files entirely. Row-group statistics skip row groups. Dramatically reduces I/O.</td></tr>
+              <tr><td>Delta: time travel</td><td>option("versionAsOf", N) or option("timestampAsOf", "2024-01-01"). Critical for audits and debugging.</td></tr>
+              <tr><td>JDBC parallelism</td><td>numPartitions + partitionColumn + lowerBound + upperBound. Spark issues N parallel SQL queries on non-overlapping ranges.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> For ADLS/S3 reads, always use Parquet or Delta. Enable mergeSchema=true only when schema evolution is expected — it adds a scan for schema metadata. For JDBC sources, always set numPartitions to enable parallel reads; a single-partition JDBC read of a large table will be a serial bottleneck.
+            </div>
+          </div>
+
           <ReadingDiagram />
           <ReadingAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses inferSchema=True for convenience</td><td>Always uses explicit StructType schema — explains that inferSchema on a 1TB dataset triggers a full scan before the job even starts, doubling runtime and cost</td></tr>
+              <tr><td>Reads entire JDBC table as one partition</td><td>Configures numPartitions, partitionColumn, lowerBound, upperBound to parallelise JDBC reads — knows that without this, reads are serial and will bottleneck the pipeline</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql.types import *
 from pyspark.sql import functions as F
 
@@ -591,6 +889,26 @@ df_events = df_kafka.select(
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Define explicit StructType schemas for all production readers</li>
+                <li>Use mode("DROPMALFORMED") for resilient CSV ingestion</li>
+                <li>Set numPartitions for JDBC reads to enable parallelism</li>
+                <li>Use Delta time travel for reproducible pipeline testing</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use inferSchema=True in production pipelines</li>
+                <li>Read a JDBC table without a partition column (serial bottleneck)</li>
+                <li>Enable mergeSchema=True by default when schemas are stable</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-reading')} style={MC_BTN(completed.has('spark-reading'))}>{completed.has('spark-reading') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -603,8 +921,52 @@ df_events = df_kafka.select(
               Writing is an action  -  it triggers the full DAG. Key decisions: format (Parquet/Delta for analytics, CSV/JSON for interchange), <strong>save mode</strong> (append/overwrite/ignore/errorIfExists), and <strong>physical layout</strong> (partitionBy for read pruning, bucketBy+sortBy for join optimisation). The number of output files equals the number of active partitions at write time  -  control this with coalesce or repartition before writing.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between coalesce and repartition for writing?" / "When would you use partitionBy vs bucketBy?" / "What is the small files problem and how do you fix it?" / "What does replaceWhere do in Delta?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand write modes, output file count control, partitioning vs bucketing, and compression tradeoffs. Senior candidates explain when bucketBy eliminates shuffle on downstream joins.
+            </div>
+          </div>
+
+          <p>Writing is an <strong>action</strong> — it triggers the full DAG. The number of output files equals the active partition count at write time. Too many files (default 200 shuffle partitions → 200 tiny files) causes metadata overhead and slow reads. Too few (coalesce to 1) causes slow parallel reads downstream. The rule: aim for 128-256MB per output file. Use <code>coalesce</code> (no shuffle) to reduce, <code>repartition</code> (shuffle) for even distribution. <strong>partitionBy</strong> creates hive-style directory partitions for read pruning. <strong>bucketBy</strong> pre-shuffles for join optimisation but requires a Hive metastore.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Save modes</td><td>overwrite (replace all), append (add files), ignore (skip if exists), errorIfExists (default)</td></tr>
+              <tr><td>Output file count</td><td>Equals number of active partitions at write time. Use coalesce(N) before write.</td></tr>
+              <tr><td>partitionBy</td><td>Creates directory-per-value. Enables partition pruning on reads. Use low-cardinality columns (date, region).</td></tr>
+              <tr><td>bucketBy</td><td>Pre-shuffles by key. Two tables bucketed on same key = no shuffle on join. Requires saveAsTable.</td></tr>
+              <tr><td>Compression</td><td>snappy = fastest read. gzip/zstd = best compression. zstd recommended for cold storage.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> After a large aggregation with spark.sql.shuffle.partitions=500, you have 500 tiny Parquet files. Fix: <code>df.coalesce(50).write.format("delta")...</code> before writing. For daily loads, use <code>replaceWhere="event_date = '2024-01-01'"</code> to atomically replace only that date's data without touching other partitions.
+            </div>
+          </div>
+
           <WritingDiagram />
           <WritingAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Writes with default partition count (200 files)</td><td>Controls output file count precisely: uses coalesce for reduce-only (no shuffle), repartition for even distribution, and calculates target file count as total_bytes / 128MB</td></tr>
+              <tr><td>Uses partitionBy on any column</td><td>Knows that high-cardinality partitionBy (e.g., user_id) creates millions of tiny directories — chooses low-cardinality columns (date, region, status) and uses Z-ORDER for additional data skipping within partitions</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── Save modes ───────────────────────────────────────────────────────
@@ -710,6 +1072,26 @@ df.select(
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Coalesce or repartition before writing to control file count</li>
+                <li>Use partitionBy with low-cardinality columns (date, region)</li>
+                <li>Use replaceWhere for partial overwrites instead of full table rewrites</li>
+                <li>Use zstd compression for cold storage, snappy for hot</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Write 200+ tiny files from default shuffle partition count</li>
+                <li>Use partitionBy on high-cardinality columns (user_id, order_id)</li>
+                <li>Use coalesce(1) for large datasets — creates a single serial file</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-writing')} style={MC_BTN(completed.has('spark-writing'))}>{completed.has('spark-writing') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -722,8 +1104,52 @@ df.select(
               The DataFrame API provides a rich transformation vocabulary. Mastering these  -  and knowing which require shuffles  -  separates efficient pipelines from slow ones. All of the following are lazy transformations; nothing executes until an action is called.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between union() and unionByName()?" / "How do you deduplicate a DataFrame by a subset of columns?" / "What is a left_anti join and when do you use it?" / "What does sortWithinPartitions do differently from orderBy?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want practical DataFrame API fluency — knowing when to use groupBy vs window functions, union vs unionByName, left_anti vs except_, and understanding that orderBy is a wide transformation but sortWithinPartitions is not.
+            </div>
+          </div>
+
+          <p>The DataFrame API provides a declarative transformation vocabulary. Every transformation is lazy. The key distinction for performance: <strong>narrow transformations</strong> (select, filter, withColumn, map) stay within a partition and never require network I/O. <strong>Wide transformations</strong> (groupBy, join, distinct, repartition, orderBy) require a shuffle — data is written to disk, transferred across the network, and read back. Minimising wide transformations is the primary lever for Spark performance.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>union vs unionByName</td><td>union stacks by column position — risky if schemas differ. unionByName matches by name — always prefer.</td></tr>
+              <tr><td>dropDuplicates vs distinct</td><td>distinct deduplicates all columns. dropDuplicates(["col"]) deduplicates on a subset — keeps first occurrence.</td></tr>
+              <tr><td>left_anti join</td><td>Returns rows from the left that have NO match on the right. Canonical "new records only" pattern.</td></tr>
+              <tr><td>sortWithinPartitions</td><td>Sorts each partition independently — no shuffle. Useful for file-level ordering before write.</td></tr>
+              <tr><td>withColumns (3.3+)</td><td>Adds multiple columns in one call — more efficient than chaining withColumn N times.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> For incremental loads, the left_anti join pattern is standard: new records = df_incoming.join(df_existing, on="id", how="left_anti"). For deduplication within a batch, use dropDuplicates(["order_id"]) before a MERGE. For stacking datasets from different sources, always use unionByName(allowMissingColumns=True) to handle schema differences safely.
+            </div>
+          </div>
+
           <TransformsDiagram />
           <TransformsAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses union() and hopes schemas match</td><td>Always uses unionByName() and adds allowMissingColumns=True when stacking data from heterogeneous sources — avoids silent column misalignment bugs</td></tr>
+              <tr><td>Uses orderBy for file sorting before write</td><td>Uses sortWithinPartitions() for partition-local ordering (no shuffle), reserves orderBy for cases where global order is truly required — understands orderBy triggers a full shuffle</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType
 
@@ -823,6 +1249,26 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use unionByName(allowMissingColumns=True) for safe DataFrame stacking</li>
+                <li>Use left_anti join for "new records only" incremental patterns</li>
+                <li>Use sortWithinPartitions() for file-level ordering without shuffle</li>
+                <li>Use withColumns() in Spark 3.3+ to add multiple columns in one call</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use union() when schema column order may differ between DataFrames</li>
+                <li>Use orderBy() just for write ordering — it's a full shuffle</li>
+                <li>Chain multiple withColumn() calls when withColumns() is available</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-transforms')} style={MC_BTN(completed.has('spark-transforms'))}>{completed.has('spark-transforms') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -835,8 +1281,52 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               <code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM  -  no Python serialisation. Always prefer these over Python UDFs. Categories: string, date/time, array, map, struct, JSON, aggregate, and conditional.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between explode() and explode_outer()?" / "How do you extract a nested JSON field from a string column?" / "When would you use coalesce() vs when().otherwise()?" / "What are higher-order functions and when do you use them?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you know the full breadth of <code>pyspark.sql.functions</code> and reach for built-ins before writing UDFs. Key: explode vs explode_outer for null safety, get_json_object for nested JSON, and higher-order functions for array manipulation.
+            </div>
+          </div>
+
+          <p><code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM — no Python serialisation penalty. They are categorised as: string (regexp_replace, split, concat_ws), date/time (date_trunc, datediff, unix_timestamp), array (explode, flatten, array_contains, transform), map (map_keys, map_values), JSON (from_json, get_json_object), conditional (when/otherwise, coalesce, nullif), and aggregate (collect_list, collect_set, percentile_approx). Always exhaust this list before writing a UDF.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>explode vs explode_outer</td><td>explode drops rows with null/empty arrays. explode_outer keeps them as null rows — critical for preserving record counts.</td></tr>
+              <tr><td>from_json vs get_json_object</td><td>from_json parses entire JSON to struct (need schema). get_json_object extracts one field by JSONPath — faster for single fields.</td></tr>
+              <tr><td>coalesce vs when/otherwise</td><td>coalesce returns first non-null from a list. when/otherwise for conditional value assignment. Use the right tool.</td></tr>
+              <tr><td>Higher-order functions</td><td>transform(col, lambda), filter(col, lambda), aggregate(col, init, lambda). Operate on array columns without explode/groupBy.</td></tr>
+              <tr><td>collect_list vs collect_set</td><td>collect_list keeps duplicates and order. collect_set deduplicates. Both aggregate rows into an array.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> JSON columns in event data are common. Use <code>from_json(col("payload"), schema)</code> to parse the full structure, then select nested fields with dot notation: <code>col("parsed.user.id")</code>. For extracting a single field from millions of rows, <code>get_json_object(col("payload"), "$.user.id")</code> is faster — no full schema parse needed.
+            </div>
+          </div>
+
           <FunctionsSparkDiagram />
           <FunctionsAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses explode() and wonders why record count drops</td><td>Uses explode_outer() when working with arrays that might be null or empty — explicitly preserves all input rows</td></tr>
+              <tr><td>Writes Python UDF for simple text manipulation</td><td>Uses F.regexp_replace(), F.split(), F.concat_ws() from pyspark.sql.functions — zero JVM-Python overhead, Catalyst can inline them into the physical plan</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import MapType, StringType, ArrayType, LongType
 
@@ -949,6 +1439,25 @@ df.groupBy("user_id").agg(
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use explode_outer() when arrays can be null to preserve row counts</li>
+                <li>Use get_json_object() for single-field extraction from JSON strings</li>
+                <li>Use higher-order functions (transform, filter) instead of explode+groupBy for arrays</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Write a Python UDF for logic expressible with built-in functions</li>
+                <li>Use collect_list() on unbounded groups — can OOM the driver</li>
+                <li>Use explode() without outer when null arrays exist</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-functions')} style={MC_BTN(completed.has('spark-functions'))}>{completed.has('spark-functions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -961,8 +1470,52 @@ df.groupBy("user_id").agg(
               Window functions compute a result for each row based on a <em>window</em> of related rows  -  without collapsing rows like groupBy does. They are indispensable for sessionisation, running totals, lag/lead comparisons, rankings, and SCD Type 2 logic. Every window function requires a <code>Window</code> spec defining partition, order, and optional frame bounds.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "How do you deduplicate keeping the most recent record per ID?" / "What is the difference between rank() and row_number()?" / "How do you compute a 7-day rolling sum in PySpark?" / "What is the difference between rowsBetween and rangeBetween?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Window functions come up in almost every senior data engineering interview. They want to see: row_number for dedup, lag/lead for time-series comparisons, running totals, rolling windows, and SCD Type 2 patterns. Know rowsBetween vs rangeBetween.
+            </div>
+          </div>
+
+          <p>Window functions compute a result for each row based on a window of related rows, without collapsing rows like <code>groupBy</code> does. Every window function requires a <code>Window</code> spec with: <code>partitionBy</code> (logical grouping), <code>orderBy</code> (row ordering within group), and optional <code>rowsBetween</code> or <code>rangeBetween</code> for frame bounds. The most important pattern: <code>row_number().over(Window.partitionBy("id").orderBy(col("ts").desc()))</code> + filter rn==1 for deduplication keeping latest record.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>row_number vs rank vs dense_rank</td><td>row_number: unique sequential (1,2,3,4). rank: ties share rank, gaps (1,2,2,4). dense_rank: ties share rank, no gaps (1,2,2,3).</td></tr>
+              <tr><td>Dedup pattern</td><td>row_number().over(Window.partitionBy("id").orderBy(col("updated_at").desc())) + filter(rn==1)</td></tr>
+              <tr><td>rowsBetween vs rangeBetween</td><td>rowsBetween counts physical rows. rangeBetween uses numeric value of orderBy column — enables time-based windows (e.g., last 7 days).</td></tr>
+              <tr><td>Running total</td><td>sum("amount").over(Window.partitionBy("user").orderBy("ts").rowsBetween(UNBOUNDED_PRECEDING, CURRENT_ROW))</td></tr>
+              <tr><td>SCD Type 2 flag</td><td>row_number().over(Window.partitionBy("customer_id").orderBy(col("effective_from").desc())) == 1 → is_current</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> The row_number dedup pattern is used in almost every CDC pipeline: incoming events may have multiple versions of the same record. Deduplicate before MERGE with <code>row_number().over(Window.partitionBy("order_id").orderBy(col("updated_at").desc()))</code> then keep only rn==1. This avoids the "ambiguous MERGE source" error.
+            </div>
+          </div>
+
           <SparkWindowDiagram />
           <WindowAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses distinct() or dropDuplicates() for dedup</td><td>Uses row_number() over partitionBy(key).orderBy(updated_at.desc()) — keeps the latest version of each record, not just any version</td></tr>
+              <tr><td>Uses rowsBetween for rolling windows</td><td>Uses rangeBetween with unix_timestamp as the orderBy column for true time-based rolling windows (e.g., last 7 days regardless of event gaps) — understands the difference between row-count and value-based frames</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
@@ -1058,6 +1611,25 @@ df_scd = df_history \
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use row_number() with partitionBy + orderBy(desc) for dedup keeping latest</li>
+                <li>Use rangeBetween with epoch timestamps for true time-based rolling windows</li>
+                <li>Use percent_rank() or ntile() for percentile bucketing</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use rank() for deduplication — ties produce duplicate rn values</li>
+                <li>Use rowsBetween for "last 7 days" windows — it counts rows, not time</li>
+                <li>Define Window specs without partitionBy — triggers full dataset sort</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-window')} style={MC_BTN(completed.has('spark-window'))}>{completed.has('spark-window') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1070,8 +1642,52 @@ df_scd = df_history \
               Spark has four physical join implementations. The right one is chosen automatically (or forced with hints). Understanding when each is used  -  and when to force one  -  is critical for avoiding shuffles and handling skew.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between Sort-Merge Join and Broadcast Hash Join?" / "When does Spark automatically choose a BHJ?" / "How many shuffle stages does a Sort-Merge Join create?" / "How do you force a broadcast join?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you can read explain() output and identify join strategies. Senior candidates know the performance hierarchy (BHJ &gt; SHJ &gt; SMJ), when to use the broadcast() hint, and how AQE dynamically switches SMJ to BHJ at runtime.
+            </div>
+          </div>
+
+          <p>Spark selects the physical join implementation based on table size estimates. The performance hierarchy: <strong>BroadcastHashJoin</strong> (one side broadcast to all executors, zero shuffle) → <strong>ShuffleHashJoin</strong> (one side fits in executor memory, hash table) → <strong>SortMergeJoin</strong> (both sides shuffled and sorted, works for any size). BHJ is automatic when either side is below <code>spark.sql.autoBroadcastJoinThreshold</code> (default 10MB). For slightly larger dimension tables, force it with the <code>broadcast()</code> hint.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Broadcast Hash Join (BHJ)</td><td>Small table serialised to all executors. Zero shuffle on either side. Fastest. Threshold default 10MB.</td></tr>
+              <tr><td>Sort-Merge Join (SMJ)</td><td>Both sides shuffled by join key, then sorted, then merged. Two shuffle stages. Works for any size.</td></tr>
+              <tr><td>Shuffle Hash Join (SHJ)</td><td>Both sides shuffled, smaller side built into hash table in memory. One shuffle, no sort overhead.</td></tr>
+              <tr><td>Force broadcast</td><td>large_df.join(broadcast(small_dim), "key") or SQL: SELECT /*+ BROADCAST(d) */ ...</td></tr>
+              <tr><td>AQE join switch</td><td>AQE can convert planned SMJ to BHJ at runtime if actual shuffle output is below autoBroadcastJoinThreshold.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A 500GB fact table joining an 8MB country lookup will SMJ by default if Catalyst underestimates the lookup size. Fix: either run ANALYZE TABLE on the lookup to update statistics, or force broadcast with the hint. Always check explain() to confirm BroadcastHashJoin appears — not SortMergeJoin.
+            </div>
+          </div>
+
           <JoinsDiagram />
           <JoinStrategiesAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Knows BHJ is faster than SMJ</td><td>Reads explain() output to confirm join strategy, adjusts autoBroadcastJoinThreshold for slightly-larger lookups (e.g., 50MB), and knows AQE can switch SMJ to BHJ at runtime after observing actual shuffle output size</td></tr>
+              <tr><td>Forces broadcast on dimension tables</td><td>Understands that skewed SMJ joins need AQE skewJoin.enabled=true or manual salting — broadcast doesn't help skew on the large side</td></tr>
+            </tbody>
+          </table>
+
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -1172,6 +1788,26 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always check explain() to verify BHJ is used for dimension table joins</li>
+                <li>Force broadcast() hint when table is under a few hundred MB</li>
+                <li>Enable AQE so SMJ can be switched to BHJ at runtime</li>
+                <li>Run ANALYZE TABLE to give Catalyst accurate statistics</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Assume Catalyst always chooses the optimal join — verify with explain()</li>
+                <li>Broadcast tables larger than ~2GB — driver must hold the serialised value</li>
+                <li>Use cross joins accidentally by omitting a join condition</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-joins')} style={MC_BTN(completed.has('spark-joins'))}>{completed.has('spark-joins') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1184,10 +1820,54 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
               Partitioning determines parallelism, shuffle size, and output file layout. There are two distinct concepts: <strong>in-memory partitions</strong> (how Spark distributes the DataFrame across executor cores) and <strong>physical/storage partitions</strong> (how files are organized on disk via <code>partitionBy</code> on write). Getting both right is the difference between a 10-minute and a 2-hour job.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between repartition and coalesce?" / "How do you choose the right number of shuffle partitions?" / "What is Dynamic Partition Pruning?" / "Why is user_id a bad partition column?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand both in-memory partitioning (parallelism) and physical/storage partitioning (file layout). Senior candidates explain DPP, partition column cardinality rules, and the formula for optimal partition count.
+            </div>
+          </div>
+
+          <p>There are two distinct partitioning concepts in Spark. <strong>In-memory partitions</strong> determine parallelism — one task per partition. The default after a shuffle is <code>spark.sql.shuffle.partitions</code> (200, or "auto" with AQE). Target 128-200MB per partition. <strong>Physical/storage partitions</strong> are hive-style directory structures created by <code>partitionBy</code> on write — Spark skips entire directories when filtering by partition columns. These two concepts are independent. A DataFrame can have 500 in-memory partitions and be written to 12 storage partitions (e.g., by month).</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>repartition(n)</td><td>Full shuffle, even distribution. Can increase or decrease. Use before joins/groupBy on the same key.</td></tr>
+              <tr><td>coalesce(n)</td><td>No shuffle, merges adjacent partitions. Only decreases. Can create uneven partitions.</td></tr>
+              <tr><td>Optimal partition count</td><td>total_bytes / 128MB. 100GB data → ~800 partitions. Default 200 is too few for large jobs.</td></tr>
+              <tr><td>Physical partition columns</td><td>Low-cardinality only: date, region, status. High-cardinality (user_id) = millions of tiny directories.</td></tr>
+              <tr><td>Dynamic Partition Pruning (DPP)</td><td>Spark evaluates dim filter first, uses result to prune fact table partitions before the join. Eliminates unnecessary reads.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> With AQE enabled and shuffle.partitions=auto, Spark starts with coalescePartitions.initialPartitionNum (default 500) and coalesces based on actual shuffle output. This eliminates the need to manually tune shuffle.partitions for most jobs. For complex pipelines, still use explain() to verify partition count is sensible.
+            </div>
+          </div>
+
           <PartitionsDiagram />
           <PartitionsAnimation />
           <ShuffleDiagram />
           <ShuffleAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Leaves shuffle.partitions at default 200</td><td>Calculates optimal partition count as total_data_bytes / 128MB, sets it explicitly or uses AQE auto mode — understands default 200 creates 5GB partitions for a 1TB job, causing OOM</td></tr>
+              <tr><td>Uses partitionBy on any column for "performance"</td><td>Knows partitionBy on user_id creates millions of tiny directories — uses date/region/status and combines with Z-ORDER for multi-dimensional skipping within partitions</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── In-memory partition count ─────────────────────────────────────────
@@ -1293,6 +1973,25 @@ df.withColumn("pid", spark_partition_id()) \
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Enable AQE with shuffle.partitions=auto for automatic partition management</li>
+                <li>Use repartition(n, "key") before joins to co-locate data and avoid later shuffle</li>
+                <li>Diagnose partition skew with spark_partition_id() + groupBy + count</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Leave shuffle.partitions=200 for jobs processing hundreds of GB</li>
+                <li>Use coalesce() expecting even partition sizes — it merges adjacent partitions</li>
+                <li>Partition by user_id, order_id, or any high-cardinality column</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-partitions')} style={MC_BTN(completed.has('spark-partitions'))}>{completed.has('spark-partitions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1305,8 +2004,52 @@ df.withColumn("pid", spark_partition_id()) \
               Data skew occurs when one or a few partition keys have significantly more rows than others. The result: 99% of tasks finish in 30 seconds, but 1 task runs for 30 minutes because it has 80% of the data. This single task becomes the bottleneck. Detection, salting, and AQE's automatic skew handling are the three tools to fix it.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "You have a Spark job where 199 tasks finish in 30 seconds but 1 task takes 30 minutes. What is the cause and how do you fix it?" / "What is the salting technique?" / "How does AQE handle skew differently from manual salting?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> This is a top-5 senior interview question. They want: detection (Spark UI task metrics), root causes (hot key, null aggregation), and at least two remediation strategies (salting, AQE, broadcast the skewed side, filter nulls separately).
+            </div>
+          </div>
+
+          <p>Data skew occurs when one or a few partition keys have dramatically more rows than others. After a shuffle, all rows with the same key land in the same reducer partition. If one merchant has 80% of your transactions, that one reducer runs for 30 minutes while 199 others finish in 30 seconds. The job is bottlenecked by that single straggler. Detection: Spark UI → Stage → Tasks → sort by Duration. Fix options: manual salting, AQE automatic skew splitting, or broadcast the skewed dimension.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Detect</td><td>Spark UI → Stage → Tasks → sort Duration descending. One task 10x longer = skew.</td></tr>
+              <tr><td>Salting</td><td>Add random int 0..N to skewed key on large side. Explode small side N times. N parallel partitions replace 1 large one.</td></tr>
+              <tr><td>AQE skew join</td><td>spark.sql.adaptive.skewJoin.enabled=true. AQE splits skewed partitions at runtime. Only SMJ.</td></tr>
+              <tr><td>Null key skew</td><td>Nulls hash to same partition. Filter nulls before join, handle separately, union back.</td></tr>
+              <tr><td>skewedPartitionFactor</td><td>Default 5 = partition must be 5x the median size to trigger AQE split. Tune for aggressive skew.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> Null key skew is the most common hidden cause. A left join on a column with 30% NULLs sends all those rows to one partition. Fix: filter nulls before the join, process them separately with a default value, then union back with unionByName(allowMissingColumns=True). Null handling adds 10 lines but prevents the 30-minute straggler.
+            </div>
+          </div>
+
           <SkewDiagram />
           <SkewAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Increase executor memory to fix slow tasks"</td><td>Diagnoses skew from Spark UI task metrics, identifies the hot key via groupBy+count, chooses between AQE (no code change, SMJ only) and salting (requires code, works with any join type) based on the situation</td></tr>
+              <tr><td>Enables AQE and assumes skew is handled</td><td>Knows AQE skew join only works on Sort-Merge joins and only after the first shuffle completes — also handles null key skew separately since AQE doesn't recognise nulls as a skew cause</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.functions import spark_partition_id
 
@@ -1410,6 +2153,26 @@ result = non_null.join(dim_user, "user_id", "left") \
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always check Spark UI task metrics for straggler tasks after a shuffle</li>
+                <li>Filter nulls before join and handle separately to eliminate null key skew</li>
+                <li>Enable AQE skewJoin for automatic handling in Sort-Merge joins</li>
+                <li>Profile key distribution with groupBy+count before designing salt factor</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Increase executor memory as the first fix for straggler tasks</li>
+                <li>Rely on AQE for broadcast hash join skew — AQE skew only applies to SMJ</li>
+                <li>Use a salt factor larger than necessary — it multiplies small-side data N times</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-skew')} style={MC_BTN(completed.has('spark-skew'))}>{completed.has('spark-skew') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1422,8 +2185,52 @@ result = non_null.join(dim_user, "user_id", "left") \
               Spark's <strong>Unified Memory Model</strong> (since Spark 1.6) divides executor memory into pools that dynamically borrow from each other. Understanding this model is essential for diagnosing OOM errors, GC pressure, and spill-to-disk  -  the top three causes of slow Spark jobs.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "An executor shows 'Container killed by YARN for exceeding memory limits'. What do you check first?" / "What is the difference between executor.memory and executor.memoryOverhead?" / "What is spill-to-disk and how do you detect it?" / "What is the Unified Memory Model?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you can diagnose OOM errors from the error message. Container killed = memoryOverhead (off-JVM). Java heap space = executor.memory. GC overhead = heap too small. Each has a different fix.
+            </div>
+          </div>
+
+          <p>Spark's <strong>Unified Memory Model</strong> divides executor JVM heap into: <strong>Reserved</strong> (300MB, fixed, JVM/Spark overhead), <strong>Spark Memory Pool</strong> (<code>memory.fraction</code> × usable heap, split between Execution and Storage that can borrow from each other), and <strong>User Memory</strong> (Python UDF objects, RDD data structures). PySpark adds <strong>memoryOverhead</strong> (off-heap for Python workers + Netty). YARN kills the entire container if combined heap + overhead exceeds the container limit.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>executor.memory</td><td>JVM heap size. "Java heap space" OOM → increase this.</td></tr>
+              <tr><td>executor.memoryOverhead</td><td>Off-JVM: Python workers, Netty shuffle. "Container killed by YARN" → increase this.</td></tr>
+              <tr><td>Execution Memory</td><td>Joins, aggregations, sorts, shuffle. Can evict Storage.</td></tr>
+              <tr><td>Storage Memory</td><td>Cached DataFrames, broadcast. Can be evicted by Execution.</td></tr>
+              <tr><td>Spill to disk</td><td>Execution memory full → shuffle data written to local disk. Detected in Spark UI Stage Shuffle Spill columns.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> PySpark jobs with heavy Pandas UDFs need large memoryOverhead: Python workers consume off-heap memory outside JVM. Rule: <code>executor.memoryOverhead = max(10% of executor.memory, 384MB)</code>. For Python-heavy workloads, set it to 2-4GB. Without this, YARN kills containers silently and the job fails with cryptic errors.
+            </div>
+          </div>
+
           <SparkMemoryDiagram />
           <MemoryAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Increases executor.memory for all OOM errors</td><td>Reads the error message: "Java heap space" → executor.memory. "Container killed by YARN" → memoryOverhead. "GC overhead limit exceeded" → heap too small + too many small objects, consider off-heap caching</td></tr>
+              <tr><td>Caches DataFrames without checking available storage memory</td><td>Uses Spark UI Storage tab to verify fraction cached — if &lt;100% then cache is being evicted. Either reduce cache usage or set memory.storageFraction higher for cache-heavy workloads</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Executor memory breakdown ─────────────────────────────────────────
 #
 #  spark.executor.memory = 8g
@@ -1515,6 +2322,26 @@ spark.conf.set("spark.memory.offHeap.size",      "4g")
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Read OOM error messages carefully — different messages need different fixes</li>
+                <li>Set executor.memoryOverhead to 2g+ for PySpark jobs with Python workers</li>
+                <li>Check Spark UI Stage for Shuffle Spill (Disk) &gt; 0</li>
+                <li>Use off-heap caching (memory.offHeap) for GC-sensitive cache workloads</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Increase executor.memory when the error is "Container killed by YARN" (that's memoryOverhead)</li>
+                <li>Cache large DataFrames without verifying they fit in storage memory</li>
+                <li>Set memory.fraction too high — leaves insufficient user memory for UDFs</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-memory')} style={MC_BTN(completed.has('spark-memory'))}>{completed.has('spark-memory') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1527,8 +2354,52 @@ spark.conf.set("spark.memory.offHeap.size",      "4g")
               Caching stores computed results so subsequent actions don't recompute from scratch. The <strong>wrong</strong> use of caching wastes memory and can slow jobs. Cache only when a DataFrame is used in multiple downstream actions and computing it is more expensive than the memory cost.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "When should you cache a DataFrame?" / "What is the difference between cache() and checkpoint()?" / "Why doesn't caching always speed things up?" / "What is the difference between MEMORY_ONLY and MEMORY_AND_DISK?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you know <em>when not</em> to cache: single-use DataFrames, DataFrames larger than available Storage Memory. And the checkpoint vs cache distinction: checkpoint truncates lineage (for iterative ML), cache does not.
+            </div>
+          </div>
+
+          <p>Caching stores computed DataFrame partitions in executor memory (and optionally disk) so subsequent actions don't recompute from scratch. Cache is <strong>also lazy</strong> — calling <code>df.cache()</code> only registers intent. The first action materialises and stores the cache. The benefit is realised on the second action. Cache when a DataFrame is used by multiple downstream actions and recomputing it is more expensive than storing it. Always <code>unpersist()</code> when done to free memory for subsequent stages.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>cache() = MEMORY_AND_DISK</td><td>Shortcut for persist(MEMORY_AND_DISK). Spills to disk if memory full.</td></tr>
+              <tr><td>MEMORY_ONLY</td><td>Faster access but evicted if memory needed for execution. Recomputed on eviction.</td></tr>
+              <tr><td>Cache is lazy</td><td>First action after cache() materialises it. df.cache(); df.count() → cached. df.cache(); df.filter().count() → df itself NOT cached.</td></tr>
+              <tr><td>cache() vs checkpoint()</td><td>cache: in-memory, lineage preserved, recoverable. checkpoint: writes to HDFS/ADLS, lineage TRUNCATED. Use checkpoint for iterative ML.</td></tr>
+              <tr><td>Always unpersist()</td><td>Cached data stays until job ends or eviction. Explicitly unpersist() after use to free memory.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> The Gold layer pattern: cache Silver after filtering/enrichment (materialise with count()), then build 3-5 Gold aggregations from the cache. Without cache, each Gold write re-reads Silver from ADLS and re-applies all transforms. With cache, only the first read hits storage — all others serve from executor memory.
+            </div>
+          </div>
+
           <CacheDiagram />
           <CacheAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Caches every DataFrame "for performance"</td><td>Caches selectively: only DataFrames reused in multiple downstream actions. Knows caching a single-use DataFrame wastes memory and adds caching overhead with no benefit</td></tr>
+              <tr><td>"cache() and checkpoint() are similar"</td><td>Knows checkpoint() truncates the lineage — critical for iterative algorithms (ML, graph processing) where a 1000-step lineage chain causes driver stack overflow. cache() keeps lineage and can recompute on eviction.</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark import StorageLevel
 
 # ── When to cache ─────────────────────────────────────────────────────
@@ -1628,6 +2499,26 @@ silver_df.unpersist()   # free memory`}
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Cache DataFrames reused in 2+ downstream actions</li>
+                <li>Always call an action (count()) after cache() to materialise it</li>
+                <li>Always unpersist() when a cached DataFrame is no longer needed</li>
+                <li>Use checkpoint() for long iterative algorithms to truncate lineage</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Cache single-use DataFrames — wastes memory with no benefit</li>
+                <li>Cache DataFrames larger than available executor Storage Memory</li>
+                <li>Forget to unpersist() — cached data persists until eviction or job end</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-cache')} style={MC_BTN(completed.has('spark-cache'))}>{completed.has('spark-cache') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1640,8 +2531,52 @@ silver_df.unpersist()   # free memory`}
               <strong>Broadcast variables</strong> efficiently distribute a read-only value to every executor once  -  instead of serialising it into every task closure. <strong>Accumulators</strong> are write-only counters/sums that executors update and the driver reads  -  the only safe way to collect per-task metrics without breaking lazy evaluation.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between a broadcast variable and caching a DataFrame?" / "Why is sc.broadcast() better than including a dict in a closure?" / "Why might an accumulator show a higher count than expected?" / "What is the practical size limit for a broadcast variable?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand network cost: a 5MB dict in a closure is serialised into every task (800 tasks × 5MB = 4GB). Broadcast sends it once per executor (~20 × 5MB = 100MB). Also: accumulator pitfalls from task re-execution.
+            </div>
+          </div>
+
+          <p><strong>Broadcast variables</strong> are read-only values that Spark sends once to each executor (not each task). Tasks on that executor access the same in-memory copy. Without broadcast, any value referenced in a task closure is serialised <em>into every task</em> — 800 tasks each carrying a 5MB lookup = 4GB of task serialisation overhead. <strong>Accumulators</strong> are write-only counters that tasks increment and only the driver can read. They are the only safe way to collect per-task metrics without breaking lazy evaluation — but task re-execution can cause over-counting.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Broadcast vs closure</td><td>Closure: 800 tasks × 5MB = 4GB. Broadcast: 20 executors × 5MB = 100MB. 40x less network.</td></tr>
+              <tr><td>broadcast() in DataFrame API</td><td>large_df.join(broadcast(small_dim), "key") — forces BHJ regardless of threshold.</td></tr>
+              <tr><td>Accumulator pitfall</td><td>Task retries re-increment. Only read accumulator.value after a successful action completes.</td></tr>
+              <tr><td>Broadcast size limit</td><td>~2GB practical limit. Driver must hold and serialise. Larger lookups: use Delta table + partition pruning.</td></tr>
+              <tr><td>bc.unpersist() / bc.destroy()</td><td>unpersist removes from executor memory. destroy removes from driver + all executors permanently.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> Common broadcast pattern: a 20MB IP-to-country lookup dict used inside a Pandas UDF. Without broadcast, each Pandas UDF batch deserialises its own copy from the task closure. With <code>bc = sc.broadcast(lookup)</code>, all UDF calls on the same executor share one in-memory copy. Remember to call <code>bc.unpersist()</code> when the pipeline stage is complete.
+            </div>
+          </div>
+
           <BroadcastDiagram />
           <BroadcastAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses Python dict in UDF closure without broadcast</td><td>Broadcasts the dict: knows the closure copy is sent to every task individually vs one copy per executor — calculates the actual network difference and chooses broadcast for any lookup &gt; a few KB</td></tr>
+              <tr><td>Reads accumulator value mid-execution</td><td>Only reads accumulator.value after a confirmed successful action — knows that speculative execution or task retries can cause double-increments, making accumulator values unreliable as exact counts</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark import AccumulatorParam
 
@@ -1744,6 +2679,25 @@ print(unique_errors.value)   # set of all error codes seen`}
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Broadcast any lookup used across many tasks if it's under ~200MB</li>
+                <li>Call bc.unpersist() when a broadcast variable is no longer needed</li>
+                <li>Only read accumulator.value after a confirmed successful action</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Reference large dicts/lists in task closures — serialised per task</li>
+                <li>Broadcast variables larger than ~2GB — driver serialisation will OOM</li>
+                <li>Treat accumulators as exact counts when speculation or retries are enabled</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-broadcast')} style={MC_BTN(completed.has('spark-broadcast'))}>{completed.has('spark-broadcast') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1756,8 +2710,52 @@ print(unique_errors.value)   # set of all error codes seen`}
               Python UDFs are the single biggest performance trap in PySpark. Every row crosses the JVM-Python boundary  -  serialised, sent via socket, deserialized, processed, re-serialised. <strong>Always exhaust built-in functions first.</strong> When you genuinely need custom logic, use Pandas UDFs (vectorised) which process entire column batches via Apache Arrow  -  10-100x faster than row UDFs.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "Why are Python UDFs slow?" / "What is a Pandas UDF and how does it differ from a Python UDF?" / "When would you use a Scalar Iterator Pandas UDF?" / "What does spark.udf.register() do?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you never reach for a Python UDF without first exhausting built-in functions. Then: Pandas UDF (vectorised, Arrow, 10-100x faster), Scalar Iterator for model loading, Grouped Map for group-level custom logic.
+            </div>
+          </div>
+
+          <p>Python row-level UDFs are the biggest performance anti-pattern in PySpark. For each row: the JVM serialises a Python object, passes it over a local socket to a Python worker process, the Python process deserialises and executes, serialises the result, and passes it back. This JVM⟷Python boundary crossing applies to every single row. For a 100M-row DataFrame, this overhead is catastrophic. <strong>Pandas UDFs</strong> use Apache Arrow to transfer entire batches as columnar arrays — no row-by-row serialisation, 10-100x faster.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Python UDF</td><td>Row-by-row JVM↔Python serialisation. Breaks whole-stage codegen. Last resort only.</td></tr>
+              <tr><td>Pandas UDF (Scalar)</td><td>Receives pd.Series, returns pd.Series. Arrow batch transfer. 10-100x faster. Use for ML inference, text processing.</td></tr>
+              <tr><td>Scalar Iterator Pandas UDF</td><td>Receives Iterator[pd.Series]. Load model/connection once per partition. Use for heavy initialisation.</td></tr>
+              <tr><td>Grouped Map Pandas UDF</td><td>Receives pd.DataFrame per group, returns pd.DataFrame. Custom group-level operations (sessionisation).</td></tr>
+              <tr><td>spark.udf.register()</td><td>Registers UDF with SparkSession catalog — callable by name in spark.sql() and SQL strings.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> ML scoring in a Spark pipeline: use Scalar Iterator Pandas UDF with the model loaded once per partition. If using a 200MB sklearn model and processing 1000 partitions, loading once per partition saves 200GB × 1000 deserialisations vs loading once per batch. Critical: add the model path to sc.addFile() so all executors can access it.
+            </div>
+          </div>
+
           <UDFDiagram />
           <UDFAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Writes Python UDF for any custom logic</td><td>Checks if logic is expressible with F.when(), F.regexp_replace(), F.expr(), or higher-order functions first — writes a UDF only when a Python library (spaCy, scikit-learn) is genuinely needed</td></tr>
+              <tr><td>Uses @pandas_udf for everything</td><td>Chooses the right UDF type: Scalar for simple column transforms, Scalar Iterator for model loading (amortise heavy init), Grouped Map for group-level custom aggregations like sessionisation</td></tr>
+            </tbody>
+          </table>
+
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
             <div className="callout-body">
@@ -1878,6 +2876,26 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Exhaust built-in functions before writing any UDF</li>
+                <li>Use Pandas UDF (vectorised) when a Python library is genuinely needed</li>
+                <li>Use Scalar Iterator Pandas UDF for expensive initialisation (ML models)</li>
+                <li>Register UDFs for SQL-facing pipelines with spark.udf.register()</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Python row UDFs for logic expressible with when/otherwise or regex functions</li>
+                <li>Load a large model inside a @pandas_udf batch function — load in Scalar Iterator instead</li>
+                <li>Use Python UDFs on the critical path of high-volume pipelines</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-udfs')} style={MC_BTN(completed.has('spark-udfs'))}>{completed.has('spark-udfs') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1890,8 +2908,52 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               Spark SQL lets you write ANSI SQL that runs on the same engine as the DataFrame API  -  both compile to the same logical plan. You can freely mix SQL and DataFrame API in the same job, referencing the same data. Views are the bridge between the two worlds.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is the difference between createOrReplaceTempView and createGlobalTempView?" / "Do spark.sql() queries use the same Catalyst optimizer as DataFrame API?" / "How do you pass a broadcast hint in SQL?" / "How do you mix SQL and DataFrame API in the same pipeline?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand that SQL and DataFrame API are completely equivalent — both compile to the same logical plan. They want practical knowledge of temp views, global views, and SQL hints.
+            </div>
+          </div>
+
+          <p>Spark SQL allows writing ANSI SQL that executes on the same engine as the DataFrame API. Both paths compile to the same logical plan and go through Catalyst optimisation. You can freely mix them in a single pipeline — use SQL for complex aggregations where SQL is more readable, then pipe the result into DataFrame API for post-processing. <strong>TempViews</strong> are scoped to the current SparkSession and vanish when it ends. <strong>GlobalTempViews</strong> are shared across SparkSessions in the same application, accessible via the <code>global_temp</code> prefix.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>createOrReplaceTempView</td><td>Session-scoped. Not visible to other sessions. Vanishes when session ends. Most common.</td></tr>
+              <tr><td>createGlobalTempView</td><td>Shared across SparkSessions in same application. Access via global_temp.view_name.</td></tr>
+              <tr><td>SQL ≡ DataFrame API</td><td>Both compile to the same logical plan. Same optimizer, same physical execution.</td></tr>
+              <tr><td>SQL hints</td><td>SELECT /*+ BROADCAST(d), REPARTITION(200) */ — same effect as DataFrame API hints.</td></tr>
+              <tr><td>Mixing SQL + DataFrame</td><td>SQL → result DataFrame → continue with DataFrame API transformations seamlessly.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A common pattern on Databricks: heavy aggregation written as a SQL string (easier for BI-oriented teammates to review), then the result is piped into DataFrame API for enrichment: <code>base = spark.sql("SELECT ... GROUP BY ...")</code> then <code>base.join(dim, "key")</code>. Both parts use the same Catalyst engine — no performance penalty for the mix.
+            </div>
+          </div>
+
           <SparkSQLDiagram />
           <SparkSQLAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Assumes spark.sql() is slower than DataFrame API</td><td>Knows both compile to the same logical plan — chooses SQL vs DataFrame API based on readability and team preference, not performance</td></tr>
+              <tr><td>Uses createOrReplaceTempView without cleanup</td><td>Drops temp views with spark.catalog.dropTempView() after use to free metadata, uses global temp views when sharing data between notebook sessions in the same application</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── spark.sql()  -  run ANSI SQL directly ──────────────────────────────
@@ -2016,6 +3078,25 @@ spark.sql("""
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Mix SQL and DataFrame API freely — same Catalyst optimizer</li>
+                <li>Use SQL hints (/*+ BROADCAST */) for join strategy control in SQL strings</li>
+                <li>Drop temp views after use to free metadata</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Assume spark.sql() is slower or different from the DataFrame API</li>
+                <li>Leave temp views alive for the session when they're no longer needed</li>
+                <li>Use global temp views when session-scoped temp views suffice</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-sql')} style={MC_BTN(completed.has('spark-sql'))}>{completed.has('spark-sql') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2028,8 +3109,52 @@ spark.sql("""
               Structured Streaming treats a stream as an unbounded table that grows over time. Each micro-batch (or continuous trigger) appends new rows. You write the same DataFrame API you know from batch  -  Spark handles checkpointing, offsets, watermarks, and exactly-once semantics automatically.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is a watermark in Structured Streaming?" / "What is the difference between append, update, and complete output modes?" / "When would you use foreachBatch instead of a native sink?" / "What is trigger(availableNow=True)?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand the micro-batch model, watermarks for late data, output modes, and foreachBatch for MERGE operations. The checkpoint location is non-negotiable — never omit it in production.
+            </div>
+          </div>
+
+          <p>Structured Streaming treats a data stream as an <em>unbounded table</em>. Each micro-batch appends new rows. You write the same DataFrame API you know from batch — Spark handles offsets, checkpointing, watermarks, and state automatically. A <strong>watermark</strong> tells Spark how late events can arrive and still be counted — after the watermark, state for old windows is discarded. <strong>Output modes</strong>: append (only finalised rows), update (changed rows since last trigger), complete (all results re-emitted — small aggregates only). The <strong>checkpoint</strong> location stores offsets and state — mandatory for fault tolerance.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Watermark</td><td>withWatermark("ts", "10 minutes"): state for windows older than (max_event_time - 10 min) is discarded.</td></tr>
+              <tr><td>Output modes</td><td>append: finalised rows only. update: changed rows. complete: all rows every trigger (only tiny aggregates).</td></tr>
+              <tr><td>foreachBatch</td><td>Run arbitrary code per micro-batch: MERGE, multi-sink writes, idempotent custom logic.</td></tr>
+              <tr><td>Checkpoint location</td><td>Stores Kafka offsets + operator state. Restart resumes from last committed offset. Always set.</td></tr>
+              <tr><td>trigger(availableNow=True)</td><td>Process all available data then stop. Preferred for scheduled incremental loads over trigger(once=True).</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> The most common Structured Streaming pipeline on Azure: Kafka/Event Hub → readStream → parse JSON → writeStream with foreachBatch to MERGE into Delta Lake. The checkpoint in ADLS ensures exactly-once delivery: on restart, Spark reads the last committed Kafka offset and resumes from there. Delta's transaction log deduplicates any micro-batch written twice.
+            </div>
+          </div>
+
           <StreamingDiagram />
           <StreamingAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Writes to Delta with outputMode("append") and no foreachBatch</td><td>Uses foreachBatch with MERGE for upsert semantics — appending to Delta on retries creates duplicates; MERGE with deduplicated source is idempotent and safe on restart</td></tr>
+              <tr><td>Sets watermark but doesn't understand what it affects</td><td>Knows watermark bounds state store growth: without watermark, deduplication and windowed aggregations keep ALL state forever — the state store OOMs within days on a production stream</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── Sources ───────────────────────────────────────────────────────────
@@ -2169,6 +3294,26 @@ for q in spark.streams.active:
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always set checkpointLocation — non-negotiable for fault tolerance</li>
+                <li>Use foreachBatch for MERGE/upsert to Delta (idempotent on retry)</li>
+                <li>Set watermarks on all stateful operations to bound state store growth</li>
+                <li>Use trigger(availableNow=True) for scheduled incremental loads</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Omit checkpointLocation — job cannot recover Kafka offset on restart</li>
+                <li>Use outputMode("complete") for large aggregations — re-emits all rows every trigger</li>
+                <li>Run stateful operations without a watermark — state store grows unboundedly</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-streaming')} style={MC_BTN(completed.has('spark-streaming'))}>{completed.has('spark-streaming') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2181,8 +3326,52 @@ for q in spark.streams.active:
               Structured Streaming stores state across micro-batches in an in-memory <strong>state store</strong> (RocksDB or HDFS-backed). Stateful operations include windowed aggregations, deduplication, and the advanced APIs <code>mapGroupsWithState</code> / <code>flatMapGroupsWithState</code> for fully custom per-group state machines.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "How do you deduplicate a streaming DataFrame?" / "What is the difference between the default state store and RocksDB?" / "What triggers a GroupState timeout in applyInPandasWithState?" / "Why must streaming dedup be paired with a watermark?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want to see you understand state store growth: without watermarks, deduplication and windowed state keep all keys forever. RocksDB for large state. applyInPandasWithState for custom per-group state machines.
+            </div>
+          </div>
+
+          <p>Stateful streaming operations maintain state across micro-batches in the executor's <strong>state store</strong>. Windowed aggregations, deduplication, and custom state via <code>applyInPandasWithState</code> all use the state store. The default state store is in-memory (HDFS-backed for checkpointing) — limited to executor heap. For large state (many keys, long retention), use <strong>RocksDB</strong> state store (Spark 3.2+) which spills to local disk. State without a watermark grows unboundedly — the #1 cause of streaming OOM in production.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Streaming dedup + watermark</td><td>dropDuplicates(["txn_id", "ts"]).withWatermark("ts", "1 hour") — state for keys older than watermark is purged.</td></tr>
+              <tr><td>Default state store</td><td>In-memory on executor heap. Limited to executor.memory. Fast but bounded.</td></tr>
+              <tr><td>RocksDB state store</td><td>Disk-backed. Handles state much larger than heap. Set via stateStore.providerClass config.</td></tr>
+              <tr><td>applyInPandasWithState</td><td>Custom per-group state machine. Receives GroupState object. Can timeout inactive groups.</td></tr>
+              <tr><td>GroupState timeout</td><td>state.setTimeoutDuration() — triggers function call with hasTimedOut=True when no data arrives for TTL.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> Sessionisation is the canonical use case for applyInPandasWithState. For each user group, maintain session state (session_id, start_time, total_spend, last_seen). When no event arrives for 30 minutes (timeout), emit the completed session and remove state. On Databricks, use RocksDB state store for any stream with more than 100K active users.
+            </div>
+          </div>
+
           <StatefulStreamingDiagram />
           <StatefulStreamingAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses dropDuplicates() without watermark</td><td>Knows that stateful deduplication without a watermark keeps all seen keys in the state store forever — on a high-volume stream this causes OOM within hours or days</td></tr>
+              <tr><td>Uses default in-memory state store</td><td>Switches to RocksDB state store for any stream with high key cardinality or long retention windows — knows RocksDB is disk-backed and handles state much larger than executor heap</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
 
@@ -2311,6 +3500,25 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always pair streaming deduplication with a watermark</li>
+                <li>Use RocksDB state store for streams with high key cardinality</li>
+                <li>Use state.setTimeoutDuration() to expire and emit inactive groups</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run stateful dedup without a watermark — unbounded state store growth</li>
+                <li>Use the default in-memory state store for high-cardinality long-retention streams</li>
+                <li>Use applyInPandasWithState without a timeout — inactive groups stay in state forever</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-streaming-state')} style={MC_BTN(completed.has('spark-streaming-state'))}>{completed.has('spark-streaming-state') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2323,8 +3531,52 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               Catalyst is Spark SQL's query optimizer. It transforms your logical query plan through four phases before execution. Understanding what Catalyst does automatically helps you write plans that Catalyst can optimise further  -  and diagnose plans where it can't.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What are the 4 phases of the Catalyst optimizer?" / "What is predicate pushdown?" / "In explain() output, what does *(2) mean?" / "How do you give Catalyst better statistics for cost-based planning?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> They want you to name the 4 phases, explain predicate pushdown and column pruning, and show you can read a physical plan. Senior candidates know how to run ANALYZE TABLE to improve cost-based join selection.
+            </div>
+          </div>
+
+          <p>Catalyst transforms your query through four phases: <strong>Analysis</strong> (resolve column names, types, expand *), <strong>Logical Optimization</strong> (rule-based: predicate pushdown, column pruning, constant folding, subquery elimination), <strong>Physical Planning</strong> (cost-based: select join strategies, use statistics), and <strong>Code Generation</strong> (Tungsten whole-stage codegen). Predicate pushdown is the biggest win: filters are pushed to the data source level — Parquet skips row groups, partitioned tables skip directories. Column pruning means only the columns you SELECT are read from disk.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Phase 1: Analysis</td><td>Resolves column names against catalog. Raises AnalysisException for unknowns.</td></tr>
+              <tr><td>Phase 2: Logical Optimization</td><td>Rule-based rewrites: predicate pushdown, column pruning, constant folding, filter reordering.</td></tr>
+              <tr><td>Phase 3: Physical Planning</td><td>Cost-based: chooses BHJ vs SMJ vs SHJ using table statistics. Requires ANALYZE TABLE.</td></tr>
+              <tr><td>Phase 4: Code Generation</td><td>Tungsten whole-stage codegen. Fuses operators into one JVM method. *(N) in explain() = active.</td></tr>
+              <tr><td>Help Catalyst</td><td>ANALYZE TABLE ... COMPUTE STATISTICS FOR ALL COLUMNS. Give it cardinality, min/max, null counts.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> After loading a large Delta table for the first time, run <code>ANALYZE TABLE silver.transactions COMPUTE STATISTICS FOR ALL COLUMNS</code>. Without this, Catalyst's cost-based optimizer makes conservative estimates — it may choose Sort-Merge Join for a table that Catalyst would broadcast if it knew the actual size. On Databricks Delta tables, ANALYZE is run automatically via OPTIMIZE.
+            </div>
+          </div>
+
           <CatalystDiagram />
           <CatalystAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Catalyst automatically makes queries fast"</td><td>Knows Catalyst's cost-based optimizer needs statistics to make good decisions — runs ANALYZE TABLE before complex multi-join queries to give Catalyst accurate cardinality and size estimates for join strategy selection</td></tr>
+              <tr><td>Calls explain() to "see what Spark does"</td><td>Reads the physical plan systematically: checks for Exchange (shuffles), verifies BroadcastHashJoin vs SortMergeJoin, confirms FileScan has column pruning (minimal column list), verifies Filter appears before Join in the plan</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
 # ── 4 phases of Catalyst ──────────────────────────────────────────────
@@ -2427,6 +3679,27 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run ANALYZE TABLE ... COMPUTE STATISTICS FOR ALL COLUMNS before complex joins</li>
+                <li>Use df.explain('formatted') and read FileScan to verify column pruning is active</li>
+                <li>Trust predicate pushdown — place filters before joins, Catalyst will push them to the source</li>
+                <li>Check for Exchange in the plan and eliminate unnecessary shuffles with broadcast hints</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't assume Catalyst has good statistics without ANALYZE — default estimates are conservative</li>
+                <li>Don't disable whole-stage codegen (spark.sql.codegen.wholeStage=false) without profiling first</li>
+                <li>Don't add manual filter .filter() after .join() and expect the same plan — predicate pushdown works best with filters defined early</li>
+                <li>Don't confuse *(N) in explain output with "phase N" — it means codegen is active, N is just an ID</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-catalyst')} style={MC_BTN(completed.has('spark-catalyst'))}>{completed.has('spark-catalyst') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2439,8 +3712,51 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               AQE (Spark 3.0+) re-optimises the physical plan at runtime using <em>actual</em> shuffle statistics  -  not estimates. It solves three of the hardest Spark tuning problems automatically: too many shuffle partitions, suboptimal join strategies, and data skew. Enabled by default in Spark 3.2+.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What are the 3 features of AQE?" / "How does AQE fix skewed joins without you changing code?" / "What is the difference between AQE and static Catalyst optimization?" / "What setting controls AQE partition coalescing?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Name all 3 features (coalesce partitions, runtime broadcast, skew join splitting). Explain that AQE works at runtime using actual shuffle statistics — not estimates. Senior candidates know the config knobs and when to tune them.
+            </div>
+          </div>
+
+          <p>AQE (Adaptive Query Execution, introduced in Spark 3.0, on by default in 3.2+) solves Spark's core problem: you can't know partition sizes, data distribution, or join suitability until data has actually been shuffled. AQE inserts <strong>QueryStage checkpoints</strong> after each shuffle map stage. At each checkpoint, it reads actual partition statistics and re-plans the rest of the query. Feature 1: coalesce many small shuffle partitions into fewer large ones. Feature 2: downgrade Sort-Merge Join to Broadcast Hash Join if the smaller side turns out small enough. Feature 3: split or replicate skewed partitions to eliminate straggler tasks.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Feature 1: Coalesce Partitions</td><td>After shuffle, AQE merges consecutive small partitions. Control with advisoryPartitionSizeInBytes (default 64MB).</td></tr>
+              <tr><td>Feature 2: Runtime Broadcast</td><td>If actual post-shuffle size of a table is below autoBroadcastJoinThreshold, upgrades SMJ → BHJ. No code change needed.</td></tr>
+              <tr><td>Feature 3: Skew Join</td><td>Detects partitions larger than 5× the median AND larger than skewedPartitionThresholdInBytes (default 256MB). Splits them and replicates the non-skewed side.</td></tr>
+              <tr><td>Key difference from Catalyst</td><td>Catalyst optimizes statically at plan time. AQE re-optimizes dynamically at runtime using real data sizes.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A daily aggregation job was taking 45 minutes — 90% of time in the last stage. AQE's skew join detection found one partition with 40GB (vs 200MB median). It automatically split it into 200 sub-partitions and replicated the small dimension table. Runtime dropped to 8 minutes. Zero code changes — just confirmed AQE was enabled and skewedPartitionFactor was at default 5.
+            </div>
+          </div>
+
           <AQEDiagram />
           <AQEAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"AQE automatically fixes everything so I don't need to tune partitions"</td><td>Knows AQE is powerful but not magic — sets shuffle.partitions="auto" but monitors the Spark UI to verify coalescing is happening and the final partition count is reasonable (not 1 giant partition)</td></tr>
+              <tr><td>Relies on AQE skew detection with default settings</td><td>Tunes skewedPartitionFactor and skewedPartitionThresholdInBytes for their data profile — for a table where p99 partition is 10× median but median is only 50MB, adjusts the threshold so AQE actually triggers</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Enable AQE ───────────────────────────────────────────────────────
 spark.conf.set("spark.sql.adaptive.enabled", "true")          # default true in 3.2+
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")  # default true
@@ -2537,6 +3853,27 @@ with spark.conf as c:
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Set spark.sql.shuffle.partitions="auto" and let AQE coalesce to the right size</li>
+                <li>Verify AQE is active by checking the Spark UI AQE tab — look for coalesced partition counts</li>
+                <li>Leave skew join detection enabled — it handles most skew cases automatically</li>
+                <li>Tune advisoryPartitionSizeInBytes to match your target task size (64–256MB depending on memory)</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't assume AQE is enabled — in Spark 3.0 and 3.1 it defaults to false; check your version</li>
+                <li>Don't use AQE as a substitute for fixing fundamentally skewed data — AQE handles runtime symptoms, not root causes like poor partition keys</li>
+                <li>Don't set shuffle.partitions=auto on Spark 2.x — it's not supported, AQE is a Spark 3 feature</li>
+                <li>Don't ignore AQE coalescing into a single partition — this can create a new bottleneck if advisoryPartitionSizeInBytes is too large</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-aqe')} style={MC_BTN(completed.has('spark-aqe'))}>{completed.has('spark-aqe') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2549,8 +3886,51 @@ with spark.conf as c:
               Tungsten is Spark's physical execution engine, introduced in Spark 1.4. It bypasses JVM object overheads and GC through three innovations: <strong>off-heap binary memory</strong> (UnsafeRow format), <strong>cache-aware algorithms</strong> (data accessed sequentially, not by pointer chasing), and <strong>whole-stage code generation</strong> (fusing operators into a single generated JVM method that the JIT can optimise fully).
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What are the 3 pillars of Tungsten?" / "What is UnsafeRow and why does it matter?" / "What does whole-stage codegen do and how can you verify it's active?" / "Why did Spark need an off-heap memory format?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Name the 3 pillars: off-heap binary format (UnsafeRow), cache-aware algorithms, and whole-stage codegen. Explain that *(N) in explain() output means codegen is active. Senior candidates know when to disable it (UDFs force deserialization, breaking the codegen pipeline).
+            </div>
+          </div>
+
+          <p>Tungsten addresses two JVM bottlenecks that limited Spark performance: garbage collection pressure and CPU cache inefficiency. The <strong>UnsafeRow</strong> format stores row data in compact binary layout off-heap — no GC, no object headers, and the binary format doubles as the shuffle wire format (no serialization step). <strong>Cache-aware algorithms</strong> organize data in memory sequentially so the CPU prefetcher can predict access patterns — 10–100× faster than pointer-chasing through Java heap objects. <strong>Whole-stage codegen</strong> fuses multiple DataFrame operators (filter + project + aggregate) into a single generated Java method that the JIT compiler can optimize fully, eliminating virtual function dispatch overhead.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Pillar 1: UnsafeRow</td><td>Compact binary off-heap row format. Nulls bitmap + fixed fields + variable data. Bypasses GC. Same format used for shuffle wire.</td></tr>
+              <tr><td>Pillar 2: Cache-Aware Algorithms</td><td>Data in sequential memory layout. Sort and hash tables designed for CPU cache lines. Avoids pointer-chasing cache misses.</td></tr>
+              <tr><td>Pillar 3: Whole-Stage Codegen</td><td>Fuses operators into one JVM method. *(N) in explain() = codegen active. Eliminates virtual dispatch per row.</td></tr>
+              <tr><td>UDF penalty</td><td>Python/Scala UDFs force row deserialization from UnsafeRow → JVM objects. Breaks off-heap pipeline. Use built-in functions or Pandas UDFs instead.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A pipeline was running 3× slower after adding a Python UDF for string normalization. Profiling showed the bottleneck was deserialization — every row was being pulled from off-heap binary format to Python objects and back. Replaced the UDF with <code>F.regexp_replace(F.lower(col), "[^a-z0-9]", "")</code> — built-in functions stay in the Tungsten pipeline. Execution time returned to baseline.
+            </div>
+          </div>
+
           <TungstenDiagram />
           <TungstenAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Spark is fast because it uses memory instead of disk"</td><td>Knows Tungsten's off-heap UnsafeRow format is why Spark is fast in-memory — not just "it's in RAM" but specifically: no GC, compact binary layout, sequential access, and codegen fusing operators into one hot loop</td></tr>
+              <tr><td>Uses Python UDFs freely, not knowing the cost</td><td>Knows Python UDFs force deserialization and break the Tungsten pipeline — always checks if an equivalent built-in function exists; uses Pandas UDFs (vectorized) when a custom function is genuinely needed</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Tungsten's 3 pillars ─────────────────────────────────────────────
 
 # 1. UnsafeRow (off-heap binary format)
@@ -2650,6 +4030,27 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use built-in DataFrame functions (F.lower, F.regexp_replace, etc.) — they stay in the Tungsten pipeline</li>
+                <li>Verify whole-stage codegen is active: look for *(N) prefix in df.explain() output</li>
+                <li>When a UDF is unavoidable, use Pandas UDF (vectorized) instead of row-at-a-time Python UDF</li>
+                <li>Leave spark.sql.codegen.wholeStage=true (the default) — only disable for debugging</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use Python UDFs for simple string or math operations — built-in functions almost always exist</li>
+                <li>Don't confuse Tungsten with AQE — Tungsten is about physical execution (CPU/memory efficiency), AQE is about dynamic re-planning</li>
+                <li>Don't disable off-heap memory (spark.memory.offHeap.enabled=false) without understanding the GC cost you're re-introducing</li>
+                <li>Don't apply UDFs to wide DataFrames with many columns — you're deserializing every column, not just the one you need</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-tungsten')} style={MC_BTN(completed.has('spark-tungsten'))}>{completed.has('spark-tungsten') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2662,8 +4063,52 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               A practical reference for the configurations that matter most in production Spark jobs. These are the knobs you'll actually tune  -  not an exhaustive list of every property.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "How do you size executors?" / "What's the difference between executor memory and memoryOverhead?" / "What's the 5-core rule?" / "How do you calculate the right number of shuffle partitions?" / "What does spark.memory.fraction control?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Show you can size a cluster from first principles. Explain executor.memory vs memoryOverhead, the 5-core per executor rule (for HDFS throughput), and how to calculate shuffle.partitions from data size. Senior candidates know spark.memory.fraction and the execution vs storage memory split.
+            </div>
+          </div>
+
+          <p>Spark performance tuning starts with three decisions: how large to make each executor, how many cores per executor, and how many shuffle partitions. The <strong>5-core rule</strong>: cap executor cores at 5 to maximize HDFS throughput (HDFS client threads per executor). <strong>Memory sizing</strong>: executor.memory is the JVM heap; memoryOverhead is off-heap memory for Python processes, Netty buffers, and native libraries (set to max(384MB, 10% of executor.memory)). For shuffle partitions with AQE enabled, start with "auto" and set advisoryPartitionSizeInBytes=128MB; without AQE, target 128–256MB per partition: <code>partitions = total_shuffle_data_GB × 1000 / 150</code>.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Executor cores</td><td>Max 5 cores per executor for HDFS throughput. More cores = HDFS client contention.</td></tr>
+              <tr><td>executor.memory</td><td>JVM heap. Split: spark.memory.fraction (default 0.6) for execution+storage; rest for user data structures.</td></tr>
+              <tr><td>memoryOverhead</td><td>Off-heap: Python worker, Netty shuffle buffers, native libs. Default max(384MB, 10% of executor.memory). Set higher for PySpark.</td></tr>
+              <tr><td>Shuffle partitions</td><td>With AQE: set "auto". Without AQE: total_data_GB × 1000 / 150. Target 128–256MB per task input.</td></tr>
+              <tr><td>Dynamic allocation</td><td>spark.dynamicAllocation.enabled=true for shared clusters. Scales executors based on pending tasks.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A PySpark job on a cluster with 16-core nodes kept OOMing executors. The default memoryOverhead was 384MB but each Python worker was using ~1.5GB for a large Pandas operation inside a mapPartitions call. Fix: set <code>spark.executor.memoryOverhead=3g</code>. Rule of thumb: for PySpark jobs with Pandas operations, set memoryOverhead to at least 20–30% of executor.memory.
+            </div>
+          </div>
+
           <SparkConfigDiagram />
           <ConfigAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Copies executor config from a Stack Overflow answer</td><td>Sizes executors from node specs: (node_cores - 1) / 5 executors per node, 5 cores each, node_memory / executors_per_node - overhead. Profiles actual usage vs configured limits in the Spark UI.</td></tr>
+              <tr><td>Sets shuffle.partitions=200 from a tutorial</td><td>Either uses AQE with shuffle.partitions="auto" or calculates from actual shuffle write size shown in the Spark UI Stage Details, targeting 128–200MB per partition</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Production baseline configuration ────────────────────────────────
 spark = SparkSession.builder \
     .appName("production_etl") \
@@ -2756,6 +4201,27 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Cap executor cores at 5 — more cores per executor hurts HDFS read throughput</li>
+                <li>Set memoryOverhead explicitly for PySpark jobs — default is often too low for Pandas operations</li>
+                <li>Use AQE with shuffle.partitions="auto" on Spark 3.2+ and avoid hard-coding a partition count</li>
+                <li>Check the Spark UI Storage tab to verify cached DataFrames fit in memory without spilling</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't copy executor config from tutorials without sizing to your cluster's actual node specs</li>
+                <li>Don't set executor.cores &gt; 5 for HDFS-backed jobs — you'll hit HDFS client throughput limits</li>
+                <li>Don't set shuffle.partitions to a small fixed number (e.g., 10) for large datasets — creates giant tasks that OOM or spill</li>
+                <li>Don't forget that driver.memory needs to hold collect() results — set driver.maxResultSize to a safe limit</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-config')} style={MC_BTN(completed.has('spark-config'))}>{completed.has('spark-config') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2768,8 +4234,52 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               The Spark UI (port 4040 by default) is the primary tool for diagnosing slow jobs. Knowing <em>exactly</em> where to look for GC time, spill, skew, and excessive shuffle is the difference between guessing at a fix and knowing the root cause.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "Walk me through how you'd diagnose a slow Spark job using the UI" / "What does a skewed stage look like in the Spark UI?" / "Where do you look for spill in the Spark UI?" / "What does GC time &gt;10% in the executors tab mean?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> A systematic diagnosis walkthrough: Jobs tab → find slow job → Stages tab → find straggler stage → Tasks tab → look for skew (one task 10× the median) + spill + GC time. Senior candidates know what shuffle read vs write means and can identify the cause from the pattern.
+            </div>
+          </div>
+
+          <p>The Spark UI at port 4040 shows four layers of detail. <strong>Jobs tab</strong>: one row per action (collect, write, count) — find the slow job. <strong>Stages tab</strong>: one row per shuffle boundary — find the stage with the longest duration. <strong>Tasks tab</strong>: one row per task in the stage — look for the task that's 10× longer than the median (skew), high GC time (&gt;10% = heap pressure), or large spill values (memory overflow to disk). <strong>Executors tab</strong>: check GC time %, storage memory usage, and active/failed task counts. Skipped stages (grayed out) mean cached data was used — that's good.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Jobs tab</td><td>One row per action. Find the job with the longest duration. Click to see stage breakdown.</td></tr>
+              <tr><td>Stages tab</td><td>One row per shuffle boundary. Check "Input", "Shuffle Read/Write", "Duration". High shuffle write = possible skew source.</td></tr>
+              <tr><td>Tasks tab (key)</td><td>Find straggler: one task much longer than median. Check: Duration (skew), GC Time (&gt;10% = heap pressure), Spill (Memory/Disk).</td></tr>
+              <tr><td>Executors tab</td><td>Total GC time %, Storage Memory used, active tasks. High GC = reduce executor memory overhead or increase heap.</td></tr>
+              <tr><td>SQL tab</td><td>Physical plan with actual row counts. Verify predicate pushdown, BHJ vs SMJ, exchange nodes.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A join stage was taking 25 minutes while all other stages took under 2 minutes. Stages tab showed 2TB shuffle write. Tasks tab showed 998 tasks completing in 30 seconds, 1 task taking 22 minutes. That task had 0 spill but high shuffle read (1.9TB). Root cause: the join key was a categorical column with one value ("UNKNOWN") representing 80% of rows — classic data skew. Fix: filter out "UNKNOWN" before the join and handle it separately.
+            </div>
+          </div>
+
           <SparkUIDiagram />
           <SparkUiAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"The job is slow" — checks logs, maybe adds more resources</td><td>Opens Spark UI immediately, identifies the specific stage and task causing the bottleneck, reads the Tasks table to distinguish skew vs spill vs GC pressure, and fixes the root cause rather than adding more memory</td></tr>
+              <tr><td>Doesn't know what shuffle read/write means in the UI</td><td>Uses shuffle write size in the Stages tab to estimate total data volume and calculate whether shuffle.partitions is appropriate — high shuffle write + few partitions = large tasks = OOM or spill</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Spark UI navigation guide ─────────────────────────────────────────
 #
 # URL: http://driver-host:4040  (or :4041, :4042 for concurrent apps)
@@ -2879,6 +4389,27 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Start diagnosis at the Jobs tab → identify the slow job → drill into stages → look at tasks</li>
+                <li>Check the Tasks table for straggler tasks: one task 5–10× the median duration = data skew</li>
+                <li>Check GC Time in the Executors tab — &gt;10% GC time means heap pressure, not a logic problem</li>
+                <li>Use the SQL tab's physical plan to verify predicate pushdown and join strategy (BHJ vs SMJ)</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't add more executors before diagnosing — skew is a data distribution problem, not a resource problem</li>
+                <li>Don't confuse "Shuffle Read" with "Input" in the Stages tab — Shuffle Read is post-shuffle data, Input is data read from storage</li>
+                <li>Don't ignore "Spill (Memory)" in the Tasks tab — spill to disk is often 10–100× slower than in-memory operations</li>
+                <li>Don't skip the AQE tab (Spark 3+) — it shows what AQE changed at runtime vs the original plan</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-ui')} style={MC_BTN(completed.has('spark-ui'))}>{completed.has('spark-ui') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2891,8 +4422,52 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
               Delta Lake integrates deeply with Spark, adding ACID transactions, schema enforcement, time travel, and the MERGE API on top of Parquet files. In Databricks, Delta is the default table format. Understanding the Spark-side API for Delta is essential for production data engineering.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "How does Delta MERGE work under the hood?" / "What is a transaction log in Delta Lake?" / "How do you do time travel in Spark?" / "What is Z-ordering and when should you use it?" / "What does VACUUM do and what's the risk?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Explain MERGE as a read-modify-write (with shuffle) that writes a new Parquet file plus a transaction log entry. Know that time travel reads from old _delta_log entries. Know that VACUUM deletes old files — default 7-day retention, and that running VACUUM aggressively breaks time travel.
+            </div>
+          </div>
+
+          <p>Delta Lake wraps Parquet with a <strong>_delta_log</strong> directory containing JSON commit files (and periodically Parquet checkpoint files). Every write — INSERT, UPDATE, DELETE, MERGE — appends a new commit JSON that describes which files were added and which removed. <strong>Time travel</strong> works by reconstructing the table state at a given version or timestamp from the log. <strong>MERGE</strong> is an upsert: it performs a shuffle join of source and target, then writes modified partitions as new Parquet files while marking old ones as deleted in the log. <strong>Z-ordering</strong> co-locates data with similar values for specified columns, enabling Delta's data skipping to skip entire files for point queries.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>_delta_log</td><td>JSON commit files (000000.json, 000001.json, ...). Every write = new entry. Checkpoint every 10 commits (Parquet file for fast log replay).</td></tr>
+              <tr><td>Time Travel</td><td>Read old version: option("versionAsOf", N). Read at timestamp: option("timestampAsOf", "..."). VACUUM breaks travel beyond retentionDurationCheck.</td></tr>
+              <tr><td>MERGE</td><td>whenMatchedUpdate + whenNotMatchedInsert. Internally: shuffle join + write new Parquet files + log commit. Expensive — avoid on frequently-updated large tables.</td></tr>
+              <tr><td>Z-Ordering</td><td>OPTIMIZE ... ZORDER BY (col1, col2). Co-locates similar values for data skipping. Best for high-cardinality columns used in WHERE filters.</td></tr>
+              <tr><td>VACUUM</td><td>Deletes Parquet files older than retentionDuration (default 7 days). SET VACUUM RETENTION HOURS before running to preserve time travel.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A CDC pipeline used Delta MERGE to upsert 10M rows/hour into a 500M-row silver table. MERGE was taking 45 minutes per run because it was doing a full table scan on the target. Fix: added a filter predicate to MERGE (`.when(condition & F.col("target.event_date") &gt;= last_run_date)`) to limit the target scan to recent partitions. MERGE time dropped to 4 minutes. Delta's partition pruning applies inside MERGE conditions.
+            </div>
+          </div>
+
           <SparkDeltaDiagram />
           <DeltaAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses MERGE without any target filtering — scans the entire table</td><td>Adds a partition filter condition in the MERGE ON clause to limit target scan to recent/relevant partitions, dramatically reducing MERGE runtime on large tables</td></tr>
+              <tr><td>Runs VACUUM without checking retention settings</td><td>Sets spark.databricks.delta.retentionDurationCheck.enabled=false only when intentionally setting short retention; otherwise keeps 7-day default and only runs VACUUM in maintenance windows</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from delta.tables import DeltaTable
 from pyspark.sql import functions as F
 
@@ -3024,6 +4599,27 @@ changes = spark.read.format("delta") \
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Add partition filter conditions in MERGE ON clause to avoid full table scans on the target</li>
+                <li>Use OPTIMIZE + ZORDER periodically on columns used in WHERE filters for point queries</li>
+                <li>Keep VACUUM retention at 7 days (default) to preserve time travel for debugging</li>
+                <li>Use schema evolution with mergeSchema=true when adding columns intentionally</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't run VACUUM with very short retention (0 hours) unless you're certain no time travel is needed</li>
+                <li>Don't use MERGE as a general-purpose UPDATE — for bulk updates, overwrite partitions directly instead</li>
+                <li>Don't Z-order on low-cardinality columns (e.g., boolean, status with 3 values) — it doesn't help data skipping</li>
+                <li>Don't ignore the _delta_log directory size — very frequent small writes create thousands of commit files; use OPTIMIZE to compact</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('spark-delta')} style={MC_BTN(completed.has('spark-delta'))}>{completed.has('spark-delta') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3036,14 +4632,58 @@ changes = spark.read.format("delta") \
               Apache Kafka is a distributed commit log  -  an append-only, ordered, immutable sequence of records. A Kafka <strong>cluster</strong> is formed by multiple <strong>brokers</strong> (servers). <strong>Topics</strong> are logical channels divided into <strong>partitions</strong>. Each partition is an ordered, immutable log replicated across brokers. The <strong>leader</strong> partition handles all reads and writes; <strong>ISR (In-Sync Replicas)</strong> are the set of replicas caught up with the leader. If the leader fails, a new leader is elected from the ISR. Historically Kafka used ZooKeeper for cluster metadata  -  from Kafka 3.3+ the <strong>KRaft</strong> mode replaces ZooKeeper with a built-in Raft consensus protocol. <strong>Consumer groups</strong> allow horizontal scaling: each partition is consumed by exactly one consumer per group. <strong>Offsets</strong> track the consumer's position in each partition. Retention can be time-based (<code>retention.ms</code>), size-based (<code>retention.bytes</code>), or log compaction (keeps only the latest value per key  -  ideal for changelog topics).
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What is ISR and why does it matter for durability?" / "How does consumer group partition assignment work?" / "What is the difference between retention.ms and log compaction?" / "What replaced ZooKeeper in Kafka 3.3+?" / "Can you decrease a topic's partition count?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Explain ISR (In-Sync Replicas) and its role in durability with acks=all. Know that each partition goes to exactly one consumer per group (parallelism limit). Explain the difference between log deletion retention and log compaction. Senior candidates know KRaft mode and partition count constraints.
+            </div>
+          </div>
+
+          <p>Kafka is a <strong>distributed commit log</strong>: each topic partition is an append-only, ordered, immutable sequence of records. Brokers store partitions; each partition has one leader and N-1 replicas. The <strong>ISR (In-Sync Replicas)</strong> set is the subset of replicas that are caught up with the leader's log. With <code>acks=all</code>, a produce request only succeeds when all ISR members have written the record — if ISR shrinks below <code>min.insync.replicas</code>, the broker rejects writes. Consumer groups enable horizontal scaling: Kafka's coordinator assigns each partition to exactly one consumer per group, so the max parallelism equals the partition count. Offsets are the positions consumers commit to track their progress.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Broker / Leader / ISR</td><td>Broker = server holding partitions. Each partition has one leader (handles reads/writes) + replicas. ISR = replicas caught up with leader. Durability guarantee via ISR.</td></tr>
+              <tr><td>Consumer Group</td><td>Each partition assigned to exactly one consumer per group. Max parallelism = partition count. Multiple groups = independent consumption (each sees all messages).</td></tr>
+              <tr><td>Retention: delete</td><td>cleanup.policy=delete. Keeps messages until retention.ms (default 7d) or retention.bytes exceeded. Old segments deleted.</td></tr>
+              <tr><td>Retention: compact</td><td>cleanup.policy=compact. Keeps only the latest value per key. Deletes = tombstone records (null value). Ideal for changelog/state topics.</td></tr>
+              <tr><td>KRaft (Kafka 3.3+)</td><td>Replaces ZooKeeper with Raft-based built-in metadata quorum. Simpler operations, faster failover.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A user-profile change topic was growing unbounded. The requirement was "always queryable latest profile state." Switched from cleanup.policy=delete (7-day retention) to cleanup.policy=compact. Now the topic holds exactly one record per user_id (the latest), regardless of how many updates were made. Storage is bounded by the number of distinct users, not by time. Compaction runs in the background and doesn't block producers or consumers.
+            </div>
+          </div>
+
           <KafkaArchDiagram />
           <KafkaArchAnimation />
+
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
               <strong>Partition count is permanent:</strong> You can increase partitions after creation but never decrease them without recreating the topic. Plan partition count carefully  -  more partitions = more parallelism but also more overhead. A common rule: partitions ≈ max desired consumer instances.
             </div>
           </div>
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Kafka stores messages and consumers read them"</td><td>Explains the ISR contract: with acks=all and min.insync.replicas=2, a produce request requires at least 2 replicas to confirm — and if the ISR drops to 1 (e.g., one broker down), producers get NotEnoughReplicasException until the replica catches up</td></tr>
+              <tr><td>Creates topics with default partition count (1 or 3)</td><td>Plans partition count as max(desired_consumer_parallelism, throughput_MB_per_sec / single_partition_throughput_MB_per_sec) and sets it at creation time, knowing it can only be increased later (never decreased)</td></tr>
+            </tbody>
+          </table>
           <CodeBlock lang="python">{`# ── Key Kafka configuration parameters ────────────────────────────────
 # Topic-level:
 # replication.factor        = 3       # copies of each partition across brokers
@@ -3114,6 +4754,27 @@ changes = spark.read.format("delta") \
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Set replication.factor=3 and min.insync.replicas=2 for production topics</li>
+                <li>Plan partition count at topic creation — equal to maximum desired consumer parallelism</li>
+                <li>Use cleanup.policy=compact for state/changelog topics (user profiles, config, CDC)</li>
+                <li>Use consumer groups for scalable consumption — add consumers up to partition count</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't assume you can reduce partition count later — you can only increase it (requires topic recreation to decrease)</li>
+                <li>Don't set min.insync.replicas=1 for critical topics — a single broker failure can cause data loss with acks=all</li>
+                <li>Don't add more consumers than partitions — extra consumers will be idle (no partition to assign to)</li>
+                <li>Don't mix cleanup.policy=delete and compact on the same topic without understanding the implications — use compact,delete for size-bounded compacted topics</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('kafka-arch')} style={MC_BTN(completed.has('kafka-arch'))}>{completed.has('kafka-arch') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3126,8 +4787,52 @@ changes = spark.read.format("delta") \
               The <strong>confluent-kafka</strong> Python library is the production-grade client for Kafka (based on librdkafka). The <strong>Producer</strong> sends messages asynchronously  -  configure <code>bootstrap.servers</code>, <code>acks='all'</code> for durability, and <code>enable.idempotence=True</code> for safe retries. A <strong>delivery report callback</strong> confirms each message was committed. The <strong>Consumer</strong> joins a consumer group via <code>group.id</code>, sets <code>auto.offset.reset='earliest'</code> to start from the beginning, and uses <code>enable.auto.commit=False</code> with manual commits  -  offsets are committed only after successful processing, preventing data loss on crashes.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "Why use enable.auto.commit=False?" / "What is a delivery report callback and why is it needed?" / "What's the difference between confluent-kafka and kafka-python?" / "What does enable.idempotence=True do?" / "What is the at-least-once vs at-most-once trade-off with offset commits?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Explain why manual offset commits (auto.commit=False) prevent data loss — you commit after processing, not after polling. Explain delivery callbacks as the producer-side confirmation. Know that confluent-kafka (librdkafka-based) is 10–20× faster than pure Python kafka-python for production workloads.
+            </div>
+          </div>
+
+          <p>The <strong>confluent-kafka</strong> library is built on librdkafka (C library), making it the production choice over pure-Python <code>kafka-python</code>. For producers, <code>acks='all'</code> waits for all ISR replicas before confirming — the highest durability guarantee. <code>enable.idempotence=True</code> assigns a PID to the producer and sequence numbers to each record, so the broker can detect and discard duplicates from retried produces. The <strong>delivery callback</strong> fires asynchronously after the broker ACKs each message — essential for error handling. For consumers, <code>enable.auto.commit=False</code> + manual <code>consumer.commit()</code> after processing prevents message loss on crash: if you process but don't commit, you reprocess after restart (at-least-once).</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>acks='all'</td><td>Producer waits for all ISR replicas to acknowledge. Highest durability. Requires min.insync.replicas=2.</td></tr>
+              <tr><td>enable.idempotence=True</td><td>Assigns sequence numbers per partition. Broker deduplicates retried records. Required for EOS.</td></tr>
+              <tr><td>Delivery Callback</td><td>Async confirmation per message. Check err field — if not None, message was not delivered. Essential for error handling in async producers.</td></tr>
+              <tr><td>auto.commit=False</td><td>Commit offsets only after successful processing. Prevents loss on crash. Trade-off: risk of duplicate processing on restart (at-least-once).</td></tr>
+              <tr><td>confluent-kafka vs kafka-python</td><td>confluent-kafka: C-based librdkafka, 10–20× faster, full feature set. kafka-python: pure Python, simpler, sufficient for low-throughput use.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A consumer was silently dropping messages after a broker restart. Root cause: enable.auto.commit=True was committing offsets every 5 seconds — messages polled but not yet processed had their offsets committed during a brief processing delay, and when the consumer crashed mid-batch, those messages were never processed. Fix: enable.auto.commit=False with manual consumer.commit() after successful database writes.
+            </div>
+          </div>
+
           <KafkaPythonDiagram />
           <KafkaPythonAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses enable.auto.commit=True (default) and assumes messages are never lost</td><td>Knows auto.commit commits offsets on a timer independent of processing completion — uses manual commit after successful processing, and handles the at-least-once reprocessing case with idempotent downstream writes</td></tr>
+              <tr><td>Ignores delivery callback errors — fires and forgets</td><td>Implements delivery callback that logs errors and adds to a dead-letter queue or raises an alert — producer.produce() is async and won't raise exceptions for broker failures without a callback</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
 import json
 
@@ -3233,6 +4938,27 @@ finally:
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Set enable.auto.commit=False and commit manually after successful processing</li>
+                <li>Implement a delivery callback to detect and handle producer failures</li>
+                <li>Set enable.idempotence=True and acks='all' for production producers</li>
+                <li>Use confluent-kafka for production — kafka-python is fine for prototyping or low-throughput scripts</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use enable.auto.commit=True for critical workloads — it commits on a timer, not after processing</li>
+                <li>Don't ignore delivery callback errors — producer.produce() is asynchronous and won't raise on broker failure</li>
+                <li>Don't set max.in.flight.requests &gt; 5 with enable.idempotence=True — Kafka's idempotence only guarantees ordering within a 5-request window</li>
+                <li>Don't call consumer.commit() before processing completes — commit after the downstream write succeeds, not after poll()</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('kafka-python')} style={MC_BTN(completed.has('kafka-python'))}>{completed.has('kafka-python') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3245,14 +4971,57 @@ finally:
               Exactly-once processing requires three things: <strong>idempotent source reads</strong> (re-reading from offset doesn't create duplicates), <strong>idempotent transformations</strong> (running the same computation twice produces the same result), and <strong>atomic sink writes</strong> (writes either fully succeed or fully fail). In Kafka, <strong>idempotent producers</strong> use a Producer ID + per-partition sequence number to deduplicate retried sends. <strong>Transactions</strong> extend this: <code>begin_transaction</code> → produce messages → <code>commit_transaction</code> (or <code>abort_transaction</code>) atomically across multiple partitions. In Spark Structured Streaming, exactly-once is achieved by combining checkpoint-based offset tracking with a Delta Lake ACID sink  -  Spark generates unique batch IDs and Delta's transaction log rejects duplicate writes.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What are the 3 requirements for exactly-once processing?" / "How does a transactional producer work?" / "What is the difference between idempotent producer and transactional producer?" / "How does Spark Structured Streaming achieve exactly-once with Delta Lake?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Name the 3 requirements (idempotent source reads, idempotent transforms, atomic sink writes). Know that idempotent producer = deduplicate retried sends within a session. Transactional producer = atomic multi-partition writes with commit/abort. Senior candidates know EOS in Structured Streaming = checkpoint offsets + Delta ACID sink.
+            </div>
+          </div>
+
+          <p>Exactly-once semantics (EOS) require exactly three properties working together: the <strong>source must be re-readable</strong> without creating duplicates (Kafka offsets satisfy this — you can re-read from any offset), <strong>transforms must be deterministic</strong>, and the <strong>sink must be atomic</strong> (writes are all-or-nothing). Kafka's <strong>idempotent producer</strong> assigns a Producer ID (PID) and per-partition sequence numbers — the broker deduplicates retried sends within a session. The <strong>transactional producer</strong> extends this with begin/commit/abort across multiple partitions — an atomic write to multiple topics. In Spark Structured Streaming, EOS uses checkpoint files to track which Kafka offsets have been processed, combined with Delta Lake's transaction log to reject duplicate batch writes.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Idempotent Producer</td><td>enable.idempotence=True. PID + sequence number per partition. Broker deduplicates retried sends. Session-scoped (new session = new PID).</td></tr>
+              <tr><td>Transactional Producer</td><td>transactional.id set. begin_transaction() → produce to multiple partitions → commit_transaction() or abort_transaction(). Atomic across partitions.</td></tr>
+              <tr><td>3 EOS requirements</td><td>1. Source re-readable (offsets). 2. Deterministic transforms. 3. Atomic/idempotent sink (Delta ACID, database upsert with unique key).</td></tr>
+              <tr><td>Structured Streaming EOS</td><td>Checkpoint files track committed offsets. Delta sink uses batch ID in transaction log. Duplicate batch → Delta rejects (idempotent write).</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A financial transaction pipeline required EOS — duplicate records would cause double-billing. Setup: Structured Streaming with Kafka source (checkpoint dir on ADLS), deterministic aggregation (idempotent by design), Delta Lake silver table as sink with trigger.Once. On failure and restart, Spark re-reads from the checkpointed Kafka offset, recomputes the same results, and Delta's transaction log detects the duplicate batch ID and rejects the second write. Zero duplicates in 6 months of production.
+            </div>
+          </div>
+
           <KafkaEOSDiagram />
           <KafkaEOSAnimation />
+
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
               <strong>The three delivery guarantees:</strong> At-most-once (messages may be lost, never duplicated), At-least-once (no messages lost, duplicates possible on retry  -  most common default), Exactly-once (no loss, no duplicates  -  requires idempotent producer + transactional writes + ACID sink). EOS has a performance cost; use it only when required.
             </div>
           </div>
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Kafka so we have exactly-once processing"</td><td>Knows EOS requires all three components: idempotent Kafka source (offsets), deterministic transforms, and atomic sink (Delta ACID, database upsert with unique constraint) — Kafka alone doesn't guarantee EOS end-to-end</td></tr>
+              <tr><td>Confuses idempotent producer with transactional producer</td><td>Idempotent producer: deduplicates retried sends to one partition (session-scoped). Transactional producer: enables atomic multi-partition writes with begin/commit/abort — needed when one logical event produces to multiple topics atomically</td></tr>
+            </tbody>
+          </table>
           <CodeBlock lang="python">{`# ── Transactional Producer (Kafka EOS) ────────────────────────────────
 from confluent_kafka import Producer
 import json
@@ -3356,6 +5125,27 @@ stream_df.writeStream \\
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>For EOS, combine all three: re-readable source (Kafka offsets) + deterministic transforms + atomic sink (Delta or idempotent DB upsert)</li>
+                <li>Set a unique transactional.id per producer instance to enable transaction isolation</li>
+                <li>Use Structured Streaming checkpoints with a Delta sink for EOS in PySpark pipelines</li>
+                <li>Reserve EOS for genuinely critical flows (financial, billing) — it has latency and throughput costs</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't claim EOS by only enabling idempotent producer — the sink must also be atomic/idempotent</li>
+                <li>Don't reuse the same transactional.id across parallel producer instances — causes transaction fencing (previous producer's transaction is aborted)</li>
+                <li>Don't use EOS for high-throughput non-critical pipelines — the 2-phase commit adds latency overhead</li>
+                <li>Don't forget that idempotence is session-scoped — a new producer instance gets a new PID and cannot deduplicate against a previous session's sends</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('kafka-eos')} style={MC_BTN(completed.has('kafka-eos'))}>{completed.has('kafka-eos') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3368,8 +5158,52 @@ stream_df.writeStream \\
               <strong>Kafka Connect</strong> is a scalable framework for streaming data between Kafka and external systems without writing custom producers/consumers. <strong>Source connectors</strong> pull data into Kafka (databases, object storage, APIs). <strong>Sink connectors</strong> push Kafka data to destinations (data lakes, databases, Elasticsearch). Connectors are deployed as JSON configuration  -  no custom code for standard integrations. <strong>Debezium</strong> is the leading CDC (Change Data Capture) source connector  -  it tails database transaction logs (MySQL binlog, PostgreSQL WAL, SQL Server CDC) and streams every INSERT/UPDATE/DELETE as a Kafka event. Topics follow the naming convention <code>server.database.table</code>. The <strong>dead letter queue (DLQ)</strong> captures records that fail to process, enabling debugging without blocking the main pipeline.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "How does Debezium CDC work?" / "What is the difference between a Kafka source connector and a sink connector?" / "What does the Debezium envelope (before/after/op) contain?" / "What is a dead letter queue in Kafka Connect?" / "How do you deploy a connector without writing code?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Explain Debezium as a log-based CDC tool that tails the database WAL/binlog (not query-based polling). Know the Debezium envelope structure (before, after, op=c/u/d). Know that Kafka Connect is deployed via REST API with JSON config. Senior candidates know snapshot mode, the DLQ pattern, and connector task parallelism limits.
+            </div>
+          </div>
+
+          <p>Kafka Connect is a framework for scalable, no-code data integration — source connectors pull data into Kafka, sink connectors push Kafka data to destinations. Connectors are deployed via a REST API with JSON configuration. <strong>Debezium</strong> is the leading CDC source connector: instead of polling the database with SELECT, it tails the transaction log (PostgreSQL WAL, MySQL binlog, SQL Server CDC log). Every committed INSERT, UPDATE, or DELETE produces a Kafka event with a standardized <strong>envelope</strong>: <code>before</code> (old row state), <code>after</code> (new row state), and <code>op</code> field (c=create, u=update, d=delete, r=read/snapshot). This makes Debezium suitable for low-latency CDC pipelines with no extra database load.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Source Connector</td><td>Pulls data into Kafka. Examples: Debezium (CDC), S3 source, JDBC source. Deployed via REST API.</td></tr>
+              <tr><td>Sink Connector</td><td>Pushes Kafka data to targets. Examples: S3 sink, Delta sink, Elasticsearch sink, JDBC sink.</td></tr>
+              <tr><td>Debezium Envelope</td><td>Each event has: before (pre-image), after (post-image), op (c/u/d/r), ts_ms, source metadata. Null before = INSERT. Null after = DELETE.</td></tr>
+              <tr><td>Snapshot Mode</td><td>On first run, Debezium snapshots the full table, then switches to log-based streaming. Mode: initial (default), never, when_needed.</td></tr>
+              <tr><td>Dead Letter Queue (DLQ)</td><td>Records that fail serialization/transformation go to a DLQ topic. Prevents one bad record from blocking the pipeline.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A PostgreSQL orders table had 500M historical rows + 50K new changes/day. Debezium initial snapshot mode ran a one-time full read, then switched to WAL tailing. The Kafka topic (ecommerce.public.orders) received 500M snapshot records over 6 hours, then streams 50K delta records daily. The snapshot is done exactly once — all subsequent processing is log-based, with sub-second latency and zero database query load.
+            </div>
+          </div>
+
           <KafkaConnectDiagram />
           <KafkaConnectAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"CDC means polling the database for new records"</td><td>Knows Debezium is log-based (WAL/binlog tailing), not polling — it adds zero query load to the database and captures deletes and before-images, which query-based CDC cannot do</td></tr>
+              <tr><td>Deploys connectors by modifying YAML config files on the server</td><td>Uses the Kafka Connect REST API (PUT /connectors/&#123;name&#125;/config) to deploy, update, pause, and resume connectors — configuration is the API contract, not files on a server</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="json">{`// ── Debezium PostgreSQL CDC Connector config ──────────────────────────
 // PUT http://kafka-connect:8083/connectors/postgres-cdc/config
 {
@@ -3447,6 +5281,27 @@ stream_df.writeStream \\
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Debezium for CDC — log-based tailing is zero-overhead vs polling-based CDC</li>
+                <li>Configure a dead letter queue topic for all connectors — one bad record shouldn't block the pipeline</li>
+                <li>Deploy and manage connectors via the REST API — don't edit config files directly on the worker</li>
+                <li>Use Debezium snapshot mode=initial for first-run historical load, then rely on WAL streaming</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use JDBC source connector for CDC — it polls with SELECT WHERE updated_at &gt; last_run, missing deletes and requiring a last_updated column</li>
+                <li>Don't set tasks.max &gt; 1 for Debezium PostgreSQL — WAL-based CDC is inherently single-threaded per slot</li>
+                <li>Don't ignore the Debezium before field — it's null for INSERTs, but essential for UPDATEs and DELETEs to understand what changed</li>
+                <li>Don't drop the DLQ — review it regularly, as it captures schema mismatches and serialization failures that can indicate upstream schema drift</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('kafka-connect')} style={MC_BTN(completed.has('kafka-connect'))}>{completed.has('kafka-connect') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3459,8 +5314,52 @@ stream_df.writeStream \\
               The <strong>Confluent Schema Registry</strong> is a central repository for Avro, Protobuf, and JSON Schema definitions. Producers register a schema before publishing; the Registry returns a schema ID that is embedded in each message (4 bytes). Consumers look up the schema by ID to deserialize  -  this decouples schema management from application code. Schemas are versioned by <strong>subject</strong> (typically <code>topic-value</code> or <code>topic-key</code>). <strong>Compatibility modes</strong> enforce evolution rules: <strong>BACKWARD</strong> (new schema can read data written with old schema  -  add optional fields), <strong>FORWARD</strong> (old schema can read data written with new schema  -  remove fields), <strong>FULL</strong> (both directions  -  safest). This prevents producers from breaking consumers with incompatible schema changes.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "What are the three Schema Registry compatibility modes?" / "Why use Avro instead of JSON in Kafka?" / "What is schema evolution and how does the Registry enforce it?" / "What is a subject in Schema Registry?" / "How is the schema ID embedded in a Kafka message?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Know BACKWARD (new schema reads old data — add nullable fields), FORWARD (old schema reads new data — remove fields safely), FULL (both directions — safest). Know that the Schema Registry embeds a 4-byte schema ID in each message header. Know that Avro is binary (compact, fast) vs JSON (human-readable, verbose). Senior candidates know subject naming conventions and when to use FULL vs BACKWARD.
+            </div>
+          </div>
+
+          <p>The Confluent Schema Registry centralizes schema management: when a producer serializes an Avro message, it registers the schema (if new) and the Registry returns a schema ID. The message is prefixed with a magic byte (0x00) + 4-byte schema ID — consumers use this ID to fetch and cache the schema for deserialization. <strong>Subjects</strong> are named by convention: <code>topic-value</code> or <code>topic-key</code>. <strong>Compatibility modes</strong> enforce which schema changes are allowed: BACKWARD (consumers using the new schema can read data written with the old schema — safe to add nullable/default fields), FORWARD (consumers using the old schema can read data written with the new schema — safe to remove fields), FULL (both directions). BACKWARD is the default and most common: add fields with defaults, never remove or rename required fields.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Schema ID Wire Format</td><td>Magic byte (0x00) + 4-byte schema ID + Avro binary payload. Consumers use the 4-byte ID to fetch schema from Registry and deserialize.</td></tr>
+              <tr><td>BACKWARD compatibility</td><td>New schema can read old data. Add new fields with defaults. Cannot remove required fields or change types. Default mode.</td></tr>
+              <tr><td>FORWARD compatibility</td><td>Old schema can read new data. Remove fields safely (old schema ignores missing fields). Cannot add required fields.</td></tr>
+              <tr><td>FULL compatibility</td><td>Both BACKWARD and FORWARD. Safest. Most restrictive — fields can only be added with defaults or removed with defaults.</td></tr>
+              <tr><td>Avro vs JSON</td><td>Avro: binary, compact, schema-enforced, 5–10× smaller than JSON. JSON: human-readable, no type enforcement, verbose. Use Avro for production throughput.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> A producer team added a new required field "region" to the Order schema without a default value. The Registry rejected the registration because it violated BACKWARD compatibility — existing consumers wouldn't know how to read old messages that lack the "region" field. Fix: add "region" as an optional field with a default of null (Avro union: ["null", "string"], default: null). The Registry accepted the new schema, and old messages deserialize with region=null.
+            </div>
+          </div>
+
           <SchemaRegistryDiagram />
           <SchemaRegistryAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>Uses JSON serialization for Kafka because "it's easy to debug"</td><td>Uses Avro with Schema Registry for production — the schema ID wire format means messages are 5–10× smaller, schema validation happens at produce time (not at consume time when it's too late), and BACKWARD compatibility prevents silent breakage</td></tr>
+              <tr><td>Doesn't know why the Registry rejected their schema change</td><td>Understands BACKWARD compatibility: to add a field safely, give it a default value in the Avro schema. Can explain that "required fields added without defaults = BACKWARD violation = old consumers can't read new messages"</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Avro Producer with Schema Registry ───────────────────────────────
 from confluent_kafka import Producer
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -3563,6 +5462,27 @@ while True:
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Add new fields with default values to maintain BACKWARD compatibility</li>
+                <li>Use FULL compatibility for topics shared by many teams — it's the safest mode</li>
+                <li>Cache the schema client in producers/consumers — avoid a Registry HTTP call per message</li>
+                <li>Use Avro for production topics — compact binary format is 5–10× smaller than JSON</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't add required fields (no default) to existing schemas — this breaks BACKWARD compatibility</li>
+                <li>Don't rename fields — Schema Registry treats a rename as remove + add, which breaks compatibility</li>
+                <li>Don't skip Schema Registry for "internal" topics — schema drift between producer and consumer is a common production incident</li>
+                <li>Don't use JSON serialization for high-throughput topics — it has no schema enforcement and is 5–10× larger than Avro</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('kafka-schema')} style={MC_BTN(completed.has('kafka-schema'))}>{completed.has('kafka-schema') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3575,8 +5495,52 @@ while True:
               Azure Event Hub is a fully managed, Kafka-compatible streaming service. It exposes the Kafka protocol  -  most Kafka clients work against Event Hub with only a <code>bootstrap.servers</code> change. Key differences: Event Hub has a maximum retention of 90 days (long-term retention requires Blob Capture); partitions are fixed at namespace creation and cannot be increased; Kafka protocol is available on Event Hub Premium. Event Hub integrates natively with the Azure ecosystem (Auto Loader, ADF, Stream Analytics). Self-managed Kafka offers more flexibility: unlimited retention, dynamic partition increases, the full Kafka Connect ecosystem, Kafka Streams, and multi-cloud deployments. Choose Event Hub for Azure-native low-ops platforms. Choose Kafka when you need the full ecosystem, multi-cloud, or complex routing.
             </p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body">
+              <strong>Interview Triggers:</strong> "When would you choose Event Hub over Kafka?" / "What Kafka features are not available in Event Hub?" / "Is Event Hub's Kafka compatibility complete?" / "How do you migrate a Kafka client to Event Hub with minimal code changes?" / "What is Event Hub Capture?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body">
+              <strong>What Interviewers Want:</strong> Know the key differences: Event Hub = managed, Azure-native, 90-day max retention, fixed partitions, Premium tier for Kafka protocol. Kafka = full ecosystem, Kafka Streams, Kafka Connect, unlimited retention, dynamic partitions. Know that migrating to Event Hub requires only changing bootstrap.servers (for basic use cases). Senior candidates know the operational trade-offs.
+            </div>
+          </div>
+
+          <p>Azure Event Hub exposes the Kafka protocol — the same confluent-kafka producer/consumer code connects to Event Hub by changing only <code>bootstrap.servers</code> and adding SASL authentication. But underneath, Event Hub is a different system with different constraints. <strong>Retention</strong>: Event Hub caps at 90 days (Blob Capture for longer); Kafka has no built-in limit. <strong>Partitions</strong>: Event Hub partitions are fixed at namespace creation, cannot be changed; Kafka allows increases. <strong>Features not in Event Hub</strong>: Kafka Streams, KTable, Kafka Connect ecosystem (some gaps), transactional producers (partial support), compaction topics. <strong>When to choose Event Hub</strong>: Azure-native shop, low ops overhead, integration with ADF/Auto Loader/Stream Analytics. <strong>When to choose Kafka</strong>: multi-cloud, need Kafka Streams, full connector ecosystem, complex routing.</p>
+
+          <table className="concept-table">
+            <thead><tr><th>60-Second Framework</th><th>Detail</th></tr></thead>
+            <tbody>
+              <tr><td>Event Hub Kafka Compatibility</td><td>Kafka protocol on Premium tier. Most producer/consumer code works unchanged. Only change: bootstrap.servers + SASL config.</td></tr>
+              <tr><td>Retention</td><td>Event Hub: max 90 days (use Capture to ADLS for longer). Kafka: unlimited (bounded by disk, not time limit).</td></tr>
+              <tr><td>Partitions</td><td>Event Hub: fixed at creation, cannot increase. Kafka: can increase (not decrease) after creation.</td></tr>
+              <tr><td>Missing from Event Hub</td><td>Kafka Streams, KTable/KStream API, Kafka Connect ecosystem, log compaction (limited support), transactional producers (partial).</td></tr>
+              <tr><td>Choose Event Hub when</td><td>Azure-native, want managed service, integrate with ADF/Azure Stream Analytics/Databricks Auto Loader. Low operational overhead is the priority.</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body">
+              <strong>In Production:</strong> An on-prem Kafka cluster serving 5 topics was migrated to Azure Event Hub Premium. The migration took 1 day: update bootstrap.servers to the Event Hub FQDN, add SASL config, and test. Zero application code changed. The ongoing operational savings (no broker management, patching, rebalancing) justified the migration for this team's scale. The trade-off: they lost Kafka Connect JDBC sink support — that connector was replaced with Azure Data Factory.
+            </div>
+          </div>
+
           <KafkaVsEventHubDiagram />
           <KafkaVsEventHubAnimation />
+
+          <table className="concept-table">
+            <thead><tr><th>Junior</th><th>Senior</th></tr></thead>
+            <tbody>
+              <tr><td>"Event Hub is just managed Kafka — they're the same"</td><td>Knows the key gaps: no Kafka Streams, fixed partition count, 90-day retention limit, and partial Kafka Connect support. Can explain which use cases Event Hub handles well and which require self-managed Kafka</td></tr>
+              <tr><td>Rebuilds entire pipeline to migrate from Kafka to Event Hub</td><td>Knows Kafka-compatible clients need only bootstrap.servers + SASL auth change for basic migration. Focuses the assessment on the gaps (Kafka Streams, transactional producers, compaction) to determine if a full migration is viable</td></tr>
+            </tbody>
+          </table>
+
           <CodeBlock lang="python">{`# ── Connecting an existing Kafka client to Azure Event Hub ────────────
 # Only bootstrap.servers and security config change.
 from confluent_kafka import Producer
@@ -3658,6 +5622,27 @@ df.writeStream \\
               correct: 1
             },
           ]} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+          <div className="card-success">
+            <strong>✓ Do</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Choose Event Hub for Azure-native architectures where low operational overhead outweighs ecosystem completeness</li>
+                <li>Migrate Kafka clients to Event Hub by only changing bootstrap.servers and adding SASL config — no application logic changes needed for basic producers/consumers</li>
+                <li>Use Event Hub Capture (to ADLS) for long-term retention beyond the 90-day limit</li>
+                <li>Evaluate the specific Kafka features your pipeline needs (Kafka Streams, compaction, Kafka Connect) before committing to Event Hub</li>
+              </ul>
+          </div>
+          <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+            <strong>✗ Don't</strong>
+            <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't assume full Kafka compatibility — Kafka Streams, transactional producers, and log compaction have gaps in Event Hub</li>
+                <li>Don't plan for partition scaling with Event Hub — partition count is fixed at namespace creation</li>
+                <li>Don't rely on Event Hub for multi-cloud streaming — it's Azure-only; use Kafka (Confluent Cloud or self-managed) for multi-cloud</li>
+                <li>Don't use Event Hub Standard tier for Kafka protocol — it requires Event Hub Premium</li>
+              </ul>
+          </div>
+        </div>
+
           <button onClick={mc('kafka-vs-eventhub')} style={MC_BTN(completed.has('kafka-vs-eventhub'))}>{completed.has('kafka-vs-eventhub') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
