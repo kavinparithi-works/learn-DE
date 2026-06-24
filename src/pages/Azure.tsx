@@ -31,6 +31,465 @@ const SECTIONS = [
   ]},
 ]
 
+// ─────────────────────────────────────────────── AZURE DIAGRAM COMPONENTS ───
+
+function AzureArchitectureDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure Data Platform — Reference Architecture</text>
+        {[
+          {label:'Ingest\n(ADF / Event Hub)',color:'#4f8ef7',x:10},
+          {label:'Store\n(ADLS Gen2)',color:'#22c55e',x:115},
+          {label:'Process\n(Databricks / Synapse)',color:'#8b5cf6',x:220},
+          {label:'Serve\n(Synapse / Power BI)',color:'#f59e0b',x:350},
+          {label:'Govern\n(Purview)',color:'#ef4444',x:455},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={s.x} y="20" width="100" height="48" rx="5" fill={s.color} opacity=".14" stroke={s.color} strokeWidth="1.5"/>
+            {s.label.split('\n').map((l,j)=><text key={j} x={s.x+50} y={35+j*14} fontSize={j===0?9.5:8} fontWeight={j===0?'700':'400'} fill={j===0?s.color:'#475569'} textAnchor="middle">{l}</text>)}
+            {i<4&&<polygon points={`${s.x+104},44 ${s.x+113},40 ${s.x+113},48`} fill={s.color} opacity=".6"/>}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ADLSDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">ADLS Gen2 — Hierarchical Namespace</text>
+        <rect x="10" y="20" width="460" height="14" rx="3" fill="#1e293b" opacity=".08" stroke="#1e293b" strokeWidth="1"/>
+        <text x="16" y="31" fontSize="8.5" fontWeight="700" fill="#1e293b">Storage Account</text>
+        <rect x="10" y="38" width="220" height="14" rx="3" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1"/>
+        <text x="16" y="49" fontSize="8" fill="#4f8ef7">Container: raw</text>
+        <rect x="240" y="38" width="230" height="14" rx="3" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+        <text x="246" y="49" fontSize="8" fill="#22c55e">Container: refined</text>
+        {['bronze/','silver/','gold/'].map((d,i)=>(
+          <g key={d}>
+            <rect x={10+i*74} y="56" width="70" height="12" rx="2" fill="#4f8ef7" opacity=".12"/>
+            <text x={45+i*74} y="66" fontSize="7.5" fill="#4f8ef7" textAnchor="middle">{d}</text>
+          </g>
+        ))}
+        <text x="4" y="82" fontSize="8" fill="#64748b">HNS enables atomic directory ops, ACLs at folder level, 3× faster than Blob for big data analytics</text>
+      </svg>
+    </div>
+  )
+}
+
+function BlobDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Blob Storage — Access Tiers</text>
+        {[
+          {tier:'Hot',cost:'High storage, Low access',lat:'< 1ms',color:'#f59e0b'},
+          {tier:'Cool',cost:'Lower storage, Higher access',lat:'< 1ms',color:'#4f8ef7'},
+          {tier:'Cold',cost:'Low storage, High access',lat:'< 1ms',color:'#22c55e'},
+          {tier:'Archive',cost:'Lowest storage, High access',lat:'1-15 hours',color:'#8b5cf6'},
+        ].map((t,i)=>(
+          <g key={t.tier}>
+            <rect x={4+i*114} y="18" width="108" height="48" rx="5" fill={t.color} opacity=".12" stroke={t.color} strokeWidth="1.2"/>
+            <text x={58+i*114} y="32" fontSize="10" fontWeight="700" fill={t.color} textAnchor="middle">{t.tier}</text>
+            <text x={58+i*114} y="44" fontSize="7" fill="#475569" textAnchor="middle">{t.cost}</text>
+            <text x={58+i*114} y="56" fontSize="7.5" fontWeight="600" fill={t.color} textAnchor="middle">{t.lat}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ADFDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure Data Factory — Pipeline Flow</text>
+        {[
+          {label:'Linked Service',sub:'Connection string',color:'#4f8ef7',x:10},
+          {label:'Dataset',sub:'Schema + format',color:'#22c55e',x:125},
+          {label:'Activity',sub:'Copy / Mapping DF',color:'#8b5cf6',x:240},
+          {label:'Pipeline',sub:'Orchestrates activities',color:'#f59e0b',x:355},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={s.x} y="18" width="108" height="44" rx="5" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.5"/>
+            <text x={s.x+54} y="34" fontSize="9" fontWeight="700" fill={s.color} textAnchor="middle">{s.label}</text>
+            <text x={s.x+54} y="48" fontSize="7.5" fill="#475569" textAnchor="middle">{s.sub}</text>
+            {i<3&&<polygon points={`${s.x+112},40 ${s.x+123},36 ${s.x+123},44`} fill={s.color} opacity=".7"/>}
+          </g>
+        ))}
+        <text x="4" y="78" fontSize="8" fill="#64748b">Trigger (schedule / tumbling / event) → runs Pipeline → Activities → Linked Services → Datasets</text>
+      </svg>
+    </div>
+  )
+}
+
+function SynapseDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Synapse Analytics — Compute Pools</text>
+        {[
+          {name:'Dedicated SQL Pool',desc:'MPP, provisioned DWU',color:'#4f8ef7'},
+          {name:'Serverless SQL Pool',desc:'Pay-per-query on ADLS',color:'#22c55e'},
+          {name:'Apache Spark Pool',desc:'Spark 3.x, auto-scale',color:'#8b5cf6'},
+          {name:'Data Explorer Pool',desc:'Time-series, KQL',color:'#f59e0b'},
+        ].map((p,i)=>(
+          <g key={p.name}>
+            <rect x={4+(i%2)*238} y={18+Math.floor(i/2)*30} width="228" height="22" rx="4" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.2"/>
+            <text x={14+(i%2)*238} y={28+Math.floor(i/2)*30} fontSize="9" fontWeight="700" fill={p.color}>{p.name}</text>
+            <text x={14+(i%2)*238} y={37+Math.floor(i/2)*30} fontSize="7.5" fill="#475569">{p.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DatabricksDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Databricks on Azure — Cluster Types</text>
+        {[
+          {type:'All-Purpose',desc:'Interactive notebooks\nPersistent, billed hourly',color:'#4f8ef7'},
+          {type:'Job Cluster',desc:'One-run pipelines\nTerminates on completion',color:'#22c55e'},
+          {type:'SQL Warehouse',desc:'BI queries (JDBC)\nServerless or classic',color:'#8b5cf6'},
+          {type:'Instance Pools',desc:'Pre-warmed VMs\nFaster cluster start',color:'#f59e0b'},
+        ].map((c,i)=>(
+          <g key={c.type}>
+            <rect x={4+(i%2)*238} y={18+Math.floor(i/2)*36} width="228" height="28" rx="4" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.2"/>
+            <text x={14+(i%2)*238} y={30+Math.floor(i/2)*36} fontSize="9" fontWeight="700" fill={c.color}>{c.type}</text>
+            {c.desc.split('\n').map((d,j)=><text key={j} x={14+(i%2)*238} y={40+j*10+Math.floor(i/2)*36} fontSize="7.5" fill="#475569">{d}</text>)}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function EventHubDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Event Hub — Kafka-Compatible Streaming Ingestion</text>
+        {['Producer A','Producer B','Producer C'].map((p,i)=>(
+          <g key={p}>
+            <rect x="10" y={18+i*22} width="80" height="16" rx="3" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x="50" y={30+i*22} fontSize="8" fill="#4f8ef7" textAnchor="middle">{p}</text>
+            <line x1="90" y1={26+i*22} x2="130" y2={26+i*22} stroke="#4f8ef7" strokeWidth="1"/>
+          </g>
+        ))}
+        <rect x="132" y="16" width="100" height="68" rx="5" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="182" y="40" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Event Hub</text>
+        <text x="182" y="52" fontSize="7.5" fill="#475569" textAnchor="middle">Namespace</text>
+        <text x="182" y="62" fontSize="7.5" fill="#475569" textAnchor="middle">partitions 0–31</text>
+        <text x="182" y="72" fontSize="7.5" fill="#475569" textAnchor="middle">retention: 1–7 days</text>
+        {['Stream Analytics','Spark (Databricks)','Function App'].map((c,i)=>(
+          <g key={c}>
+            <line x1="232" y1={26+i*22} x2="270" y2={26+i*22} stroke="#22c55e" strokeWidth="1"/>
+            <rect x="272" y={18+i*22} width="100" height="16" rx="3" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+            <text x="322" y={30+i*22} fontSize="7.5" fill="#22c55e" textAnchor="middle">{c}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function EventGridDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Event Grid — Reactive Event Routing</text>
+        {['Blob Storage','Resource Group','Custom Topic'].map((s,i)=>(
+          <g key={s}>
+            <rect x="10" y={18+i*18} width="110" height="14" rx="3" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x="65" y={29+i*18} fontSize="7.5" fill="#4f8ef7" textAnchor="middle">{s}</text>
+            <line x1="120" y1={25+i*18} x2="155" y2="36" stroke="#4f8ef7" strokeWidth="1" strokeDasharray="2 1"/>
+          </g>
+        ))}
+        <rect x="157" y="24" width="80" height="24" rx="4" fill="#f59e0b" opacity=".18" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="197" y="40" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Event Grid</text>
+        {['Azure Function','Logic App','Service Bus'].map((h,i)=>(
+          <g key={h}>
+            <line x1="237" y1="36" x2="272" y2={25+i*18} stroke="#22c55e" strokeWidth="1" strokeDasharray="2 1"/>
+            <rect x="274" y={18+i*18} width="110" height="14" rx="3" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1"/>
+            <text x="329" y={29+i*18} fontSize="7.5" fill="#22c55e" textAnchor="middle">{h}</text>
+          </g>
+        ))}
+        <text x="4" y="74" fontSize="8" fill="#64748b">Push model — near real-time event fan-out, max 1M events/s, 5-min retry SLA</text>
+      </svg>
+    </div>
+  )
+}
+
+function ServiceBusDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Service Bus — Queue vs Topic</text>
+        <rect x="10" y="20" width="200" height="44" rx="5" fill="#4f8ef7" opacity=".1" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Queue (P2P)</text>
+        <text x="110" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">One consumer dequeues msg</text>
+        <text x="110" y="58" fontSize="7.5" fill="#94a3b8" textAnchor="middle">FIFO, dead-letter queue</text>
+        <rect x="250" y="20" width="200" height="44" rx="5" fill="#8b5cf6" opacity=".1" stroke="#8b5cf6" strokeWidth="1.5"/>
+        <text x="350" y="34" fontSize="9" fontWeight="700" fill="#8b5cf6" textAnchor="middle">Topic (Pub/Sub)</text>
+        <text x="350" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">Multiple subscriptions receive copy</text>
+        <text x="350" y="58" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Filter rules per subscription</text>
+      </svg>
+    </div>
+  )
+}
+
+function FunctionsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure Functions — Trigger → Function → Output Binding</text>
+        {[
+          {trigger:'Timer Trigger',fn:'cleanup_old_blobs',out:'ADLS Delete',color:'#4f8ef7'},
+          {trigger:'Event Hub Trigger',fn:'process_stream',out:'Cosmos DB upsert',color:'#22c55e'},
+          {trigger:'HTTP Trigger',fn:'validate_payload',out:'Service Bus msg',color:'#8b5cf6'},
+        ].map((f,i)=>(
+          <g key={f.trigger}>
+            <rect x="10" y={18+i*18} width="100" height="14" rx="3" fill={f.color} opacity=".2" stroke={f.color} strokeWidth="1"/>
+            <text x="60" y={29+i*18} fontSize="7.5" fill={f.color} textAnchor="middle">{f.trigger}</text>
+            <polygon points={`${112},${25+i*18} ${122},${21+i*18} ${122},${29+i*18}`} fill={f.color} opacity=".6"/>
+            <rect x="124" y={18+i*18} width="130" height="14" rx="3" fill={f.color} opacity=".12"/>
+            <text x="189" y={29+i*18} fontSize="7.5" fontFamily="monospace" fill="#1e293b" textAnchor="middle">{f.fn}()</text>
+            <polygon points={`${256},${25+i*18} ${266},${21+i*18} ${266},${29+i*18}`} fill={f.color} opacity=".6"/>
+            <rect x="268" y={18+i*18} width="130" height="14" rx="3" fill={f.color} opacity=".12" stroke={f.color} strokeWidth="1"/>
+            <text x="333" y={29+i*18} fontSize="7.5" fill={f.color} textAnchor="middle">{f.out}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function StreamAnalyticsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Stream Analytics — Real-Time SQL on Streams</text>
+        <rect x="10" y="20" width="90" height="40" rx="5" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="55" y="38" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Input</text>
+        <text x="55" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">Event Hub</text>
+        <polygon points="102,40 112,36 112,44" fill="#4f8ef7"/>
+        <rect x="114" y="18" width="160" height="44" rx="5" fill="#f59e0b" opacity=".12" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="194" y="34" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">ASA Job</text>
+        <text x="194" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">SELECT, WHERE, GROUP BY</text>
+        <text x="194" y="56" fontSize="7.5" fill="#475569" textAnchor="middle">TUMBLING / HOPPING window</text>
+        <polygon points="276,40 286,36 286,44" fill="#22c55e"/>
+        <rect x="288" y="20" width="90" height="40" rx="5" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="333" y="38" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Output</text>
+        <text x="333" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">Power BI / ADLS</text>
+        <text x="4" y="74" fontSize="8" fill="#64748b">SU (Streaming Units) = compute. 1 SU ≈ 1 MB/s throughput</text>
+      </svg>
+    </div>
+  )
+}
+
+function KeyVaultDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Key Vault — Secret Management</text>
+        <rect x="10" y="20" width="140" height="40" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="80" y="37" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">App / Service</text>
+        <text x="80" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">Managed Identity</text>
+        <polygon points="152,40 162,36 162,44" fill="#4f8ef7"/>
+        <rect x="164" y="20" width="140" height="40" rx="5" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="234" y="37" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Key Vault</text>
+        <text x="234" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">Secrets / Keys / Certs</text>
+        <polygon points="306,40 316,36 316,44" fill="#22c55e"/>
+        <rect x="318" y="20" width="130" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="383" y="37" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Secret value</text>
+        <text x="383" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">returned to caller</text>
+        <text x="4" y="70" fontSize="8" fill="#64748b">No secrets in code — apps authenticate via Managed Identity, retrieve secrets at runtime</text>
+      </svg>
+    </div>
+  )
+}
+
+function IdentityDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure Identity — RBAC Layers</text>
+        {[
+          {scope:'Management Group',color:'#1e293b'},
+          {scope:'Subscription',color:'#4f8ef7'},
+          {scope:'Resource Group',color:'#8b5cf6'},
+          {scope:'Resource',color:'#22c55e'},
+        ].map((s,i)=>(
+          <g key={s.scope}>
+            <rect x={10+i*14} y={18+i*13} width={440-i*28} height="12" rx="2" fill={s.color} opacity={.1+i*.06} stroke={s.color} strokeWidth="1"/>
+            <text x={16+i*14} y={28+i*13} fontSize="8" fill={s.color}>{s.scope}</text>
+          </g>
+        ))}
+        <text x="4" y="76" fontSize="8" fill="#64748b">Role assignment = {'{'}identity{'}'}+{'{'}role{'}'}+{'{'}scope{'}'}. Inherited downwards. Deny assignments override allow.</text>
+      </svg>
+    </div>
+  )
+}
+
+function NetworkingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure Networking — VNet Isolation</text>
+        <rect x="10" y="18" width="460" height="54" rx="6" fill="#4f8ef7" opacity=".05" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="20" y="28" fontSize="8" fill="#4f8ef7">VNet: 10.0.0.0/16</text>
+        <rect x="22" y="32" width="140" height="28" rx="4" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.2"/>
+        <text x="92" y="44" fontSize="8" fontWeight="600" fill="#22c55e" textAnchor="middle">Subnet: app 10.0.1.0/24</text>
+        <text x="92" y="55" fontSize="7.5" fill="#475569" textAnchor="middle">NSG: allow 443</text>
+        <rect x="180" y="32" width="140" height="28" rx="4" fill="#8b5cf6" opacity=".12" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="250" y="44" fontSize="8" fontWeight="600" fill="#8b5cf6" textAnchor="middle">Subnet: data 10.0.2.0/24</text>
+        <text x="250" y="55" fontSize="7.5" fill="#475569" textAnchor="middle">Private Endpoints</text>
+        <rect x="338" y="32" width="120" height="28" rx="4" fill="#f59e0b" opacity=".12" stroke="#f59e0b" strokeWidth="1.2"/>
+        <text x="398" y="44" fontSize="8" fontWeight="600" fill="#f59e0b" textAnchor="middle">Subnet: gateway</text>
+        <text x="398" y="55" fontSize="7.5" fill="#475569" textAnchor="middle">VPN / ExpressRoute</text>
+      </svg>
+    </div>
+  )
+}
+
+function MonitorDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure Monitor — Observability Stack</text>
+        {[
+          {name:'Metrics',desc:'Numeric time-series\n(CPU, memory, latency)',color:'#4f8ef7'},
+          {name:'Logs (LA Workspace)',desc:'Structured KQL-queryable\nlog data',color:'#8b5cf6'},
+          {name:'Traces (App Insights)',desc:'Distributed request tracing\nend-to-end',color:'#22c55e'},
+          {name:'Alerts',desc:'Metric or log rules\n→ action group',color:'#ef4444'},
+        ].map((m,i)=>(
+          <g key={m.name}>
+            <rect x={4+(i%2)*232} y={18+Math.floor(i/2)*30} width="222" height="22" rx="4" fill={m.color} opacity=".12" stroke={m.color} strokeWidth="1.1"/>
+            <text x={14+(i%2)*232} y={27+Math.floor(i/2)*30} fontSize="8.5" fontWeight="700" fill={m.color}>{m.name}</text>
+            <text x={14+(i%2)*232} y={37+Math.floor(i/2)*30} fontSize="7.5" fill="#475569">{m.desc.replace('\n',' — ')}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function CosmosDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Cosmos DB — Global Distribution + Multi-API</text>
+        {[
+          {api:'Core (SQL)',desc:'JSON docs + SQL queries',color:'#4f8ef7'},
+          {api:'Mongo API',desc:'MongoDB-compatible wire',color:'#22c55e'},
+          {api:'Cassandra API',desc:'Wide-column CQL',color:'#8b5cf6'},
+          {api:'Gremlin API',desc:'Graph traversal',color:'#f59e0b'},
+        ].map((a,i)=>(
+          <g key={a.api}>
+            <rect x={4+i*113} y="18" width="108" height="44" rx="5" fill={a.color} opacity=".12" stroke={a.color} strokeWidth="1.2"/>
+            <text x={58+i*113} y="33" fontSize="9" fontWeight="700" fill={a.color} textAnchor="middle">{a.api}</text>
+            <text x={58+i*113} y="45" fontSize="7.5" fill="#475569" textAnchor="middle">{a.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="74" fontSize="8" fill="#64748b">RU/s = Request Units per second. Single-digit ms P99 globally. 5 consistency levels.</text>
+      </svg>
+    </div>
+  )
+}
+
+function AzureSQLDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure SQL — Deployment Options</text>
+        {[
+          {name:'SQL Database (single)',desc:'PaaS, built-in HA, serverless option',color:'#4f8ef7'},
+          {name:'SQL Managed Instance',desc:'Full SQL Server + VNet injection',color:'#22c55e'},
+          {name:'SQL Server on VM',desc:'IaaS, full control, BYOL',color:'#8b5cf6'},
+          {name:'Synapse Serverless SQL',desc:'T-SQL over ADLS (no writes)',color:'#f59e0b'},
+        ].map((s,i)=>(
+          <g key={s.name}>
+            <rect x={4+(i%2)*232} y={18+Math.floor(i/2)*26} width="222" height="20" rx="4" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.1"/>
+            <text x={14+(i%2)*232} y={27+Math.floor(i/2)*26} fontSize="8.5" fontWeight="700" fill={s.color}>{s.name}</text>
+            <text x={14+(i%2)*232} y={35+Math.floor(i/2)*26} fontSize="7.5" fill="#475569">{s.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DevOpsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Azure DevOps — CI/CD Pipeline</text>
+        {['Commit','Build (YAML)','Unit Tests','Artifact','Deploy Dev','Deploy Prod'].map((s,i)=>(
+          <g key={s}>
+            <rect x={4+i*78} y="18" width="72" height="28" rx="4" fill={i>=4?'#22c55e':i===0?'#4f8ef7':'#8b5cf6'} opacity=".15" stroke={i>=4?'#22c55e':i===0?'#4f8ef7':'#8b5cf6'} strokeWidth="1.2"/>
+            <text x={40+i*78} y="36" fontSize="8" fontWeight="600" fill={i>=4?'#22c55e':i===0?'#4f8ef7':'#8b5cf6'} textAnchor="middle">{s}</text>
+            {i<5&&<polygon points={`${76+i*78},32 ${82+i*78},28 ${82+i*78},36`} fill="#94a3b8"/>}
+          </g>
+        ))}
+        <text x="4" y="56" fontSize="7.5" fill="#64748b">Pipeline as code (azure-pipelines.yml). Gates between stages. Environments with approvals.</text>
+      </svg>
+    </div>
+  )
+}
+
+function TerraformDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Terraform IaC — Plan → Apply Cycle</text>
+        {[
+          {label:'Write HCL\n(.tf files)',color:'#4f8ef7',x:10},
+          {label:'terraform init\n(providers)',color:'#22c55e',x:120},
+          {label:'terraform plan\n(diff)',color:'#f59e0b',x:230},
+          {label:'terraform apply\n(provision)',color:'#ef4444',x:340},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={s.x} y="18" width="104" height="40" rx="5" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.5"/>
+            {s.label.split('\n').map((l,j)=><text key={j} x={s.x+52} y={34+j*14} fontSize={j===0?9:8} fontWeight={j===0?'700':'400'} fill={j===0?s.color:'#475569'} textAnchor="middle">{l}</text>)}
+            {i<3&&<polygon points={`${s.x+108},38 ${s.x+118},34 ${s.x+118},42`} fill={s.color} opacity=".7"/>}
+          </g>
+        ))}
+        <text x="4" y="74" fontSize="8" fill="#64748b">State file (.tfstate) tracks real infra. Remote state in Azure Blob for team collaboration.</text>
+      </svg>
+    </div>
+  )
+}
+
+function CostDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Cost Optimization — Key Levers</text>
+        {[
+          {tip:'Reserved Instances',save:'Up to 72% vs PAYG',color:'#22c55e'},
+          {tip:'Spot / Low-priority VMs',save:'Up to 90% for interruptible',color:'#4f8ef7'},
+          {tip:'Auto-pause (serverless)',save:'Zero cost when idle',color:'#8b5cf6'},
+          {tip:'ADLS lifecycle mgmt',save:'Auto-tier cold data',color:'#f59e0b'},
+          {tip:'Right-size clusters',save:'Reduce DWU / SU',color:'#ef4444'},
+          {tip:'Tags + budgets',save:'Cost allocation + alerts',color:'#ec4899'},
+        ].map((t,i)=>(
+          <g key={t.tip}>
+            <rect x={4+(i%3)*152} y={18+Math.floor(i/3)*28} width="144" height="22" rx="4" fill={t.color} opacity=".1" stroke={t.color} strokeWidth="1.1"/>
+            <text x={14+(i%3)*152} y={28+Math.floor(i/3)*28} fontSize="8" fontWeight="700" fill={t.color}>{t.tip}</text>
+            <text x={14+(i%3)*152} y={37+Math.floor(i/3)*28} fontSize="7.5" fill="#475569">{t.save}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 function ADLSAnimation() {
   const [tier, setTier] = useState<'hot'|'cool'|'cold'|'archive'>('hot')
   const tiers = [
@@ -734,6 +1193,7 @@ export default function Azure({ completed, onComplete, onUnmark }: Props) {
             <h1 className="topic-title">Azure Fundamentals</h1>
             <p className="topic-desc">Azure organizes resources in a strict hierarchy: Management Groups contain Subscriptions, Subscriptions contain Resource Groups, and Resource Groups contain Resources. RBAC is applied at any level and flows downward. Understanding this hierarchy is essential for governance, cost allocation, and access control.</p>
           </div>
+          <AzureArchitectureDiagram />
           <AzureArchitectureAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -903,6 +1363,7 @@ az policy assignment create \\
             <h1 className="topic-title">ADLS Gen2</h1>
             <p className="topic-desc">Azure Data Lake Storage Gen2 combines Azure Blob Storage with a Hierarchical Namespace (HNS). HNS enables true directory semantics with atomic renames and ACL-based access control, making it the standard storage layer for Azure data platforms running Spark and Databricks.</p>
           </div>
+          <ADLSDiagram />
           <ADLSAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#9889;</span>
@@ -1123,6 +1584,7 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
             <h1 className="topic-title">Azure Blob Storage</h1>
             <p className="topic-desc">Azure Blob Storage is the foundational object storage service. It supports three blob types for different use cases, multiple replication strategies, and SAS tokens for delegated, time-limited access. ADLS Gen2 is built on Blob Storage with HNS added - they share the same underlying infrastructure.</p>
           </div>
+          <BlobDiagram />
           <BlobAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128230;</span>
@@ -1317,6 +1779,7 @@ az storage account blob-service-properties update \\
             <h1 className="topic-title">Azure Data Factory</h1>
             <p className="topic-desc">ADF is Azure's fully managed ETL and data integration service. It orchestrates data movement and transformation through pipelines composed of activities, datasets, and linked services. ADF supports 90+ connectors, mapping data flows for code-free Spark transformations, and multiple trigger types for scheduling and event-driven execution.</p>
           </div>
+          <ADFDiagram />
           <ADFPipelineAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128268;</span>
@@ -1628,6 +2091,7 @@ dataset_param = {
             <h1 className="topic-title">Azure Synapse Analytics</h1>
             <p className="topic-desc">Synapse is Azure's unified analytics platform combining a dedicated SQL pool (formerly SQL DW - massively parallel processing), a serverless SQL pool (query-on-demand over data lake files), Apache Spark pools, and integration pipelines - all in one workspace. Understanding when to use each pool type is critical for exam and interviews.</p>
           </div>
+          <SynapseDiagram />
           <SynapseAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#9878;</span>
@@ -1873,6 +2337,7 @@ gold_df.write.format("delta") \\
             <h1 className="topic-title">Azure Databricks</h1>
             <p className="topic-desc">Azure Databricks is the managed Spark platform on Azure, jointly developed by Databricks and Microsoft. It provides workspace management, cluster lifecycle, Unity Catalog for data governance, Delta Lake integration, and deep Azure service integrations. It runs in your Azure subscription (BYOC - bring your own cloud) with Databricks managing the control plane.</p>
           </div>
+          <DatabricksDiagram />
           <DatabricksAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128218;</span>
@@ -2087,6 +2552,7 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
             <h1 className="topic-title">Event Hub</h1>
             <p className="topic-desc">Azure Event Hub is a fully managed, high-throughput event streaming service capable of ingesting millions of events per second. It is partitioned (like Kafka topics), supports consumer groups for independent reads, and is the primary Azure service for real-time data ingestion pipelines. Event Hub Premium and Dedicated tiers offer schema registry and private endpoints.</p>
           </div>
+          <EventHubDiagram />
           <EventHubAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#9888;</span>
@@ -2363,6 +2829,7 @@ producer.flush()  # wait for all messages to be delivered`}</CodeBlock>
             <h1 className="topic-title">Event Grid</h1>
             <p className="topic-desc">Azure Event Grid is a fully managed event routing service built for reactive, event-driven architectures. It delivers discrete events (not streams) from sources like Azure services (Blob Storage, Resource Manager) or custom topics to handlers like Azure Functions, Logic Apps, webhooks, or Event Hub. It is the backbone of event-driven file ingestion patterns in Azure data platforms.</p>
           </div>
+          <EventGridDiagram />
           <EventGridAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128260;</span>
@@ -2545,6 +3012,7 @@ processed.writeStream \\
             <h1 className="topic-title">Azure Service Bus</h1>
             <p className="topic-desc">Azure Service Bus is an enterprise messaging service supporting queues (point-to-point) and topics with subscriptions (pub/sub). Unlike Event Hub, Service Bus guarantees ordered delivery, supports message sessions for FIFO processing, dead letter queues for failed messages, and transactional semantics - making it the right choice for workflow orchestration and reliable command messaging.</p>
           </div>
+          <ServiceBusDiagram />
           <ServiceBusAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128235;</span>
@@ -2776,6 +3244,7 @@ for t in threads:
             <h1 className="topic-title">Azure Functions</h1>
             <p className="topic-desc">Azure Functions is a serverless compute service for event-driven code execution. Functions are triggered by events (HTTP requests, timers, blob creation, queue messages, Event Hub events) and can read/write to other services via input/output bindings - all declared in configuration, not code. For data engineering, Functions are ideal for lightweight ETL triggers, file processing, and API integrations.</p>
           </div>
+          <FunctionsDiagram />
           <AzureFunctionsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#10052;</span>
@@ -3072,6 +3541,7 @@ func azure functionapp publish func-data-platform-realtime --python`}</CodeBlock
             <h1 className="topic-title">Azure Stream Analytics</h1>
             <p className="topic-desc">Azure Stream Analytics (ASA) is a fully managed, serverless real-time analytics service. It uses a SQL-like query language with temporal windowing functions to process streaming data from Event Hubs, IoT Hub, or Blob Storage and route results to 20+ sinks.</p>
           </div>
+          <StreamAnalyticsDiagram />
           <StreamAnalyticsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -3223,6 +3693,7 @@ az stream-analytics job start \
             <h1 className="topic-title">Key Vault Deep Dive</h1>
             <p className="topic-desc">Azure Key Vault centralises secrets, encryption keys, and TLS certificates. It integrates natively with ADF linked services, Azure Functions app settings, Databricks secret scopes, and virtually every Azure service via managed identity.</p>
           </div>
+          <KeyVaultDiagram />
           <KeyVaultAnimation />
           <div className="callout callout-danger">
             <span className="callout-icon">&#128680;</span>
@@ -3370,6 +3841,7 @@ spark.conf.set(
             <h1 className="topic-title">Azure AD / Entra ID and Identity</h1>
             <p className="topic-desc">Microsoft Entra ID (formerly Azure Active Directory) is the identity platform for Azure. For data engineering, the critical concepts are service principals, managed identities, workload identity federation, and OAuth 2.0 token flows used by SDKs and pipelines.</p>
           </div>
+          <IdentityDiagram />
           <IdentityAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -3515,6 +3987,7 @@ print(result.stdout.strip())`}</CodeBlock>
             <h1 className="topic-title">VNet Deep Dive</h1>
             <p className="topic-desc">Azure networking for data engineers focuses on isolating data platform resources inside a VNet, locking down storage accounts and databases behind private endpoints, and controlling traffic with NSGs and route tables.</p>
           </div>
+          <NetworkingDiagram />
           <AzureNetworkAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -3649,6 +4122,7 @@ az network vnet peering create \
             <h1 className="topic-title">Azure Monitor Deep Dive</h1>
             <p className="topic-desc">Azure Monitor is the unified observability platform for Azure. It collects metrics (numerical time-series), logs (structured/unstructured text), and traces. Log Analytics workspace stores logs queryable with KQL. Application Insights adds APM for applications.</p>
           </div>
+          <MonitorDiagram />
           <MonitorAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -3798,6 +4272,7 @@ az monitor action-group create \
             <h1 className="topic-title">Cosmos DB Deep Dive</h1>
             <p className="topic-desc">Azure Cosmos DB is a globally distributed, multi-model NoSQL database with guaranteed single-digit millisecond latency at any scale. The partition key is the single most important design decision  -  it determines data distribution, query efficiency, and throughput consumption.</p>
           </div>
+          <CosmosDiagram />
           <CosmosAnimation />
           <div className="callout callout-danger">
             <span className="callout-icon">&#9888;</span>
@@ -3952,6 +4427,7 @@ az cosmosdb sql container query-throughput \
             <h1 className="topic-title">Azure SQL Database</h1>
             <p className="topic-desc">Azure SQL Database is a fully managed PaaS relational database built on SQL Server. Key choices: DTU vs vCore purchasing model, single database vs elastic pool vs Managed Instance, and geo-replication strategy.</p>
           </div>
+          <AzureSQLDiagram />
           <AzureSQLAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -4104,6 +4580,7 @@ rows = cursor.fetchall()`}</CodeBlock>
             <h1 className="topic-title">Azure DevOps and GitHub Actions</h1>
             <p className="topic-desc">CI/CD for data engineering pipelines: automatically test, build, and deploy ADF pipelines, Databricks notebooks, Terraform infrastructure, and dbt models when code is merged. Azure DevOps and GitHub Actions are the two dominant platforms.</p>
           </div>
+          <DevOpsDiagram />
           <DevOpsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -4296,6 +4773,7 @@ jobs:
             <h1 className="topic-title">Terraform for Azure</h1>
             <p className="topic-desc">Terraform is the de-facto IaC tool for Azure data platforms. It declaratively manages all Azure resources  -  VNets, storage accounts, ADF, Databricks workspaces  -  with a state file tracking what exists, enabling plan/apply/destroy workflows.</p>
           </div>
+          <TerraformDiagram />
           <TerraformAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
@@ -4561,6 +5039,7 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
             <h1 className="topic-title">Azure Cost Management</h1>
             <p className="topic-desc">Cloud cost is an engineering concern. Data platforms commonly overspend on idle Databricks clusters, over-provisioned Synapse dedicated pools, and unnecessary data egress. Understanding Azure Cost Management tools lets you monitor, alert, and optimise spend proactively.</p>
           </div>
+          <CostDiagram />
           <CostAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
