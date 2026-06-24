@@ -92,6 +92,7 @@ export default function Spark({ completed, onComplete, onUnmark }: Props) {
               Spark is a distributed compute engine built on a master-worker model. The <strong>Driver</strong> is the JVM process that hosts your application, creates the SparkContext/SparkSession, builds the logical plan, and coordinates execution. <strong>Executors</strong> are JVM processes on worker nodes that run tasks and cache data. A <strong>Cluster Manager</strong> (Standalone, YARN, or Kubernetes) allocates resources. Understanding this hierarchy is essential for debugging OOM errors, task failures, and performance tuning.
             </p>
           </div>
+          <SparkArchDiagram />
           <SparkArchAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -182,6 +183,7 @@ print(f"Executor memory: {spark.conf.get('spark.executor.memory')}")
               Every Spark job is represented as a Directed Acyclic Graph (DAG) of stages. <strong>Narrow transformations</strong> (map, filter, withColumn) pipeline within a stage  -  each partition is processed independently with no data movement. <strong>Wide transformations</strong> (groupBy, join, repartition) require a <strong>shuffle</strong>  -  data is written to disk, transferred across the network, and re-read  -  creating a new stage boundary. Each stage is divided into <strong>tasks</strong>, one per partition, and tasks are serialized and sent to executor slots.
             </p>
           </div>
+          <DagDiagram />
           <DagAnimation />
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
@@ -271,6 +273,7 @@ df.rdd.map(lambda row: bc.value.get(row.key))
               Spark does <em>nothing</em> when you call a transformation. It records the operation in the logical plan. Only when you call an <strong>action</strong> (count, collect, show, write, save) does Spark hand the full logical plan to Catalyst for optimization, generate a physical plan, and execute. This lazy model enables optimizations impossible in eager systems: Catalyst can push filters down to the data source, prune columns before reading, reorder joins, and fold constants  -  all because it sees the <em>complete</em> query before touching any data.
             </p>
           </div>
+          <LazyEvalDiagram />
           <LazyEvalAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -369,6 +372,7 @@ df4.explain(True)
               Spark has three abstraction layers. <strong>RDDs</strong> (Resilient Distributed Datasets) are the low-level API  -  typed, unstructured partitions of JVM objects with no schema. <strong>DataFrames</strong> are distributed tables with a named schema, optimised by Catalyst and Tungsten  -  the right choice for 95% of work. <strong>Datasets</strong> are typed DataFrames available only in Scala/Java (Python has no Dataset API  -  PySpark DataFrames behave like untyped Datasets[Row]). In practice: always use DataFrames; drop to RDD only when you need low-level partition-level control unavailable in the DataFrame API.
             </p>
           </div>
+          <RDDDiagram />
           <RDDAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
@@ -469,6 +473,7 @@ result_df.rdd.foreachPartition(process_partition)
               Spark can read from virtually any source. Understanding format-specific options  -  especially <code>inferSchema</code> vs explicit schema, <code>header</code>, <code>multiLine</code>, and predicate pushdown support  -  is critical for building reliable ingestion pipelines. Always define schemas explicitly in production; <code>inferSchema=True</code> triggers a full scan just to determine types.
             </p>
           </div>
+          <ReadingDiagram />
           <ReadingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql.types import *
 from pyspark.sql import functions as F
@@ -598,6 +603,7 @@ df_events = df_kafka.select(
               Writing is an action  -  it triggers the full DAG. Key decisions: format (Parquet/Delta for analytics, CSV/JSON for interchange), <strong>save mode</strong> (append/overwrite/ignore/errorIfExists), and <strong>physical layout</strong> (partitionBy for read pruning, bucketBy+sortBy for join optimisation). The number of output files equals the number of active partitions at write time  -  control this with coalesce or repartition before writing.
             </p>
           </div>
+          <WritingDiagram />
           <WritingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
@@ -716,6 +722,7 @@ df.select(
               The DataFrame API provides a rich transformation vocabulary. Mastering these  -  and knowing which require shuffles  -  separates efficient pipelines from slow ones. All of the following are lazy transformations; nothing executes until an action is called.
             </p>
           </div>
+          <TransformsDiagram />
           <TransformsAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType
@@ -828,6 +835,7 @@ df.na.replace({"PENDING": "IN_PROGRESS"}, subset=["status"])`}
               <code>pyspark.sql.functions</code> contains 300+ functions that run entirely in the JVM  -  no Python serialisation. Always prefer these over Python UDFs. Categories: string, date/time, array, map, struct, JSON, aggregate, and conditional.
             </p>
           </div>
+          <FunctionsSparkDiagram />
           <FunctionsAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.types import MapType, StringType, ArrayType, LongType
@@ -953,6 +961,7 @@ df.groupBy("user_id").agg(
               Window functions compute a result for each row based on a <em>window</em> of related rows  -  without collapsing rows like groupBy does. They are indispensable for sessionisation, running totals, lag/lead comparisons, rankings, and SCD Type 2 logic. Every window function requires a <code>Window</code> spec defining partition, order, and optional frame bounds.
             </p>
           </div>
+          <SparkWindowDiagram />
           <WindowAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.window import Window
@@ -1061,6 +1070,7 @@ df_scd = df_history \
               Spark has four physical join implementations. The right one is chosen automatically (or forced with hints). Understanding when each is used  -  and when to force one  -  is critical for avoiding shuffles and handling skew.
             </p>
           </div>
+          <JoinsDiagram />
           <JoinStrategiesAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -1174,7 +1184,9 @@ result = events.hint("range_join", 86400).join(  # 86400 = 1 day in seconds
               Partitioning determines parallelism, shuffle size, and output file layout. There are two distinct concepts: <strong>in-memory partitions</strong> (how Spark distributes the DataFrame across executor cores) and <strong>physical/storage partitions</strong> (how files are organized on disk via <code>partitionBy</code> on write). Getting both right is the difference between a 10-minute and a 2-hour job.
             </p>
           </div>
+          <PartitionsDiagram />
           <PartitionsAnimation />
+          <ShuffleDiagram />
           <ShuffleAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
@@ -1293,6 +1305,7 @@ df.withColumn("pid", spark_partition_id()) \
               Data skew occurs when one or a few partition keys have significantly more rows than others. The result: 99% of tasks finish in 30 seconds, but 1 task runs for 30 minutes because it has 80% of the data. This single task becomes the bottleneck. Detection, salting, and AQE's automatic skew handling are the three tools to fix it.
             </p>
           </div>
+          <SkewDiagram />
           <SkewAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.functions import spark_partition_id
@@ -1409,6 +1422,7 @@ result = non_null.join(dim_user, "user_id", "left") \
               Spark's <strong>Unified Memory Model</strong> (since Spark 1.6) divides executor memory into pools that dynamically borrow from each other. Understanding this model is essential for diagnosing OOM errors, GC pressure, and spill-to-disk  -  the top three causes of slow Spark jobs.
             </p>
           </div>
+          <SparkMemoryDiagram />
           <MemoryAnimation />
           <CodeBlock lang="python">{`# ── Executor memory breakdown ─────────────────────────────────────────
 #
@@ -1513,6 +1527,7 @@ spark.conf.set("spark.memory.offHeap.size",      "4g")
               Caching stores computed results so subsequent actions don't recompute from scratch. The <strong>wrong</strong> use of caching wastes memory and can slow jobs. Cache only when a DataFrame is used in multiple downstream actions and computing it is more expensive than the memory cost.
             </p>
           </div>
+          <CacheDiagram />
           <CacheAnimation />
           <CodeBlock lang="python">{`from pyspark import StorageLevel
 
@@ -1625,6 +1640,7 @@ silver_df.unpersist()   # free memory`}
               <strong>Broadcast variables</strong> efficiently distribute a read-only value to every executor once  -  instead of serialising it into every task closure. <strong>Accumulators</strong> are write-only counters/sums that executors update and the driver reads  -  the only safe way to collect per-task metrics without breaking lazy evaluation.
             </p>
           </div>
+          <BroadcastDiagram />
           <BroadcastAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark import AccumulatorParam
@@ -1740,6 +1756,7 @@ print(unique_errors.value)   # set of all error codes seen`}
               Python UDFs are the single biggest performance trap in PySpark. Every row crosses the JVM-Python boundary  -  serialised, sent via socket, deserialized, processed, re-serialised. <strong>Always exhaust built-in functions first.</strong> When you genuinely need custom logic, use Pandas UDFs (vectorised) which process entire column batches via Apache Arrow  -  10-100x faster than row UDFs.
             </p>
           </div>
+          <UDFDiagram />
           <UDFAnimation />
           <div className="callout callout-warning">
             <span className="callout-icon">⚠️</span>
@@ -1873,6 +1890,7 @@ df.withColumn("score", weighted_score(F.col("amount"), F.col("weight")))`}
               Spark SQL lets you write ANSI SQL that runs on the same engine as the DataFrame API  -  both compile to the same logical plan. You can freely mix SQL and DataFrame API in the same job, referencing the same data. Views are the bridge between the two worlds.
             </p>
           </div>
+          <SparkSQLDiagram />
           <SparkSQLAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
@@ -2010,6 +2028,7 @@ spark.sql("""
               Structured Streaming treats a stream as an unbounded table that grows over time. Each micro-batch (or continuous trigger) appends new rows. You write the same DataFrame API you know from batch  -  Spark handles checkpointing, offsets, watermarks, and exactly-once semantics automatically.
             </p>
           </div>
+          <StreamingDiagram />
           <StreamingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
@@ -2162,6 +2181,7 @@ for q in spark.streams.active:
               Structured Streaming stores state across micro-batches in an in-memory <strong>state store</strong> (RocksDB or HDFS-backed). Stateful operations include windowed aggregations, deduplication, and the advanced APIs <code>mapGroupsWithState</code> / <code>flatMapGroupsWithState</code> for fully custom per-group state machines.
             </p>
           </div>
+          <StatefulStreamingDiagram />
           <StatefulStreamingAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 from pyspark.sql.streaming.state import GroupState, GroupStateTimeout
@@ -2303,6 +2323,7 @@ spark.conf.set("spark.sql.streaming.stateStore.providerClass",
               Catalyst is Spark SQL's query optimizer. It transforms your logical query plan through four phases before execution. Understanding what Catalyst does automatically helps you write plans that Catalyst can optimise further  -  and diagnose plans where it can't.
             </p>
           </div>
+          <CatalystDiagram />
           <CatalystAnimation />
           <CodeBlock lang="python">{`from pyspark.sql import functions as F
 
@@ -2418,6 +2439,7 @@ spark.conf.set("spark.sql.optimizer.excludedRules",
               AQE (Spark 3.0+) re-optimises the physical plan at runtime using <em>actual</em> shuffle statistics  -  not estimates. It solves three of the hardest Spark tuning problems automatically: too many shuffle partitions, suboptimal join strategies, and data skew. Enabled by default in Spark 3.2+.
             </p>
           </div>
+          <AQEDiagram />
           <AQEAnimation />
           <CodeBlock lang="python">{`# ── Enable AQE ───────────────────────────────────────────────────────
 spark.conf.set("spark.sql.adaptive.enabled", "true")          # default true in 3.2+
@@ -2527,6 +2549,7 @@ with spark.conf as c:
               Tungsten is Spark's physical execution engine, introduced in Spark 1.4. It bypasses JVM object overheads and GC through three innovations: <strong>off-heap binary memory</strong> (UnsafeRow format), <strong>cache-aware algorithms</strong> (data accessed sequentially, not by pointer chasing), and <strong>whole-stage code generation</strong> (fusing operators into a single generated JVM method that the JIT can optimise fully).
             </p>
           </div>
+          <TungstenDiagram />
           <TungstenAnimation />
           <CodeBlock lang="python">{`# ── Tungsten's 3 pillars ─────────────────────────────────────────────
 
@@ -2639,6 +2662,7 @@ spark.conf.set("spark.memory.offHeap.size",    "8g")
               A practical reference for the configurations that matter most in production Spark jobs. These are the knobs you'll actually tune  -  not an exhaustive list of every property.
             </p>
           </div>
+          <SparkConfigDiagram />
           <ConfigAnimation />
           <CodeBlock lang="python">{`# ── Production baseline configuration ────────────────────────────────
 spark = SparkSession.builder \
@@ -2744,6 +2768,7 @@ spark.conf.set("spark.shuffle.io.retryWait",                "30s")
               The Spark UI (port 4040 by default) is the primary tool for diagnosing slow jobs. Knowing <em>exactly</em> where to look for GC time, spill, skew, and excessive shuffle is the difference between guessing at a fix and knowing the root cause.
             </p>
           </div>
+          <SparkUIDiagram />
           <SparkUiAnimation />
           <CodeBlock lang="python">{`# ── Spark UI navigation guide ─────────────────────────────────────────
 #
@@ -2866,6 +2891,7 @@ spark.conf.set("spark.job.description", "Gold: daily revenue by merchant")`}
               Delta Lake integrates deeply with Spark, adding ACID transactions, schema enforcement, time travel, and the MERGE API on top of Parquet files. In Databricks, Delta is the default table format. Understanding the Spark-side API for Delta is essential for production data engineering.
             </p>
           </div>
+          <SparkDeltaDiagram />
           <DeltaAnimation />
           <CodeBlock lang="python">{`from delta.tables import DeltaTable
 from pyspark.sql import functions as F
@@ -3010,6 +3036,7 @@ changes = spark.read.format("delta") \
               Apache Kafka is a distributed commit log  -  an append-only, ordered, immutable sequence of records. A Kafka <strong>cluster</strong> is formed by multiple <strong>brokers</strong> (servers). <strong>Topics</strong> are logical channels divided into <strong>partitions</strong>. Each partition is an ordered, immutable log replicated across brokers. The <strong>leader</strong> partition handles all reads and writes; <strong>ISR (In-Sync Replicas)</strong> are the set of replicas caught up with the leader. If the leader fails, a new leader is elected from the ISR. Historically Kafka used ZooKeeper for cluster metadata  -  from Kafka 3.3+ the <strong>KRaft</strong> mode replaces ZooKeeper with a built-in Raft consensus protocol. <strong>Consumer groups</strong> allow horizontal scaling: each partition is consumed by exactly one consumer per group. <strong>Offsets</strong> track the consumer's position in each partition. Retention can be time-based (<code>retention.ms</code>), size-based (<code>retention.bytes</code>), or log compaction (keeps only the latest value per key  -  ideal for changelog topics).
             </p>
           </div>
+          <KafkaArchDiagram />
           <KafkaArchAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3099,6 +3126,7 @@ changes = spark.read.format("delta") \
               The <strong>confluent-kafka</strong> Python library is the production-grade client for Kafka (based on librdkafka). The <strong>Producer</strong> sends messages asynchronously  -  configure <code>bootstrap.servers</code>, <code>acks='all'</code> for durability, and <code>enable.idempotence=True</code> for safe retries. A <strong>delivery report callback</strong> confirms each message was committed. The <strong>Consumer</strong> joins a consumer group via <code>group.id</code>, sets <code>auto.offset.reset='earliest'</code> to start from the beginning, and uses <code>enable.auto.commit=False</code> with manual commits  -  offsets are committed only after successful processing, preventing data loss on crashes.
             </p>
           </div>
+          <KafkaPythonDiagram />
           <KafkaPythonAnimation />
           <CodeBlock lang="python">{`from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
 import json
@@ -3217,6 +3245,7 @@ finally:
               Exactly-once processing requires three things: <strong>idempotent source reads</strong> (re-reading from offset doesn't create duplicates), <strong>idempotent transformations</strong> (running the same computation twice produces the same result), and <strong>atomic sink writes</strong> (writes either fully succeed or fully fail). In Kafka, <strong>idempotent producers</strong> use a Producer ID + per-partition sequence number to deduplicate retried sends. <strong>Transactions</strong> extend this: <code>begin_transaction</code> → produce messages → <code>commit_transaction</code> (or <code>abort_transaction</code>) atomically across multiple partitions. In Spark Structured Streaming, exactly-once is achieved by combining checkpoint-based offset tracking with a Delta Lake ACID sink  -  Spark generates unique batch IDs and Delta's transaction log rejects duplicate writes.
             </p>
           </div>
+          <KafkaEOSDiagram />
           <KafkaEOSAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3339,6 +3368,7 @@ stream_df.writeStream \\
               <strong>Kafka Connect</strong> is a scalable framework for streaming data between Kafka and external systems without writing custom producers/consumers. <strong>Source connectors</strong> pull data into Kafka (databases, object storage, APIs). <strong>Sink connectors</strong> push Kafka data to destinations (data lakes, databases, Elasticsearch). Connectors are deployed as JSON configuration  -  no custom code for standard integrations. <strong>Debezium</strong> is the leading CDC (Change Data Capture) source connector  -  it tails database transaction logs (MySQL binlog, PostgreSQL WAL, SQL Server CDC) and streams every INSERT/UPDATE/DELETE as a Kafka event. Topics follow the naming convention <code>server.database.table</code>. The <strong>dead letter queue (DLQ)</strong> captures records that fail to process, enabling debugging without blocking the main pipeline.
             </p>
           </div>
+          <KafkaConnectDiagram />
           <KafkaConnectAnimation />
           <CodeBlock lang="json">{`// ── Debezium PostgreSQL CDC Connector config ──────────────────────────
 // PUT http://kafka-connect:8083/connectors/postgres-cdc/config
@@ -3429,6 +3459,7 @@ stream_df.writeStream \\
               The <strong>Confluent Schema Registry</strong> is a central repository for Avro, Protobuf, and JSON Schema definitions. Producers register a schema before publishing; the Registry returns a schema ID that is embedded in each message (4 bytes). Consumers look up the schema by ID to deserialize  -  this decouples schema management from application code. Schemas are versioned by <strong>subject</strong> (typically <code>topic-value</code> or <code>topic-key</code>). <strong>Compatibility modes</strong> enforce evolution rules: <strong>BACKWARD</strong> (new schema can read data written with old schema  -  add optional fields), <strong>FORWARD</strong> (old schema can read data written with new schema  -  remove fields), <strong>FULL</strong> (both directions  -  safest). This prevents producers from breaking consumers with incompatible schema changes.
             </p>
           </div>
+          <SchemaRegistryDiagram />
           <SchemaRegistryAnimation />
           <CodeBlock lang="python">{`# ── Avro Producer with Schema Registry ───────────────────────────────
 from confluent_kafka import Producer
@@ -3544,6 +3575,7 @@ while True:
               Azure Event Hub is a fully managed, Kafka-compatible streaming service. It exposes the Kafka protocol  -  most Kafka clients work against Event Hub with only a <code>bootstrap.servers</code> change. Key differences: Event Hub has a maximum retention of 90 days (long-term retention requires Blob Capture); partitions are fixed at namespace creation and cannot be increased; Kafka protocol is available on Event Hub Premium. Event Hub integrates natively with the Azure ecosystem (Auto Loader, ADF, Stream Analytics). Self-managed Kafka offers more flexibility: unlimited retention, dynamic partition increases, the full Kafka Connect ecosystem, Kafka Streams, and multi-cloud deployments. Choose Event Hub for Azure-native low-ops platforms. Choose Kafka when you need the full ecosystem, multi-cloud, or complex routing.
             </p>
           </div>
+          <KafkaVsEventHubDiagram />
           <KafkaVsEventHubAnimation />
           <CodeBlock lang="python">{`# ── Connecting an existing Kafka client to Azure Event Hub ────────────
 # Only bootstrap.servers and security config change.
@@ -3630,6 +3662,723 @@ df.writeStream \\
         </section>
 
       </main>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────── SPARK DIAGRAM COMPONENTS ───
+
+function SparkArchDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark Cluster Architecture</text>
+        <rect x="10" y="18" width="100" height="36" rx="5" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="60" y="34" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Driver</text>
+        <text x="60" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">SparkContext</text>
+        <text x="60" y="56" fontSize="7.5" fill="#475569" textAnchor="middle">DAG Scheduler</text>
+        {[0,1,2].map(i=>(
+          <g key={i}>
+            <rect x={160+i*100} y="18" width="88" height="36" rx="4" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.2"/>
+            <text x={204+i*100} y="34" fontSize="9" fontWeight="600" fill="#22c55e" textAnchor="middle">Executor {i+1}</text>
+            <text x={204+i*100} y="46" fontSize="7.5" fill="#475569" textAnchor="middle">Tasks + Cache</text>
+            <line x1="110" y1="36" x2={160+i*100} y2="36" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+          </g>
+        ))}
+        <text x="4" y="78" fontSize="8" fill="#64748b">Cluster Manager (YARN / K8s / Standalone) allocates Executors → Driver distributes Tasks</text>
+      </svg>
+    </div>
+  )
+}
+
+function DagDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DAG — Stages and Tasks</text>
+        {[
+          {label:'Stage 0\nRead CSV',color:'#4f8ef7',x:10},
+          {label:'Stage 1\nFilter/Map',color:'#22c55e',x:140},
+          {label:'Stage 2\nShuffle\n(groupBy)',color:'#f59e0b',x:270},
+          {label:'Stage 3\nAggregate',color:'#8b5cf6',x:380},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={s.x} y="18" width="110" height="50" rx="5" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.5"/>
+            {s.label.split('\n').map((l,j)=><text key={j} x={s.x+55} y={33+j*14} fontSize={j===0?9:8} fontWeight={j===0?'700':'400'} fill={j===0?s.color:'#475569'} textAnchor="middle">{l}</text>)}
+            {i<3&&<polygon points={`${s.x+114},43 ${s.x+126},39 ${s.x+126},47`} fill={s.color} opacity=".7"/>}
+          </g>
+        ))}
+        <text x="4" y="80" fontSize="8" fill="#64748b">Shuffle = stage boundary. Tasks run in parallel within a stage. Wide vs narrow transformations.</text>
+      </svg>
+    </div>
+  )
+}
+
+function LazyEvalDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Lazy Evaluation — Transformations vs Actions</text>
+        {['read()','filter()','select()','groupBy()','agg()'].map((t,i)=>(
+          <g key={t}>
+            <rect x={10+i*80} y="18" width="74" height="22" rx="3" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1" strokeDasharray="4 2"/>
+            <text x={47+i*80} y="33" fontSize="8.5" fontFamily="monospace" fill="#4f8ef7" textAnchor="middle">{t}</text>
+            {i<4&&<polygon points={`${84+i*80},29 ${90+i*80},25 ${90+i*80},33`} fill="#4f8ef7" opacity=".5"/>}
+          </g>
+        ))}
+        <text x="4" y="52" fontSize="8" fill="#4f8ef7">Transformations (lazy — build plan, no execution)</text>
+        <rect x="10" y="56" width="74" height="16" rx="3" fill="#ef4444" opacity=".25" stroke="#ef4444" strokeWidth="1.5"/>
+        <text x="47" y="67" fontSize="8.5" fontFamily="monospace" fill="#ef4444" textAnchor="middle">.show() / .count()</text>
+        <text x="90" y="67" fontSize="8" fill="#ef4444">← Action triggers DAG execution</text>
+      </svg>
+    </div>
+  )
+}
+
+function RDDDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">RDD vs DataFrame vs Dataset</text>
+        {[
+          {name:'RDD',desc:'Low-level, type-safe Java/Python objects\nNo optimizer, manual control',color:'#f59e0b'},
+          {name:'DataFrame',desc:'Distributed table with schema\nCatalyst optimizer + Tungsten',color:'#4f8ef7'},
+          {name:'Dataset',desc:'Typed DataFrame (Scala/Java only)\nEncoder-based serialization',color:'#22c55e'},
+        ].map((s,i)=>(
+          <g key={s.name}>
+            <rect x={4+i*154} y="18" width="147" height="44" rx="5" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.2"/>
+            <text x={77+i*154} y="32" fontSize="10" fontWeight="700" fill={s.color} textAnchor="middle">{s.name}</text>
+            {s.desc.split('\n').map((d,j)=><text key={j} x={77+i*154} y={43+j*11} fontSize="7" fill="#475569" textAnchor="middle">{d}</text>)}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ReadingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Reading Data — Format Comparison</text>
+        {[
+          {fmt:'CSV',pros:'Universal,human-readable',cons:'No schema,slow',color:'#64748b'},
+          {fmt:'JSON',pros:'Semi-structured,flexible',cons:'Verbose,slow parse',color:'#f59e0b'},
+          {fmt:'Parquet',pros:'Columnar,schema,fast',cons:'Binary,not editable',color:'#4f8ef7'},
+          {fmt:'Delta',pros:'ACID,time travel,fast',cons:'Needs Delta runtime',color:'#22c55e'},
+        ].map((r,i)=>(
+          <g key={r.fmt}>
+            <rect x={4+i*113} y="18" width="107" height="44" rx="4" fill={r.color} opacity=".12" stroke={r.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="31" fontSize="9.5" fontWeight="700" fill={r.color} textAnchor="middle">{r.fmt}</text>
+            <text x={57+i*113} y="42" fontSize="7" fill="#22c55e" textAnchor="middle">+ {r.pros.split(',')[0]}</text>
+            <text x={57+i*113} y="52" fontSize="7" fill="#ef4444" textAnchor="middle">- {r.cons.split(',')[0]}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function WritingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Write Modes</text>
+        {[
+          {mode:'overwrite',desc:'Replace entire dataset',color:'#ef4444'},
+          {mode:'append',desc:'Add rows, no dedup',color:'#22c55e'},
+          {mode:'ignore',desc:'Skip if data exists',color:'#64748b'},
+          {mode:'error (default)',desc:'Fail if data exists',color:'#f59e0b'},
+        ].map((w,i)=>(
+          <g key={w.mode}>
+            <rect x={4+i*113} y="18" width="107" height="38" rx="4" fill={w.color} opacity=".12" stroke={w.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="32" fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={w.color} textAnchor="middle">{w.mode}</text>
+            <text x={57+i*113} y="46" fontSize="7.5" fill="#475569" textAnchor="middle">{w.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function TransformsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Narrow vs Wide Transformations</text>
+        <rect x="10" y="18" width="200" height="52" rx="5" fill="#22c55e" opacity=".1" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="110" y="31" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Narrow (no shuffle)</text>
+        {['map()','filter()','select()','withColumn()'].map((t,i)=>(
+          <text key={t} x="20" y={44+i*12} fontSize="8" fontFamily="monospace" fill="#1e293b">{t}</text>
+        ))}
+        <rect x="260" y="18" width="195" height="52" rx="5" fill="#f59e0b" opacity=".1" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="357" y="31" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Wide (shuffle/barrier)</text>
+        {['groupBy().agg()','join()','distinct()','repartition()'].map((t,i)=>(
+          <text key={t} x="270" y={44+i*12} fontSize="8" fontFamily="monospace" fill="#1e293b">{t}</text>
+        ))}
+        <text x="4" y="80" fontSize="8" fill="#64748b">Wide transformations = stage boundary = shuffle across network. Minimize them.</text>
+      </svg>
+    </div>
+  )
+}
+
+function FunctionsSparkDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark Functions — Performance Hierarchy</text>
+        {[
+          {label:'Built-in SQL functions',desc:'pyspark.sql.functions — JVM, no ser/deser',color:'#22c55e',rank:'FASTEST'},
+          {label:'Pandas UDF (vectorized)',desc:'Arrow batch transfer to Python',color:'#4f8ef7',rank:'FAST'},
+          {label:'Python UDF',desc:'Row-by-row ser/deser via Pickle',color:'#f59e0b',rank:'SLOW'},
+        ].map((f,i)=>(
+          <g key={f.label}>
+            <rect x="8" y={18+i*18} width="320" height="14" rx="3" fill={f.color} opacity=".15" stroke={f.color} strokeWidth="1"/>
+            <text x="14" y={29+i*18} fontSize="8.5" fontWeight="600" fill="#1e293b">{f.label}</text>
+            <text x="335" y={29+i*18} fontSize="8" fontWeight="700" fill={f.color}>{f.rank}</text>
+            <text x="14" y={40+i*18} fontSize="7" fill="#94a3b8">{f.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="74" fontSize="8" fill="#64748b">Always prefer built-in functions. Only use UDFs when no SQL equivalent exists.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SparkWindowDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Window Functions — Partition + Order</text>
+        {[{user:'u1',amt:100},{user:'u1',amt:200},{user:'u2',amt:150},{user:'u2',amt:300}].map((r,i)=>(
+          <g key={i}>
+            <rect x="10" y={18+i*12} width="60" height="10" rx="2" fill={i<2?'#4f8ef7':'#22c55e'} opacity=".15"/>
+            <text x="40" y={27+i*12} fontSize="7.5" fill="#1e293b" textAnchor="middle">{r.user}</text>
+            <rect x="74" y={18+i*12} width="40" height="10" rx="2" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1"/>
+            <text x="94" y={27+i*12} fontSize="7.5" fill="#1e293b" textAnchor="middle">{r.amt}</text>
+          </g>
+        ))}
+        <rect x="8" y="16" width="108" height="25" rx="3" fill="none" stroke="#4f8ef7" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <text x="122" y="28" fontSize="8" fill="#4f8ef7">partition u1</text>
+        <rect x="8" y="41" width="108" height="25" rx="3" fill="none" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <text x="122" y="54" fontSize="8" fill="#22c55e">partition u2</text>
+        <text x="4" y="68" fontSize="8" fill="#64748b">W = Window.partitionBy("user").orderBy("amount")</text>
+        <text x="200" y="28" fontSize="8" fill="#8b5cf6">rank() / sum() / lag() / lead()</text>
+      </svg>
+    </div>
+  )
+}
+
+function JoinsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark Join Strategies</text>
+        {[
+          {name:'Broadcast Hash Join',desc:'Small table fits in memory\nbroadcast to all executors',color:'#22c55e'},
+          {name:'Sort Merge Join',desc:'Large-large: sort + merge\nDefault for large tables',color:'#4f8ef7'},
+          {name:'Shuffle Hash Join',desc:'Hash large table partition\nGood mid-size tables',color:'#8b5cf6'},
+        ].map((j,i)=>(
+          <g key={j.name}>
+            <rect x={4+i*154} y="18" width="147" height="48" rx="5" fill={j.color} opacity=".12" stroke={j.color} strokeWidth="1.2"/>
+            <text x={77+i*154} y="32" fontSize="8.5" fontWeight="700" fill={j.color} textAnchor="middle">{j.name}</text>
+            {j.desc.split('\n').map((d,k)=><text key={k} x={77+i*154} y={44+k*12} fontSize="7.5" fill="#475569" textAnchor="middle">{d}</text>)}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function PartitionsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Partitioning — Sizing Guide</text>
+        {[
+          {rule:'Target: 100-200 MB per partition',color:'#22c55e'},
+          {rule:'Default shuffle partitions: 200 (often too many)',color:'#f59e0b'},
+          {rule:'repartition() = full shuffle (use sparingly)',color:'#ef4444'},
+          {rule:'coalesce() = no shuffle, reduce only',color:'#4f8ef7'},
+        ].map((r,i)=>(
+          <g key={r.rule}>
+            <rect x="8" y={18+i*12} width="444" height="10" rx="2" fill={r.color} opacity=".12" stroke={r.color} strokeWidth="1"/>
+            <text x="14" y={27+i*12} fontSize="8" fill="#1e293b">{r.rule}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ShuffleDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Shuffle — Network Data Exchange</text>
+        {[0,1,2].map(i=>(
+          <g key={i}>
+            <rect x="10" y={18+i*18} width="80" height="14" rx="3" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x="50" y={29+i*18} fontSize="8" fill="#4f8ef7" textAnchor="middle">Map {i+1}</text>
+          </g>
+        ))}
+        <text x="100" y="35" fontSize="14" fill="#94a3b8">⇄</text>
+        {[0,1,2].map(i=>(
+          <g key={i}>
+            <rect x="130" y={18+i*18} width="80" height="14" rx="3" fill="#ef4444" opacity=".18" stroke="#ef4444" strokeWidth="1"/>
+            <text x="170" y={29+i*18} fontSize="8" fill="#ef4444" textAnchor="middle">Reduce {i+1}</text>
+          </g>
+        ))}
+        <text x="4" y="68" fontSize="8" fill="#64748b">All Map tasks write shuffle files → disk. Reduce tasks read across network → high I/O cost.</text>
+        <text x="220" y="30" fontSize="8" fill="#64748b">Minimise by: pushing filters before joins,\nusing broadcast joins, AQE skew hints.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SkewDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Skew — One Executor Does All the Work</text>
+        {[
+          {partition:'P0 (null key)',rows:800,color:'#ef4444'},
+          {partition:'P1',rows:50,color:'#22c55e'},
+          {partition:'P2',rows:60,color:'#22c55e'},
+          {partition:'P3',rows:45,color:'#22c55e'},
+        ].map((p,i)=>(
+          <g key={p.partition}>
+            <rect x={10+i*110} y={62-p.rows/16} width="100" height={p.rows/16} rx="2" fill={p.color} opacity=".35" stroke={p.color} strokeWidth="1.2"/>
+            <text x={60+i*110} y="70" fontSize="8" fill={p.color} textAnchor="middle">{p.partition}</text>
+          </g>
+        ))}
+        <text x="4" y="58" fontSize="8" fill="#64748b">Fix: filter nulls early, salting, AQE skew join (spark.sql.adaptive.skewJoin.enabled=true)</text>
+      </svg>
+    </div>
+  )
+}
+
+function SparkMemoryDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark Executor Memory Layout</text>
+        <rect x="10" y="18" width="440" height="14" rx="3" fill="#1e293b" opacity=".08" stroke="#1e293b" strokeWidth="1"/>
+        <text x="16" y="29" fontSize="8.5" fontWeight="700" fill="#1e293b">--executor-memory 4g (JVM heap)</text>
+        <rect x="10" y="35" width="88" height="12" rx="2" fill="#64748b" opacity=".25"/>
+        <text x="54" y="45" fontSize="7.5" fill="#64748b" textAnchor="middle">Reserved (300 MB)</text>
+        <rect x="100" y="35" width="176" height="12" rx="2" fill="#4f8ef7" opacity=".25"/>
+        <text x="188" y="45" fontSize="7.5" fill="#4f8ef7" textAnchor="middle">Unified Memory (60%)</text>
+        <rect x="278" y="35" width="172" height="12" rx="2" fill="#22c55e" opacity=".25"/>
+        <text x="364" y="45" fontSize="7.5" fill="#22c55e" textAnchor="middle">User Memory (40%)</text>
+        <rect x="100" y="50" width="88" height="10" rx="2" fill="#8b5cf6" opacity=".25"/>
+        <text x="144" y="59" fontSize="7" fill="#8b5cf6" textAnchor="middle">Storage (cache)</text>
+        <rect x="190" y="50" width="86" height="10" rx="2" fill="#f59e0b" opacity=".25"/>
+        <text x="233" y="59" fontSize="7" fill="#f59e0b" textAnchor="middle">Execution (shuffle)</text>
+        <text x="4" y="76" fontSize="8" fill="#64748b">spark.memory.fraction=0.6  spark.memory.storageFraction=0.5</text>
+        <text x="4" y="88" fontSize="8" fill="#94a3b8">Storage evicts if Execution needs more space (unified pool)</text>
+      </svg>
+    </div>
+  )
+}
+
+function CacheDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Cache / Persist Storage Levels</text>
+        {[
+          {level:'MEMORY_ONLY',desc:'Deserialised JVM objects. Fast, most memory.',color:'#4f8ef7'},
+          {level:'MEMORY_AND_DISK',desc:'Spill to disk if memory full.',color:'#22c55e'},
+          {level:'MEMORY_ONLY_SER',desc:'Serialised bytes. Less memory, slower.',color:'#8b5cf6'},
+          {level:'DISK_ONLY',desc:'No memory used. Slowest.',color:'#f59e0b'},
+        ].map((l,i)=>(
+          <g key={l.level}>
+            <rect x={4+(i%2)*230} y={18+Math.floor(i/2)*24} width="220" height="18" rx="3" fill={l.color} opacity=".12" stroke={l.color} strokeWidth="1"/>
+            <text x={14+(i%2)*230} y={26+Math.floor(i/2)*24} fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={l.color}>{l.level}</text>
+            <text x={14+(i%2)*230} y={33+Math.floor(i/2)*24} fontSize="7.5" fill="#475569">{l.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function BroadcastDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Broadcast Join — Eliminate Shuffle</text>
+        <rect x="10" y="20" width="90" height="44" rx="4" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="55" y="38" fontSize="8.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Small Table</text>
+        <text x="55" y="52" fontSize="7.5" fill="#475569" textAnchor="middle">&lt; 10 MB</text>
+        {[0,1,2].map(i=>(
+          <g key={i}>
+            <line x1="100" y1="42" x2="170" y2={28+i*16} stroke="#f59e0b" strokeWidth="1" strokeDasharray="3 2"/>
+            <rect x="172" y={20+i*16} width="90" height="14" rx="3" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+            <text x="217" y={31+i*16} fontSize="7.5" fill="#22c55e" textAnchor="middle">Executor {i+1}</text>
+          </g>
+        ))}
+        <text x="4" y="76" fontSize="8" fill="#64748b">Broadcast variable sent to every executor once → each does hash lookup locally, no shuffle.</text>
+      </svg>
+    </div>
+  )
+}
+
+function UDFDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">UDF Performance — Python ↔ JVM Boundary</text>
+        <rect x="10" y="18" width="200" height="38" rx="5" fill="#22c55e" opacity=".1" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="110" y="32" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Pandas UDF (Arrow)</text>
+        <text x="110" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">Batch transfer via Apache Arrow</text>
+        <text x="110" y="54" fontSize="7.5" fill="#22c55e" textAnchor="middle">10-100× faster than row UDF</text>
+        <rect x="250" y="18" width="200" height="38" rx="5" fill="#ef4444" opacity=".1" stroke="#ef4444" strokeWidth="1.5"/>
+        <text x="350" y="32" fontSize="9" fontWeight="700" fill="#ef4444" textAnchor="middle">Python UDF (row-by-row)</text>
+        <text x="350" y="44" fontSize="7.5" fill="#475569" textAnchor="middle">Pickle serialize each row to Python</text>
+        <text x="350" y="54" fontSize="7.5" fill="#ef4444" textAnchor="middle">High overhead per row</text>
+      </svg>
+    </div>
+  )
+}
+
+function SparkSQLDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark SQL — API Equivalence</text>
+        {[
+          {api:'SQL String',code:'spark.sql("SELECT * FROM t WHERE…")',color:'#4f8ef7'},
+          {api:'DataFrame API',code:'df.filter(col("a")>1).select("b","c")',color:'#22c55e'},
+          {api:'Dataset API (Scala)',code:'ds.filter(_.amount > 100)',color:'#8b5cf6'},
+        ].map((a,i)=>(
+          <g key={a.api}>
+            <rect x="8" y={18+i*16} width="444" height="13" rx="2" fill={a.color} opacity=".12" stroke={a.color} strokeWidth="1"/>
+            <text x="14" y={29+i*16} fontSize="7.5" fontWeight="700" fill={a.color}>{a.api}:</text>
+            <text x="80" y={29+i*16} fontSize="7.5" fontFamily="monospace" fill="#1e293b">{a.code}</text>
+          </g>
+        ))}
+        <text x="4" y="66" fontSize="8" fill="#64748b">All three compile to the same logical plan → same optimizer → same performance</text>
+      </svg>
+    </div>
+  )
+}
+
+function StreamingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Structured Streaming — Micro-batch Model</text>
+        {[0,1,2,3].map(i=>(
+          <g key={i}>
+            <rect x={10+i*108} y="18" width="96" height="30" rx="4" fill={i===3?'#4f8ef7':'#22c55e'} opacity={i===3?.25:.15} stroke={i===3?'#4f8ef7':'#22c55e'} strokeWidth={i===3?2:1}/>
+            <text x={58+i*108} y="31" fontSize="8.5" fontWeight="700" fill={i===3?'#4f8ef7':'#22c55e'} textAnchor="middle">Batch {i}</text>
+            <text x={58+i*108} y="43" fontSize="7.5" fill="#475569" textAnchor="middle">{i<3?'processed':'current'}</text>
+            {i<3&&<polygon points={`${108+i*108},33 ${114+i*108},29 ${114+i*108},37`} fill="#94a3b8"/>}
+          </g>
+        ))}
+        <text x="4" y="62" fontSize="8" fill="#64748b">trigger(processingTime="1 min") — or Trigger.Once(), Trigger.Continuous("1 second")</text>
+        <text x="4" y="72" fontSize="8" fill="#94a3b8">Output modes: append / complete / update. Checkpoint dir stores offset + state.</text>
+      </svg>
+    </div>
+  )
+}
+
+function StatefulStreamingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Stateful Streaming — Watermarks and Windows</text>
+        <text x="4" y="26" fontSize="8.5" fill="#64748b">Watermark = how late events can arrive and still be counted</text>
+        {[
+          {t:'10:00',events:['e1','e2'],color:'#22c55e'},
+          {t:'10:05',events:['e3'],color:'#22c55e'},
+          {t:'10:10',events:['e4','e5'],color:'#22c55e'},
+          {t:'10:15',events:['e6'],color:'#f59e0b'},
+          {t:'10:20',events:['late!'],color:'#ef4444'},
+        ].map((b,i)=>(
+          <g key={b.t}>
+            <rect x={10+i*88} y="32" width="82" height="24" rx="4" fill={b.color} opacity=".15" stroke={b.color} strokeWidth="1"/>
+            <text x={51+i*88} y="43" fontSize="8" fill={b.color} textAnchor="middle">{b.t}</text>
+            <text x={51+i*88} y="53" fontSize="7.5" fill="#475569" textAnchor="middle">{b.events.join(',')}</text>
+          </g>
+        ))}
+        <text x="4" y="68" fontSize="7.5" fill="#ef4444">Late event past watermark — dropped or handled by withWatermark("ts","10 min")</text>
+      </svg>
+    </div>
+  )
+}
+
+function CatalystDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Catalyst Optimizer — Query Pipeline</text>
+        {[
+          {label:'Parsed Plan',color:'#64748b'},
+          {label:'Analyzed Plan',color:'#4f8ef7'},
+          {label:'Optimized Plan',color:'#22c55e'},
+          {label:'Physical Plans',color:'#8b5cf6'},
+          {label:'Selected Plan',color:'#f59e0b'},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={4+i*94} y="18" width="88" height="30" rx="4" fill={s.color} opacity=".15" stroke={s.color} strokeWidth="1.2"/>
+            <text x={48+i*94} y="36" fontSize="8" fontWeight="600" fill={s.color} textAnchor="middle">{s.label}</text>
+            {i<4&&<polygon points={`${94+i*94},33 ${98+i*94},29 ${98+i*94},37`} fill={s.color} opacity=".7"/>}
+          </g>
+        ))}
+        <text x="4" y="64" fontSize="8" fill="#64748b">Catalyst applies rules: predicate pushdown, column pruning, constant folding, join reordering</text>
+      </svg>
+    </div>
+  )
+}
+
+function AQEDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Adaptive Query Execution (AQE)</text>
+        {[
+          {feat:'Dynamic repartition',desc:'Coalesce small shuffle partitions automatically',color:'#4f8ef7'},
+          {feat:'Dynamic join switch',desc:'Broadcast small build side at runtime',color:'#22c55e'},
+          {feat:'Skew join optimization',desc:'Split skewed partitions into sub-tasks',color:'#8b5cf6'},
+        ].map((f,i)=>(
+          <g key={f.feat}>
+            <rect x="8" y={18+i*16} width="444" height="13" rx="2" fill={f.color} opacity=".12" stroke={f.color} strokeWidth="1"/>
+            <text x="14" y={29+i*16} fontSize="8" fontWeight="700" fill={f.color}>{f.feat}:</text>
+            <text x="130" y={29+i*16} fontSize="8" fill="#475569">{f.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="66" fontSize="8" fill="#64748b">spark.sql.adaptive.enabled=true  (default on Spark 3.0+)</text>
+      </svg>
+    </div>
+  )
+}
+
+function TungstenDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Tungsten — Off-Heap Memory & Code Gen</text>
+        {[
+          {feat:'Off-heap memory',desc:'Binary format, no GC pressure',color:'#4f8ef7'},
+          {feat:'Cache-aware layouts',desc:'Data adjacent in memory for CPU cache',color:'#22c55e'},
+          {feat:'Whole-stage codegen',desc:'JVM bytecode per query, no interpretation',color:'#8b5cf6'},
+          {feat:'Vectorized reader',desc:'Columnar Parquet in batches',color:'#f59e0b'},
+        ].map((f,i)=>(
+          <g key={f.feat}>
+            <rect x={4+(i%2)*230} y={18+Math.floor(i/2)*22} width="220" height="16" rx="3" fill={f.color} opacity=".12" stroke={f.color} strokeWidth="1"/>
+            <text x={14+(i%2)*230} y={30+Math.floor(i/2)*22} fontSize="8" fontWeight="700" fill={f.color}>{f.feat}: </text>
+            <text x={110+(i%2)*230} y={30+Math.floor(i/2)*22} fontSize="7.5" fill="#475569">{f.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function SparkConfigDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark Key Configuration</text>
+        {[
+          {key:'spark.executor.memory',val:'4g — per executor heap',color:'#4f8ef7'},
+          {key:'spark.executor.cores',val:'4 — tasks in parallel per exec',color:'#22c55e'},
+          {key:'spark.sql.shuffle.partitions',val:'200 → tune to data size',color:'#8b5cf6'},
+          {key:'spark.dynamicAllocation.enabled',val:'true — auto-scale executors',color:'#f59e0b'},
+          {key:'spark.sql.adaptive.enabled',val:'true — AQE (Spark 3+)',color:'#ef4444'},
+          {key:'spark.serializer',val:'KryoSerializer — 10× faster',color:'#ec4899'},
+        ].map((c,i)=>(
+          <g key={c.key}>
+            <text x={14+(i%2)*238} y={24+Math.floor(i/3)*16} fontSize="8" fontFamily="monospace" fontWeight="600" fill={c.color}>{c.key}</text>
+            <text x={14+(i%2)*238} y={35+Math.floor(i/3)*16} fontSize="7.5" fill="#475569">= {c.val}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function SparkUIDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Spark UI — Key Tabs</text>
+        {[
+          {tab:'Jobs',desc:'Job timeline, skipped stages',color:'#4f8ef7'},
+          {tab:'Stages',desc:'Task metrics, spill, GC time',color:'#22c55e'},
+          {tab:'SQL',desc:'DAG viz, scan sizes',color:'#8b5cf6'},
+          {tab:'Executors',desc:'Memory usage, GC %',color:'#f59e0b'},
+        ].map((t,i)=>(
+          <g key={t.tab}>
+            <rect x={4+i*113} y="18" width="107" height="38" rx="4" fill={t.color} opacity=".12" stroke={t.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="32" fontSize="9.5" fontWeight="700" fill={t.color} textAnchor="middle">{t.tab}</text>
+            <text x={57+i*113} y="46" fontSize="7.5" fill="#475569" textAnchor="middle">{t.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="64" fontSize="8" fill="#64748b">:4040 (local), or History Server for completed jobs</text>
+      </svg>
+    </div>
+  )
+}
+
+function SparkDeltaDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Delta Lake — ACID on Data Lake</text>
+        {[
+          {feat:'ACID Transactions',desc:'BEGIN/COMMIT via _delta_log JSON',color:'#4f8ef7'},
+          {feat:'Time Travel',desc:'VERSION AS OF / TIMESTAMP AS OF',color:'#22c55e'},
+          {feat:'Schema Enforcement',desc:'Block wrong-schema writes',color:'#8b5cf6'},
+          {feat:'Merge (Upsert)',desc:'MERGE INTO for SCD / CDC',color:'#f59e0b'},
+        ].map((f,i)=>(
+          <g key={f.feat}>
+            <rect x={4+(i%2)*230} y={18+Math.floor(i/2)*24} width="220" height="18" rx="3" fill={f.color} opacity=".12" stroke={f.color} strokeWidth="1"/>
+            <text x={14+(i%2)*230} y={28+Math.floor(i/2)*24} fontSize="8.5" fontWeight="700" fill={f.color}>{f.feat}</text>
+            <text x={14+(i%2)*230} y={34+Math.floor(i/2)*24} fontSize="7.5" fill="#475569">{f.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function KafkaArchDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Kafka Architecture</text>
+        {['P1','P2','P3'].map((p,i)=>(
+          <g key={p}>
+            <rect x="10" y={18+i*20} width="60" height="16" rx="3" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x="40" y={30+i*20} fontSize="8" fill="#4f8ef7" textAnchor="middle">Producer {i+1}</text>
+          </g>
+        ))}
+        <rect x="90" y="14" width="200" height="60" rx="5" fill="#f59e0b" opacity=".1" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="190" y="30" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Broker / Topic</text>
+        {['P0 offset→','P1 offset→','P2 offset→'].map((pa,i)=>(
+          <text key={pa} x="100" y={44+i*12} fontSize="7.5" fill="#475569">{pa}</text>
+        ))}
+        {['Consumer A','Consumer B'].map((c,i)=>(
+          <g key={c}>
+            <rect x="300" y={22+i*24} width="80" height="16" rx="3" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+            <text x="340" y={34+i*24} fontSize="8" fill="#22c55e" textAnchor="middle">{c}</text>
+            <line x1="290" y1="44" x2="300" y2={30+i*24} stroke="#22c55e" strokeWidth="1" strokeDasharray="2 1"/>
+          </g>
+        ))}
+        <text x="4" y="80" fontSize="8" fill="#64748b">Retention default 7 days. Consumer group = independent cursor per partition.</text>
+      </svg>
+    </div>
+  )
+}
+
+function KafkaPythonDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Kafka Python Clients</text>
+        {[
+          {lib:'confluent-kafka',desc:'librdkafka C wrapper — fastest, most features',color:'#4f8ef7'},
+          {lib:'kafka-python',desc:'Pure Python — simple, good for light use',color:'#22c55e'},
+          {lib:'aiokafka',desc:'async/await — good for asyncio pipelines',color:'#8b5cf6'},
+        ].map((l,i)=>(
+          <g key={l.lib}>
+            <rect x="8" y={18+i*15} width="444" height="12" rx="2" fill={l.color} opacity=".12" stroke={l.color} strokeWidth="1"/>
+            <text x="14" y={28+i*15} fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={l.color}>{l.lib}</text>
+            <text x="140" y={28+i*15} fontSize="8" fill="#475569">— {l.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function KafkaEOSDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Kafka Delivery Semantics</text>
+        {[
+          {sem:'At most once',desc:'May lose messages. acks=0, no retry.',color:'#ef4444'},
+          {sem:'At least once',desc:'May duplicate. acks=all, retries>0.',color:'#f59e0b'},
+          {sem:'Exactly once (EOS)',desc:'No loss, no dup. enable.idempotence=true + transactions.',color:'#22c55e'},
+        ].map((s,i)=>(
+          <g key={s.sem}>
+            <rect x="8" y={18+i*16} width="444" height="13" rx="2" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1"/>
+            <text x="14" y={29+i*16} fontSize="8" fontWeight="700" fill={s.color}>{s.sem}:</text>
+            <text x="110" y={29+i*16} fontSize="7.5" fill="#475569">{s.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="66" fontSize="8" fill="#64748b">EOS (Exactly-Once Semantics) = Idempotent Producer + Transactional API</text>
+      </svg>
+    </div>
+  )
+}
+
+function KafkaConnectDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Kafka Connect — Source & Sink Connectors</text>
+        <rect x="10" y="20" width="100" height="40" rx="5" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="60" y="37" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Source</text>
+        <text x="60" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">DB / API / File</text>
+        <polygon points="112,40 122,36 122,44" fill="#4f8ef7"/>
+        <rect x="125" y="20" width="110" height="40" rx="5" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="180" y="37" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Kafka Topic</text>
+        <text x="180" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">+ Schema Registry</text>
+        <polygon points="237,40 247,36 247,44" fill="#22c55e"/>
+        <rect x="250" y="20" width="100" height="40" rx="5" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="300" y="37" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Sink</text>
+        <text x="300" y="50" fontSize="7.5" fill="#475569" textAnchor="middle">ADLS/S3/Blob</text>
+        <text x="4" y="70" fontSize="8" fill="#64748b">Zero-code connectors. Workers auto-distribute tasks. SMTs (Single Message Transforms) for light ETL.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SchemaRegistryDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Schema Registry — Evolution Compatibility</text>
+        {[
+          {rule:'BACKWARD',desc:'New schema can read old data',color:'#22c55e'},
+          {rule:'FORWARD',desc:'Old schema can read new data',color:'#4f8ef7'},
+          {rule:'FULL',desc:'Both backward AND forward compatible',color:'#8b5cf6'},
+          {rule:'NONE',desc:'No compatibility enforced',color:'#ef4444'},
+        ].map((r,i)=>(
+          <g key={r.rule}>
+            <rect x={4+i*113} y="18" width="107" height="38" rx="4" fill={r.color} opacity=".12" stroke={r.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="32" fontSize="9" fontWeight="700" fill={r.color} textAnchor="middle">{r.rule}</text>
+            <text x={57+i*113} y="46" fontSize="7.5" fill="#475569" textAnchor="middle">{r.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function KafkaVsEventHubDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Apache Kafka vs Azure Event Hub</text>
+        {[['Deployment','Self-hosted / MSK','Fully managed PaaS'],['Max retention','Unlimited','90 days'],['Kafka-compat','Native','Kafka surface API'],['Partitions','Unlimited','Up to 1000'],['Auth','SASL / SSL','AAD / SAS / MI'],['Cost model','Infra cost','Per-CU per hour']].map((r,i)=>(
+          <g key={r[0]}>
+            <text x="8" y={22+i*10} fontSize="7.5" fontWeight="600" fill="#64748b" style={{width:90}}>{r[0]}</text>
+            <text x="105" y={22+i*10} fontSize="7.5" fill="#4f8ef7">{r[1]}</text>
+            <text x="285" y={22+i*10} fontSize="7.5" fill="#f59e0b">{r[2]}</text>
+          </g>
+        ))}
+        <line x1="100" y1="14" x2="100" y2="78" stroke="#e2e8f0" strokeWidth="1"/>
+        <line x1="280" y1="14" x2="280" y2="78" stroke="#e2e8f0" strokeWidth="1"/>
+        <text x="175" y="76" fontSize="7.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Kafka</text>
+        <text x="350" y="76" fontSize="7.5" fontWeight="700" fill="#f59e0b" textAnchor="middle">Event Hub</text>
+      </svg>
     </div>
   )
 }
