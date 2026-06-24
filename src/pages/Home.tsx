@@ -355,41 +355,103 @@ export default function Home({ completed }: Props) {
             From Zero to Senior<br />Azure Data Engineer
           </h1>
 
-          {/* Creator byline */}
+          {/* Creator byline — special animated signature */}
           <div className="hero-byline" style={{
-            display:'inline-flex', alignItems:'center', gap:10,
-            marginBottom:28, marginTop:4,
+            display:'inline-flex', alignItems:'center', gap:12,
+            marginBottom:28, marginTop:8, position:'relative',
           }}>
-            <div style={{ height:1, width:40, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.25))' }}/>
-            <a
-              href="https://www.linkedin.com/in/kavinparithi"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display:'inline-flex', alignItems:'center', gap:7,
-                textDecoration:'none',
-                fontFamily:'var(--font-display)',
-                fontSize:'clamp(.85rem,2vw,1rem)',
-                fontWeight:800,
-                letterSpacing:'-.01em',
-                background:'linear-gradient(135deg,#93c5fd 0%,#c4b5fd 50%,#f9a8d4 100%)',
-                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                transition:'filter .25s ease',
-              }}
-              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.filter='brightness(1.25) drop-shadow(0 0 12px rgba(196,181,253,.6))'}
-              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.filter='none'}
-            >
+            {/* Left line */}
+            <div style={{ height:1, width:48, background:'linear-gradient(90deg,transparent,rgba(196,181,253,.5))', flexShrink:0 }}/>
+
+            <div style={{ position:'relative', display:'inline-flex', alignItems:'center', gap:10 }}>
+              {/* Sparkle particles behind name */}
+              {[
+                { top:'-14px', left:'12%',  size:6,  color:'#f9a8d4', delay:'0s',   dur:'2.2s' },
+                { top:'-10px', left:'38%',  size:5,  color:'#c4b5fd', delay:'.4s',  dur:'2.8s' },
+                { top:'-16px', left:'62%',  size:7,  color:'#93c5fd', delay:'.8s',  dur:'2s'   },
+                { top:'-8px',  left:'80%',  size:4,  color:'#fde68a', delay:'1.1s', dur:'2.5s' },
+                { top:'18px',  left:'22%',  size:4,  color:'#a5f3fc', delay:'.3s',  dur:'3s'   },
+                { top:'20px',  left:'55%',  size:5,  color:'#f9a8d4', delay:'.9s',  dur:'2.4s' },
+                { top:'22px',  left:'74%',  size:4,  color:'#c4b5fd', delay:'.2s',  dur:'2.7s' },
+              ].map((s, i) => (
+                <div key={i} style={{
+                  position:'absolute', top:s.top, left:s.left,
+                  width:s.size, height:s.size,
+                  borderRadius:'50%',
+                  background:s.color,
+                  boxShadow:`0 0 ${s.size*2}px ${s.color}`,
+                  animation:`sparkleFloat ${s.dur} ease-in-out ${s.delay} infinite`,
+                  pointerEvents:'none',
+                }} />
+              ))}
+
+              {/* LinkedIn logo pill */}
+              <a
+                href="https://www.linkedin.com/in/kavinparithi"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                style={{
+                  display:'inline-flex', alignItems:'center', gap:5,
+                  padding:'5px 11px', borderRadius:999, flexShrink:0,
+                  background:'linear-gradient(135deg,rgba(10,102,194,.35),rgba(10,102,194,.2))',
+                  border:'1px solid rgba(10,102,194,.55)',
+                  color:'#7dd3fc', fontSize:'.72rem', fontWeight:700,
+                  textDecoration:'none', fontFamily:'var(--font-sans)',
+                  backdropFilter:'blur(8px)',
+                  transition:'all .25s ease',
+                  boxShadow:'0 0 12px rgba(10,102,194,.25)',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.background = 'linear-gradient(135deg,rgba(10,102,194,.55),rgba(10,102,194,.35))'
+                  el.style.boxShadow = '0 0 20px rgba(10,102,194,.5)'
+                  el.style.transform = 'translateY(-2px) scale(1.05)'
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.background = 'linear-gradient(135deg,rgba(10,102,194,.35),rgba(10,102,194,.2))'
+                  el.style.boxShadow = '0 0 12px rgba(10,102,194,.25)'
+                  el.style.transform = 'none'
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                LinkedIn
+              </a>
+
+              {/* The name — shimmer gradient + glow */}
               <span style={{
-                display:'inline-flex', alignItems:'center', justifyContent:'center',
-                width:26, height:26, borderRadius:'50%', flexShrink:0,
-                background:'linear-gradient(135deg,#4f8ef7,#8b5cf6)',
-                fontSize:'.78rem', fontWeight:900, color:'white',
-                WebkitTextFillColor:'white',
-                boxShadow:'0 0 14px rgba(139,92,246,.55)',
-              }}>K</span>
-              Kavin Parithi Sivasamy
-            </a>
-            <div style={{ height:1, width:40, background:'linear-gradient(90deg,rgba(255,255,255,.25),transparent)' }}/>
+                fontFamily:'var(--font-display)',
+                fontSize:'clamp(1rem,2.5vw,1.18rem)',
+                fontWeight:900,
+                letterSpacing:'-.02em',
+                background:'linear-gradient(90deg,#93c5fd 0%,#c4b5fd 30%,#f9a8d4 55%,#fde68a 75%,#c4b5fd 90%,#93c5fd 100%)',
+                backgroundSize:'200% auto',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+                animation:'nameShimmer 3s linear infinite',
+                filter:'drop-shadow(0 0 18px rgba(196,181,253,.55))',
+                position:'relative', zIndex:1,
+              }}>
+                Kavin Parithi Sivasamy
+              </span>
+            </div>
+
+            {/* Right line */}
+            <div style={{ height:1, width:48, background:'linear-gradient(90deg,rgba(196,181,253,.5),transparent)', flexShrink:0 }}/>
+
+            {/* Keyframes injected inline */}
+            <style>{`
+              @keyframes sparkleFloat {
+                0%,100% { transform:translateY(0) scale(1); opacity:.8; }
+                50%      { transform:translateY(-7px) scale(1.3); opacity:1; }
+              }
+              @keyframes nameShimmer {
+                0%   { background-position: 200% center; }
+                100% { background-position: -200% center; }
+              }
+            `}</style>
           </div>
 
           {/* Hero punch quote */}
