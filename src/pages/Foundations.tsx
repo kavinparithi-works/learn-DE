@@ -205,30 +205,132 @@ print(struct.pack('>f', 3.14).hex())  # '4048f5c3'`}</CodeBlock>
             </div>
           </div>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Explain how negative numbers are stored in memory"</li>
+              <li>"Why does 0.1 + 0.2 not equal 0.3 in Python?"</li>
+              <li>"What is the difference between FLOAT and DECIMAL — when would you use each?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to know you understand that all data is ultimately bits, and that data type choices have real consequences: float vs decimal for money, integer overflow on large IDs, timezone bugs from naive timestamps. They are not testing your ability to convert binary by hand — they are checking that you think about correctness at the storage level.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Identify the constraint</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Binary uses two states because transistors are reliable switches — on or off"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Show the consequence</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"IEEE 754 floats can't represent most decimals exactly — 0.1 + 0.2 = 0.30000000000000004"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply to your work</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"So I always use DECIMAL(18,2) for money in Spark schemas and SQL DDL"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Stripe stores all monetary amounts as integers (cents) to avoid floating-point issues entirely. Netflix encodes video quality scores as bit flags inside a TINYINT column to save space in their recommendation engine feature store. At LinkedIn, a pipeline bug using FLOAT instead of DECIMAL caused a $0.02 per-transaction rounding error that compounded to a $1.2M reconciliation issue over one quarter.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I know binary is base-2 and computers use it"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Binary maps directly to transistor states. For me the practical impact is: floats are approximate so I use DECIMAL for money, and I size integer columns by expected max value — BIGINT for event IDs, INT for most foreign keys"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use DECIMAL(18,2) for all monetary values</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use BIGINT for epoch millisecond timestamps</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use math.isclose() for float comparisons in Python</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use FLOAT or DOUBLE for financial amounts</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Assume 0.1 + 0.2 == 0.3 in any language</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Ignore integer overflow risk on large tables</div>
+            </div>
+          </div>
+
           <Quiz topicId="binary" questions={[
-            {
-              question: "What is the decimal value of the binary number 10110101?",
-              options: ["181", "165", "171", "185"],
-              correct: 0,
-              explanation: "128+32+16+4+1 = 181"
-            },
-            {
-              question: "In two's complement, how is -5 represented in 8 bits?",
-              options: ["10000101", "11111010", "11111011", "10000100"],
-              correct: 2,
-              explanation: "Invert 00000101 → 11111010, then add 1 → 11111011"
-            },
-            {
-              question: "Why should you never store currency as a floating-point number?",
-              options: [
-                "Floats are too slow for financial calculations",
-                "Floats cannot represent numbers larger than 1000",
-                "Most decimal fractions cannot be represented exactly in binary floating point, causing rounding errors",
-                "Databases don't support float columns"
-              ],
-              correct: 2,
-              explanation: "IEEE 754 cannot represent most decimal fractions exactly, leading to cumulative rounding errors"
-            },
+    {
+      question: "A data engineer stores product prices as DOUBLE in a Delta table. After 10 million transactions, the finance team reports a $0.03 discrepancy per row. What is the root cause?",
+      options: [
+              "Delta Lake has a known float precision bug",
+              "DOUBLE uses IEEE 754 which cannot represent most decimal fractions exactly — rounding errors accumulate across rows",
+              "The ETL pipeline rounded incorrectly",
+              "DOUBLE only supports 7 significant digits"
+      ],
+      correct: 1,
+      explanation: "IEEE 754 double precision cannot represent values like 0.1 exactly in binary — use DECIMAL(18,2) for money"
+    },
+    {
+      question: "What is the two's complement binary representation of -3 in 8 bits?",
+      options: [
+              "10000011",
+              "11111100",
+              "11111101",
+              "10000100"
+      ],
+      correct: 2,
+      explanation: "Invert 00000011 → 11111100, add 1 → 11111101"
+    },
+    {
+      question: "Which Python expression correctly checks if two floating-point values are equal within a small tolerance?",
+      options: [
+              "a == b",
+              "abs(a - b) == 0",
+              "math.isclose(a, b)",
+              "round(a, 10) == round(b, 10)"
+      ],
+      correct: 2,
+      explanation: "math.isclose() uses relative and absolute tolerance, the standard way to compare floats"
+    },
           ]} />
 
           <button
@@ -375,40 +477,132 @@ for j in range(1000):
 print(f"Col-major: {time.perf_counter() - t:.3f}s")
 # Column-major will be noticeably slower due to cache misses`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Why is columnar storage faster for analytics?"</li>
+              <li>"Explain cache misses and how they affect your pipelines"</li>
+              <li>"How do you decide the parallelism setting for a Spark job?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want evidence that you connect hardware behaviour to pipeline performance decisions. Can you explain why DuckDB is 10x faster than Pandas on aggregations? Why does Parquet outperform CSV for SELECT queries? The answer traces back to CPU cache locality and SIMD. You don't need assembly-level knowledge — you need the reasoning chain from hardware to architectural choice.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Name the bottleneck</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"CPUs stall waiting for data — L1 cache hit is 1ns, RAM is 60ns, 60x slower"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Connect to storage format</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Columnar formats like Parquet pack one column together — the whole column fits in cache during a scan"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply to tuning</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"So I set spark.default.parallelism to 2x physical cores, not logical, to avoid context-switch overhead"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>DuckDB achieves 10-100x faster aggregations than Pandas on the same hardware by using SIMD (AVX-512) to process 8 doubles per clock cycle. Netflix's recommendation engine moved from row-based feature storage to columnar Arrow format and reduced feature serving latency by 40%. At Databricks, Photon (the native vectorised engine) exploits CPU vector instructions — the same principle explains why it outperforms standard Spark on GROUP BY queries.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"More cores is always better for Spark"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Parallelism depends on the workload. CPU-bound stages benefit from physical cores; I/O-bound stages can over-provision. I set spark.default.parallelism to 2x physical cores and tune from there — and I use columnar formats to keep data cache-hot during scans"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Set Spark parallelism based on physical core count</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use columnar formats (Parquet/Delta) for analytical queries</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use NumPy/Arrow arrays instead of Python lists for bulk data</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Set thread pools larger than logical CPU count for CPU-bound work</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use Python UDFs when native Spark SQL functions exist</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Ignore cache effects when choosing data structures</div>
+            </div>
+          </div>
+
           <Quiz topicId="cpu" questions={[
-            {
-              question: "What is the primary purpose of the CPU's L1 cache?",
-              options: [
-                "Store the operating system kernel",
-                "Hold frequently accessed data close to the execution units to avoid slow RAM accesses",
-                "Buffer data being written to disk",
-                "Store the program's source code"
-              ],
-              correct: 1,
-              explanation: "L1 cache is on-die, ~1 ns latency, and holds the hottest data to avoid 60 ns RAM round trips"
-            },
-            {
-              question: "Why do columnar formats like Parquet perform better for aggregations than row-oriented formats?",
-              options: [
-                "Parquet files are always smaller than CSV",
-                "Columnar storage places a single column's values contiguously, maximising CPU cache reuse during scans",
-                "Parquet uses a faster compression algorithm",
-                "Row formats require more network bandwidth"
-              ],
-              correct: 1,
-              explanation: "Cache locality: when scanning column A, all of column A fits in cache  -  no wasted bytes from columns B, C, D"
-            },
-            {
-              question: "Hyper-threading presents two logical cores per physical core. What is the main benefit?",
-              options: [
-                "It doubles the number of ALUs available",
-                "It doubles the clock speed",
-                "It allows one thread to use execution units while another thread is stalled on a memory access",
-                "It prevents cache misses entirely"
-              ],
-              correct: 2,
-              explanation: "HT hides memory latency by keeping the execution units busy with a second thread while the first waits for data"
-            },
+    {
+      question: "A Spark job running GROUP BY on a CSV file is 8x slower than the same query on a Parquet file with the same data. The most likely hardware-level reason is:",
+      options: [
+              "Parquet files are always smaller",
+              "Parquet's columnar layout keeps the scanned column contiguous in memory — maximising CPU cache hits and enabling SIMD processing; CSV reads all columns into cache even when only one is needed",
+              "Parquet uses faster compression",
+              "CSV requires more network bandwidth"
+      ],
+      correct: 1,
+      explanation: "Cache locality: columnar formats let the CPU prefetch and process a single column without cache pollution from other columns"
+    },
+    {
+      question: "You have a 16-core (32 logical with hyperthreading) machine. A CPU-bound Python data processing script uses multiprocessing.Pool. What pool size gives best throughput?",
+      options: [
+              "32 — match logical CPUs",
+              "16 — match physical cores",
+              "64 — maximize concurrency",
+              "8 — leave headroom for OS"
+      ],
+      correct: 1,
+      explanation: "CPU-bound work: hyperthreading helps I/O-bound work, not CPU-bound. Use physical core count to avoid contention"
+    },
+    {
+      question: "Branch prediction misses cost ~15 CPU cycles each. Which coding pattern is most likely to trigger frequent branch mispredictions in a data pipeline?",
+      options: [
+              "Using columnar aggregations in Spark SQL",
+              "Iterating over a randomly-ordered boolean array with if/else logic on each element",
+              "Reading a Parquet file with predicate pushdown",
+              "Sorting a DataFrame before writing"
+      ],
+      correct: 1,
+      explanation: "Random boolean data gives the CPU no predictable pattern to learn — nearly 50% miss rate; sorted or low-cardinality data is much more predictable"
+    },
           ]} />
 
           <button
@@ -540,40 +734,132 @@ df['id'] = df['id'].astype('int32')          # int64 → int32: half the memory
 df['status'] = df['status'].astype('category')  # repeated strings → category
 print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"A Spark job is hitting OOM — how do you diagnose and fix it?"</li>
+              <li>"Why is a Python list of 1 million integers much larger than a NumPy array of the same values?"</li>
+              <li>"Explain the difference between stack and heap memory"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to see that you can debug memory problems systematically, not just throw more RAM at them. Can you explain JVM heap tuning for Spark executors? Do you understand why Pandas DataFrames are memory-hungry? Do you know the difference between off-heap and on-heap memory in Spark? These are daily engineering decisions, not academic questions.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Identify what is consuming memory</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Python objects have 28-byte overhead each — 1M ints = 28 MB, vs 8 MB in NumPy"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Explain the allocation model</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Heap is for dynamic objects managed by GC; stack is fixed-size per-thread for local variables"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Tune accordingly</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"For Spark OOM: increase executor memory, use Tungsten off-heap, or reduce partition size to avoid shuffle spill"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Uber's data platform team reduced Spark executor OOM incidents by 60% by switching from Python UDFs (which serialize data between JVM and Python heap) to Pandas UDFs with Apache Arrow (zero-copy memory transfer). Pinterest moved from Pandas to Polars for in-memory transformations and cut RAM usage by 3x because Polars uses a contiguous Arrow memory layout instead of Python object references. At Shopify, enabling Spark's off-heap memory (spark.memory.offHeap.enabled) reduced GC pause times from 8 seconds to under 200ms on their Gold aggregation jobs.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Just add more memory to fix OOM errors"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I first diagnose what's consuming memory: Python object overhead, JVM heap fragmentation, shuffle spill, or broadcast variable size. Then I apply the right fix — Arrow-based UDFs, smaller partitions, off-heap memory, or schema optimization like downcast int64 to int32"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use NumPy arrays or Polars instead of Python lists for bulk numeric data</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Downcast integer columns (int64→int32) when range allows</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use category dtype for low-cardinality string columns in Pandas</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use Python UDFs in Spark when native functions exist</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Load entire datasets into Pandas on a driver node</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Ignore GC pause metrics in Spark executor logs</div>
+            </div>
+          </div>
+
           <Quiz topicId="memory" questions={[
-            {
-              question: "Why does hitting swap space (page file) cause dramatic performance degradation?",
-              options: [
-                "Swap uses a different memory bus",
-                "The CPU must switch to kernel mode to access swap",
-                "Swap is on disk, which is ~80,000x slower than RAM  -  a page fault stalls the process for ~5 ms",
-                "Swap only supports 32-bit addresses"
-              ],
-              correct: 2,
-              explanation: "A page fault requires reading from disk (~5 ms) vs RAM (~60 ns)  -  about 80,000x slower"
-            },
-            {
-              question: "A Spark job using Python UDFs is much slower than one using native SQL functions. The main memory reason is:",
-              options: [
-                "Python UDFs use the stack instead of the heap",
-                "Each Python UDF call creates a full Python object with reference counting overhead; native SQL stays in JVM heap with raw arrays",
-                "Python uses mark-and-sweep GC which is slower",
-                "Python UDFs require more CPU registers"
-              ],
-              correct: 1,
-              explanation: "Python object overhead (~28 bytes per int) and serialisation between JVM and Python processes is the bottleneck"
-            },
-            {
-              question: "Converting a Pandas string column with many repeated values to 'category' dtype reduces memory because:",
-              options: [
-                "Category dtype compresses strings using gzip",
-                "Category dtype stores an integer code per row and a single dictionary of unique values, instead of a full string per row",
-                "Category dtype uses SRAM instead of DRAM",
-                "Category dtype disables garbage collection for that column"
-              ],
-              correct: 1,
-              explanation: "Like an enum/dictionary encoding  -  store an int8 code (1 byte) instead of the full string per row"
-            },
+    {
+      question: "A Spark executor with 8GB of memory is writing a 500MB shuffle and then doing a 6GB aggregation. It hits OOM. What is the most targeted fix?",
+      options: [
+              "Increase driver memory",
+              "Increase executor memory to 16GB or reduce partition count to shrink per-partition memory footprint, because shuffle + execution memory compete in the same unified memory pool",
+              "Disable garbage collection",
+              "Use a smaller cluster"
+      ],
+      correct: 1,
+      explanation: "Spark unified memory pool splits between execution and storage — large shuffles and large aggregations competing causes OOM; increase executor memory or reduce partition size"
+    },
+    {
+      question: "Why does converting a Pandas string column to category dtype reduce memory usage dramatically?",
+      options: [
+              "Category dtype applies gzip compression to strings",
+              "Category dtype stores unique strings once in a dictionary and replaces each row value with a small integer index — like dictionary encoding in Parquet",
+              "Category dtype removes duplicate rows",
+              "Category dtype uses SRAM instead of heap"
+      ],
+      correct: 1,
+      explanation: "Like dictionary encoding: 1M rows of 'active'/'inactive' go from ~50MB (full strings) to ~1MB (int8 codes + 2-string dict)"
+    },
+    {
+      question: "Python's CPython uses reference counting for garbage collection. What is the main weakness of this approach?",
+      options: [
+              "It is too slow for any production use",
+              "It cannot collect reference cycles (A → B → A) without a separate cycle detector, meaning circular references leak memory until the cycle GC runs",
+              "It requires stop-the-world pauses longer than JVM GC",
+              "It only works for integers, not objects"
+      ],
+      correct: 1,
+      explanation: "Reference counting immediately frees objects when count hits 0, but circular references keep counts above 0 forever — Python has a separate cycle detector for this"
+    },
           ]} />
 
           <button
@@ -747,40 +1033,132 @@ print("HDD" if is_hdd else "SSD/NVMe")
 df -h          # human-readable disk free space
 du -sh /data/* # size of each item in /data`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Why does reading a Parquet file column skip most of the disk I/O?"</li>
+              <li>"What is the difference between IOPS and throughput — when does each matter?"</li>
+              <li>"How would you design storage for a 10PB cold archive vs a real-time serving layer?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to see that you make storage decisions based on access patterns, not just size. Sequential vs random I/O, NVMe vs HDD for Spark shuffle, object storage for cold data vs SSD for hot serving — these are architectural trade-offs that cost real money. They also check whether you understand why columnar formats and partition pruning exist at all: they're storage access pattern optimisations.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Characterise the access pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Is it sequential scans (analytics) or random point lookups (OLTP)?"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Match storage to pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Sequential analytics → columnar format on object storage; random lookups → NVMe SSD or in-memory cache"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Quantify the tradeoff</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"HDD: $20/TB but 5ms latency; NVMe: $200/TB but 20µs — 250x faster for shuffle-heavy Spark jobs"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Databricks recommends NVMe instance storage (AWS i3/i4i, Azure L-series) for Spark shuffle because shuffle IOPS on NVMe is 5-10x higher than EBS gp3. Netflix stores 60+ days of viewing history in S3 (object storage, sequential reads) and uses ElastiCache (memory) for the last 24h of activity for real-time recommendations. Cloudflare uses NVMe RAID arrays for their analytics pipeline ingest layer, pushing 40 GB/s sustained sequential write throughput per node.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"We store data in S3 because it's cheap"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"S3 is optimised for high-throughput sequential reads of large objects — perfect for Parquet files in a data lake. For Spark shuffle I'd use NVMe instance storage to get 500K IOPS instead of 16K on gp2 EBS. The access pattern determines the storage tier — not just cost"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Match storage tier to access pattern (hot/warm/cold)</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use NVMe instance storage for Spark shuffle on cloud VMs</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Partition Parquet files to enable sequential column scans</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Store hot serving data in cold object storage</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use HDD-backed storage for shuffle-intensive Spark jobs</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Ignore the difference between IOPS and throughput when sizing storage</div>
+            </div>
+          </div>
+
           <Quiz topicId="storage" questions={[
-            {
-              question: "Why is sequential I/O so much faster than random I/O on HDDs?",
-              options: [
-                "Sequential I/O uses a different storage bus",
-                "Sequential blocks are read without mechanical seek time or rotational latency  -  the head moves once and sweeps continuously",
-                "HDDs cache sequential reads in SRAM",
-                "The OS allocates more memory for sequential operations"
-              ],
-              correct: 1,
-              explanation: "Each random I/O requires a seek (~5 ms) + rotational wait (~4 ms) = ~9 ms; sequential reads eliminate most of this"
-            },
-            {
-              question: "A data engineer needs to store 10 years of raw clickstream logs cheaply. No real-time access needed. Which storage type is most cost-effective?",
-              options: [
-                "NVMe SSD  -  fastest access for future queries",
-                "RAID 10 array of SSDs  -  maximum redundancy",
-                "HDD-based cold storage or cloud archival (S3 Glacier)  -  cheapest $/GB for rarely accessed data",
-                "In-memory storage  -  eliminates disk I/O entirely"
-              ],
-              correct: 2,
-              explanation: "Cold/archival tiers are 10 - 100x cheaper per GB than hot SSD storage for data accessed infrequently"
-            },
-            {
-              question: "NVMe is significantly faster than SATA SSD primarily because:",
-              options: [
-                "NVMe uses a different type of NAND flash",
-                "NVMe drives spin faster than SATA drives",
-                "NVMe communicates over the PCIe bus which provides direct high-bandwidth lanes to the CPU, bypassing the SATA controller bottleneck",
-                "NVMe has larger cache chips"
-              ],
-              correct: 2,
-              explanation: "SATA was designed for HDDs (600 MB/s ceiling); PCIe 4.0 x4 provides ~7 GB/s  -  the bus, not the flash, was the bottleneck"
-            },
+    {
+      question: "A Databricks job spends 70% of its time on shuffle. You are choosing between gp2 EBS (16K IOPS) and NVMe instance storage (500K IOPS) at similar cost. Which should you choose and why?",
+      options: [
+              "gp2 EBS — it is more reliable",
+              "NVMe instance storage — shuffle is random small I/O where IOPS is the bottleneck, not sequential throughput, so 31x more IOPS directly reduces shuffle time",
+              "It does not matter — Spark caches shuffle data in RAM",
+              "gp2 EBS — NVMe is too expensive"
+      ],
+      correct: 1,
+      explanation: "Spark shuffle is small random reads/writes — IOPS-bound. NVMe's 500K IOPS vs EBS gp2's 16K is a 31x difference that directly maps to shuffle performance"
+    },
+    {
+      question: "You have a 500GB Parquet table with 200 columns. A query reads only 3 columns. How much data does Spark physically read from storage compared to a row-oriented CSV of the same data?",
+      options: [
+              "The same — Spark reads entire files regardless of column selection",
+              "Approximately 3/200 = 1.5% of the data — only the 3 column chunks are read from each row group; the other 197 columns are skipped entirely",
+              "About 50% less — Parquet is compressed",
+              "It depends on the partition scheme"
+      ],
+      correct: 1,
+      explanation: "Columnar storage enables column pruning: each column's data is stored separately, so a 3-column query on a 200-column table reads ~1.5% of the physical bytes"
+    },
+    {
+      question: "What is the key advantage of RAID 10 over RAID 5 for a database server?",
+      options: [
+              "RAID 10 uses less storage capacity",
+              "RAID 10 combines striping and mirroring — it can survive multiple simultaneous drive failures (one per mirrored pair) and has no write penalty, unlike RAID 5's parity calculation overhead",
+              "RAID 10 has better compression",
+              "RAID 10 requires fewer disks"
+      ],
+      correct: 1,
+      explanation: "RAID 5 has a write penalty (must read-modify-write parity block). RAID 10 mirrors data directly — high write performance and better fault tolerance for databases"
+    },
           ]} />
 
           <button
@@ -882,10 +1260,132 @@ async def main():
 
 asyncio.run(main())`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Explain the difference between a process and a thread — when would you use each in a data pipeline?"</li>
+              <li>"Why does Python have the GIL and how does it affect your ETL jobs?"</li>
+              <li>"What happens at the OS level when a Spark executor runs out of memory?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to see that you understand the concurrency model of the tools you use. Python's GIL means threads don't help CPU-bound work — you need multiprocessing or async for I/O. Spark executors are JVM processes, not threads. Understanding process isolation, system calls, and scheduling explains why certain Spark configurations cause resource contention. This is the knowledge that separates engineers who can tune distributed systems from those who just add more nodes.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Identify workload type</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"CPU-bound (computation) or I/O-bound (network, disk)?"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Match concurrency model</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"CPU-bound: multiprocessing (bypasses GIL); I/O-bound: asyncio or threads"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply to distributed context</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Spark executors are JVM processes — true parallelism. Python UDFs inside Spark spawn a separate Python process per core, causing serialisation overhead"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Airflow uses separate OS processes per task (not threads) to isolate failures — if one task crashes its process, the scheduler continues. LinkedIn's Gobblin ingestion framework uses thread pools for I/O-bound API calls but process pools for CPU-bound schema inference. At Databricks, the Photon engine bypasses the JVM and makes direct system calls to Linux io_uring for async disk I/O, achieving near-hardware-limit throughput on NVMe.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Python is slow because of the GIL"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"The GIL prevents true CPU parallelism with threads, but it doesn't affect I/O-bound tasks where threads are fine. For CPU-bound work I use multiprocessing or move computation into Spark's JVM layer. For I/O-bound work like API ingestion, asyncio gives me 100 concurrent requests on a single thread with zero context-switch overhead"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use multiprocessing for CPU-bound Python tasks</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use asyncio for I/O-bound work (API calls, DB queries)</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Spark's native functions instead of Python UDFs for compute-heavy transformations</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use Python threading for CPU-bound parallelism — the GIL blocks it</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Spawn more threads than available CPU cores for CPU-bound work</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Run Python UDFs in Spark when native SQL alternatives exist</div>
+            </div>
+          </div>
+
           <Quiz topicId="os" questions={[
-            { question: "What is the main reason Python threads don't achieve true CPU parallelism?", options: ["Python threads are too slow", "The Global Interpreter Lock (GIL) allows only one thread to execute Python bytecode at a time", "Python doesn't support threads", "Threads require kernel mode"], correct: 1 },
-            { question: "Which scheduling algorithm does Linux use by default?", options: ["Round Robin", "Priority Scheduling", "Completely Fair Scheduler (CFS)", "First-Come-First-Served"], correct: 2 },
-            { question: "When should you use asyncio coroutines instead of threads?", options: ["CPU-bound computations", "When you need true parallelism", "For I/O-bound tasks like API calls and database queries", "For spawning child processes"], correct: 2 },
+    {
+      question: "An Airflow DAG has 20 parallel tasks running Python scripts. Each script imports pandas and reads a 500MB CSV. The scheduler VM has 8 CPU cores. What is the most likely bottleneck?",
+      options: [
+              "Python GIL prevents any parallel execution",
+              "Memory — 20 processes each loading 500MB CSV into RAM simultaneously may exhaust available memory, causing OOM kills or heavy swapping",
+              "The OS scheduler can only run 8 tasks at once",
+              "Airflow worker processes share the GIL"
+      ],
+      correct: 1,
+      explanation: "20 processes × 500MB each = 10GB RAM minimum. The CPU cores can context-switch between processes fine, but RAM exhaustion causes swap and OOM kills"
+    },
+    {
+      question: "Why does using asyncio for 100 simultaneous API calls in Python use less resources than using 100 threads?",
+      options: [
+              "asyncio bypasses the network stack",
+              "asyncio multiplexes all 100 requests on a single OS thread using cooperative yielding — no thread stack allocation (8MB each), no OS context switching, no GIL contention",
+              "asyncio compresses HTTP requests",
+              "asyncio uses a separate process per request"
+      ],
+      correct: 1,
+      explanation: "100 threads = 100 OS stacks + context switches. asyncio = 1 thread + event loop that yields at every await, enabling thousands of concurrent I/O operations"
+    },
+    {
+      question: "The Linux CFS (Completely Fair Scheduler) uses 'virtual runtime' to decide which process gets CPU next. What does this mean practically for your data pipelines?",
+      options: [
+              "All processes get exactly equal CPU time regardless of priority",
+              "The process that has received the least CPU time relative to its weight runs next — CPU-hungry jobs don't starve other processes, and short-lived tasks get low-latency scheduling",
+              "CFS only applies to real-time tasks",
+              "CFS is only relevant for single-core machines"
+      ],
+      correct: 1,
+      explanation: "CFS tracks vruntime per task — the most 'deprived' task runs next, providing fairness while still allowing nice-value-based priority weights"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('os')) { await unmarkTopicComplete('os'); onUnmark('os') } else { await markTopicComplete('os'); onComplete('os') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('os') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('os') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1003,10 +1503,132 @@ for file in "\${DATA_DIR}"/*.csv; do
 done
 log "Pipeline complete"`} />
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Walk me through how you'd diagnose a slow pipeline on a Linux server"</li>
+              <li>"What does 'set -euo pipefail' do and why is it important?"</li>
+              <li>"How do you find which process is consuming the most memory on a Linux machine?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Linux proficiency is a force multiplier for data engineers. They want to see you can navigate a production server, diagnose issues from logs, profile resource usage with standard tools, and write reliable bash scripts. You will be asked to debug pipelines on cloud VMs, read Airflow task logs, configure cron jobs, and investigate disk usage on HDFS nodes. Terminal fluency separates engineers who wait for a UI from engineers who can diagnose anything.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Check resources first</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"top / htop for CPU; free -h for memory; df -h for disk; iotop for I/O"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Narrow to the process</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"ps aux | grep spark to find PIDs; lsof -p PID to see open files; strace -p PID for syscalls"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Fix and automate</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Script the fix with set -euo pipefail; add to cron or systemd; log with tee"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>At Netflix, on-call engineers use a standard Linux triage runbook: first check /proc/meminfo and free -h for swap usage, then iotop to identify I/O-bound processes, then journalctl -u servicename to read structured logs. Databricks cluster init scripts are bash scripts that run on every node — misconfigured scripts without set -e have caused silent half-initialised clusters. LinkedIn's Kafka brokers use ulimit -n 1000000 in their systemd unit files to raise the open file descriptor limit — a common production gotcha for high-throughput brokers.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I use the terminal sometimes but prefer the UI"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I'm comfortable with the full Linux toolkit for production diagnosis: awk/sed/grep for log analysis, iotop/top for resource profiling, ss/netstat for network debugging. I write bash scripts with set -euo pipefail as standard — it prevents half-executed pipelines from silently corrupting data"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Start bash scripts with set -euo pipefail</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use journalctl and /var/log for structured log analysis</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use iotop/top/free to profile resource usage before optimising</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Write bash scripts without error handling (no set -e)</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use root for running data pipelines — create a service account</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Hardcode passwords in scripts — use environment variables or secret managers</div>
+            </div>
+          </div>
+
           <Quiz topicId="linux" questions={[
-            { question: "What does 'set -euo pipefail' do in a bash script?", options: ["Sets environment variables", "Makes the script exit on errors, treat unset variables as errors, and propagate pipe failures", "Enables verbose mode", "Sets file permissions"], correct: 1 },
-            { question: "Which command counts the number of occurrences of each unique line in a sorted file?", options: ["wc -l file", "sort file | uniq -c", "grep -c file", "awk '{count[$0]++}' file"], correct: 1 },
-            { question: "What is stored in /proc/meminfo?", options: ["Memory configuration files", "Virtual filesystem showing live kernel memory statistics", "RAM hardware specs", "Swap file configuration"], correct: 1 },
+    {
+      question: "A nightly bash pipeline script runs 10 steps. Step 4 fails silently (non-zero exit code) but the script continues and corrupts downstream tables. What single line at the top of the script would have prevented this?",
+      options: [
+              "#!/bin/bash",
+              "set -euo pipefail",
+              "trap 'exit 1' ERR",
+              "set -x"
+      ],
+      correct: 1,
+      explanation: "set -e exits on any command failure; -u treats unset variables as errors; -o pipefail makes pipe failures propagate — together they prevent silent failures"
+    },
+    {
+      question: "You need to find all Parquet files larger than 1GB modified in the last 7 days under /mnt/datalake. Which command does this?",
+      options: [
+              "ls -la /mnt/datalake/*.parquet",
+              "find /mnt/datalake -name '*.parquet' -size +1G -mtime -7",
+              "du -sh /mnt/datalake/*.parquet | grep G",
+              "grep -r parquet /mnt/datalake"
+      ],
+      correct: 1,
+      explanation: "find with -name for pattern, -size +1G for size filter, and -mtime -7 for modification time within 7 days"
+    },
+    {
+      question: "A Spark job writes Parquet files to /data/output/ as user 'spark'. The downstream Airflow task (running as user 'airflow') cannot read them. What is the likely cause and fix?",
+      options: [
+              "Parquet files are encrypted by default",
+              "File permissions: spark wrote files as mode 600 (owner-only read). Fix: chmod 644 on the files, or run both as the same user, or add airflow to the spark group with chmod 640",
+              "Airflow cannot read Parquet files directly",
+              "The files are still being written"
+      ],
+      correct: 1,
+      explanation: "Linux file permissions: 600 = rw------- means only owner can read. chmod 644 (rw-r--r--) or group permissions with chown/chmod g+r fix this"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('linux')) { await unmarkTopicComplete('linux'); onUnmark('linux') } else { await markTopicComplete('linux'); onComplete('linux') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('linux') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('linux') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1137,10 +1759,132 @@ def paginate(url):
             </div>
           </div>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"A microservice is failing to connect to your database — how do you diagnose it?"</li>
+              <li>"Explain the difference between a VNet, subnet, and private endpoint in Azure"</li>
+              <li>"Why does low latency matter more than high bandwidth for a database connection?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Data engineers configure VNets, private endpoints, and service endpoints daily in cloud environments. They want to see you can troubleshoot network connectivity issues — not just at the HTTP level, but down to DNS, TCP handshakes, and firewall rules. Understanding latency vs bandwidth also explains architectural decisions: why you colocate compute with storage in the same AZ, why you use connection pooling for databases, and why streaming requires low-latency networks while batch tolerates high-latency links.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Isolate the layer</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Is it DNS (name not resolving), TCP (connection refused/timeout), or HTTP (4xx/5xx)?"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Test each layer</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"nslookup → nc -zv host port → curl -v URL to walk the stack"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Fix architecturally</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Private endpoint = no public internet; NSG = firewall rules; CIDR planning = subnet isolation"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Azure Databricks uses VNet injection so cluster traffic stays on private subnets — without it, all cluster-to-ADLS traffic traverses the public internet. Stripe's data platform uses AWS PrivateLink for all internal service-to-service calls, eliminating cross-AZ traffic costs. LinkedIn configures TCP keepalive (SO_KEEPALIVE) on all Kafka producer connections to detect dead connections within 60 seconds instead of the default 2 hours — critical for maintaining throughput on long-lived producer connections.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I set up the connection string and it connected"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I design network connectivity with private endpoints by default — no public internet traffic between compute and storage. I use NSGs to allow only required ports and source IPs, CIDR subnets sized to the service (/28 for private endpoints, /24 for compute), and I test connectivity at each OSI layer before assuming the application layer is at fault"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use private endpoints for Azure SQL, ADLS, Event Hub in production</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Plan CIDR subnets before deployment — changes are disruptive later</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Test connectivity with nc / curl / nslookup before blaming application code</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Allow 0.0.0.0/0 inbound on any production NSG rule</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Assume DNS resolution is instant — add TTL-aware caching</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Mix dev and prod subnets in the same VNet without NSG isolation</div>
+            </div>
+          </div>
+
           <Quiz topicId="networking" questions={[
-            { question: "What happens during the TCP three-way handshake?", options: ["Data is compressed and sent", "SYN → SYN-ACK → ACK establishes connection before data is sent", "TLS certificates are exchanged", "DNS resolves the IP address"], correct: 1 },
-            { question: "What is CIDR notation 10.0.1.0/24?", options: ["An IP address with 24 bits of host portion", "A subnet with 256 addresses where the first 24 bits are the network prefix", "A VLAN tag", "An IPv6 prefix"], correct: 1 },
-            { question: "What is the key difference between bandwidth and throughput?", options: ["They are the same thing", "Bandwidth is theoretical maximum capacity; throughput is actual data transferred per second (always ≤ bandwidth)", "Throughput measures latency, bandwidth measures speed", "Bandwidth is for downloads, throughput for uploads"], correct: 1 },
+    {
+      question: "A Spark job connecting to Azure SQL Database fails with 'Connection timed out' after 30 seconds. DNS resolves correctly. Which layer is the problem and what should you check?",
+      options: [
+              "Layer 7 (Application) — check connection string format",
+              "Layer 4 (Transport) — TCP connection is being dropped. Check: NSG inbound rules on the SQL subnet, Azure SQL firewall rules, and whether a private endpoint is configured and the DNS CNAME points to it",
+              "Layer 3 (Network) — IP routing issue in the VNet",
+              "Layer 1 (Physical) — network cable unplugged"
+      ],
+      correct: 1,
+      explanation: "DNS working but TCP timing out points to a firewall (NSG/SQL firewall) blocking the TCP SYN. Check NSG rules and SQL server firewall allow rules"
+    },
+    {
+      question: "What is the difference between a VNet service endpoint and a private endpoint for Azure Storage?",
+      options: [
+              "They are identical",
+              "Service endpoint routes traffic over the Azure backbone but the storage still has a public IP; private endpoint assigns a private IP in your VNet — traffic never leaves the private network and the public endpoint can be disabled",
+              "Private endpoint is faster than service endpoint",
+              "Service endpoints support more Azure services"
+      ],
+      correct: 1,
+      explanation: "Service endpoint: traffic stays on Azure backbone but storage is still internet-addressable. Private endpoint: NIC with private IP in your subnet — true private connectivity with no public exposure"
+    },
+    {
+      question: "A data pipeline makes 10,000 short database queries per second, each taking 1ms of compute but 5ms of network round-trip. Halving latency to 2.5ms would have what effect?",
+      options: [
+              "No effect — compute time dominates",
+              "Throughput increases from 10K to ~17K QPS — latency dominates total time (5ms of 6ms total), so halving it reduces total query time by ~42%",
+              "Throughput doubles exactly",
+              "Network latency only matters for large data transfers"
+      ],
+      correct: 1,
+      explanation: "When latency dominates query time, reducing latency directly increases throughput. 10K QPS at 6ms total → at 3.5ms total = 28.5K QPS theoretical max"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('networking')) { await unmarkTopicComplete('networking'); onUnmark('networking') } else { await markTopicComplete('networking'); onComplete('networking') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('networking') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('networking') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1281,10 +2025,132 @@ docker inspect myapp          # full container config as JSON
 docker stats                  # live CPU/memory usage
 docker system prune -af       # clean up stopped containers, images, volumes`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"What is the difference between a Docker image and a container?"</li>
+              <li>"How do you ensure a container cannot access secrets stored in the image?"</li>
+              <li>"Walk me through how you'd containerise a Python Spark job for Kubernetes"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to confirm you can build production-grade container images: multi-stage builds for size, non-root users for security, proper layer ordering for cache efficiency, and externalized config via environment variables. They also check whether you understand orchestration context — Airflow runs DAGs in Docker containers, Databricks uses Docker init scripts, and Kubernetes is the standard for deploying Spark. Container knowledge is table stakes for modern data engineering.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Describe the isolation model</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Image is the immutable blueprint; container is a running instance with a writable layer on top"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Explain the security model</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Non-root user, no secrets in ENV or layers, read-only filesystem where possible"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Connect to your workflow</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Multi-stage build keeps image under 200MB; I pin base image versions for reproducibility; volumes for persistent data"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Airflow 2.x uses the KubernetesExecutor which spins up one Docker container per task — complete isolation with defined resource limits. Spark on Kubernetes (spark-submit --master k8s://) packages the driver and executor as Docker images, enabling reproducible environments across dev/staging/prod. LinkedIn's Gobblin runs each ingestion job as a Docker container on Kubernetes, using multi-stage builds to keep final images under 150MB — critical for fast cold starts when scaling from 0.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I write a Dockerfile and it builds"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I use multi-stage builds to keep production images small, pin base image versions for reproducibility, run as a non-root user, and never bake secrets into the image — they come from environment variables or a secret manager at runtime. I size memory and CPU limits based on profiling, not guessing"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use multi-stage builds to keep images small</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Pin base image versions (python:3.11.9-slim not python:latest)</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Run containers as non-root users</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Store secrets, passwords or API keys in ENV instructions or image layers</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use latest tag in production — it breaks reproducibility</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Run containers as root in production</div>
+            </div>
+          </div>
+
           <Quiz topicId="docker" questions={[
-            { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical", "ENTRYPOINT defines the executable that always runs; CMD provides default arguments that can be overridden at runtime", "CMD is for environment variables, ENTRYPOINT is for ports", "ENTRYPOINT is deprecated, use CMD instead"], correct: 1 },
-            { question: "What happens to data written inside a container when it stops?", options: ["It is saved to the image", "It persists in the container layer forever", "It is lost unless stored in a volume or bind mount", "It is synced to Docker Hub"], correct: 2 },
-            { question: "What is a multi-stage Docker build used for?", options: ["Running multiple services in one container", "Keeping the final image small by separating build dependencies from runtime", "Building on multiple architectures simultaneously", "Caching build layers"], correct: 1 },
+    {
+      question: "A Dockerfile has RUN pip install -r requirements.txt before COPY src/ ./src/. A developer changes only a Python source file. What happens on the next docker build?",
+      options: [
+              "All layers rebuild from scratch",
+              "Only the COPY src/ layer and subsequent layers rebuild — pip install layer is cached because requirements.txt did not change",
+              "The image refuses to build",
+              "pip install runs again because Docker cannot detect changes"
+      ],
+      correct: 1,
+      explanation: "Docker layer cache: if inputs to a layer haven't changed, it uses the cached layer. Putting pip install before copying source code is a best practice that saves minutes on every rebuild"
+    },
+    {
+      question: "You need to pass a database password to a container at runtime without storing it in the image. What is the correct approach?",
+      options: [
+              "Add ENV DB_PASSWORD=secret in the Dockerfile",
+              "Pass via --env-file .env at docker run time, or mount from a secrets manager (Vault, AWS Secrets Manager, Azure Key Vault) as environment variable or file",
+              "Hardcode it in the application config file inside the image",
+              "Store it in a Docker volume"
+      ],
+      correct: 1,
+      explanation: "Secrets in Dockerfile ENV or layers are visible via docker inspect and docker history. Runtime injection via --env-file or secret manager keeps them out of the image entirely"
+    },
+    {
+      question: "A containerised Python pipeline writes processed data to /app/output/ inside the container. After the container exits and is removed, where is the data?",
+      options: [
+              "Saved to the Docker image automatically",
+              "Gone — container's writable layer is deleted when the container is removed unless a volume or bind mount was used",
+              "In the Docker registry",
+              "In /var/lib/docker on the host"
+      ],
+      correct: 1,
+      explanation: "Containers are ephemeral — the writable layer is destroyed with docker rm. Use volumes (-v myvolume:/app/output) or bind mounts (-v /host/path:/app/output) for persistent data"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('docker')) { await unmarkTopicComplete('docker'); onUnmark('docker') } else { await markTopicComplete('docker'); onComplete('docker') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('docker') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('docker') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1385,10 +2251,132 @@ df = df.withColumn("week",        weekofyear("ts"))
 df = df.withColumn("7d_ago",      date_sub("date", 7))
 df = df.withColumn("days_since",  datediff(current_date(), "date"))`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Why did your pipeline produce incorrect financial totals?"</li>
+              <li>"A join between two tables is silently dropping rows — what data type issue might cause this?"</li>
+              <li>"How do you handle timezone-aware timestamps across multiple source systems?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Data type bugs are among the most expensive in production — they are silent and cumulative. They want to see you default to DECIMAL for money, BIGINT for large IDs, and UTC timestamps for all event times. They also look for schema evolution awareness: can you add a nullable column without breaking existing readers? Do you understand what happens when Spark infers schema from JSON and gets it wrong? Type discipline at ingestion prevents cascading correctness issues downstream.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Choose by semantic meaning</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Money → DECIMAL(18,2); event time → TIMESTAMP UTC; flags → BOOLEAN or TINYINT"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Consider storage efficiency</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Downcast where safe: country code → STRING(2) not VARCHAR(255); age → TINYINT not INT"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Plan for evolution</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"New columns must be nullable with defaults; never change a column's type in place — add new column, backfill, swap"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Stripe stores all money amounts as integers (smallest currency unit, e.g. cents) with a separate currency code column — completely eliminating floating-point issues. Airbnb's data platform team wrote a schema enforcement layer that rejects Parquet files where inferred types differ from the registered schema — catching float-for-decimal bugs before they reach Silver. At Booking.com, a naive timestamp without timezone caused a daylight-saving-time bug that double-counted 1 hour of bookings every March and October for two years.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I just use STRING for everything to avoid type errors"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Using STRING for everything defers type errors to query time and destroys compression efficiency. I define explicit schemas at ingestion, use DECIMAL for money, BIGINT for large IDs, and enforce UTC for all timestamps. Schema-on-write catches type mismatches early when they're cheapest to fix"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Declare explicit schemas at ingestion — never rely on inference</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use DECIMAL(18,2) for all monetary amounts</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Store all timestamps in UTC; convert at display time only</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use DOUBLE or FLOAT for financial values</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Let Spark infer schema from JSON/CSV in production pipelines</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Store local-timezone timestamps in a lakehouse</div>
+            </div>
+          </div>
+
           <Quiz topicId="data-types" questions={[
-            { question: "Why should you use DecimalType(18,2) instead of DoubleType for financial amounts?", options: ["Decimal is faster to compute", "DoubleType uses IEEE 754 floating point which cannot represent all decimal fractions exactly  -  0.1 + 0.2 ≠ 0.3", "Decimal uses less storage", "DoubleType doesn't support negative numbers"], correct: 1 },
-            { question: "What is type widening vs narrowing?", options: ["Widening adds columns, narrowing removes them", "Widening converts to a larger type (safe, no data loss); narrowing converts to a smaller type (unsafe, may truncate)", "Widening is for strings, narrowing for numbers", "They refer to schema evolution in Parquet"], correct: 1 },
-            { question: "What is the best practice for storing timestamps in a data lakehouse?", options: ["Store in local timezone of the source system", "Store in UTC always; convert to local only at display time", "Store as Unix epoch strings", "Store in the timezone of the data warehouse region"], correct: 1 },
+    {
+      question: "A Spark job joins fact_orders (order_id: BIGINT) with dim_customer (order_id: INT). The join silently produces fewer rows than expected. What is happening?",
+      options: [
+              "Spark cannot join different integer types",
+              "BIGINT values above 2.1 billion overflow INT silently in some SQL engines — IDs that exceed INT range have no matching key in dim_customer, causing rows to be dropped without error",
+              "INT and BIGINT use different encoding in Parquet",
+              "The join requires explicit CAST to be valid"
+      ],
+      correct: 1,
+      explanation: "INT max is 2,147,483,647. Order IDs above this value cannot be stored in INT — they either error or wrap, breaking the join. Always use BIGINT for IDs that may grow large"
+    },
+    {
+      question: "You are ingesting JSON events from an API that sometimes omits the 'amount' field. What is the safest Spark schema definition for this field?",
+      options: [
+              "StructField('amount', DoubleType(), nullable=False)",
+              "StructField('amount', DecimalType(18,2), nullable=True) — decimal for precision, nullable to handle missing field",
+              "StructField('amount', StringType(), nullable=False)",
+              "Let Spark infer the type from the JSON"
+      ],
+      correct: 1,
+      explanation: "DECIMAL for money precision; nullable=True handles missing fields; never use DoubleType for money or infer schema in production"
+    },
+    {
+      question: "A Gold table aggregates daily revenue. The source Silver table stores timestamps in 'America/New_York' timezone. At 2am on a DST change, some events are counted twice. What is the fix?",
+      options: [
+              "Use a different aggregation function",
+              "Store all timestamps in UTC in Silver — convert to local timezone only in Gold reporting views. UTC has no DST transitions",
+              "Add a deduplication step based on event_id",
+              "Use DATE instead of TIMESTAMP"
+      ],
+      correct: 1,
+      explanation: "Local timezones with DST create ambiguous hours (1am–2am occur twice during fall-back). UTC is monotonic with no ambiguity — always store UTC, convert at display time"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('data-types')) { await unmarkTopicComplete('data-types'); onUnmark('data-types') } else { await markTopicComplete('data-types'); onComplete('data-types') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('data-types') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-types') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1479,10 +2467,102 @@ for i in range(pf.num_row_groups):
     rg = pf.row_group(i)
     print(f"Row group {i}: {rg.num_rows} rows, {rg.total_byte_size} bytes")`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Why would you choose Parquet over CSV for a 500GB analytics table?"</li>
+              <li>"Explain what predicate pushdown and column pruning mean in Parquet"</li>
+              <li>"When would you use Avro instead of Parquet for a Kafka topic?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>File format choice directly impacts query performance, storage cost, and pipeline architecture. They want to hear you explain why columnar formats win for analytics (column pruning, cache locality, compression ratios on homogeneous data), why row formats win for streaming (write one record at a time efficiently), and why the Parquet row-group/column-chunk/page hierarchy enables data skipping. This is fundamental lakehouse knowledge.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>State the access pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Analytics scanning few columns of many rows → columnar (Parquet/ORC)"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Explain the mechanism</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Parquet reads only the requested column chunks — 3 of 200 columns = 1.5% of I/O"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Add the operational consideration</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Plus predicate pushdown on min/max stats skips entire row groups — no scan needed"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Netflix migrated their viewing history store from JSON to Parquet and reduced storage by 87% while cutting query times by 10x — primarily due to columnar compression and column pruning. Twitter (now X) uses Parquet with Snappy for their ad analytics pipeline, scanning 3 of 80 columns per query and achieving 95% I/O reduction. At Confluent, Avro with Schema Registry is mandatory for all Kafka topics — schema evolution compatibility checks prevent consumer outages when producers add new fields.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"We use Parquet because everyone else does"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Parquet is right for analytics because it stores each column separately — a query on 3 of 200 columns reads 1.5% of the file. Row groups with min/max statistics enable predicate pushdown — the query engine skips entire 128MB chunks without decompressing them. For streaming I'd use Avro with schema registry since writing one event at a time is efficient in row format"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Parquet for analytical workloads with selective column access</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Avro with Schema Registry for Kafka event streaming</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Sort data within Parquet files on commonly-filtered columns to enable data skipping</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use CSV or JSON for large analytical tables in production</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Let Spark write tiny Parquet files — compact to 128-512MB row groups</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use Parquet for Kafka events — it is not designed for streaming writes</div>
+            </div>
+          </div>
+
           <Quiz topicId="file-formats" questions={[
-            { question: "Why is Parquet significantly faster than CSV for analytical queries that touch only 3 of 50 columns?", options: ["Parquet is compressed, CSV is not", "Parquet stores data column-by-column  -  the query reads only the 3 needed columns, skipping 94% of the file's I/O", "Parquet has a better index", "Parquet files are cached automatically"], correct: 1 },
-            { question: "What is dictionary encoding in Parquet and when does it help most?", options: ["It compresses column names", "It stores unique values once and replaces repeated values with integer indexes  -  most effective for low-cardinality columns like country, status, category", "It encodes the schema in a dictionary", "It deduplicates row groups"], correct: 1 },
-            { question: "Why is Avro preferred over Parquet for Kafka streaming?", options: ["Avro is a columnar format", "Avro is row-oriented making it efficient for writing individual events, and supports schema evolution via registry", "Avro has better compression", "Parquet doesn't support streaming"], correct: 1 },
+            { question: "A 10TB CSV file on S3 is queried by Athena: SELECT COUNT(*) WHERE country='US'. With Parquet partitioned by country, the same query takes 2 seconds instead of 45 minutes. The reason is:", options: ["Parquet has better compression", "Partition pruning reads only the country=US partition; column pruning skips all other columns; row-group stats may skip entire groups", "Parquet indexes every value", "Athena has a Parquet cache"], correct: 1, explanation: "Partition pruning + column pruning + predicate pushdown = 3 independent layers of I/O reduction" },
+            { question: "Parquet uses dictionary encoding for a 'status' column with values ['active','inactive','pending'] across 100M rows. It stores:", options: ["100M copies of the strings", "3 unique strings once in a dictionary + 100M 1-2 byte integer indexes", "The column as a bloom filter", "The column as RLE pairs"], correct: 1, explanation: "Dictionary: 3 strings x ~8 bytes = 24 bytes + 100M x 1 byte index = ~100 MB vs ~800 MB raw strings" },
+            { question: "Why is Avro row-oriented format preferred over Parquet for Kafka event streaming?", options: ["Avro is smaller than Parquet", "Avro serializes one complete record at a time enabling efficient single-event writes; Parquet requires accumulating rows into column chunks before writing", "Avro has built-in Kafka support", "Parquet doesn't support streaming"], correct: 1, explanation: "Row-oriented formats write individual events efficiently; columnar requires batching which adds latency" },
           ]} />
           <button onClick={async () => { try { if (completed.has('file-formats')) { await unmarkTopicComplete('file-formats'); onUnmark('file-formats') } else { await markTopicComplete('file-formats'); onComplete('file-formats') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('file-formats') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('file-formats') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1581,10 +2661,132 @@ def folder_size(path):
 print(f"Snappy: {folder_size(path_snappy):.1f} MB")
 print(f"Zstd:   {folder_size(path_zstd):.1f} MB")`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"What compression codec do you use for Parquet and why?"</li>
+              <li>"A Spark job with Gzip-compressed CSV files only uses 1 executor core per file — why?"</li>
+              <li>"When would you choose Zstd over Snappy for a Delta table?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to see you make data-driven compression choices, not just pick defaults. The key insight is that splittability determines parallelism: a 10GB Gzip CSV cannot be split so Spark reads it on one core. Parquet avoids this because row groups are independently compressed and splittable. The speed-vs-ratio tradeoff (Snappy vs Zstd) is a daily decision: hot Bronze data favors fast decompression; cold Gold archives favor higher ratio. This knowledge directly saves compute costs.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>State the tradeoff axis</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Speed vs ratio: Snappy is 500MB/s decompress but 2x ratio; Zstd is 200MB/s but 3x ratio"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply splittability rule</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Never use Gzip/Snappy for raw text files in HDFS/Spark — they are not splittable. Parquet row groups are splittable regardless of codec"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Match to data layer</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Bronze/Silver: Snappy for fast reads; Gold archive: Zstd for cost; Kafka: LZ4 for lowest latency"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Meta (Facebook) uses Zstd at compression level 3 for all their cold Hive/Spark tables, saving an estimated 30% storage versus Snappy with only 15% CPU overhead increase. Cloudflare processes 50 million events/second with LZ4 compression on Kafka — LZ4's sub-millisecond decompression latency fits within their 10ms end-to-end streaming SLA where Gzip's 50ms would not. Netflix A/B tested Snappy vs Zstd on their Gold recommendation tables and found Zstd level 3 reduced storage 40% with query times within 5% of Snappy.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I use Snappy because it's the default"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Snappy is a good default for hot query paths — fast decompression matters more than ratio when the same data is queried frequently. For cold Gold archives I switch to Zstd level 3 or 6 — same query performance but 30-40% smaller files. For Kafka I use LZ4 — it has the lowest per-message CPU overhead which adds up at millions of messages per second"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Snappy or Zstd for Parquet/Delta tables</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use LZ4 for high-throughput Kafka topics</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Zstd for cold/archive data where storage cost matters more than CPU</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Compress CSV/JSON files with Gzip for Spark input — they cannot be split</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use Bzip2 for anything except when you specifically need splittable text files</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Leave Parquet files uncompressed in production — you lose 2-4x storage savings</div>
+            </div>
+          </div>
+
           <Quiz topicId="compression" questions={[
-            { question: "Why is Snappy the most common compression codec for Parquet in Spark?", options: ["It has the highest compression ratio", "It balances fast compression/decompression speed with reasonable ratio  -  minimises CPU overhead during queries", "It is the only splittable codec", "It is the only codec supported by Delta Lake"], correct: 1 },
-            { question: "What does 'splittable' mean for a compressed file and why does it matter?", options: ["The file can be decompressed in parallel blocks, allowing multiple Spark tasks to read different parts simultaneously", "The file can be split across multiple disks", "The file supports partial writes", "It means the file has multiple compression levels"], correct: 0 },
-            { question: "When would you choose Zstd over Snappy for Parquet files?", options: ["For real-time streaming where decompression speed is critical", "For Gold/archive layers where storage cost matters and you can afford slightly more CPU", "For CSV files on HDFS", "When Snappy is not available"], correct: 1 },
+    {
+      question: "A 100GB CSV file is compressed with Gzip (non-splittable). You read it with Spark on a 20-core cluster. How many Spark tasks will read this file and what is the performance implication?",
+      options: [
+              "20 tasks — Spark splits the file across all cores",
+              "1 task — Gzip files cannot be split, so the entire file is read by a single task regardless of cluster size. 19 cores sit idle during the read phase",
+              "100 tasks — one per GB",
+              "It depends on the number of partitions"
+      ],
+      correct: 1,
+      explanation: "Gzip is not splittable — Spark cannot know where block boundaries are without decompressing from the start. Use Parquet (internally splittable by row group) or Bzip2 for splittable compressed text"
+    },
+    {
+      question: "You are choosing compression for a Delta table that holds 6 months of raw Bronze events (50TB, queried rarely, retained for replay). Which codec and why?",
+      options: [
+              "Snappy — it is the default and most compatible",
+              "Zstd level 6 — higher compression ratio (3-4x vs 2x for Snappy) reduces storage cost by 30-40% for cold data where CPU overhead on infrequent reads is acceptable",
+              "LZ4 — fastest for streaming",
+              "No compression — simplifies debugging"
+      ],
+      correct: 1,
+      explanation: "Cold data optimises for storage cost over read speed. Zstd level 6 gives ~3.5x compression vs Snappy's ~2x, cutting 50TB to ~14TB vs ~25TB — significant cost savings for rarely-read archives"
+    },
+    {
+      question: "Parquet uses both encoding (dictionary, RLE, delta) AND block compression (Snappy, Zstd). In what order are they applied, and why does this matter?",
+      options: [
+              "Compression first, then encoding — compression is faster",
+              "Encoding first, then compression — encoding exploits data patterns to reduce entropy first; the resulting encoded bytes are then compressed further. Encoding can reduce data 10x before compression even starts",
+              "They are applied simultaneously",
+              "Only one is applied depending on the column type"
+      ],
+      correct: 1,
+      explanation: "Encoding (dictionary, RLE, delta) exploits semantic patterns in the data. Compression then finds remaining byte-level redundancy. Applying encoding first means compression operates on more uniform, lower-entropy input — better ratios overall"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('compression')) { await unmarkTopicComplete('compression'); onUnmark('compression') } else { await markTopicComplete('compression'); onComplete('compression') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('compression') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('compression') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1681,10 +2883,102 @@ producer.produce(
 # Bad (breaking): rename "amount" → "total_amount"
 # Good (backward): add {"name": "discount", "type": ["null", "double"], "default": null}`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"A Kafka consumer fails to deserialise a message after a producer deployed a new schema — how do you prevent this?"</li>
+              <li>"What is the difference between backward and forward schema compatibility?"</li>
+              <li>"Why is Avro smaller and faster than JSON for event streaming?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Schema evolution is the central challenge in event-driven architectures. They want to confirm you use a schema registry to enforce compatibility rules — not just documentation or verbal agreements between teams. They also want to see you understand the binary format advantage: Avro removes field names from every message (they are in the schema), so a 50-field event shrinks from 2KB JSON to 200 bytes Avro. For high-throughput Kafka topics, this directly cuts broker storage and network bandwidth costs.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>State the format tradeoff</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"JSON is human-readable but large and schema-less; Avro is binary, schema-enforced, and 5-10x smaller"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Explain the evolution model</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Backward: new schema reads old data (add optional fields); Forward: old schema reads new data (unknown fields ignored)"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply the registry pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Schema Registry enforces compatibility rules before a producer can register a new schema — breaking changes are caught at deploy time, not runtime"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Confluent's Schema Registry is used by Uber for all 4,000+ Kafka topics — a producer cannot publish to a topic with a schema that violates the topic's registered compatibility setting. This catches breaking changes before they reach consumers. LinkedIn invented Avro specifically for their internal messaging system and open-sourced it — their Kafka topics process 7 trillion messages per day, and the binary format vs JSON saves an estimated 60% network bandwidth. Netflix uses Protobuf for gRPC inter-service calls where latency is critical — Protobuf serialization is 3-10x faster than JSON.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"We use JSON for Kafka because it's easy to read"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"JSON works for prototyping but in production I use Avro with Schema Registry. Binary serialization is 5-10x smaller and faster. More importantly, the registry enforces backward compatibility — a producer can't deploy a breaking schema change without coordination. I configure topics as FULL_TRANSITIVE compatibility so both old and new consumers can always read any message"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Avro + Schema Registry for production Kafka topics</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Configure FULL_TRANSITIVE compatibility for shared event streams</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Only add optional fields with defaults when evolving schemas</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use JSON for high-throughput Kafka topics — it is 5-10x larger</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Rename or remove fields from a production schema without a migration plan</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Rely on verbal agreements for schema evolution — use a registry</div>
+            </div>
+          </div>
+
           <Quiz topicId="serialization" questions={[
-            { question: "What does 'backward compatible' schema evolution mean in Avro?", options: ["Old consumers can read new data", "New consumers can read old data written with the previous schema", "The schema can be changed without any constraints", "Consumers and producers must be upgraded together"], correct: 1 },
-            { question: "Why is Avro preferred over JSON for Kafka events in enterprise systems?", options: ["Avro is human-readable like JSON", "Avro is binary (smaller, faster), enforces a schema via registry, and supports full schema evolution compatibility checks", "Avro supports more data types", "JSON doesn't support nested objects"], correct: 1 },
-            { question: "What is the safest schema evolution change you can make to a 'full compatible' Avro schema?", options: ["Rename an existing field", "Remove a required field", "Add a new optional field with a default value", "Change a field's type from int to string"], correct: 2 },
+            { question: "A team removes a required Avro field under 'FULL' compatibility mode in Confluent Schema Registry. This change is:", options: ["Allowed -- consumers use the default value", "REJECTED -- removing a required field breaks backward compatibility; new consumers cannot read old data without defaults", "Allowed if the field has a default", "Requires a major version bump only"], correct: 1, explanation: "FULL = backward AND forward compatible; removing required fields breaks backward compat" },
+            { question: "Protobuf fields are identified by field numbers, not names. The consequence for schema evolution is:", options: ["Field names can never change", "Field names can be freely renamed without breaking consumers -- consumers decode by field number, not name", "Field numbers must be sequential", "Protobuf doesn't support schema evolution"], correct: 1, explanation: "Protobuf wire format uses varint-encoded field numbers; name is just metadata in the .proto file" },
+            { question: "JSON uses 186 bytes to serialize a 4-field order event. Protobuf uses 28 bytes. For 1 billion Kafka messages/day, the daily storage saving is approximately:", options: ["158 GB saved", "140 GB saved", "1.6 TB saved", "16 GB saved"], correct: 0, explanation: "(186-28) bytes x 1B = 158 GB/day saved; over a month ~4.7 TB -- significant at scale" },
           ]} />
           <button onClick={async () => { try { if (completed.has('serialization')) { await unmarkTopicComplete('serialization'); onUnmark('serialization') } else { await markTopicComplete('serialization'); onComplete('serialization') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('serialization') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('serialization') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1778,10 +3072,132 @@ import pinecone
 index = pinecone.Index("product-embeddings")
 results = index.query(vector=query_embedding, top_k=10, include_metadata=True)`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"When would you use Cassandra vs PostgreSQL vs BigQuery for a given problem?"</li>
+              <li>"Explain why you can't use a JOIN in Cassandra the same way you do in PostgreSQL"</li>
+              <li>"A startup wants to store ML embeddings for semantic search — what database would you recommend?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Database selection is one of the most consequential architectural decisions. They want to see you match access patterns to database capabilities — not just list database names. OLTP vs OLAP is the first cut. Then: Do you need horizontal scale for writes (Cassandra/DynamoDB)? Fast point lookups (Redis)? Flexible schema (MongoDB)? Time-series (InfluxDB)? Semantic search (vector DB)? The worst answer is 'use PostgreSQL for everything' — the second worst is 'it depends' without explaining what it depends on.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Define the access pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"How many reads/writes per second? Point lookups or scans? Structured or semi-structured?"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply the CAP tradeoff</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Cassandra: AP (available, partition-tolerant, eventual consistency); PostgreSQL: CP (consistent, partition-tolerant)"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Match to use case</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Time-series metrics → InfluxDB/ADX; ML embeddings → vector DB; caching → Redis; ACID transactions → PostgreSQL"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Netflix uses Apache Cassandra for their viewing history service — it handles 50 million writes per day across globally distributed datacenters because Cassandra's eventual consistency and horizontal write scaling is perfect for append-heavy event data. Instagram uses PostgreSQL for their OLTP workload (user profiles, follow graph) and BigQuery for analytics. Airbnb uses Pinecone as their vector database for listing similarity search — returning the 10 most similar listings to a given search embedding in under 10ms at scale.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I use PostgreSQL for the database"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"The database choice follows the access pattern. For transactional writes with ACID guarantees I'd use PostgreSQL or Azure SQL. For high-throughput time-series I'd use InfluxDB or Azure Data Explorer. For caching with sub-millisecond reads I'd use Redis. For analytical scans over billions of rows I'd use BigQuery or Databricks — row-oriented OLTP databases scan extremely slowly for aggregations"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Choose databases based on access pattern, not familiarity</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Redis for caching to reduce load on OLTP databases</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use a time-series DB (InfluxDB/ADX) for IoT/metrics workloads</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Run analytical GROUP BY queries on an OLTP PostgreSQL database in production</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use a relational DB for ML embedding similarity search</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use a document DB when you need complex multi-table joins</div>
+            </div>
+          </div>
+
           <Quiz topicId="databases" questions={[
-            { question: "Why is a column-oriented database faster for analytical queries like SUM(revenue)?", options: ["It stores less data overall", "All values for a column are stored contiguously  -  the query reads only the revenue column, skipping all other columns", "It uses better compression", "Analytical queries run in parallel automatically"], correct: 1 },
-            { question: "Which database type is best suited for storing ML embeddings and performing semantic similarity search?", options: ["OLTP relational database", "Key-value store like Redis", "Vector database like Pinecone or pgvector", "Column-family database like Cassandra"], correct: 2 },
-            { question: "What is the main tradeoff of NoSQL databases compared to relational OLTP databases?", options: ["NoSQL is always faster", "NoSQL sacrifices ACID transactions and complex joins for horizontal scalability and schema flexibility", "NoSQL stores less data", "NoSQL requires more storage"], correct: 1 },
+    {
+      question: "A pipeline needs to write 500,000 IoT sensor readings per second across 10,000 devices globally and serve time-range queries like 'last 24h of readings for device X'. Which database is best suited?",
+      options: [
+              "PostgreSQL with a timescaledb extension on a single large server",
+              "A distributed time-series database (InfluxDB, TimescaleDB, Azure Data Explorer) — designed for high-frequency time-indexed writes, automatic downsampling, and retention policies. Cassandra works too for this volume",
+              "Redis — fastest reads",
+              "BigQuery — most scalable"
+      ],
+      correct: 1,
+      explanation: "Time-series DBs have specialised storage engines optimised for time-ordered writes (LSM trees) and time-range reads. They also handle downsampling (keep 1-minute aggregates, drop per-second data after 30 days) automatically"
+    },
+    {
+      question: "You are building a recommendation engine. For each product, you have a 768-dimensional embedding vector from a transformer model. You need to find the 10 most similar products to a given query embedding in under 20ms. Which database type do you use?",
+      options: [
+              "PostgreSQL with a JSON column storing the embedding array",
+              "A vector database (Pinecone, Weaviate, pgvector) that uses Approximate Nearest Neighbour (ANN) indexing — exact nearest-neighbour search over 768 dimensions at scale requires specialised index structures (HNSW, IVF)",
+              "Cassandra — optimised for high-throughput writes",
+              "Redis — sub-millisecond reads"
+      ],
+      correct: 1,
+      explanation: "ANN indexes (HNSW, IVF-PQ) reduce similarity search from O(N) brute force to O(log N). At 10M products, brute force takes seconds; HNSW takes milliseconds"
+    },
+    {
+      question: "An OLTP PostgreSQL table has 500 million rows. An analyst runs SELECT region, SUM(revenue) FROM orders GROUP BY region and it takes 45 minutes. What is the root cause?",
+      options: [
+              "PostgreSQL does not support GROUP BY on large tables",
+              "PostgreSQL is row-oriented — it must read all 500M rows (all columns) from disk to compute the aggregation. An OLAP columnar store (BigQuery, Synapse, Redshift) would read only the region and revenue columns, taking seconds",
+              "The query is missing an index",
+              "PostgreSQL's query planner chose the wrong join strategy"
+      ],
+      correct: 1,
+      explanation: "Row-oriented storage reads full rows even for single-column aggregations. Columnar OLAP engines read only the 2 needed columns out of potentially 50+ — 96% less I/O"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('databases')) { await unmarkTopicComplete('databases'); onUnmark('databases') } else { await markTopicComplete('databases'); onComplete('databases') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('databases') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('databases') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -1901,10 +3317,132 @@ WHERE d.year = 2024
 GROUP BY 1,2,3,4
 ORDER BY 1,2,5 DESC;`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Explain the difference between a fact table and a dimension table"</li>
+              <li>"A customer changes their address — how do you handle this in SCD Type 2?"</li>
+              <li>"Why do we use surrogate keys instead of natural keys in a data warehouse?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Data warehouse modelling is the core of analytics engineering. They want to see you think in star schemas instinctively — fact tables for measurable events, dimension tables for context. They check whether you know SCD Type 2 cold: the effective_start/effective_end/is_current pattern for tracking historical changes. They also look for understanding of why surrogate keys exist: natural keys from source systems change, can be NULL, and span multiple source systems — surrogate keys are stable, unique, and system-generated.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Identify fact vs dimension</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Fact: one row per business event (sale, click, payment); Dimension: one row per business entity (customer, product, date)"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Apply SCD pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Attribute changes over time → SCD Type 2: new row with effective dates and is_current flag"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Connect measures to dimensions</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Fact table holds foreign keys to all dimensions + additive measures (amount, quantity, duration)"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Amazon Redshift's best practice guide mandates star schemas for BI workloads — their query planner is optimised for one fact + N dimension joins. Snowflake's sample TPC-DS benchmark database uses a star schema with a 24-billion-row fact table and 7 dimension tables. At Capital One, their data warehouse uses SCD Type 2 for all customer dimension attributes — regulators require point-in-time accuracy: 'what was this customer's credit score when they applied in March 2022?' requires accurate historical records.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I put all the data in one big table"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"For analytics I use a star schema: a central fact table with one row per business event, foreign keys to conformed dimension tables, and only additive measures in the fact table. Historical changes to customer attributes use SCD Type 2 — new row with effective_start, effective_end, and is_current — so I can accurately answer 'what was this customer's tier when they made this purchase?'"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use surrogate keys (IDENTITY/SEQUENCE) for all dimension primary keys</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Implement SCD Type 2 for attributes that change and where history matters</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Include a conformed dim_date in every star schema</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use natural keys (source system IDs) as warehouse primary keys</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use SCD Type 1 when regulatory/audit requirements exist — it destroys history</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Denormalise fact tables with repeated dimension attributes — use foreign keys instead</div>
+            </div>
+          </div>
+
           <Quiz topicId="data-warehouse" questions={[
-            { question: "What is the difference between a surrogate key and a natural key?", options: ["They are the same thing", "A surrogate key is system-generated (e.g., IDENTITY/SEQUENCE); a natural key is the business identifier from the source system (e.g., customer_id='CUST001')", "Natural keys are always integers", "Surrogate keys come from the source system"], correct: 1 },
-            { question: "In SCD Type 2, how do you identify the current record for a customer?", options: ["The record with the highest surrogate key", "Using is_current = TRUE or WHERE effective_end IS NULL", "The record with the most recent effective_start date", "All records are current in SCD Type 2"], correct: 1 },
-            { question: "Why is a star schema preferred over a snowflake schema for Power BI / BI tools?", options: ["Star schemas use less storage", "Star schemas require fewer joins  -  BI tools generate SQL with one level of joins, which is faster and easier to optimise", "Snowflake schemas don't support date dimensions", "Star schemas have better compression"], correct: 1 },
+    {
+      question: "A customer 'Alice' (customer_nk='C001') changes her tier from 'Silver' to 'Gold' on 2024-06-15. You are implementing SCD Type 2. Which SQL operation correctly handles this?",
+      options: [
+              "UPDATE dim_customer SET tier='Gold' WHERE customer_nk='C001'",
+              "UPDATE dim_customer SET effective_end='2024-06-14', is_current=FALSE WHERE customer_nk='C001' AND is_current=TRUE; then INSERT a new row with tier='Gold', effective_start='2024-06-15', effective_end=NULL, is_current=TRUE",
+              "DELETE and re-INSERT the customer row",
+              "Add a new column 'previous_tier' and set it to 'Silver'"
+      ],
+      correct: 1,
+      explanation: "SCD Type 2: close the old record (set effective_end and is_current=FALSE), insert a new record for the new value. This preserves complete history for point-in-time queries"
+    },
+    {
+      question: "A fact_sales table has 50 billion rows with a date_sk column (INT, FK to dim_date). An analyst queries revenue for Q1 2024 only. What is the most effective physical optimisation for this query?",
+      options: [
+              "Create an index on date_sk",
+              "Partition the fact table by year/month — Spark/SQL can prune all partitions outside Q1 2024, reading only 3 months instead of the entire 50B-row table",
+              "Add a materialized view for Q1",
+              "Increase executor memory"
+      ],
+      correct: 1,
+      explanation: "Partition pruning on date is the most powerful optimisation for time-range queries on fact tables — it reduces I/O from the full table to just the relevant partitions"
+    },
+    {
+      question: "Why should measures in a fact table be additive rather than non-additive?",
+      options: [
+              "Additive measures compress better in Parquet",
+              "Additive measures (SUM, COUNT) can be aggregated across any combination of dimensions without recalculation. Non-additive measures like ratios or averages produce incorrect results when summed — they must be recalculated from the base additive components",
+              "Non-additive measures require more storage",
+              "BI tools only support additive measures"
+      ],
+      correct: 1,
+      explanation: "Example: average_order_value = total_revenue / order_count. Both are additive; the ratio is not. Store total_revenue and order_count in the fact table; compute the ratio at query time"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('data-warehouse')) { await unmarkTopicComplete('data-warehouse'); onUnmark('data-warehouse') } else { await markTopicComplete('data-warehouse'); onComplete('data-warehouse') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('data-warehouse') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-warehouse') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -2004,10 +3542,132 @@ spark.sql("""
     GROUP BY 1, 2, 3
 """)`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"Why is Bronze append-only and kept forever?"</li>
+              <li>"What transformations belong in Silver vs Gold?"</li>
+              <li>"A Silver table has a bug in the deduplication logic — how do you fix it without re-ingesting from source?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>The Medallion architecture is the default lakehouse pattern at companies using Databricks, Azure Synapse, or Delta Lake. They want to hear you articulate the purpose of each layer: Bronze is a durable, immutable record of what arrived; Silver is cleaned and conformed; Gold is business-ready. They check whether you know the replay pattern — the reason Bronze is never modified is so you can always reprocess Silver and Gold by replaying Bronze when transformation logic changes.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Define each tier's contract</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Bronze: raw as-received, append-only, schema preserved; Silver: validated, typed, deduplicated; Gold: aggregated, business-ready"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Explain the replay pattern</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"When Silver logic changes, replay Bronze → Silver → Gold without re-ingesting from source"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Connect to MERGE semantics</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Silver uses MERGE (upsert) to handle late-arriving Bronze duplicates idempotently"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Databricks' reference architecture for enterprise lakehouses uses exactly the Bronze/Silver/Gold pattern with Delta Lake at each layer. The Medallion architecture is also used at Condé Nast (processing 2 billion clickstream events daily), where Bronze stores raw Kafka events in Delta, Silver applies deduplication and PII masking, and Gold provides aggregated engagement metrics for editorial teams. At Microsoft, the Azure Synapse Analytics documentation explicitly recommends this pattern for all new data platform implementations.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"We clean the data in the ingestion step"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I keep Bronze raw and append-only because it's the source of truth for replaying the pipeline. If I clean in Bronze, a future bug fix requires re-ingesting from the source system — expensive and sometimes impossible. Silver applies all cleaning: types, deduplication, null handling. Gold is business-ready aggregations only. This separation means any layer can be reprocessed independently"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Keep Bronze append-only and never modify after ingestion</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use MERGE/upsert in Silver to handle late-arriving duplicates</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Make each layer independently reprocessable from the layer below</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Apply transformations or filtering in Bronze — it should be raw</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Delete rows from Bronze even for GDPR — use a tombstone/delete pattern</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Mix Bronze, Silver, and Gold tables in the same database schema</div>
+            </div>
+          </div>
+
           <Quiz topicId="medallion" questions={[
-            { question: "Why is Bronze append-only and kept forever?", options: ["Bronze is the cheapest storage layer", "Bronze is the source of truth  -  if Silver/Gold transformation logic has bugs, you can replay/reprocess from Bronze without re-ingesting from source systems", "Bronze tables are too large to delete", "Bronze data is never read after ingestion"], correct: 1 },
-            { question: "What type of data transformation should NOT happen in Bronze?", options: ["Adding ingestion metadata columns", "Recording the source file name", "Type casting, deduplication, and joins to lookup tables", "Appending new records as they arrive"], correct: 2 },
-            { question: "When should you use a materialised Gold table instead of a view?", options: ["Always  -  views are never used in Gold", "When the aggregation is expensive and many BI users query the same data  -  pre-computation saves repeated compute costs", "Only when using Parquet instead of Delta", "When the source data changes every second"], correct: 1 },
+    {
+      question: "A Silver job has a bug: it incorrectly filters out orders with status='refunded' during cleaning. This has been running for 6 months. How do you fix Gold without calling the source API again?",
+      options: [
+              "Accept the data loss — you cannot recover without the source API",
+              "Fix the Silver transformation logic, delete and reprocess Silver from Bronze (which is intact and append-only), then reprocess Gold from the corrected Silver — Bronze is your source of truth for exactly this scenario",
+              "Add the missing records manually",
+              "Use Bronze data directly in Gold until Silver is fixed"
+      ],
+      correct: 1,
+      explanation: "Bronze as immutable source of truth enables full reprocessing. Fix logic, replay Bronze → Silver → Gold. This is the primary architectural justification for never modifying Bronze"
+    },
+    {
+      question: "Why does Silver use MERGE (upsert) rather than INSERT for writing to Delta tables?",
+      options: [
+              "MERGE is faster than INSERT for small datasets",
+              "Bronze may deliver the same event multiple times (duplicate messages from Kafka, retried Auto Loader loads). MERGE deduplicates by matching on the natural key — idempotent processing means running Silver twice produces the same result",
+              "INSERT does not work with Delta Lake",
+              "MERGE applies SCD Type 2 automatically"
+      ],
+      correct: 1,
+      explanation: "Idempotency: MERGE on order_id means re-running Silver on the same Bronze data updates existing records instead of creating duplicates. Critical for fault-tolerant pipeline design"
+    },
+    {
+      question: "A Gold table serves a Power BI dashboard used by 500 analysts running the same 5 queries. Should this be a view over Silver or a materialised Delta table? Why?",
+      options: [
+              "Always a view — views are simpler to maintain",
+              "A materialised Delta table — 500 analysts hitting the same complex aggregation as a view would recompute the query 500 times simultaneously, consuming massive compute. Pre-materialise the aggregation once, update on a schedule, and serve the pre-computed result to all 500 users",
+              "It depends only on the query complexity",
+              "Views automatically cache in Databricks"
+      ],
+      correct: 1,
+      explanation: "High fan-out (many users, same query) is the primary signal to materialise. Views re-execute on every read; materialised tables execute once and serve many reads from pre-computed storage"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('medallion')) { await unmarkTopicComplete('medallion'); onUnmark('medallion') } else { await markTopicComplete('medallion'); onComplete('medallion') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('medallion') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('medallion') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -2101,10 +3761,132 @@ bad.withColumn("quarantine_reason", lit("null order_id or negative amount")) \
    .write.format("delta").mode("append").saveAsTable("quarantine.orders")
 good.write.format("delta").mode("append").saveAsTable("silver.orders")`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"How do you implement data quality checks in a production Spark pipeline?"</li>
+              <li>"A downstream BI report is showing incorrect numbers — how do you investigate?"</li>
+              <li>"What is the quarantine pattern and why is it better than dropping bad records?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to see that data quality is built into your pipeline architecture, not bolted on after an incident. Do you have automated checks at each layer boundary? Do you alert on DQ failures before the business notices? Do you route bad records to quarantine rather than dropping them silently? They also check whether you know the six dimensions of DQ (completeness, accuracy, consistency, timeliness, uniqueness, validity) — framing an answer in these terms signals seniority.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Name the dimension</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Is this a completeness issue (nulls), uniqueness issue (duplicates), or validity issue (out-of-range values)?"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Instrument the check</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Great Expectations expectation, Deequ constraint, or dbt test — whatever integrates with your orchestrator"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Define the failure mode</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Critical checks halt the pipeline; warnings go to monitoring; all failures go to a DLQ/quarantine table, never dropped"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Netflix uses automated data quality monitors that track 200+ metrics per table — row count anomaly detection, null rate trends, and cardinality drift. An alert fires if row count drops more than 15% from the 7-day moving average. LinkedIn's data quality platform (DataHub) runs DQ checks on every table write and blocks promotion from Silver to Gold if any critical check fails. At Airbnb, the Minerva metrics platform validates that computed metrics match within 0.1% of a separately computed reference value before publishing to dashboards.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I check for nulls and duplicates manually when something looks wrong"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I implement DQ checks at every layer boundary: completeness checks on required fields, uniqueness checks on natural keys, range checks on numeric values, and referential integrity checks against dimension tables. Failed records go to a quarantine table with a reason code — never dropped silently. I monitor DQ metrics in Grafana and page on-call if the null rate on order_id exceeds 0.01%"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Run automated DQ checks at every Bronze-to-Silver and Silver-to-Gold boundary</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Route failed records to a quarantine/dead-letter table with reason codes</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Monitor DQ metrics over time to detect drift (gradual degradation)</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Drop bad records silently — it hides systematic upstream problems</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Only run DQ checks manually after a business incident</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use the same DQ thresholds for all columns — critical columns need stricter rules</div>
+            </div>
+          </div>
+
           <Quiz topicId="data-quality" questions={[
-            { question: "What is the 'quarantine pattern' in data quality?", options: ["Deleting bad records immediately", "Routing failed DQ records to a separate table/queue for investigation and reprocessing rather than silently dropping them", "Encrypting PII data at rest", "Running DQ checks in a separate environment"], correct: 1 },
-            { question: "Which data quality dimension checks that data is available when it should be?", options: ["Accuracy", "Uniqueness", "Timeliness", "Validity"], correct: 2 },
-            { question: "What is a key advantage of Deequ over Great Expectations for large-scale data engineering?", options: ["Deequ generates better HTML reports", "Deequ is built natively on Spark so DQ checks run distributed across the cluster without converting to Pandas", "Deequ supports more check types", "Deequ integrates with more orchestrators"], correct: 1 },
+    {
+      question: "A Silver pipeline runs daily and the order_id null rate has gradually increased from 0.01% to 3% over 30 days. Nobody noticed until a Gold report was wrong. What DQ process failure occurred?",
+      options: [
+              "The DQ check thresholds were too strict",
+              "No trend monitoring — a static threshold check (is null rate &lt; 5%?) would pass at 3%, but a trend-based alert (null rate increased 30x in 30 days) would have fired on day 5 when it crossed 0.1%",
+              "Great Expectations was not installed",
+              "The pipeline was running too frequently"
+      ],
+      correct: 1,
+      explanation: "Point-in-time checks miss gradual drift. Add trend monitoring: alert if a metric changes by more than X% from its rolling 7-day average — catches slow degradation before it becomes a business incident"
+    },
+    {
+      question: "You implement a DQ check: expect_column_values_to_be_between('amount', 0, 1000000). A batch has 0.003% of rows with amount=-0.01 (refund reversal bug). Should the pipeline halt or continue?",
+      options: [
+              "Always halt on any DQ failure",
+              "It depends on the defined severity: a 0.003% failure rate might be WARNING (continue, quarantine bad rows, alert) rather than ERROR (halt). Critical pipelines halt on any failure; analytical pipelines often continue with quarantine",
+              "Always continue — small failure rates are acceptable",
+              "Delete the failing rows and continue"
+      ],
+      correct: 1,
+      explanation: "DQ check severity is a business decision: 0.003% bad rows in a revenue report might warrant quarantine + alert, not a full pipeline halt. Define ERROR vs WARNING thresholds per column based on business impact"
+    },
+    {
+      question: "What is the key advantage of Deequ over running DQ checks in Pandas for a 10TB Silver table?",
+      options: [
+              "Deequ has more check types than Pandas",
+              "Deequ runs distributed on the Spark cluster — checks execute as Spark jobs across all partitions simultaneously. Converting 10TB to Pandas would require a single machine with 10TB+ RAM, which is impossible",
+              "Deequ automatically fixes data quality issues",
+              "Deequ integrates with more BI tools"
+      ],
+      correct: 1,
+      explanation: "Scale is the key: Pandas operates on a single machine's memory; Deequ distributes checks across the entire Spark cluster. For TB-scale data, only distributed DQ frameworks work"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('data-quality')) { await unmarkTopicComplete('data-quality'); onUnmark('data-quality') } else { await markTopicComplete('data-quality'); onComplete('data-quality') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('data-quality') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-quality') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -2192,10 +3974,132 @@ spark.sql("""
     ALTER COLUMN email SET MASK mask_email;
 """)`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"How would you implement GDPR's right to erasure in a Delta Lake environment?"</li>
+              <li>"What is data lineage and how does it help with debugging?"</li>
+              <li>"A new dataset contains PII — what governance steps do you take before it enters your lakehouse?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Data governance has moved from a compliance checkbox to a core engineering responsibility. They want to see you understand that governance is implemented in code: Unity Catalog for access control, Delta Lake VACUUM for GDPR deletion, column masking functions for PII, and data lineage captured by your orchestration tool. They also check whether you know the difference between pseudonymisation (reversible with key) and anonymisation (irreversible) — relevant for GDPR compliance assessments.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Classify first</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Tag every column with sensitivity level (PII, PCI, public) before writing to the catalog"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Enforce at the platform layer</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Unity Catalog column masking, row filters, and RBAC — not just application-level checks"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Build GDPR operations</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Right to erasure: DELETE + VACUUM in Delta; audit log of all delete operations; test quarterly"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Databricks Unity Catalog implements column-level security using masking policies — non-PII-readers see joh***@***.com instead of john@example.com with zero application code changes. At ING Bank, every new table ingested into their Azure Data Lake requires a completed Data Protection Impact Assessment (DPIA) before the pipeline can be promoted to production — enforced via a catalog registration step in their CI/CD pipeline. LinkedIn's DataHub tracks complete column-level lineage across 400,000 dataset assets, enabling engineers to answer 'who consumes this column?' before making a schema change.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"We mask PII in the application layer"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"Application-layer masking breaks when someone queries the table directly. I implement governance at the platform layer: Unity Catalog column masking policies so non-privileged roles never see raw PII regardless of query tool. I track lineage through the catalog so I know which Gold tables consume a given Silver column before I change it. For GDPR deletion I use Delta's DELETE + VACUUM with a documented SLA and audit trail"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Classify PII columns in the data catalog before ingestion</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use platform-layer access control (Unity Catalog) not application-layer only</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Document and test GDPR deletion procedures quarterly</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Assume application-layer masking is sufficient — direct SQL bypasses it</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Store PII in Bronze without classification and masking in Silver</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Conflate pseudonymisation with anonymisation — they have different GDPR implications</div>
+            </div>
+          </div>
+
           <Quiz topicId="data-governance" questions={[
-            { question: "What is data lineage and why is it important?", options: ["A list of all databases in the organisation", "A record of where data came from and how it was transformed  -  essential for debugging data issues and assessing impact of schema changes", "The history of schema changes to a table", "A graph of all data consumers"], correct: 1 },
-            { question: "Under GDPR's Right to Erasure, what must a data engineer implement?", options: ["Delete the user's account from the operational database only", "Delete all PII for a user across all systems (Bronze, Silver, Gold, backups) when requested, with audit trail", "Anonymise the data by removing the name field", "Archive the data to cold storage"], correct: 1 },
-            { question: "What is the difference between pseudonymisation and anonymisation?", options: ["They are the same thing", "Pseudonymisation replaces identifiers with tokens while retaining re-linkability via a key; anonymisation is irreversible  -  re-identification is impossible", "Anonymisation uses hashing, pseudonymisation uses encryption", "Pseudonymisation is stronger than anonymisation"], correct: 1 },
+    {
+      question: "Under GDPR Article 17 (Right to Erasure), a user requests deletion of all their data. Your pipeline stores data in: Bronze (Delta, append-only), Silver (Delta, with MERGE), Gold (Delta, aggregated). What must you do?",
+      options: [
+              "Delete from Silver and Gold only — Bronze is append-only and cannot be modified",
+              "Delete from all three layers: Silver and Gold with DELETE statements + VACUUM; Bronze with a deletion vector or replacing the affected files + VACUUM. Document and audit every deletion with timestamp",
+              "Delete from Gold only — this is the user-facing layer",
+              "Anonymise the data in Bronze instead of deleting it"
+      ],
+      correct: 1,
+      explanation: "GDPR requires deletion across ALL systems holding the data, including Bronze. Delta Lake supports this via DELETE + VACUUM (which physically removes the files after the retention period). Using Delta's Change Data Feed or deletion vectors makes this more efficient"
+    },
+    {
+      question: "A data engineer builds a column masking function in Unity Catalog that shows full email to 'pii_readers' group and masked email to others. An analyst with no special permissions runs SELECT email FROM silver.customers. What do they see?",
+      options: [
+              "An error — they cannot query the table",
+              "The full email — masking only works in the application layer",
+              "The masked email (e.g. joh***@***.com) — Unity Catalog applies the masking function transparently at query execution time regardless of the query tool used",
+              "NULL — masked columns always return NULL"
+      ],
+      correct: 2,
+      explanation: "Unity Catalog column masking is enforced at the SQL execution layer — it applies to all queries regardless of tool (SQL Editor, Tableau, Python, REST API). This is why platform-layer governance is stronger than application-layer"
+    },
+    {
+      question: "What is the difference between data lineage and data cataloguing?",
+      options: [
+              "They are the same thing",
+              "A data catalog inventories assets (what tables exist, their schemas, owners, descriptions). Data lineage tracks the transformation graph (table B was derived from table A by pipeline X on date Y). Lineage answers 'where did this data come from and who consumes it?'; the catalog answers 'what data assets exist and what do they mean?'",
+              "Lineage is for GDPR, cataloguing is for BI",
+              "Cataloguing is automated, lineage requires manual documentation"
+      ],
+      correct: 1,
+      explanation: "Catalog = inventory (what exists). Lineage = provenance graph (where it came from and where it flows). Both are needed: catalog for discovery, lineage for impact analysis and debugging"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('data-governance')) { await unmarkTopicComplete('data-governance'); onUnmark('data-governance') } else { await markTopicComplete('data-governance'); onComplete('data-governance') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('data-governance') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('data-governance') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
@@ -2329,10 +4233,132 @@ windowed = (stream_df
     .trigger(availableNow=True)   # idiomatic replacement for batch jobs in Databricks
     .table("silver.orders"))`}</CodeBlock>
 
+          
+          <div className="callout callout-warning">
+            <span className="callout-icon">⚠️</span>
+            <div className="callout-body">
+              <strong>Interview Triggers</strong>
+              <ul style={{ marginTop: 8, marginBottom: 0 }}>
+              <li>"When would you choose streaming over batch for a data pipeline?"</li>
+              <li>"Explain watermarks in Spark Structured Streaming"</li>
+              <li>"What is the main operational complexity that Lambda Architecture introduces?"</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">💡</span>
+            <div className="callout-body">
+              <strong>What Interviewers Actually Want</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>They want to see that you make the batch vs streaming decision based on latency requirements and complexity tolerance — not because 'streaming is modern'. Batch is simpler, cheaper, and easier to reprocess. Streaming adds state management, watermarks, late data handling, and checkpoint maintenance. The right answer usually involves micro-batch (Databricks availableNow trigger) for most 'near real-time' use cases, reserving true streaming for genuine sub-minute SLAs. They also check whether you know the Kappa architecture argument: one streaming codebase is simpler to maintain than Lambda's two.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>60-Second Framework</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', width: 40 }}>Step</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>What to Say</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)' }}>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>1</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Ask the latency requirement</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"What is the maximum acceptable data delay? &lt;1 minute → streaming; &lt;1 hour → micro-batch; daily → batch"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>2</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>State the complexity tradeoff</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Streaming adds: watermarks for late data, stateful operations, checkpoint management, exactly-once semantics"</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 12px', fontWeight: 700, whiteSpace: 'nowrap', borderBottom: '1px solid var(--border)' }}>3</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>Recommend the simplest sufficient solution</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>"Databricks availableNow trigger gives near-real-time with batch semantics — often the right choice over full streaming"</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏭</span>
+            <div className="callout-body">
+              <strong>In Production</strong>
+              <p style={{ margin: '6px 0 0', lineHeight: 1.7, fontSize: '.9rem' }}>Netflix uses Kafka + Flink for their real-time viewing analytics (updating play count within 30 seconds) but uses batch Spark for their daily recommendation model training — they chose streaming where latency mattered and batch where it didn't. Uber's surge pricing engine uses Spark Structured Streaming with 10-second micro-batches to aggregate ride requests by geohash — true streaming was not needed since 10-second latency was sufficient. LinkedIn's Kappa architecture for activity feeds uses Kafka as the durable log and Samza (stream processor) as the single processing engine for both real-time and historical reprocessing.</p>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '24px 0 10px' }}>Junior vs Senior Phrasing</h3>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.88rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--surface-2)' }}>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#ef4444' }}>Junior Says</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', borderBottom: '2px solid var(--border)', color: '#22c55e' }}>Senior Says</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"We should use streaming because it's faster"</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text-secondary)' }}>"I start by asking what the latency SLA is. If the business needs data within 30 seconds, we need streaming. If hourly is fine, micro-batch or batch is simpler, cheaper, and easier to debug. Streaming adds real complexity: watermarks for late data, stateful aggregations, checkpoint recovery. I'll only introduce that complexity when the latency requirement justifies it"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#166534' }}>Do</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use batch when hourly or daily latency is acceptable — it is simpler</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Use Databricks availableNow trigger as a middle ground (near-real-time with batch semantics)</div>
+              <div className="card card-success" style={{ fontSize: ".85rem" }}>✅ Set watermarks to handle late-arriving data in streaming jobs</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 10, color: '#92400e' }}>Don't</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Use streaming just because it sounds more modern or impressive</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Build Lambda Architecture (dual batch + streaming codebases) when Kappa (single streaming) suffices</div>
+              <div className="card card-warning" style={{ fontSize: ".85rem" }}>❌ Ignore late data handling in streaming — it silently drops events that arrive after window close</div>
+            </div>
+          </div>
+
           <Quiz topicId="batch-vs-streaming" questions={[
-            { question: "What is the main disadvantage of Lambda Architecture compared to Kappa Architecture?", options: ["Lambda is more expensive", "Lambda requires maintaining two separate codebases (batch and streaming) implementing the same business logic", "Lambda doesn't support real-time processing", "Lambda uses more storage"], correct: 1 },
-            { question: "What is a watermark in Spark Structured Streaming?", options: ["A data quality check", "A threshold that defines how long to wait for late-arriving data before closing a time window", "A checkpoint for fault tolerance", "A trigger interval"], correct: 1 },
-            { question: "When is batch processing the better choice over streaming?", options: ["Always  -  streaming is too complex", "When latency requirements are hourly or daily, data volumes are large, and simplicity/reprocessability are valued over low latency", "When the data source is Kafka", "When you need exactly-once semantics"], correct: 1 },
+    {
+      question: "A fraud detection system needs to flag suspicious transactions within 45 seconds of the transaction occurring. Which architecture best meets this requirement?",
+      options: [
+              "Nightly batch job — simpler and cheaper",
+              "Spark Structured Streaming with a 30-second micro-batch trigger consuming from Kafka — 30-second processing + 15-second buffer fits the 45-second SLA with low operational complexity",
+              "Lambda Architecture with both batch and streaming",
+              "Store-and-forward batch running every 5 minutes"
+      ],
+      correct: 1,
+      explanation: "45-second SLA requires streaming or micro-batch. 30-second trigger provides results within 30-60 seconds of event arrival. Lambda adds unnecessary complexity when a single streaming path suffices"
+    },
+    {
+      question: "A Spark Structured Streaming job groups events by 5-minute windows. An event arrives 12 minutes late (after the window should have closed). You have set withWatermark('event_time', '10 minutes'). What happens to this event?",
+      options: [
+              "The event is processed and included in the window",
+              "The event is dropped — it arrived more than 10 minutes after the watermark, so the window has been finalised and evicted from state. The watermark controls how long late data is accepted",
+              "The event opens a new window",
+              "The event is stored in quarantine"
+      ],
+      correct: 1,
+      explanation: "Watermark = how long to wait for late data. Event 12 minutes late with 10-minute watermark: the window is already closed and state evicted. The event is dropped. Set watermark based on your late-arrival SLA"
+    },
+    {
+      question: "What is the primary operational advantage of Kappa Architecture over Lambda Architecture?",
+      options: [
+              "Kappa is always faster than Lambda",
+              "Kappa uses a single processing codebase (streaming only) — Lambda requires maintaining two separate implementations of the same business logic (batch layer + speed layer), doubling the surface area for bugs, tests, and deployments",
+              "Kappa uses less storage",
+              "Lambda does not support exactly-once semantics"
+      ],
+      correct: 1,
+      explanation: "Lambda's main cost is code duplication: the same transformation logic must be written and maintained in both the batch layer (Spark batch) and speed layer (Kafka Streams/Flink). Kappa eliminates this by using a replayable event log (Kafka) as the single source for both real-time and historical processing"
+    },
           ]} />
           <button onClick={async () => { try { if (completed.has('batch-vs-streaming')) { await unmarkTopicComplete('batch-vs-streaming'); onUnmark('batch-vs-streaming') } else { await markTopicComplete('batch-vs-streaming'); onComplete('batch-vs-streaming') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('batch-vs-streaming') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('batch-vs-streaming') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
