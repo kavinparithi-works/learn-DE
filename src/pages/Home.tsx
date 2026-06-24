@@ -355,96 +355,89 @@ export default function Home({ completed }: Props) {
             From Zero to Senior<br />Azure Data Engineer
           </h1>
 
-          {/* Creator byline */}
+          {/* Creator byline — elegant inline signature */}
           <div className="hero-byline" style={{
-            display:'flex', flexDirection:'column', alignItems:'center',
-            gap:10, marginBottom:28, marginTop:8,
+            display:'inline-flex', alignItems:'center', gap:10,
+            marginBottom:28, marginTop:6,
           }}>
             <style>{`
-              @keyframes nameReveal {
-                0%   { opacity:0; transform:translateY(12px) scale(.94); filter:blur(6px); }
-                100% { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
-              }
-              @keyframes nameGlow {
-                0%,100% { filter: drop-shadow(0 0 10px rgba(196,181,253,.5)) drop-shadow(0 0 24px rgba(244,114,182,.3)); }
-                50%      { filter: drop-shadow(0 0 22px rgba(196,181,253,.9)) drop-shadow(0 0 48px rgba(244,114,182,.6)) drop-shadow(0 0 72px rgba(147,197,253,.4)); }
-              }
               @keyframes nameShimmer {
                 0%   { background-position: 200% center; }
                 100% { background-position: -200% center; }
               }
-              @keyframes underlineGrow {
-                0%   { transform: scaleX(0); opacity:0; }
-                100% { transform: scaleX(1); opacity:1; }
+              @keyframes nameGlow {
+                0%,100% { text-shadow: 0 0 12px rgba(196,181,253,.4), 0 0 28px rgba(244,114,182,.2); }
+                50%      { text-shadow: 0 0 20px rgba(196,181,253,.85), 0 0 44px rgba(244,114,182,.5), 0 0 64px rgba(147,197,253,.3); }
               }
-              @keyframes linkedinPop {
-                0%   { opacity:0; transform:scale(.7) translateY(6px); }
-                100% { opacity:1; transform:scale(1) translateY(0); }
+              @keyframes bylineIn {
+                0%   { opacity:0; transform:translateY(8px); }
+                100% { opacity:1; transform:translateY(0); }
               }
             `}</style>
 
-            {/* The name — the STAR */}
-            <div style={{ position:'relative', display:'inline-block' }}>
-              <span style={{
-                fontFamily:'var(--font-display)',
-                fontSize:'clamp(1.6rem,4vw,2.2rem)',
-                fontWeight:900,
-                letterSpacing:'-.03em',
-                lineHeight:1.1,
-                background:'linear-gradient(90deg,#e0c3fc 0%,#c4b5fd 18%,#f9a8d4 38%,#fde68a 55%,#a5f3fc 72%,#c4b5fd 88%,#e0c3fc 100%)',
-                backgroundSize:'250% auto',
-                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                animation:'nameReveal .9s cubic-bezier(.22,1,.36,1) .2s both, nameShimmer 4s linear 1.1s infinite, nameGlow 3s ease-in-out 1.1s infinite',
-                display:'inline-block',
-              }}>
-                Kavin Parithi Sivasamy
-              </span>
-              {/* Animated underline */}
-              <div style={{
-                position:'absolute', bottom:-4, left:0, right:0, height:2,
-                background:'linear-gradient(90deg,transparent,#c4b5fd 25%,#f9a8d4 50%,#fde68a 75%,transparent)',
-                borderRadius:2,
-                transformOrigin:'left center',
-                animation:'underlineGrow .8s cubic-bezier(.22,1,.36,1) .9s both',
-              }}/>
-            </div>
+            {/* Left dash */}
+            <div style={{ width:32, height:1, background:'linear-gradient(90deg,transparent,rgba(196,181,253,.45))', flexShrink:0 }}/>
 
-            {/* LinkedIn pill — below the name */}
+            {/* "by" label */}
+            <span style={{
+              fontSize:'.72rem', fontWeight:600, color:'rgba(255,255,255,.35)',
+              fontFamily:'var(--font-sans)', letterSpacing:'.08em', textTransform:'uppercase',
+              animation:'bylineIn .6s ease .3s both',
+            }}>by</span>
+
+            {/* The name */}
+            <span style={{
+              fontFamily:'var(--font-display)',
+              fontSize:'clamp(.95rem,2vw,1.1rem)',
+              fontWeight:900,
+              letterSpacing:'-.02em',
+              background:'linear-gradient(90deg,#c4b5fd 0%,#f9a8d4 25%,#fde68a 50%,#a5f3fc 72%,#c4b5fd 100%)',
+              backgroundSize:'220% auto',
+              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+              animation:'bylineIn .6s ease .45s both, nameShimmer 4s linear 1s infinite',
+              display:'inline-block',
+            }}>
+              Kavin Parithi Sivasamy
+            </span>
+
+            {/* LinkedIn icon button */}
             <a
               href="https://www.linkedin.com/in/kavinparithi"
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
+              title="Connect on LinkedIn"
               style={{
-                display:'inline-flex', alignItems:'center', gap:6,
-                padding:'6px 16px', borderRadius:999,
-                background:'rgba(10,102,194,.18)',
-                border:'1px solid rgba(10,102,194,.45)',
-                color:'#7dd3fc', fontSize:'.75rem', fontWeight:700,
-                textDecoration:'none', fontFamily:'var(--font-sans)',
-                backdropFilter:'blur(10px)',
-                transition:'all .25s ease',
-                boxShadow:'0 0 16px rgba(10,102,194,.2)',
-                animation:'linkedinPop .5s cubic-bezier(.34,1.56,.64,1) 1.2s both',
+                display:'inline-flex', alignItems:'center', justifyContent:'center',
+                width:28, height:28, borderRadius:8, flexShrink:0,
+                background:'rgba(10,102,194,.22)',
+                border:'1px solid rgba(10,102,194,.4)',
+                color:'#7dd3fc',
+                textDecoration:'none',
+                transition:'all .22s ease',
+                boxShadow:'0 0 10px rgba(10,102,194,.2)',
+                animation:'bylineIn .6s ease .6s both',
               }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement
-                el.style.background = 'rgba(10,102,194,.35)'
-                el.style.boxShadow = '0 0 24px rgba(10,102,194,.5)'
-                el.style.transform = 'translateY(-2px) scale(1.06)'
+                el.style.background = 'rgba(10,102,194,.45)'
+                el.style.boxShadow = '0 0 18px rgba(10,102,194,.55)'
+                el.style.transform = 'scale(1.15) translateY(-2px)'
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLElement
-                el.style.background = 'rgba(10,102,194,.18)'
-                el.style.boxShadow = '0 0 16px rgba(10,102,194,.2)'
+                el.style.background = 'rgba(10,102,194,.22)'
+                el.style.boxShadow = '0 0 10px rgba(10,102,194,.2)'
                 el.style.transform = 'none'
               }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
               </svg>
-              Kavin Parithi · LinkedIn
             </a>
+
+            {/* Right dash */}
+            <div style={{ width:32, height:1, background:'linear-gradient(90deg,rgba(196,181,253,.45),transparent)', flexShrink:0 }}/>
           </div>
 
           {/* Hero punch quote */}
