@@ -63,7 +63,7 @@ export default function Quiz({ questions, topicId }: Props) {
 
   const answered = (qIdx: number, chosen: number) => {
     if (answers[qIdx] !== undefined) return
-    const isCorrect = chosen === questions[qIdx].correct
+    const isCorrect = chosen === shuffled[qIdx].correct
     const newAnswers = { ...answers, [qIdx]: chosen }
     setAnswers(newAnswers)
     const newScore = score + (isCorrect ? 1 : 0)
@@ -203,20 +203,20 @@ export default function Quiz({ questions, topicId }: Props) {
               </div>
               <div className="quiz-options">
                 {q.options.map((opt, j) => {
+                  const correctIdx = shuffled[i].correct
                   let cls = 'quiz-opt'
                   if (isAnswered) {
-                    if (j === q.correct) cls += ' correct'
+                    if (j === correctIdx) cls += ' correct'
                     else if (j === userAnswer) cls += ' wrong'
                   }
                   return (
                     <button key={j} className={cls} disabled={isAnswered} onClick={() => answered(i, j)}>
-                      {/* Colored circle letter badge */}
                       <span
                         className="quiz-opt-letter"
                         style={{
-                          background: isAnswered && j === q.correct
+                          background: isAnswered && j === correctIdx
                             ? 'rgba(34,197,94,.3)'
-                            : isAnswered && j === userAnswer && j !== q.correct
+                            : isAnswered && j === userAnswer && j !== correctIdx
                             ? 'rgba(239,68,68,.2)'
                             : 'rgba(255,255,255,.08)',
                         }}
@@ -227,10 +227,10 @@ export default function Quiz({ questions, topicId }: Props) {
                 })}
               </div>
               {isAnswered && (
-                <div className={`quiz-feedback show ${userAnswer === q.correct ? 'correct' : 'wrong'}`}>
-                  {userAnswer === q.correct
+                <div className={`quiz-feedback show ${userAnswer === shuffled[i].correct ? 'correct' : 'wrong'}`}>
+                  {userAnswer === shuffled[i].correct
                     ? '✓ Correct! Well done.'
-                    : `✗ The answer is ${String.fromCharCode(65 + q.correct)}${q.explanation ? ' — ' + q.explanation : ''}`}
+                    : `✗ The answer is: ${shuffled[i].options[shuffled[i].correct]}${shuffled[i].explanation ? ' — ' + shuffled[i].explanation : ''}`}
                 </div>
               )}
             </div>

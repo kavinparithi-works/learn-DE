@@ -6,6 +6,22 @@ interface Props {
   onClose: () => void
 }
 
+function friendlyError(code: string): string {
+  switch (code) {
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':    return 'Incorrect password. Please try again.'
+    case 'auth/user-not-found':        return 'No account found with this email.'
+    case 'auth/email-already-in-use':  return 'This email already has an account. Try signing in instead.'
+    case 'auth/invalid-email':         return 'Please enter a valid email address.'
+    case 'auth/weak-password':         return 'Password must be at least 6 characters.'
+    case 'auth/too-many-requests':     return 'Too many attempts. Please wait a few minutes and try again.'
+    case 'auth/network-request-failed':return 'Network error. Check your connection and try again.'
+    case 'auth/popup-closed-by-user':  return 'Sign-in popup was closed. Please try again.'
+    case 'auth/cancelled-popup-request': return ''
+    default:                           return 'Something went wrong. Please try again.'
+  }
+}
+
 export default function AuthModal({ open, onClose }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,21 +35,23 @@ export default function AuthModal({ open, onClose }: Props) {
       await signInGoogle()
       onClose()
     } catch (e: any) {
-      setError(e.message)
+      const msg = friendlyError(e.code)
+      if (msg) setError(msg)
     } finally {
       setLoading(false)
     }
   }
 
   const handleEmail = async () => {
-    if (!email || !password) { setError('Enter email and password'); return }
+    if (!email || !password) { setError('Please enter your email and password.'); return }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
     setError('')
     try {
       await signInEmail(email, password)
       onClose()
     } catch (e: any) {
-      setError(e.message)
+      setError(friendlyError(e.code))
     } finally {
       setLoading(false)
     }

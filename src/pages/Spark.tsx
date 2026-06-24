@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
 import { markTopicComplete, unmarkTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void; onSignInNeeded: () => void }
 
 const SECTIONS = [
   { title: 'Level 7 - Apache Spark + PySpark', items: [
@@ -51,7 +51,7 @@ const MC_BTN = (done: boolean) => ({
   fontWeight: 700, cursor: 'pointer', fontSize: '.84rem'
 }) as const
 
-export default function Spark({ completed, onComplete, onUnmark }: Props) {
+export default function Spark({ completed, onComplete, onUnmark, onSignInNeeded }: Props) {
   const [activeId, setActiveId] = useState('spark-arch')
   const sectionRefs = useRef<Record<string, HTMLElement>>({})
 
@@ -76,7 +76,7 @@ export default function Spark({ completed, onComplete, onUnmark }: Props) {
 
   const totalTopics = SECTIONS.flatMap(s => s.items).length
   const ref = (id: string) => (el: HTMLElement | null) => { if (el) sectionRefs.current[id] = el }
-  const mc = (id: string) => async () => { if (completed.has(id)) { await unmarkTopicComplete(id); onUnmark(id) } else { await markTopicComplete(id); onComplete(id) } }
+  const mc = (id: string) => async () => { try { if (completed.has(id)) { await unmarkTopicComplete(id); onUnmark(id) } else { await markTopicComplete(id); onComplete(id) } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }
 
   return (
     <div className="page-with-sidebar">

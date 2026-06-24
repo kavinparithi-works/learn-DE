@@ -23,12 +23,23 @@ export async function signInGoogle() {
 export async function signInEmail(email: string, password: string) {
   try {
     return await signInWithEmailAndPassword(auth, email, password)
-  } catch (e: unknown) {
-    const code = (e as { code?: string }).code
-    if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+  } catch (signInErr: unknown) {
+    const code = (signInErr as { code?: string }).code
+    if (code === 'auth/user-not-found') {
       return createUserWithEmailAndPassword(auth, email, password)
     }
-    throw e
+    if (code === 'auth/invalid-credential') {
+      try {
+        return await createUserWithEmailAndPassword(auth, email, password)
+      } catch (createErr: unknown) {
+        const createCode = (createErr as { code?: string }).code
+        if (createCode === 'auth/email-already-in-use') {
+          throw signInErr
+        }
+        throw createErr
+      }
+    }
+    throw signInErr
   }
 }
 

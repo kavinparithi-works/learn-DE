@@ -4,7 +4,7 @@ import CodeBlock from '../components/CodeBlock'
 import Quiz from '../components/Quiz'
 import { markTopicComplete, unmarkTopicComplete } from '../lib/firebase'
 
-interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void }
+interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void; onSignInNeeded: () => void }
 
 // ── Animation Components ──────────────────────────────────────────────────────
 // ─────────────────────────────────────────────── PRODUCTION DIAGRAM COMPONENTS ───
@@ -1039,7 +1039,7 @@ const SECTIONS = [
   ]},
 ]
 
-export default function Production({ completed, onComplete, onUnmark }: Props) {
+export default function Production({ completed, onComplete, onUnmark, onSignInNeeded }: Props) {
   const [activeId, setActiveId] = useState('prod-architecture')
   const sectionRefs = useRef<Record<string, HTMLElement>>({})
   const scrollTo = (id: string) => {
@@ -1059,7 +1059,7 @@ export default function Production({ completed, onComplete, onUnmark }: Props) {
   const totalTopics = SECTIONS.flatMap(s => s.items).length
   const completeBtn = (id: string) => (
     <button
-      onClick={async () => { if (completed.has(id)) { await unmarkTopicComplete(id); onUnmark(id) } else { await markTopicComplete(id); onComplete(id) } }}
+      onClick={async () => { try { if (completed.has(id)) { await unmarkTopicComplete(id); onUnmark(id) } else { await markTopicComplete(id); onComplete(id) } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }}
       style={{ marginTop: 16, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: completed.has(id) ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--green-500)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '.84rem' }}
     >{completed.has(id) ? 'Undo ✕' : 'Mark Complete ✓'}</button>
   )
