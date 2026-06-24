@@ -9,24 +9,33 @@ interface Props {
 function friendlyError(code: string): string {
   switch (code) {
     case 'auth/wrong-password':
-    case 'auth/invalid-credential':    return 'Incorrect password. Please try again.'
-    case 'auth/user-not-found':        return 'No account found with this email.'
-    case 'auth/email-already-in-use':  return 'Signing you in...'
-    case 'auth/invalid-email':         return 'Please enter a valid email address.'
-    case 'auth/weak-password':         return 'Password must be at least 6 characters.'
-    case 'auth/too-many-requests':     return 'Too many attempts. Please wait a few minutes and try again.'
-    case 'auth/network-request-failed':return 'Network error. Check your connection and try again.'
-    case 'auth/popup-closed-by-user':  return 'Sign-in popup was closed. Please try again.'
+    case 'auth/invalid-credential':     return 'Incorrect password. Please try again.'
+    case 'auth/google-only':            return 'This email is linked to Google. Use "Continue with Google" to sign in.'
+    case 'auth/user-not-found':         return 'No account found with this email. Try creating one.'
+    case 'auth/email-already-in-use':   return 'An account already exists with this email. Try signing in.'
+    case 'auth/invalid-email':          return 'Please enter a valid email address.'
+    case 'auth/weak-password':          return 'Password must be at least 6 characters.'
+    case 'auth/too-many-requests':      return 'Too many attempts. Please wait a few minutes and try again.'
+    case 'auth/network-request-failed': return 'Network error. Check your connection and try again.'
+    case 'auth/popup-closed-by-user':   return 'Sign-in popup was closed. Please try again.'
     case 'auth/cancelled-popup-request': return ''
-    default:                           return 'Something went wrong. Please try again.'
+    default:                            return 'Something went wrong. Please try again.'
   }
 }
 
 export default function AuthModal({ open, onClose }: Props) {
+  const [tab, setTab] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const reset = (t: 'signin' | 'signup') => {
+    setTab(t)
+    setError('')
+    setEmail('')
+    setPassword('')
+  }
 
   const handleGoogle = async () => {
     setLoading(true)
@@ -58,11 +67,40 @@ export default function AuthModal({ open, onClose }: Props) {
   }
 
   return (
-    <div className={`modal-overlay${open ? ' open' : ''}`} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      className={`modal-overlay${open ? ' open' : ''}`}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
       <div className="modal">
         <button className="modal-close" onClick={onClose}>✕</button>
-        <div className="modal-title">Welcome back</div>
-        <div className="modal-sub">Sign in to track progress and streaks.</div>
+
+        <div className="modal-title">{tab === 'signin' ? 'Welcome back' : 'Create account'}</div>
+        <div className="modal-sub">
+          {tab === 'signin' ? 'Sign in to track progress and streaks.' : 'Join to track your learning journey.'}
+        </div>
+
+        {/* Tab switcher */}
+        <div style={{
+          display: 'flex', gap: 4, marginBottom: 20,
+          background: 'rgba(99,102,241,.07)', borderRadius: 12, padding: 4,
+        }}>
+          {(['signin', 'signup'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => reset(t)}
+              style={{
+                flex: 1, padding: '8px 0', border: 'none', cursor: 'pointer',
+                borderRadius: 9, fontFamily: 'var(--font-sans)', fontWeight: 700,
+                fontSize: '.83rem', transition: 'all .18s ease',
+                background: tab === t ? 'white' : 'transparent',
+                color: tab === t ? '#4f46e5' : '#7068a0',
+                boxShadow: tab === t ? '0 1px 6px rgba(99,102,241,.15)' : 'none',
+              }}
+            >
+              {t === 'signin' ? 'Sign In' : 'Sign Up'}
+            </button>
+          ))}
+        </div>
 
         <button className="modal-btn-google" onClick={handleGoogle} disabled={loading}>
           <svg width="18" height="18" viewBox="0 0 48 48">
@@ -73,11 +111,44 @@ export default function AuthModal({ open, onClose }: Props) {
 
         <div className="modal-divider">or</div>
         <div className="modal-error">{error}</div>
-        <input className="modal-input" type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)}/>
-        <input className="modal-input" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)}/>
+
+        <input
+          className="modal-input" type="email" placeholder="Email address"
+          value={email} onChange={e => { setEmail(e.target.value); setError('') }}
+          onKeyDown={e => e.key === 'Enter' && handleEmail()}
+        />
+        <input
+          className="modal-input" type="password" placeholder="Password (min 6 characters)"
+          value={password} onChange={e => { setPassword(e.target.value); setError('') }}
+          onKeyDown={e => e.key === 'Enter' && handleEmail()}
+        />
+
         <button className="modal-btn-primary" onClick={handleEmail} disabled={loading}>
-          {loading ? 'Please wait...' : 'Sign In / Create Account'}
+          {loading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
         </button>
+
+        <div style={{
+          textAlign: 'center', marginTop: 14,
+          fontSize: '.78rem', color: '#7068a0',
+        }}>
+          {tab === 'signin' ? (
+            <>Don't have an account?{' '}
+              <button onClick={() => reset('signup')} style={{
+                background: 'none', border: 'none', color: '#6366f1',
+                cursor: 'pointer', fontWeight: 700, fontSize: 'inherit',
+                fontFamily: 'var(--font-sans)',
+              }}>Sign up</button>
+            </>
+          ) : (
+            <>Already have an account?{' '}
+              <button onClick={() => reset('signin')} style={{
+                background: 'none', border: 'none', color: '#6366f1',
+                cursor: 'pointer', fontWeight: 700, fontSize: 'inherit',
+                fontFamily: 'var(--font-sans)',
+              }}>Sign in</button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

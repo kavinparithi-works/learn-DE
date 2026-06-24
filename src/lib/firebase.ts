@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, signOut as fbSignOut } from 'firebase/auth'
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, serverTimestamp, increment } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -22,32 +22,44 @@ export async function signInGoogle() {
 }
 
 export async function signInEmail(email: string, password: string) {
-  // Sign out any existing session first so we can sign in fresh here
   if (auth.currentUser) await fbSignOut(auth)
 
   try {
     return await signInWithEmailAndPassword(auth, email, password)
   } catch (signInErr: unknown) {
     const code = (signInErr as { code?: string }).code
+
     if (code === 'auth/user-not-found') {
       return createUserWithEmailAndPassword(auth, email, password)
     }
-    if (code === 'auth/invalid-credential') {
+
+    if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+      // Check if this email uses a different provider (e.g. Google)
+      try {
+        const methods = await fetchSignInMethodsForEmail(auth, email)
+        if (methods.includes('google.com') && !methods.includes('password')) {
+          const err: any = new Error('GOOGLE_ONLY')
+          err.code = 'auth/google-only'
+          throw err
+        }
+      } catch (fetchErr: any) {
+        if (fetchErr.code === 'auth/google-only') throw fetchErr
+        // fetchSignInMethods failed — fall through to original error
+      }
+      // Try creating a new account; if email in use, password is just wrong
       try {
         return await createUserWithEmailAndPassword(auth, email, password)
       } catch (createErr: unknown) {
         const createCode = (createErr as { code?: string }).code
-        if (createCode === 'auth/email-already-in-use') {
-          // Account exists — password was wrong, re-throw sign-in error
-          throw signInErr
-        }
+        if (createCode === 'auth/email-already-in-use') throw signInErr
         throw createErr
       }
     }
+
     if (code === 'auth/email-already-in-use') {
-      // Signed in as someone else — already signed them out above, retry
       return await signInWithEmailAndPassword(auth, email, password)
     }
+
     throw signInErr
   }
 }
