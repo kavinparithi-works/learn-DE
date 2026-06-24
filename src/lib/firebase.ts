@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, signOut as fbSignOut } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut } from 'firebase/auth'
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, serverTimestamp, increment } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -34,24 +34,17 @@ export async function signInEmail(email: string, password: string) {
     }
 
     if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
-      // Check if this email uses a different provider (e.g. Google)
-      try {
-        const methods = await fetchSignInMethodsForEmail(auth, email)
-        if (methods.includes('google.com') && !methods.includes('password')) {
-          const err: any = new Error('GOOGLE_ONLY')
-          err.code = 'auth/google-only'
-          throw err
-        }
-      } catch (fetchErr: any) {
-        if (fetchErr.code === 'auth/google-only') throw fetchErr
-        // fetchSignInMethods failed — fall through to original error
-      }
-      // Try creating a new account; if email in use, password is just wrong
+      // Try creating — if email already in use it means account exists with Google
       try {
         return await createUserWithEmailAndPassword(auth, email, password)
       } catch (createErr: unknown) {
         const createCode = (createErr as { code?: string }).code
-        if (createCode === 'auth/email-already-in-use') throw signInErr
+        if (createCode === 'auth/email-already-in-use') {
+          // Account exists but password sign-in failed → must be Google-only
+          const err: any = new Error('GOOGLE_ONLY')
+          err.code = 'auth/google-only'
+          throw err
+        }
         throw createErr
       }
     }
