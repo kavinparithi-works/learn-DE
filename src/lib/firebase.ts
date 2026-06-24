@@ -17,10 +17,14 @@ export const db = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()
 
 export async function signInGoogle() {
+  if (auth.currentUser) await fbSignOut(auth)
   return signInWithPopup(auth, googleProvider)
 }
 
 export async function signInEmail(email: string, password: string) {
+  // Sign out any existing session first so we can sign in fresh here
+  if (auth.currentUser) await fbSignOut(auth)
+
   try {
     return await signInWithEmailAndPassword(auth, email, password)
   } catch (signInErr: unknown) {
@@ -34,10 +38,15 @@ export async function signInEmail(email: string, password: string) {
       } catch (createErr: unknown) {
         const createCode = (createErr as { code?: string }).code
         if (createCode === 'auth/email-already-in-use') {
+          // Account exists — password was wrong, re-throw sign-in error
           throw signInErr
         }
         throw createErr
       }
+    }
+    if (code === 'auth/email-already-in-use') {
+      // Signed in as someone else — already signed them out above, retry
+      return await signInWithEmailAndPassword(auth, email, password)
     }
     throw signInErr
   }

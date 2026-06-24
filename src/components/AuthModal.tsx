@@ -11,7 +11,7 @@ function friendlyError(code: string): string {
     case 'auth/wrong-password':
     case 'auth/invalid-credential':    return 'Incorrect password. Please try again.'
     case 'auth/user-not-found':        return 'No account found with this email.'
-    case 'auth/email-already-in-use':  return 'This email already has an account. Try signing in instead.'
+    case 'auth/email-already-in-use':  return 'Signing you in...'
     case 'auth/invalid-email':         return 'Please enter a valid email address.'
     case 'auth/weak-password':         return 'Password must be at least 6 characters.'
     case 'auth/too-many-requests':     return 'Too many attempts. Please wait a few minutes and try again.'
