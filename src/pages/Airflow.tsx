@@ -71,8 +71,10 @@ export default function Airflow({ completed, onComplete, onUnmark }: Props) {
               Apache Airflow is an open-source workflow orchestration platform that lets you author, schedule, and monitor data pipelines as Directed Acyclic Graphs (DAGs). Airflow orchestrates  -  it does not execute compute itself. It tells other systems (Spark, dbt, Python, APIs) what to run and when. The scheduler evaluates DAGs every heartbeat, determines which tasks are ready to run based on dependencies, and queues them to an executor. Understanding this architecture is critical: Airflow is a control plane, not a data plane.
             </p>
           </div>
-          <AirflowArchAnimation />
-          <AirflowDagAnimation />
+          <AirflowArchDiagram />
+              <AirflowArchAnimation />
+          <AirflowDagDiagram />
+              <AirflowDagAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body">
@@ -265,7 +267,8 @@ with DAG(
               Operators are the building blocks of a DAG  -  each operator becomes one task. <code>PythonOperator</code> runs a Python callable. <code>BashOperator</code> runs a shell command. <code>EmailOperator</code> sends email alerts. <code>DummyOperator</code>/<code>EmptyOperator</code> (2.4+) creates structural nodes for grouping or fanout. <code>BranchPythonOperator</code> enables conditional logic by returning the task_id(s) to execute next  -  all other branches are skipped.
             </p>
           </div>
-          <OperatorsAnimation />
+          <OperatorsDiagram />
+              <OperatorsAnimation />
           <CodeBlock lang="python">{`from airflow.operators.python  import PythonOperator, BranchPythonOperator
 from airflow.operators.bash    import BashOperator
 from airflow.operators.email   import EmailOperator
@@ -373,7 +376,8 @@ notify = EmailOperator(
               For data engineering workflows, Airflow frequently submits jobs to Spark clusters or Databricks. <code>SparkSubmitOperator</code> submits a jar/Python file to a YARN/Standalone cluster via spark-submit. <code>SparkSqlOperator</code> runs SQL on Spark Thrift Server. <code>DatabricksRunNowOperator</code> triggers an existing Databricks Job by job_id. <code>DatabricksSubmitRunOperator</code> creates and runs a one-off Databricks job run (notebook or Python script). <code>SimpleHttpOperator</code>/<code>HttpOperator</code> calls REST APIs and is useful for triggering external systems.
             </p>
           </div>
-          <SparkSubmitAnimation />
+          <SparkSubmitDiagram />
+              <SparkSubmitAnimation />
           <CodeBlock lang="python">{`from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.apache.spark.operators.spark_sql   import SparkSqlOperator
 from airflow.providers.databricks.operators.databricks    import (
@@ -480,7 +484,8 @@ trigger_api = SimpleHttpOperator(
               Sensors are special operators that wait for a condition to be true before proceeding. <code>FileSensor</code> waits for a file/directory to appear. <code>S3KeySensor</code> waits for an S3 key (exact or wildcard). <code>SqlSensor</code> runs a SQL query and waits until it returns a non-zero result. <code>ExternalTaskSensor</code> waits for a task in another DAG to succeed. Key parameters: <code>poke_interval</code> (seconds between checks), <code>timeout</code> (max seconds to wait  -  raises <code>AirflowSensorTimeout</code> if exceeded), <code>mode</code> ('poke' keeps the worker slot busy; 'reschedule' releases the slot between checks  -  always use 'reschedule' in production).
             </p>
           </div>
-          <SensorsAnimation />
+          <SensorsDiagram />
+              <SensorsAnimation />
           <CodeBlock lang="python">{`from airflow.sensors.filesystem           import FileSensor
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 from airflow.sensors.sql                  import SqlSensor
@@ -588,7 +593,8 @@ wait_for_bronze = ExternalTaskSensor(
               The TaskFlow API (Airflow 2.0+) uses the <code>@task</code> decorator to define tasks as Python functions. XComs are passed automatically between <code>@task</code> functions  -  return values become XCom outputs, function parameters become XCom inputs. <code>@task.branch</code> replaces <code>BranchPythonOperator</code>. <code>@task_group</code> replaces <code>TaskGroup</code> context manager for grouping tasks visually. Dynamic task mapping with <code>.expand()</code> allows creating N tasks at runtime based on input data.
             </p>
           </div>
-          <TaskFlowAnimation />
+          <TaskFlowDiagram />
+              <TaskFlowAnimation />
           <CodeBlock lang="python">{`from airflow.decorators import dag, task, task_group
 from datetime import datetime
 
@@ -714,7 +720,8 @@ dag_instance = orders_pipeline()`}
               XComs (Cross-Communications) allow tasks to exchange small amounts of data via the Airflow metadata database. A task pushes a value with <code>ti.xcom_push(key, value)</code> and another pulls it with <code>ti.xcom_pull(task_ids, key)</code>. With TaskFlow API, this is automatic. XComs are stored in the metadata DB  -  this creates a critical constraint: XComs are for metadata only (IDs, counts, status strings, small config dicts). Never push large DataFrames, file contents, or binary data through XComs. For large data, write to S3/ADLS/Delta and pass only the path via XCom.
             </p>
           </div>
-          <XComAnimation />
+          <XComDiagram />
+              <XComAnimation />
           <CodeBlock lang="python">{`# ── Manual XCom push/pull (classic operators) ─────────────────────────
 def extract_fn(**context):
     ti = context['ti']
@@ -805,7 +812,8 @@ bash_task = BashOperator(
               Connections store credentials and endpoint URLs for external systems (databases, cloud storage, APIs, Spark clusters). They are managed in the Airflow UI (Admin &gt; Connections) or via environment variables (<code>AIRFLOW_CONN_{"{CONN_ID}"}</code>). Hooks are the Python interface for connections  -  they handle authentication and provide high-level methods. <code>PostgresHook</code>, <code>S3Hook</code>, <code>HttpHook</code>, <code>SparkHook</code>. When building custom integrations, create a custom Hook that extends <code>BaseHook</code>.
             </p>
           </div>
-          <ConnectionsAnimation />
+          <ConnectionsDiagram />
+              <ConnectionsAnimation />
           <CodeBlock lang="python">{`from airflow.hooks.base          import BaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.amazon.aws.hooks.s3     import S3Hook
@@ -912,7 +920,8 @@ class DataQualityApiHook(BaseHook):
               The KubernetesExecutor spins up a dedicated pod for each task. No persistent workers  -  the scheduler creates a pod when a task is ready, the pod runs the task and terminates. This provides perfect isolation, independent resource allocation per task, and eliminates noisy-neighbor problems. <code>KubernetesPodOperator</code> runs an arbitrary Docker image in a pod  -  essential for tasks requiring custom dependencies. Configure resource requests/limits, secrets, volume mounts, and image pull policies.
             </p>
           </div>
-          <K8sOperatorAnimation />
+          <K8sOperatorDiagram />
+              <K8sOperatorAnimation />
           <CodeBlock lang="python">{`from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from kubernetes.client import models as k8s
 
@@ -1021,7 +1030,8 @@ run_spark_job = KubernetesPodOperator(
               Production Airflow deployments use the DAG factory pattern to generate many similar DAGs programmatically. DAGs are tested with pytest using <code>airflow.models.DagBag</code>. CI pipelines validate DAGs on every PR: import correctly, have no cycles, meet naming conventions. DAG versioning uses <code>version</code> tags or <code>doc_md</code>. Never deploy broken DAGs  -  a parsing error in one DAG file can impact the scheduler's ability to process other DAGs.
             </p>
           </div>
-          <CICDAnimation />
+          <CICDDiagram />
+              <CICDAnimation />
           <CodeBlock lang="python">{`# ── DAG Factory Pattern ───────────────────────────────────────────────
 # dag_factory.py  -  generates one DAG per table config
 import yaml
@@ -1138,7 +1148,8 @@ def test_dag_retries(dagbag):
               Production Airflow requires comprehensive monitoring. SLA misses trigger <code>sla_miss_callback</code> when a task or DAG run exceeds its declared SLA. Task-level callbacks (<code>on_success_callback</code>, <code>on_failure_callback</code>, <code>on_retry_callback</code>) execute custom Python on state changes  -  use these for Slack/PagerDuty alerts. Airflow emits StatsD metrics (task duration, success/failure counts, scheduler heartbeat) which can be forwarded to Prometheus/Datadog.
             </p>
           </div>
-          <MonitoringAnimation />
+          <MonitoringDiagram />
+              <MonitoringAnimation />
           <CodeBlock lang="python">{`import json, urllib.request
 from datetime import timedelta
 from airflow import DAG
@@ -1256,7 +1267,8 @@ with DAG(
               Choosing the right orchestration tool depends on your data platform, team, and complexity. Apache Airflow is the most flexible  -  code-first, any operator, any cloud, rich ecosystem. Databricks Workflows is tightly integrated with Databricks notebooks and jobs  -  best when your entire platform is Databricks. Azure Data Factory (ADF) is Azure-native with a GUI-first approach  -  great for simple ELT and Azure service integration. In practice, many production platforms use a hybrid: Airflow for complex cross-system orchestration, Databricks Workflows for Databricks-internal compute graphs, ADF for simple Azure data movements.
             </p>
           </div>
-          <VSComparisionAnimation />
+          <VSComparisonDiagram />
+              <VSComparisionAnimation />
           <CodeBlock lang="yaml">{`# ── Comparison Matrix ─────────────────────────────────────────────────
 tool: Apache Airflow
   strengths:
@@ -1352,6 +1364,269 @@ tool: Azure Data Factory (ADF)
 }
 
 // ─── ANIMATION COMPONENTS ────────────────────────────────────────────────────
+// ─────────────────────────────────────────────── AIRFLOW DIAGRAM COMPONENTS ───
+
+function AirflowArchDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Airflow Architecture Components</text>
+        {[
+          {name:'Scheduler',desc:'Parses DAGs, triggers tasks',color:'#4f8ef7'},
+          {name:'Executor',desc:'Runs tasks (Local/Celery/K8s)',color:'#22c55e'},
+          {name:'Webserver',desc:'UI, REST API, auth',color:'#8b5cf6'},
+          {name:'Metadata DB',desc:'Postgres/MySQL state store',color:'#f59e0b'},
+        ].map((c,i)=>(
+          <g key={c.name}>
+            <rect x={4+i*118} y="18" width="112" height="40" rx="5" fill={c.color} opacity=".13" stroke={c.color} strokeWidth="1.5"/>
+            <text x={60+i*118} y="33" fontSize="9" fontWeight="700" fill={c.color} textAnchor="middle">{c.name}</text>
+            <text x={60+i*118} y="47" fontSize="7.5" fill="#475569" textAnchor="middle">{c.desc}</text>
+            {i<3&&<line x1={116+i*118} y1="38" x2={122+i*118} y2="38" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="3 2"/>}
+          </g>
+        ))}
+        <text x="4" y="68" fontSize="8" fill="#64748b">Workers pull tasks from queue (Celery) or spin pods (K8s). All state persists in Metadata DB.</text>
+      </svg>
+    </div>
+  )
+}
+
+function AirflowDagDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DAG Anatomy</text>
+        {[
+          {id:'extract',x:10,y:24,w:90,h:22,color:'#4f8ef7'},
+          {id:'transform',x:160,y:14,w:90,h:22,color:'#22c55e'},
+          {id:'validate',x:160,y:42,w:90,h:22,color:'#8b5cf6'},
+          {id:'load',x:330,y:28,w:90,h:22,color:'#f59e0b'},
+        ].map(t=>(
+          <g key={t.id}>
+            <rect x={t.x} y={t.y} width={t.w} height={t.h} rx="4" fill={t.color} opacity=".14" stroke={t.color} strokeWidth="1.5"/>
+            <text x={t.x+t.w/2} y={t.y+14} fontSize="8.5" fontWeight="700" fill={t.color} textAnchor="middle">{t.id}</text>
+          </g>
+        ))}
+        <line x1="100" y1="35" x2="160" y2="25" stroke="#4f8ef7" strokeWidth="1.2"/>
+        <line x1="100" y1="35" x2="160" y2="53" stroke="#4f8ef7" strokeWidth="1.2"/>
+        <line x1="250" y1="25" x2="330" y2="39" stroke="#22c55e" strokeWidth="1.2"/>
+        <line x1="250" y1="53" x2="330" y2="39" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="4" y="72" fontSize="8" fill="#64748b">DAG = Python file. Tasks are nodes. Dependencies via &gt;&gt; or set_downstream(). Scheduler drives execution.</text>
+      </svg>
+    </div>
+  )
+}
+
+function OperatorsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Common Airflow Operators</text>
+        {[
+          {name:'PythonOperator',desc:'Run Python callable',color:'#4f8ef7'},
+          {name:'BashOperator',desc:'Run shell command',color:'#22c55e'},
+          {name:'SqlOperator',desc:'Execute SQL',color:'#8b5cf6'},
+          {name:'EmptyOperator',desc:'Placeholder / gate',color:'#64748b'},
+          {name:'TriggerDagRun',desc:'Kick off another DAG',color:'#f59e0b'},
+          {name:'DockerOperator',desc:'Run Docker container',color:'#ef4444'},
+        ].map((op,i)=>(
+          <g key={op.name}>
+            <rect x={4+(i%3)*158} y={18+Math.floor(i/3)*22} width="152" height="18" rx="3" fill={op.color} opacity=".12" stroke={op.color} strokeWidth="1"/>
+            <text x={80+(i%3)*158} y={27+Math.floor(i/3)*22} fontSize="8.5" fontWeight="700" fill={op.color} textAnchor="middle">{op.name}</text>
+            <text x={80+(i%3)*158} y={33+Math.floor(i/3)*22} fontSize="7" fill="#475569" textAnchor="middle">{op.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function SparkSubmitDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">SparkSubmitOperator — Submit Spark Jobs from Airflow</text>
+        {[
+          {label:'Airflow\nScheduler',color:'#4f8ef7'},
+          {label:'SparkSubmit\nOperator',color:'#22c55e'},
+          {label:'Spark\nCluster',color:'#f59e0b'},
+          {label:'Delta\nTable',color:'#8b5cf6'},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={10+i*113} y="18" width="107" height="34" rx="4" fill={s.color} opacity=".14" stroke={s.color} strokeWidth="1.5"/>
+            {s.label.split('\n').map((l,j)=><text key={j} x={63+i*113} y={30+j*12} fontSize={j===0?8.5:8} fontWeight="700" fill={s.color} textAnchor="middle">{l}</text>)}
+            {i<3&&<polygon points={`${119+i*113},35 ${123+i*113},31 ${123+i*113},39`} fill={s.color} opacity=".7"/>}
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">connection_id → spark_conn. Pass conf, jars, app_name, application path.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SensorsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Sensors — Wait for External Condition</text>
+        {[
+          {name:'FileSensor',desc:'Wait for file on disk/ADLS',color:'#4f8ef7'},
+          {name:'ExternalTask\nSensor',desc:'Wait for another DAG task',color:'#22c55e'},
+          {name:'HttpSensor',desc:'Wait for HTTP 200',color:'#8b5cf6'},
+          {name:'SqlSensor',desc:'Wait for row count > 0',color:'#f59e0b'},
+        ].map((s,i)=>(
+          <g key={s.name}>
+            <rect x={4+i*113} y="18" width="107" height="36" rx="4" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.2"/>
+            {s.name.split('\n').map((l,j)=><text key={j} x={57+i*113} y={29+j*9} fontSize="8" fontWeight="700" fill={s.color} textAnchor="middle">{l}</text>)}
+            <text x={57+i*113} y={47} fontSize="7" fill="#475569" textAnchor="middle">{s.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">poke_interval + timeout. mode='reschedule' releases worker slot between pokes.</text>
+      </svg>
+    </div>
+  )
+}
+
+function TaskFlowDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">TaskFlow API — @task Decorator Pattern</text>
+        <rect x="10" y="18" width="200" height="40" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="31" fontSize="8.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Classic API</text>
+        <text x="110" y="43" fontSize="7.5" fontFamily="monospace" fill="#475569" textAnchor="middle">PythonOperator + XCom push/pull</text>
+        <text x="110" y="52" fontSize="7" fill="#94a3b8" textAnchor="middle">verbose, boilerplate</text>
+        <rect x="250" y="18" width="200" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="31" fontSize="8.5" fontWeight="700" fill="#22c55e" textAnchor="middle">TaskFlow API (2.0+)</text>
+        <text x="350" y="43" fontSize="7.5" fontFamily="monospace" fill="#475569" textAnchor="middle">@task → return value auto-XCom</text>
+        <text x="350" y="52" fontSize="7" fill="#94a3b8" textAnchor="middle">cleaner Python, type-safe</text>
+      </svg>
+    </div>
+  )
+}
+
+function XComDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">XCom — Cross-Task Communication</text>
+        <rect x="10" y="20" width="120" height="36" rx="4" fill="#4f8ef7" opacity=".14" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="70" y="36" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Task A</text>
+        <text x="70" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">xcom_push(key, val)</text>
+        <rect x="180" y="20" width="120" height="36" rx="4" fill="#f59e0b" opacity=".14" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="240" y="33" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Metadata DB</text>
+        <text x="240" y="43" fontSize="7.5" fill="#475569" textAnchor="middle">task_id → key → value</text>
+        <rect x="350" y="20" width="100" height="36" rx="4" fill="#22c55e" opacity=".14" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="400" y="36" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Task B</text>
+        <text x="400" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">xcom_pull(task_id)</text>
+        <line x1="130" y1="38" x2="180" y2="38" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <line x1="300" y1="38" x2="350" y2="38" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="4" y="66" fontSize="8" fill="#64748b">Keep XCom small (IDs, file paths). Large data → write to storage, pass path via XCom.</text>
+      </svg>
+    </div>
+  )
+}
+
+function ConnectionsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Connections &amp; Variables — Secrets Management</text>
+        {[
+          {name:'Connection',key:'conn_id',example:'spark_default, postgres_prod',color:'#4f8ef7'},
+          {name:'Variable',key:'key',example:'datalake_path, env=prod',color:'#22c55e'},
+          {name:'Secret Backend',key:'provider',example:'Vault / AWS SSM / GCP SM',color:'#8b5cf6'},
+        ].map((c,i)=>(
+          <g key={c.name}>
+            <rect x={4+i*152} y="18" width="146" height="32" rx="4" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.2"/>
+            <text x={77+i*152} y="29" fontSize="8.5" fontWeight="700" fill={c.color} textAnchor="middle">{c.name}</text>
+            <text x={77+i*152} y="40" fontSize="7" fill="#475569" textAnchor="middle">{c.key}: {c.example}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Store credentials in secret backends, not plain Variable. Rotate without redeploying DAGs.</text>
+      </svg>
+    </div>
+  )
+}
+
+function K8sOperatorDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">KubernetesExecutor / KubernetesPodOperator</text>
+        <rect x="10" y="18" width="200" height="40" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="30" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">KubernetesExecutor</text>
+        <text x="110" y="42" fontSize="7.5" fill="#475569" textAnchor="middle">Each task = ephemeral K8s pod</text>
+        <text x="110" y="51" fontSize="7" fill="#94a3b8" textAnchor="middle">No persistent workers needed</text>
+        <rect x="250" y="18" width="200" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="30" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">KubernetesPodOperator</text>
+        <text x="350" y="42" fontSize="7.5" fill="#475569" textAnchor="middle">Run any Docker image as task</text>
+        <text x="350" y="51" fontSize="7" fill="#94a3b8" textAnchor="middle">Custom resource requests</text>
+        <text x="4" y="66" fontSize="8" fill="#64748b">KubernetesPodOperator logs stream back. xcom_push via sidecar. Resource isolation per task.</text>
+      </svg>
+    </div>
+  )
+}
+
+function CICDDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Airflow CI/CD Pipeline</text>
+        {['Git push','Lint +\nunit tests','Docker\nbuild','K8s deploy\n(Helm)','DAG\nvalidation'].map((s,i)=>(
+          <g key={s}>
+            <rect x={4+i*90} y="18" width="84" height="30" rx="4" fill="#4f8ef7" opacity={.1+i*.04} stroke="#4f8ef7" strokeWidth="1.2"/>
+            {s.split('\n').map((l,j)=><text key={j} x={46+i*90} y={29+j*10} fontSize="8" fontWeight="700" fill="#4f8ef7" textAnchor="middle">{l}</text>)}
+            {i<4&&<polygon points={`${90+i*90},33 ${94+i*90},29 ${94+i*90},37`} fill="#4f8ef7" opacity=".6"/>}
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">DAGs as code in Git. Never edit DAGs directly on scheduler. Use pre-commit hooks for dag.test().</text>
+      </svg>
+    </div>
+  )
+}
+
+function MonitoringDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Airflow Monitoring</text>
+        {[
+          {metric:'SLA Miss',desc:'Task exceeded max_active_run',color:'#ef4444'},
+          {metric:'Task Duration',desc:'P95 latency per DAG run',color:'#f59e0b'},
+          {metric:'DAG Run State',desc:'success/failed/running count',color:'#4f8ef7'},
+          {metric:'Scheduler Lag',desc:'Time from due to scheduled',color:'#8b5cf6'},
+        ].map((m,i)=>(
+          <g key={m.metric}>
+            <rect x={4+i*113} y="18" width="107" height="30" rx="4" fill={m.color} opacity=".12" stroke={m.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="29" fontSize="8.5" fontWeight="700" fill={m.color} textAnchor="middle">{m.metric}</text>
+            <text x={57+i*113} y="40" fontSize="7" fill="#475569" textAnchor="middle">{m.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">StatsD / OpenMetrics → Prometheus → Grafana. Alerts on SLA miss via email/Slack callbacks.</text>
+      </svg>
+    </div>
+  )
+}
+
+function VSComparisonDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Airflow vs Databricks Workflows</text>
+        {[['','Airflow','Databricks Workflows'],['Paradigm','General orchestration','Spark-native orchestration'],['Language','Python DAGs','YAML + Notebooks/Python'],['Compute','Separate (K8s, VMs)','Clusters/SQL warehouses'],['Governance','OSS, self-managed','Unity Catalog integrated'],['Best for','Cross-system pipelines','Lakehouse-centric pipelines']].map((r,i)=>(
+          <g key={r[0]+i}>
+            <rect x="4" y={14+i*11} width="472" height="9" rx="1" fill={i===0?'#1e293b':i%2===0?'#f8fafc':'white'} opacity={i===0?.08:.4}/>
+            <text x="10" y={22+i*11} fontSize="7.5" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#1e293b'}>{r[0]}</text>
+            <text x="160" y={22+i*11} fontSize="7.5" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#4f8ef7'}>{r[1]}</text>
+            <text x="330" y={22+i*11} fontSize="7.5" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#22c55e'}>{r[2]}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function AirflowArchAnimation() {
   const [comp, setComp] = useState<'scheduler'|'executor'|'webserver'|'metadata'>('scheduler')
