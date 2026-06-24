@@ -75,15 +75,35 @@ export default function Python({ completed, onComplete, onUnmark, onSignInNeeded
             <p className="topic-desc">Python's execution model is unique among mainstream languages. Understanding the GIL (Global Interpreter Lock) explains why Python threads don't parallelize CPU work, why data engineers default to multiprocessing or asyncio, and how PySpark bypasses these constraints entirely by running in the JVM.</p>
           </div>
 
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "Explain the GIL and how it affects your pipelines"<br/>• "When would you use threading vs multiprocessing vs asyncio?"<br/>• "Why doesn't Python parallelize CPU work with threads?"<br/>• "How does PySpark avoid the GIL bottleneck?"<br/>• "What's the difference between concurrency and parallelism in Python?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand <em>why</em> the GIL exists and how to pick the right concurrency tool for the workload — or do they just know the definition?</div>
+          </div>
+
+          <p>The GIL is CPython's mutex that prevents multiple threads from executing Python bytecode simultaneously. The reason is historical: CPython's memory management (reference counting) is not thread-safe, so the GIL was the simplest fix. In production, this means that threading only helps for I/O-bound work — the GIL is released when a thread blocks on a network call or disk read, allowing another thread to run. For CPU-bound work like parsing 10 GB of JSON, you need <code>multiprocessing</code> which gives each process its own GIL. PySpark sidesteps the issue entirely — Python only drives the driver, while transformations execute in JVM workers on executors.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"The GIL serializes Python bytecode — one thread holds it at a time, even on 64-core machines."</td></tr>
+              <tr><td>2</td><td>"For I/O-bound work I use <code>ThreadPoolExecutor</code> or <code>asyncio</code> — the GIL releases during blocking I/O."</td></tr>
+              <tr><td>3</td><td>"For CPU-bound work I use <code>multiprocessing.Pool</code> — each process has its own interpreter and GIL."</td></tr>
+              <tr><td>4</td><td>"In Spark, Python drives the driver only. Executors run JVM bytecode — the GIL is completely irrelevant."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Databricks:</strong> PySpark clusters run transformations in JVM workers on thousands of cores simultaneously — Python GIL affects only the driver process. A 200-node cluster processes 10 TB/hour while the Python driver uses &lt;1 CPU core.<br/><strong>Stripe:</strong> Uses asyncio + aiohttp for payment webhook ingestion pipelines, handling 80,000 concurrent API connections on 8 CPU cores — 10x more efficient than threading for this I/O-bound workload.<br/><strong>Airbnb:</strong> Batch ETL pipelines use <code>multiprocessing.Pool(cpu_count())</code> for parallel Parquet file validation — achieving 8x speedup on 8-core machines versus single-threaded processing.</div>
+          </div>
+
           <GILDiagram />
           <PythonGilAnimation />
-
-          <div className="callout callout-warning">
-            <span className="callout-icon">⚠️</span>
-            <div className="callout-body">
-              <strong>The GIL in one sentence:</strong> CPython's Global Interpreter Lock allows only ONE thread to execute Python bytecode at a time  -  even on multi-core machines. Threads help for I/O-bound work (network, disk) because the GIL is released during blocking I/O. For CPU-bound work (parsing, hashing, computation) you need <code>multiprocessing</code> or offload to a compiled extension. PySpark runs transformations in the JVM  -  the GIL is irrelevant to Spark's distributed execution.
-            </div>
-          </div>
 
           <CodeBlock lang="python">{`import threading
 import multiprocessing
@@ -183,11 +203,40 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
 # Still experimental; most C extensions not yet compatible.
 # For now, multiprocessing + asyncio remain the production patterns.`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"Python is slow because of the GIL"</td><td>"The GIL only serializes CPU-bound pure-Python code. I/O-bound workloads, asyncio, multiprocessing, and JVM-backed runtimes like Spark all sidestep it entirely."</td></tr>
+              <tr><td>"I'd use threads to speed up my data processing"</td><td>"Threading gives concurrency for I/O but zero parallelism for CPU work. For a 10 GB JSON parse, multiprocessing.Pool(cpu_count()) gives near-linear speedup; threads would be serialized."</td></tr>
+              <tr><td>"asyncio is faster than threading"</td><td>"asyncio is single-threaded cooperative concurrency — ideal for high-fan-out I/O like 1000 concurrent API calls. It doesn't parallelize CPU; it minimizes blocking time."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-execution" questions={[
-            { question: "The Python GIL means that even on a 16-core machine, CPython threads can:", options: ["Execute Python bytecode fully in parallel across all cores", "Execute only one thread's Python bytecode at a time", "Execute I/O and CPU code in parallel simultaneously", "Never be used  -  only processes are allowed"], correct: 1 },
-            { question: "For a CPU-bound pipeline task (e.g., parsing 10 GB of JSON files), the correct Python parallelism tool is:", options: ["threading.Thread  -  fastest for all tasks", "asyncio.gather  -  best for computation", "multiprocessing.Pool  -  bypasses the GIL with separate processes", "concurrent.futures.ThreadPoolExecutor  -  releases the GIL for CPU work"], correct: 2 },
-            { question: "Why does PySpark not suffer from Python's GIL during data transformations?", options: ["PySpark uses PyPy which has no GIL", "PySpark automatically disables the GIL at startup", "Spark transformations execute in the JVM (Java/Scala workers)  -  Python only drives the driver logic", "PySpark uses asyncio internally"], correct: 2 },
+            { question: "A data engineer runs 8 threads to parse 8 large JSON files simultaneously on a 16-core machine. What actually happens at the CPU level?", options: ["All 8 threads execute Python bytecode in parallel — 8x speedup", "Threads take turns holding the GIL — CPU-bound bytecode is effectively serialized with no speedup", "Python automatically switches to multiprocessing when threads are CPU-bound", "The GIL only affects threads in the same module"], correct: 1 },
+            { question: "You need to ingest 500 REST API endpoints concurrently. Which approach gives the best throughput per CPU core?", options: ["multiprocessing.Pool(500) — each process handles one URL", "asyncio.gather() with aiohttp — single thread, cooperative I/O concurrency", "threading.Thread × 500 — one thread per URL", "subprocess.run() in a loop — OS-level parallelism"], correct: 1 },
+            { question: "In a PySpark job, a Python UDF processes each row. Where does the Python GIL bottleneck appear?", options: ["Nowhere — Spark's JVM bypasses the GIL entirely", "In the executor JVM process — the JVM also has a GIL", "In the Python UDF execution on each executor — data must serialize to Python, execute, then serialize back to JVM", "Only in the driver, never in executors"], correct: 2 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use <code>multiprocessing.Pool</code> for CPU-bound tasks like file parsing or hashing</li>
+                <li>Use <code>asyncio</code> + <code>aiohttp</code> for high-concurrency API ingestion</li>
+                <li>Use <code>ThreadPoolExecutor</code> for I/O-bound tasks like parallel file downloads</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use <code>threading</code> for CPU-heavy work — the GIL prevents real parallelism</li>
+                <li>Spawn 500 threads for API calls — use asyncio + semaphore instead</li>
+                <li>Assume free-threaded Python 3.13 is production-ready for all C extensions</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-execution')) { await unmarkTopicComplete('py-execution'); onUnmark('py-execution') } else { await markTopicComplete('py-execution'); onComplete('py-execution') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-execution') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-execution') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -199,14 +248,36 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
             <p className="topic-desc">Python is dynamically typed at runtime but supports static type annotations checked by tools like mypy and Pyright. In production data pipelines, type hints are not optional  -  they prevent entire classes of bugs, make IDE auto-complete reliable, and serve as living documentation for schema contracts.</p>
           </div>
 
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you enforce type safety in Python pipelines?"<br/>• "What's the difference between TypedDict, dataclass, and Pydantic?"<br/>• "Explain Protocol vs ABC — when would you use each?"<br/>• "Do Python type hints have runtime overhead?"<br/>• "How do you use generics in Python?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand the type system as a developer productivity and correctness tool — or do they think annotations are just documentation?</div>
+          </div>
+
+          <p>Type hints are zero-cost at runtime — Python's interpreter ignores them entirely. The reason they matter is that they enable static analysis tools like mypy and Pyright to catch type errors before the code ever runs. In production, a pipeline that mismatches a <code>str</code> for an <code>int</code> user_id will fail silently on row 1 or row 10 million. With strict mypy, that bug is caught in CI in milliseconds.</p>
+          <p>The key distinctions: <strong>TypedDict</strong> gives named keys to plain dicts — ideal for JSON records. <strong>dataclass</strong> generates <code>__init__</code>/<code>__repr__</code>/<code>__eq__</code> — ideal for config objects. <strong>Protocol</strong> enables structural subtyping (duck typing with type safety) — any class with matching methods satisfies it without explicit inheritance.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Type hints have zero runtime cost — they're erased before execution. The value is in mypy running in CI."</td></tr>
+              <tr><td>2</td><td>"For dict-shaped records I use TypedDict — keys and types are statically checked. For config objects I use @dataclass."</td></tr>
+              <tr><td>3</td><td>"Protocol gives structural subtyping — any class with matching methods satisfies it, no inheritance required."</td></tr>
+              <tr><td>4</td><td>"I run mypy --strict in CI. Generics let me type PipelineResult[T] once and use it for any output type."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Uber:</strong> Runs mypy --strict on all Python data platform code. Caught 3,200+ type errors during migration from Python 2 to 3, preventing production incidents across 400+ pipelines.<br/><strong>Dropbox:</strong> Migrated 4 million lines of Python to typed annotations using mypy — reduced runtime TypeError crashes by 15% and sped up new engineer onboarding by eliminating "what type does this function return?" questions.<br/><strong>Netflix:</strong> Uses Pyright in VS Code for their Metaflow pipeline framework — type hints on @step decorators give engineers autocomplete and error detection when writing multi-step workflows.</div>
+          </div>
+
           <TypeHintsDiagram />
           <TypeHintsAnimation />
-          <div className="callout callout-info">
-            <span className="callout-icon">💡</span>
-            <div className="callout-body">
-              <strong>Type hints are zero-cost at runtime.</strong> Python ignores annotations during execution  -  they exist purely for static analysis tools (mypy, Pyright, Ruff) and IDEs. Use <code>from __future__ import annotations</code> at the top of files to make all annotations lazy strings (faster import, allows forward references).
-            </div>
-          </div>
 
           <CodeBlock lang="python">{`from __future__ import annotations
 from typing import TypeVar, Generic, Callable, Literal, Union, Any
@@ -360,11 +431,40 @@ def write_dataset(
 # strict = true
 # plugins = ["pydantic.mypy"]`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I add type hints for documentation"</td><td>"Type hints let mypy --strict catch mismatches in CI before runtime. A dict typed as TypedDict gets every key checked; bare dict[str, Any] catches nothing."</td></tr>
+              <tr><td>"I use dataclass for everything"</td><td>"TypedDict for JSON records you pass around as dicts — keys stay interoperable with json.loads. Dataclass when you need methods, defaults, or frozen immutability."</td></tr>
+              <tr><td>"Protocol is like an interface"</td><td>"Protocol uses structural subtyping — no inheritance needed. Any class with the right method signatures satisfies it, which is critical for dependency injection in pipelines."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-types" questions={[
-            { question: "In Python, type hints like 'def fn(x: int) -> str' are:", options: ["Enforced at runtime  -  TypeError raised if violated", "Purely for static analysis tools (mypy/Pyright) and IDEs  -  ignored at runtime", "Compiled to C checks for performance", "Only valid in Python 3.12+"], correct: 1 },
-            { question: "Which typing construct is best for defining the exact shape of a dictionary (like a JSON schema) with static checking?", options: ["dict[str, Any]  -  most flexible", "TypedDict  -  key names and value types are statically checked", "dataclass  -  required for dict-like objects", "NamedTuple  -  always use instead of TypedDict"], correct: 1 },
-            { question: "A Protocol in Python's typing system enables:", options: ["Multiple inheritance without MRO issues", "Structural subtyping  -  any class with matching methods satisfies the Protocol, no explicit inheritance needed", "Runtime interface enforcement like Java interfaces", "Abstract method enforcement identical to ABC"], correct: 1 },
+            { question: "You annotate a function 'def process(record: RawEvent) -> EnrichedEvent'. At runtime, what happens if you pass a plain dict instead of a RawEvent TypedDict?", options: ["Python raises TypeError immediately — TypedDict is enforced at runtime", "Nothing — Python ignores the annotation at runtime; only mypy/Pyright catch this statically", "The function silently converts the dict to RawEvent", "Python raises AttributeError when accessing TypedDict-specific keys"], correct: 1 },
+            { question: "A Pipeline class doesn't inherit from DataSource but has all the same method signatures. Under Protocol-based typing, which statement is true?", options: ["Pipeline fails isinstance(pipeline, DataSource) check — Protocol requires inheritance for isinstance", "Pipeline satisfies DataSource Protocol structurally — no inheritance needed, only matching method signatures", "You must use @runtime_checkable on Protocol for static type checking to work", "Protocol only works if the class is defined after the Protocol"], correct: 1 },
+            { question: "When should you prefer TypedDict over @dataclass for a pipeline record type?", options: ["Always — TypedDict is faster than dataclass", "When the data is frequently serialized to/from JSON and interop with dict-based APIs matters — TypedDict keeps it a plain dict; dataclass requires .asdict() conversion", "When you need __post_init__ validation logic", "TypedDict supports defaults; dataclass does not"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run <code>mypy --strict</code> in CI on every PR</li>
+                <li>Use TypedDict for JSON/dict records, dataclass for config objects</li>
+                <li>Use Protocol for dependency injection instead of ABCs when possible</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use bare <code>dict[str, Any]</code> for record types — it catches nothing</li>
+                <li>Skip <code>from __future__ import annotations</code> — causes slow imports from eager evaluation</li>
+                <li>Annotate with <code>Any</code> to silence mypy — it defeats the purpose entirely</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-types')) { await unmarkTopicComplete('py-types'); onUnmark('py-types') } else { await markTopicComplete('py-types'); onComplete('py-types') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-types') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-types') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -374,6 +474,33 @@ def write_dataset(
             <div className="topic-eyebrow">Level 5 - Python for Data Engineering</div>
             <h1 className="topic-title">Data Structures & Big-O</h1>
             <p className="topic-desc">Choosing the right data structure is a multiplier on pipeline performance. A membership test that costs O(n) in a list costs O(1) in a set. A priority queue implemented with a sorted list costs O(n log n) per insert; heapq costs O(log n). These differences dominate at pipeline scale.</p>
+          </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "Walk me through the Big-O of Python's core data structures"<br/>• "How would you deduplicate 50 million records efficiently?"<br/>• "When would you use heapq instead of sorted()?"<br/>• "Explain defaultdict vs a regular dict"<br/>• "How would you find the top-100 values in a stream without sorting everything?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate match structure to problem (O(1) set for dedup, heapq for top-K), or do they default to list for everything?</div>
+          </div>
+
+          <p>In production, the wrong data structure is the most common cause of pipeline slowdowns that don't show up in small tests. The reason is that O(n) vs O(1) differences are invisible on 1,000 rows but catastrophic on 50 million. A deduplication check using <code>if record_id in seen_list</code> runs 50M operations each touching up to 50M items — O(n²) total. The same check with a set is O(n) total.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"For dedup and membership checks — set. O(1) average for add/in/remove."</td></tr>
+              <tr><td>2</td><td>"For lookup enrichment joins — dict. O(1) get/set. I build it once from the dimension table."</td></tr>
+              <tr><td>3</td><td>"For top-K over a stream — min-heap of size K with heapq. O(log K) per record."</td></tr>
+              <tr><td>4</td><td>"For sliding windows and BFS queues — deque. O(1) at both ends; list.insert(0) is O(n)."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Meta:</strong> Ad impression deduplication pipeline uses Python sets to check 200M event IDs per hour — switching from list to set reduced the dedup stage from 4 hours to 8 minutes.<br/><strong>Spotify:</strong> Track play count aggregation uses Counter + heapq.nlargest() to compute top-1000 tracks per region in real time — O(n log 1000) vs O(n log n) for sorting all tracks.<br/><strong>Uber:</strong> Driver dispatch uses defaultdict(deque) for per-driver event windows — O(1) initialization eliminates the "if key not in dict" boilerplate that was causing KeyErrors in high-throughput event streams.</div>
           </div>
 
           <DataStructuresDiagram />
@@ -516,11 +643,40 @@ today_counts = Counter(today_events)
 yesterday_counts = Counter(yesterday_events)
 combined = today_counts + yesterday_counts`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I'd use a list and check if the ID is already in it"</td><td>"That's O(n) per check — O(n²) total on 50M records. A set gives O(1) average lookup. At 50M records the set approach runs in seconds; the list approach runs for hours."</td></tr>
+              <tr><td>"I'd sort the stream and take the top 100"</td><td>"Sorting requires all data in memory and is O(n log n). A min-heap of size K gives O(n log K) with O(K) memory — heapq.nsmallest(100, stream) does this in one line."</td></tr>
+              <tr><td>"defaultdict is just a convenience"</td><td>"It eliminates the if-key-not-in-dict guard that appears in every groupby operation. More importantly, it prevents KeyError race conditions in multi-step aggregations."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-structures" questions={[
-            { question: "You need to check whether a user_id has already been processed (deduplication in a pipeline loop with 50M records). Which structure gives O(1) lookup?", options: ["list  -  simple and readable", "set  -  O(1) average-case hash lookup", "sorted list with bisect  -  O(log n)", "tuple  -  immutable so faster"], correct: 1 },
-            { question: "You need to maintain the top-100 highest-value orders seen so far in a streaming pipeline without sorting the entire stream. The right structure is:", options: ["A sorted list  -  always O(1) access", "heapq (min-heap of size 100)  -  O(log 100) per insert, O(1) peek at min", "Counter.most_common()  -  designed for top-K", "deque(maxlen=100)  -  automatically evicts old items"], correct: 1 },
-            { question: "collections.defaultdict(list) vs a plain dict: what problem does defaultdict solve?", options: ["defaultdict is faster for all operations", "defaultdict auto-initialises missing keys with the factory value, eliminating if-key-not-in-dict boilerplate", "defaultdict allows non-hashable keys", "defaultdict is thread-safe; plain dict is not"], correct: 1 },
+            { question: "A pipeline groups 50M events by user_id using a plain dict, checking 'if user_id not in d: d[user_id] = []' on every row. What is the asymptotic complexity of this grouping operation?", options: ["O(n²) — checking key existence in a dict is O(n)", "O(n) — dict key lookup is O(1) average, so total is O(n)", "O(n log n) — dict uses a sorted tree internally", "O(1) — dicts have constant-time access for all sizes"], correct: 1 },
+            { question: "You're streaming 10M revenue records and need to return the top-50 highest-revenue customers without loading all records into memory first. What's the correct approach?", options: ["sorted(stream, key=lambda r: r['revenue'], reverse=True)[:50] — most readable", "heapq of size 50: push each record, pop smallest when size exceeds 50 — O(n log 50) time, O(50) memory", "Counter(r['customer_id'] for r in stream).most_common(50) — designed for frequency counting", "list.sort() then slice — sort is in-place and memory-efficient"], correct: 1 },
+            { question: "What is the memory complexity of Python's deque(maxlen=1000) when used as a sliding window for anomaly detection over an infinite stream?", options: ["O(n) — grows with the number of records processed", "O(1) — deque with maxlen auto-evicts old items, maintaining constant size of 1000", "O(log n) — deque uses a balanced tree internally", "O(maxlen²) — each insertion copies the array"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use <code>set</code> for deduplication and membership checks — O(1)</li>
+                <li>Use <code>heapq</code> for top-K problems — O(n log K) with O(K) memory</li>
+                <li>Use <code>defaultdict(list)</code> for groupby aggregations</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Check membership with <code>if x in my_list</code> in hot loops — it's O(n)</li>
+                <li>Sort a full stream to find top-K — use heapq instead</li>
+                <li>Use <code>list.insert(0, item)</code> for queue operations — it's O(n); use deque</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-structures')) { await unmarkTopicComplete('py-structures'); onUnmark('py-structures') } else { await markTopicComplete('py-structures'); onComplete('py-structures') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-structures') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-structures') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -532,14 +688,35 @@ combined = today_counts + yesterday_counts`}</CodeBlock>
             <p className="topic-desc">Comprehensions are Python's most idiomatic feature for building collections. They're faster than equivalent for-loops because the iteration is implemented in C inside the interpreter. Generator expressions look identical but produce values lazily  -  critical when processing files or streams that don't fit in memory.</p>
           </div>
 
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What's the difference between a list comprehension and a generator expression?"<br/>• "How would you process a 20 GB file without running out of memory?"<br/>• "Why are list comprehensions faster than for-loops?"<br/>• "When would you use a generator vs a list?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate know when to materialize (list comp) vs stream lazily (generator), or do they use list comprehensions everywhere regardless of data size?</div>
+          </div>
+
+          <p>List comprehensions build the full collection in memory immediately — they're 30-40% faster than equivalent for-loops because the iteration loop runs in C. The reason generator expressions matter is different: they never build the collection at all. <code>sum(x['amount'] for x in iter_file(path))</code> processes a 20 GB file with O(1) memory because only one record lives in memory at a time.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"List comp when I need the full collection: passing to a function, slicing, indexing."</td></tr>
+              <tr><td>2</td><td>"Generator expression when I'm immediately consuming: sum(), max(), writing row-by-row."</td></tr>
+              <tr><td>3</td><td>"For large files I always use generators — O(1) memory regardless of file size."</td></tr>
+              <tr><td>4</td><td>"List comps are ~30% faster than for-loops because the inner loop runs in C bytecode."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Google:</strong> BigQuery export processing pipelines use generator chaining to process 100 GB JSONL exports — <code>sum(row['revenue'] for row in iter_jsonl(path))</code> uses under 10 MB RAM regardless of export size.<br/><strong>Airbnb:</strong> Schema normalization pipeline uses dict comprehensions to rename 200+ column names in one expression: <code>{'{k: normalize(k) for k in df.columns}'}</code> — reduces 10 lines of loop boilerplate to one.<br/><strong>Netflix:</strong> Content analytics pipelines chain generator expressions for lazy ETL — no intermediate list allocations means 4x less peak memory on 50 GB daily event exports.</div>
+          </div>
+
           <ComprehensionDiagram />
           <ComprehensionAnimation />
-          <div className="callout callout-info">
-            <span className="callout-icon">💡</span>
-            <div className="callout-body">
-              <strong>Rule of thumb:</strong> Use a <em>list comprehension</em> when you need the full collection in memory (e.g., passing to a function). Use a <em>generator expression</em> when you're immediately iterating or aggregating (e.g., <code>sum()</code>, <code>max()</code>, writing to a file row-by-row). Never use a list comprehension just to feed it into <code>for x in [...]</code>.
-            </div>
-          </div>
 
           <CodeBlock lang="python">{`# ── List comprehensions ─────────────────────────────────────────────────
 # Transform and filter in one expression  -  cleaner than for+append
@@ -674,16 +851,73 @@ t_gen = timeit.timeit("sum(x**2 for x in range(100_000))", number=100)
 # Slightly slower than list comp for sum() due to generator overhead,
 # but uses O(1) memory vs O(n)  -  the right trade-off for large data.`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use list comprehensions for everything — they're cleaner"</td><td>"List comp is right when I need the full result. For aggregations over large files I use generator expressions — same syntax, zero memory overhead, because nothing is materialized."</td></tr>
+              <tr><td>"sum([x for x in large_file]) is fine"</td><td>"That allocates the entire file in RAM first. sum(x for x in large_file) is identical speed but O(1) memory — the generator feeds directly into sum() without building a list."</td></tr>
+              <tr><td>"Generator expressions are slower"</td><td>"For aggregations they're faster because there's no list allocation. For random access they're inappropriate. The question is always: do I need the collection or just the aggregate?"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-comprehensions" questions={[
-            { question: "You need to compute the sum of a column across a 10 GB JSONL file that doesn't fit in RAM. Which approach is correct?", options: ["[row['amount'] for row in iter_file(path)] then sum()  -  fast because list comp is optimised", "sum(row['amount'] for row in iter_file(path))  -  generator expression never materialises the full list", "pd.read_json(path)['amount'].sum()  -  pandas always handles large files efficiently", "map(lambda r: r['amount'], iter_file(path)) then sum()  -  map is lazy so identical"], correct: 1 },
-            { question: "A list comprehension is generally faster than an equivalent for-loop + append because:", options: ["The Python interpreter optimises list comps with multi-threading", "The iteration loop executes in C within CPython, avoiding per-iteration Python bytecode overhead", "List comps are compiled to native machine code at parse time", "CPython pre-allocates the list at a fixed size to avoid reallocation"], correct: 1 },
-            { question: "What is the key difference between [x*2 for x in data] and (x*2 for x in data)?", options: ["Brackets vs parentheses is purely stylistic  -  behaviour is identical", "The list comprehension builds the full list in memory immediately; the generator expression yields values one at a time lazily", "Generator expressions are always faster than list comprehensions", "List comprehensions support filtering with if; generator expressions do not"], correct: 1 },
+            { question: "A pipeline needs to compute total revenue from a 15 GB gzipped JSONL file. The machine has 8 GB RAM. Which code runs successfully?", options: ["total = sum([row['amount'] for row in iter_jsonl_gz(path)]) — list comp is optimized for sum()", "total = sum(row['amount'] for row in iter_jsonl_gz(path)) — generator never materializes the full list", "df = pd.read_json(path) then df['amount'].sum() — pandas reads in chunks automatically", "All three work identically — Python handles memory automatically"], correct: 1 },
+            { question: "Why does [x**2 for x in range(1_000_000)] run about 30-40% faster than an equivalent for-loop with list.append()?", options: ["Python pre-compiles list comprehensions to native code", "The list comprehension's internal loop runs in C bytecode — each append in a Python for-loop requires a Python function call overhead per iteration", "List comprehensions use multiple CPU cores automatically", "CPython reserves memory for the full list upfront, avoiding reallocation"], correct: 1 },
+            { question: "A set comprehension {row['user_id'] for row in events} and list comprehension [row['user_id'] for row in events] both iterate over the same data. What critical behavioral difference should a data engineer know?", options: ["Set comprehension is O(n log n); list comprehension is O(n)", "Set comprehension deduplicates automatically — it produces only unique user_ids; list comprehension preserves duplicates. Use set comp when you need distinct values.", "List comprehension preserves insertion order; set comprehension sorts the output", "They are identical — sets and lists have the same iteration semantics"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use generator expressions for <code>sum()</code>, <code>max()</code>, row-by-row writes</li>
+                <li>Chain generators for lazy ETL pipelines with O(1) memory</li>
+                <li>Use list comp only when you need random access or the full collection</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use list comp to feed directly into <code>for x in [...]</code> — use a generator</li>
+                <li>Materialize gigabytes into a list just to aggregate it</li>
+                <li>Nest comprehensions more than 2 levels deep — extract to a function</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-comprehensions')) { await unmarkTopicComplete('py-comprehensions'); onUnmark('py-comprehensions') } else { await markTopicComplete('py-comprehensions'); onComplete('py-comprehensions') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-comprehensions') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-comprehensions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-functions" ref={el => { if (el) sectionRefs.current['py-functions'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Functions, args/kwargs, closures, functools</h1><p className="topic-desc">Python functions are first-class objects. Mastering args/kwargs, closures, functools.partial, and lru_cache is essential for building flexible, reusable pipeline components.</p></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What's the difference between *args and **kwargs?"<br/>• "Explain closures and when you'd use them in a pipeline"<br/>• "How does functools.lru_cache work?"<br/>• "What does functools.partial do and when is it useful?"<br/>• "Write a function that returns a validator for a given schema"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use higher-order functions fluently (closures for factories, partial for specialization, lru_cache for memoization) — or do they copy-paste boilerplate for each variation?</div>
+          </div>
+
+          <p>Functions are first-class objects in Python — you can pass them, return them, and store them. In production, this enables powerful patterns: closures capture configuration at creation time (making <code>make_validator(schema)</code> return a reusable checker), <code>functools.partial</code> specializes general functions without subclassing, and <code>lru_cache</code> memoizes expensive DB lookups with zero boilerplate. The reason these matter is that they replace class hierarchies with simpler composable functions.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"*args captures extra positional args as a tuple; **kwargs captures keyword args as a dict."</td></tr>
+              <tr><td>2</td><td>"Closures let me build factory functions — make_validator(schema) returns a function that closes over the schema."</td></tr>
+              <tr><td>3</td><td>"functools.partial pre-fills arguments: write_raw = partial(write_to_gcs, bucket='raw-bucket')."</td></tr>
+              <tr><td>4</td><td>"lru_cache(maxsize=1024) memoizes a function — same inputs return cached output. I use it for dimension lookups."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Stripe:</strong> Payment validation uses closure-based schema validators — <code>make_validator(schema)</code> is called once at startup per endpoint, returning a cached function that processes millions of requests/day without re-parsing the schema.<br/><strong>Databricks:</strong> Delta Lake Python API uses functools.partial extensively to create environment-specific write functions — <code>write_prod = partial(write_delta, env='prod', format='delta')</code> — reducing per-table boilerplate by 80%.<br/><strong>Google:</strong> BigQuery client wrapper uses lru_cache for schema lookups — fetching table schemas once and caching them reduces API calls from O(n queries) to O(unique tables) in batch pipelines.</div>
+          </div>
+
           <FunctionsDiagram />
           <FunctoolsAnimation />
           <CodeBlock lang="python">{`from typing import Any, Callable
@@ -777,16 +1011,73 @@ def _(obj: dict) -> str:
 def _(obj: pd.DataFrame) -> str:
     return obj.to_csv(index=False)`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I create a new function for each pipeline variant"</td><td>"I use functools.partial to specialize a general function once: write_raw = partial(write_to_gcs, bucket='raw'). One general function, N specialized versions — no duplication."</td></tr>
+              <tr><td>"I call the DB on every dimension lookup"</td><td>"I decorate the lookup function with @lru_cache(maxsize=10_000). First call hits the DB; subsequent calls with the same ID return instantly. cache_info() shows hit rate."</td></tr>
+              <tr><td>"I use a class to hold shared state for validators"</td><td>"A closure is simpler: make_validator(schema) returns a validate() function that closes over schema. No class, no self, no __init__ — just a function that returns a function."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-functions" questions={[
-            { question: "What is the difference between *args and **kwargs?", options: ["*args captures keyword args; **kwargs captures positional args", "*args captures extra positional args as a tuple; **kwargs captures extra keyword args as a dict", "*args and **kwargs are identical", "*args is for integers; **kwargs is for strings"], correct: 1 },
-            { question: "What does functools.lru_cache do?", options: ["Runs functions in parallel", "Memoizes function results  -  returns cached output for repeated identical inputs", "Converts a function to a generator", "Adds retry logic to a function"], correct: 1 },
-            { question: "What does functools.partial do?", options: ["Partially evaluates a function and returns a generator", "Creates a new function with some arguments pre-filled", "Splits a function into multiple steps", "Makes a function thread-safe"], correct: 1 },
+            { question: "A function uses @functools.lru_cache(maxsize=256). After 300 unique inputs are processed, what happens to the oldest cached results?", options: ["They raise a CacheOverflowError", "The cache evicts the least recently used entries when maxsize is exceeded — the 256 most recently used results are kept", "The cache silently doubles in size", "All cached results are cleared and rebuilt from scratch"], correct: 1 },
+            { question: "You have: write_to_gcs(df, bucket, path, format='parquet'). You need 3 specialized writers for 3 different buckets. What's the correct approach?", options: ["Subclass a WriteBase class and override bucket in __init__", "Use functools.partial: write_raw = partial(write_to_gcs, bucket='raw-bucket') — creates a new callable with bucket pre-filled", "Create 3 lambda functions that call write_to_gcs with hardcoded bucket names", "Use global variables to configure the bucket before each call"], correct: 1 },
+            { question: "What does a closure capture — and when does capture happen?", options: ["A closure captures variable values at the time it's called", "A closure captures the enclosing scope's variable bindings at definition time — if the outer variable changes later, the closure sees the latest value", "A closure creates a deep copy of all variables in scope", "Closures only capture variables that are explicitly passed as arguments"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use <code>functools.partial</code> to specialize general functions for specific environments</li>
+                <li>Use <code>@lru_cache</code> for expensive dimension table lookups</li>
+                <li>Use closures (factory functions) to capture configuration at creation time</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use mutable default arguments like <code>def fn(cache=[])</code> — shared across all calls</li>
+                <li>Apply <code>@lru_cache</code> to functions with unhashable arguments (dicts, lists)</li>
+                <li>Overuse <code>functools.reduce</code> when a simple for-loop is more readable</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-functions')) { await unmarkTopicComplete('py-functions'); onUnmark('py-functions') } else { await markTopicComplete('py-functions'); onComplete('py-functions') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-functions') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-functions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-generators" ref={el => { if (el) sectionRefs.current['py-generators'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Generators &amp; itertools</h1><p className="topic-desc">Generators are the cornerstone of memory-efficient data pipelines in Python. itertools provides lazy, composable building blocks for data stream processing.</p></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How would you stream records from S3 without loading everything into memory?"<br/>• "Explain the yield keyword and generator lifecycle"<br/>• "What does itertools.groupby require before you call it?"<br/>• "How do you compose multiple transformation steps lazily?"<br/>• "Difference between yield and yield from"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand that generators enable O(1) memory pipeline stages that compose lazily — not just that "yield makes a generator"?</div>
+          </div>
+
+          <p>A generator function suspends execution at each <code>yield</code> and resumes from that exact point on the next <code>next()</code> call. In production, this is the mechanism that lets you chain five transformation stages over a 50 GB S3 file using constant memory — each record flows through all stages one at a time, never building an intermediate list. The reason itertools matters is that it provides these lazy building blocks without you needing to write them: <code>chain</code>, <code>islice</code>, <code>groupby</code>, <code>batched</code> all compose naturally with generator pipelines.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"yield pauses the function and returns a value. next() resumes it from the same point."</td></tr>
+              <tr><td>2</td><td>"yield from delegates to a sub-iterator — it flattens one level, great for streaming from multiple S3 objects."</td></tr>
+              <tr><td>3</td><td>"I compose pipeline stages as generator functions: raw = read_jsonl(path); clean = (clean(r) for r in raw); valid = (r for r in clean if validate(r))."</td></tr>
+              <tr><td>4</td><td>"itertools.groupby requires pre-sorted data — it only groups consecutive equal keys."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Airbnb:</strong> Listing data export pipeline uses generator-chained ETL to process 200M listing records from S3 — peak memory stays under 500 MB regardless of export size by never materializing intermediate stages.<br/><strong>Databricks:</strong> Custom log parser for 10 TB/day of Spark executor logs uses itertools.groupby on sorted log lines — groups errors by executor ID in one pass without loading all logs into a dict first.<br/><strong>Spotify:</strong> Playlist recommendation pipeline uses itertools.batched to group stream records into 500-row batches for Postgres bulk inserts — 40x faster than row-by-row inserts with minimal code change.</div>
+          </div>
+
           <GeneratorDiagram />
           <GeneratorAnimation />
           <CodeBlock lang="python">{`from typing import Iterator, Generator
@@ -896,16 +1187,73 @@ daily_sales = [1200, 850, 2100, 670, 1900]
 cumulative = list(itertools.accumulate(daily_sales, operator.add))
 # [1200, 2050, 4150, 4820, 6720]`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I return a list from my read function"</td><td>"For large datasets I always yield — the caller controls how much to buffer. A generator composes naturally: read() | filter() | transform() all stay lazy with O(1) memory each."</td></tr>
+              <tr><td>"I use itertools.groupby like a SQL GROUP BY"</td><td>"groupby only groups consecutive equal keys — you must sort first. For unsorted data I use defaultdict(list) instead. Forgetting this is the #1 groupby bug in pipeline code."</td></tr>
+              <tr><td>"yield from is just a for loop with yield"</td><td>"yield from is a proper delegation — it forwards send() and throw() into the sub-generator too, which matters for coroutine pipelines that use generator.send() for two-way communication."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-generators" questions={[
-            { question: "Why are generator functions preferred over returning a list for large dataset streaming?", options: ["Generators are always faster", "Generators yield one item at a time using O(1) memory; returning a list requires O(n) memory for the full dataset", "Generators run in parallel automatically", "Generators bypass the GIL"], correct: 1 },
-            { question: "What does itertools.islice do?", options: ["Slices a list in place", "Lazily takes the first N items from any iterator without consuming the rest", "Creates a slice object for numpy arrays", "Splits an iterator into N equal parts"], correct: 1 },
-            { question: "What requirement must be met before using itertools.groupby to group records?", options: ["Records must be stored in a dict", "Records must be sorted by the grouping key first  -  groupby only groups consecutive equal keys", "Records must be unique", "itertools.groupby has no requirements"], correct: 1 },
+            { question: "A generator pipeline: raw = read_s3(); clean = (clean(r) for r in raw); valid = (r for r in clean if validate(r)). When does any data actually flow through the pipeline?", options: ["When clean is defined — generator expressions execute immediately", "When valid is defined — the final expression triggers upstream evaluation", "When you consume valid in a for loop or pass it to list()/sum() — generators are lazy until consumed", "When read_s3() is called — S3 reads are always eager"], correct: 2 },
+            { question: "itertools.groupby(sorted_records, key=lambda r: r['region']) — what happens if sorted_records is NOT sorted by region?", options: ["groupby raises a ValueError: data must be sorted", "groupby silently produces incorrect results — it only groups consecutive equal keys, so unsorted data creates multiple groups for the same key", "groupby automatically sorts the input before grouping", "groupby works correctly on unsorted data but is slower"], correct: 1 },
+            { question: "What is the key behavioral difference between yield and yield from when delegating to a sub-generator?", options: ["They are identical — yield from is syntactic sugar for 'for x in sub: yield x'", "yield from also forwards .send() and .throw() calls into the sub-generator, enabling proper coroutine delegation — a plain for/yield loop cannot do this", "yield from is only valid inside async functions", "yield from materializes the sub-generator into a list before yielding"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use generator functions for streaming S3/GCS/ADLS records</li>
+                <li>Sort before <code>itertools.groupby</code> — it only groups consecutive keys</li>
+                <li>Use <code>itertools.batched</code> (3.12+) or manual batching for bulk DB inserts</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Materialize a generator with <code>list()</code> unless you actually need random access</li>
+                <li>Call <code>itertools.groupby</code> on unsorted data — silent wrong results</li>
+                <li>Use a generator where the caller needs to iterate it twice — generators are single-pass</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-generators')) { await unmarkTopicComplete('py-generators'); onUnmark('py-generators') } else { await markTopicComplete('py-generators'); onComplete('py-generators') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-generators') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-generators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-decorators" ref={el => { if (el) sectionRefs.current['py-decorators'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Decorators</h1><p className="topic-desc">Decorators let you wrap functions with cross-cutting concerns (logging, retry, timing, caching) without modifying business logic. They are the backbone of clean, DRY pipeline code.</p></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "Write a retry decorator with exponential backoff"<br/>• "What does @functools.wraps do and why is it important?"<br/>• "When stacking decorators, what order do they execute?"<br/>• "How would you implement a rate limiter as a decorator?"<br/>• "What's the advantage of a class-based decorator over a function-based one?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand the mechanics (wrapper pattern, @functools.wraps, stacking order) and can they write a production-quality retry decorator from scratch?</div>
+          </div>
+
+          <p>A decorator is syntactic sugar for <code>fetch_api = retry(timer(rate_limit(fetch_api)))</code>. In production, decorators are where cross-cutting concerns live: every API call gets retry with backoff, every expensive function gets timing, every external call gets rate limiting — without touching the business logic. The reason <code>@functools.wraps(func)</code> is non-negotiable is that without it, the wrapper replaces the original function's <code>__name__</code> and <code>__doc__</code>, which breaks logging, introspection, and pytest reporting.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"A decorator is a function that takes a function and returns a function. @functools.wraps copies metadata."</td></tr>
+              <tr><td>2</td><td>"Stacking: @A @B @C applies bottom-up — C wraps func first, B wraps that, A wraps that. Execution order is A → B → C → func → C → B → A."</td></tr>
+              <tr><td>3</td><td>"For parametrized decorators I need 3 levels: retry() returns a decorator, which returns a wrapper."</td></tr>
+              <tr><td>4</td><td>"Class-based decorators maintain state across calls — useful for TTL caches and call counters."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Stripe:</strong> All payment API calls are wrapped with a @retry(max_attempts=3, backoff=2.0, exceptions=(ConnectionError, Timeout)) decorator — handles transient failures transparently with zero code duplication across 200+ API call sites.<br/><strong>Airflow:</strong> The @task decorator wraps Python functions as DAG tasks — it captures function metadata, handles XCom serialization, and injects execution context. Built on the same decorator mechanics.<br/><strong>Netflix:</strong> Rate-limiting decorators on all Chaos Monkey API calls prevent test-induced DDoS — a single @rate_limit(calls_per_second=10) decorator replaced 50+ manual time.sleep() calls across their reliability testing codebase.</div>
+          </div>
+
           <DecoratorDiagram />
           <DecoratorAnimation />
           <CodeBlock lang="python">{`import functools, time, logging, threading
@@ -1038,16 +1386,73 @@ def validate_input(**field_types):
 def process_event(record: dict) -> dict:
     return {**record, "amount_usd": record["amount"] / 100}`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I add retry logic inside the function"</td><td>"I use a parametrized @retry(max_attempts=3, backoff=2.0, exceptions=(ConnectionError,)) decorator. The retry logic lives once; all 50 API call functions get it with one line each."</td></tr>
+              <tr><td>"I skip functools.wraps"</td><td>"Without @functools.wraps(func), the wrapper has __name__='wrapper' and no docstring. That breaks pytest output, logging, and any code that inspects function metadata."</td></tr>
+              <tr><td>"@A @B @C — A runs first"</td><td>"Applied bottom-up: C wraps func, B wraps C's wrapper, A wraps B's wrapper. At call time execution enters A first, then B, then C, then the original function."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-decorators" questions={[
-            { question: "Why is @functools.wraps(func) important when writing decorators?", options: ["It speeds up the wrapped function", "It copies the original function's __name__, __doc__, and __module__ to the wrapper  -  without it, introspection and debugging break", "It makes the decorator re-entrant", "It enables the decorator to accept arguments"], correct: 1 },
-            { question: "When decorators are stacked as @A @B @C def func(), in what order are they applied?", options: ["A first, then B, then C (top to bottom)", "C first, then B, then A (bottom to top  -  C wraps func, B wraps that, A wraps that)", "All three are applied simultaneously", "Order depends on function signature"], correct: 1 },
-            { question: "What advantage does a class-based decorator have over a function-based decorator?", options: ["Class decorators are faster", "Class decorators can maintain state (instance variables) across multiple calls", "Class decorators don't need functools.wraps", "Class decorators can decorate classes but not functions"], correct: 1 },
+            { question: "A decorator omits @functools.wraps(func). What is the observable consequence in a production pipeline?", options: ["The decorator runs twice on each call", "The wrapped function's __name__ becomes 'wrapper' — breaking structured logging that uses func.__name__, pytest reporting, and any introspection tools", "The decorator ignores exceptions thrown by the wrapped function", "functools.wraps is only needed for class-based decorators"], correct: 1 },
+            { question: "Given @retry @timer @rate_limit def fetch_data(): ... — when fetch_data() is called, which decorator's code executes first?", options: ["rate_limit — innermost, closest to the original function", "timer — middle decorator always executes first", "retry — outermost decorator executes first at call time, last at return time", "All three execute simultaneously"], correct: 2 },
+            { question: "You need a decorator that tracks the total number of calls to a function across the entire program lifetime. Which implementation is most appropriate?", options: ["A function-based decorator with a local variable inside the wrapper", "A class-based decorator using self.call_count as an instance variable — class maintains state across all invocations", "functools.lru_cache with maxsize=None", "A closure that captures a mutable default argument for the counter"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always use <code>@functools.wraps(func)</code> in every decorator</li>
+                <li>Use parametrized decorators for retry, timer, rate_limit with configurable values</li>
+                <li>Use class-based decorators when you need state (TTL caches, call counters)</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Omit <code>@functools.wraps</code> — silent debugging pain</li>
+                <li>Put business logic inside a decorator — decorators are for cross-cutting concerns only</li>
+                <li>Stack more than 3-4 decorators — call overhead and debug complexity compound</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-decorators')) { await unmarkTopicComplete('py-decorators'); onUnmark('py-decorators') } else { await markTopicComplete('py-decorators'); onComplete('py-decorators') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-decorators') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-decorators') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-oop" ref={el => { if (el) sectionRefs.current['py-oop'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">OOP, ABC, Protocol, dataclasses, __slots__</h1><p className="topic-desc">Python's OOP supports multiple inheritance, abstract base classes, structural typing via Protocol, and zero-boilerplate value objects with dataclasses. Understanding MRO and __dunder__ methods is critical for building reusable DE frameworks.</p></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What's the difference between ABC and Protocol in Python?"<br/>• "When would you use @dataclass(frozen=True)?"<br/>• "What does __slots__ do and when does it matter?"<br/>• "Explain Python's MRO for multiple inheritance"<br/>• "Design a pluggable data source interface for a pipeline framework"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate reach for the right abstraction (ABC for shared behavior contracts, Protocol for dependency injection, dataclass for value objects) — or do they use class for everything?</div>
+          </div>
+
+          <p>In production pipeline frameworks, OOP is about choosing the right abstraction level. ABCs enforce that subclasses implement required methods at instantiation time — good for plugin architectures where you want a loud error if a method is missing. Protocol enables dependency injection without coupling: any class with matching methods satisfies the interface. Dataclasses eliminate <code>__init__</code> boilerplate for config and record objects. The reason <code>__slots__</code> matters is memory: at 10 million EventRecord objects in a pipeline, replacing <code>__dict__</code> with fixed slots saves ~400 MB of RAM.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"ABC for nominal typing — subclasses must inherit and implement abstract methods. Gets a TypeError at instantiation if they don't."</td></tr>
+              <tr><td>2</td><td>"Protocol for structural typing — any class with the right methods satisfies it. No inheritance needed — great for dependency injection."</td></tr>
+              <tr><td>3</td><td>"@dataclass for value objects: config, partition keys, records. frozen=True makes it immutable and hashable."</td></tr>
+              <tr><td>4</td><td>"__slots__ replaces __dict__ with a fixed slot array — 40% less memory when creating millions of instances."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Apache Airflow:</strong> BaseOperator is an ABC that all 500+ operators inherit from — abstract execute() must be implemented, or instantiation raises TypeError. This pattern caught 200+ missing implementations during migration to Airflow 2.0.<br/><strong>dbt:</strong> Adapter classes use Protocol-style structural typing — any adapter implementing query()/execute()/get_columns() works with the core framework. Snowflake, BigQuery, Redshift adapters all satisfy the Protocol without a shared inheritance chain.<br/><strong>Uber:</strong> SparkJob dataclass with frozen=True serves as an immutable job specification — hashable, usable as dict keys for job deduplication, safe to pass across thread boundaries without defensive copies.</div>
+          </div>
+
           <OOPDiagram />
           <OOPAnimation />
           <CodeBlock lang="python">{`from abc import ABC, abstractmethod
@@ -1185,16 +1590,73 @@ ingest   = DataPipeline("ingest", [read_s3, validate, normalize])
 enrich   = DataPipeline("enrich", [join_dims, add_metrics])
 full_etl = ingest | enrich   # DataPipeline(name='ingest|enrich', stages=6)`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use ABC and Protocol interchangeably"</td><td>"ABC for plugin frameworks where you want an immediate TypeError if a subclass forgets to implement a method. Protocol for dependency injection — the class doesn't even know the Protocol exists."</td></tr>
+              <tr><td>"I use @dataclass for everything"</td><td>"frozen=True when the object is a key, set member, or passes across threads — immutability and hashability are free. Regular dataclass for mutable config objects."</td></tr>
+              <tr><td>"__slots__ is a micro-optimization"</td><td>"At 10 million EventRecord objects it saves 400+ MB of RAM. The __dict__ per instance costs 200-300 bytes. __slots__ replaces it with direct attribute storage — also 10-20% faster attribute access."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-oop" questions={[
-            { question: "What is the difference between ABC (Abstract Base Class) and Protocol in Python?", options: ["They are identical", "ABC requires explicit inheritance (nominal typing); Protocol uses structural/duck typing  -  any class with the right methods satisfies it", "Protocol requires explicit inheritance; ABC uses duck typing", "ABC is faster; Protocol is for type checking only"], correct: 1 },
-            { question: "What does @dataclass(frozen=True) do?", options: ["Prevents the dataclass from being serialized", "Makes the dataclass immutable and hashable (raises FrozenInstanceError on assignment)", "Freezes all class variables to their defaults", "Prevents subclassing"], correct: 1 },
-            { question: "What is the purpose of __slots__ in a dataclass?", options: ["Enables multiple inheritance", "Replaces __dict__ with a fixed-size slot array, reducing per-instance memory by ~40%  -  important when creating millions of record objects", "Allows the class to be used as a context manager", "Enables the class to be iterated"], correct: 1 },
+            { question: "A DataWriter Protocol defines write() and flush() methods. A class DeltaWriter implements both but does NOT inherit from DataWriter. When passed to run_pipeline(writer: DataWriter), what happens?", options: ["TypeError at runtime — DeltaWriter doesn't inherit DataWriter", "mypy accepts DeltaWriter as a valid DataWriter because Protocol uses structural subtyping — matching methods are enough", "Protocol requires @runtime_checkable to work at all", "DeltaWriter must call DataWriter.__init__() to register itself"], correct: 1 },
+            { question: "You have @dataclass class PartitionKey: year: int; month: int; region: str. You want to use PartitionKey instances as dictionary keys. What's required?", options: ["Nothing — all dataclasses are hashable by default", "Add frozen=True — regular dataclasses have __eq__ but not __hash__; frozen=True makes them immutable and hashable", "Manually implement __hash__ and __eq__ methods", "Use NamedTuple instead — dataclasses cannot be dict keys"], correct: 1 },
+            { question: "A pipeline creates 50 million EventRecord objects per day. You add __slots__ = ('user_id', 'event_type', 'ts', 'amount') to the class. What is the primary benefit?", options: ["__slots__ enables multiprocessing serialization of the objects", "Each instance no longer has a __dict__ — memory per instance drops ~40% from ~240 bytes to ~144 bytes, saving ~5 GB RAM at 50M objects", "__slots__ makes the class thread-safe", "__slots__ enables faster isinstance() checks"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Protocol for dependency injection — decouples classes from framework code</li>
+                <li>Add <code>frozen=True</code> to dataclasses used as dict keys or set members</li>
+                <li>Use <code>__slots__</code> when creating millions of instances in pipelines</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use deep inheritance hierarchies — Python MRO becomes hard to reason about beyond 2 levels</li>
+                <li>Define ABC methods without <code>@abstractmethod</code> — subclasses won't be forced to implement them</li>
+                <li>Add <code>__slots__</code> to classes that use <code>__dict__</code>-dependent features like pickle</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-oop')) { await unmarkTopicComplete('py-oop'); onUnmark('py-oop') } else { await markTopicComplete('py-oop'); onComplete('py-oop') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-oop') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-oop') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-context" ref={el => { if (el) sectionRefs.current['py-context'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Context Managers</h1><p className="topic-desc">Context managers guarantee resource cleanup even when exceptions occur. __enter__/__exit__, contextlib.contextmanager, suppress, and ExitStack are essential for robust database connections, file handles, and distributed locks.</p></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What does __exit__ returning True mean?"<br/>• "Implement a context manager for a database transaction"<br/>• "When would you use contextlib.ExitStack?"<br/>• "What's the difference between a class-based and @contextmanager-based context manager?"<br/>• "How do you handle cleanup when the number of resources is determined at runtime?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand that context managers are about guaranteed cleanup — not just syntax sugar for try/finally — and can they implement one correctly?</div>
+          </div>
+
+          <p>Context managers are Python's solution to the "cleanup on exit" problem. In production, this means DB connections always close (even on exceptions), temp tables always drop, and file handles never leak. The reason <code>__exit__</code> returning <code>False</code> matters: it tells Python to re-raise the exception. Returning <code>True</code> silently swallows it — almost never what you want. <code>contextlib.suppress</code> is the correct way to intentionally ignore specific exceptions. <code>ExitStack</code> handles the critical case where you don't know how many resources to open until runtime.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"__enter__ acquires the resource and returns it. __exit__ releases it — always, even on exception."</td></tr>
+              <tr><td>2</td><td>"__exit__ returning False (or None) re-raises any exception. Returning True silently suppresses it."</td></tr>
+              <tr><td>3</td><td>"@contextmanager turns a generator with one yield into a context manager — the yield is the body of the with block."</td></tr>
+              <tr><td>4</td><td>"ExitStack when the number of context managers is determined at runtime — dynamically opening N files for N partitions."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Airbnb:</strong> Database transaction context managers wrap every multi-table write in their pricing pipeline — on any exception, the transaction rolls back automatically. Before adoption, 12% of partial-write bugs were caused by missing rollback calls.<br/><strong>Uber:</strong> Distributed lock context managers for idempotency — with DistributedLock(run_id) ensures exactly one worker processes each partition. ExitStack manages N locks across N partitions in their batch job scheduler.<br/><strong>Databricks:</strong> Temp staging table context manager in their MERGE pipelines — @contextmanager creates the temp table, yields it, and drops it in the finally block. The DROP always fires even when MERGE raises a schema mismatch exception.</div>
+          </div>
+
           <ContextManagerDiagram />
           <ContextManagerAnimation />
           <CodeBlock lang="python">{`from contextlib import contextmanager, suppress, ExitStack
@@ -1307,16 +1769,73 @@ def pipeline_stage(name: str, conn):
         )
         raise`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"with open() automatically closes the file"</td><td>"with open() calls __enter__ which opens and returns the file, then __exit__ which calls file.close() — even if an exception is raised inside the block. It's try/finally without the boilerplate."</td></tr>
+              <tr><td>"I use try/finally for cleanup"</td><td>"Context managers are composable and reusable — I implement __enter__/__exit__ once, then use with everywhere. For one-offs, @contextmanager with try/finally is cleaner."</td></tr>
+              <tr><td>"ExitStack is for advanced use cases only"</td><td>"ExitStack is the right tool whenever the number of resources is dynamic — opening files for N partitions, or combining 3 locks where N isn't known until runtime."</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-context" questions={[
-            { question: "What does __exit__ returning False (or None) mean in a context manager?", options: ["The context manager failed", "The exception (if any) is re-raised after __exit__ runs  -  returning True would suppress it", "The resource was not released", "The context manager will retry"], correct: 1 },
-            { question: "What is the advantage of @contextlib.contextmanager over writing a full class?", options: ["It is always faster", "It lets you write a context manager as a generator function with a single yield  -  much less boilerplate", "It supports async operations automatically", "It allows multiple yields"], correct: 1 },
-            { question: "When should you use contextlib.ExitStack?", options: ["When you need to suppress all exceptions", "When the number of context managers to open is determined at runtime  -  ExitStack manages an arbitrary dynamic list of them", "When you need nested transactions", "When context managers don't have __exit__"], correct: 1 },
+            { question: "A context manager's __exit__ method is called with exc_type=ValueError, exc_val=..., exc_tb=.... It returns None. What happens next?", options: ["The ValueError is silently discarded — returning None is equivalent to suppress", "The ValueError is re-raised — __exit__ must return True to suppress an exception; None/False lets it propagate", "The context manager retries the with block", "Python calls __exit__ again with exc_type=None"], correct: 1 },
+            { question: "You need to open a variable number of partition files (determined at runtime) and process them together, guaranteeing all handles close even on exception. What's the correct tool?", options: ["Nested with statements — one per file", "contextlib.ExitStack — dynamically manages any number of context managers, all cleaned up together", "A try/finally with a list of file handles", "contextlib.suppress(IOError) around each open() call"], correct: 1 },
+            { question: "In a @contextmanager generator, where should cleanup code (like dropping a temp table) be placed to guarantee it runs even when an exception occurs in the with block?", options: ["Before the yield statement", "In the except clause after the yield", "In a finally block after the yield — this guarantees execution regardless of exceptions", "After the yield statement with no exception handling"], correct: 2 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use <code>@contextmanager</code> with <code>finally</code> for guaranteed temp resource cleanup</li>
+                <li>Use <code>contextlib.suppress</code> to intentionally ignore specific exceptions</li>
+                <li>Use <code>ExitStack</code> when opening a dynamic number of resources</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Return <code>True</code> from <code>__exit__</code> unless you intentionally want to suppress exceptions</li>
+                <li>Use bare <code>except: pass</code> instead of <code>contextlib.suppress</code></li>
+                <li>Put multiple <code>yield</code> statements in a <code>@contextmanager</code> — it raises <code>RuntimeError</code></li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-context')) { await unmarkTopicComplete('py-context'); onUnmark('py-context') } else { await markTopicComplete('py-context'); onComplete('py-context') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-context') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-context') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
         <section id="py-errors" ref={el => { if (el) sectionRefs.current['py-errors'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Error Handling, Custom Exceptions &amp; Logging</h1><p className="topic-desc">Robust pipelines need structured error handling with custom exception hierarchies, exception chaining (raise X from Y), and structured logging. structlog and Python's logging module are the standard tools.</p></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How would you design a custom exception hierarchy for a data pipeline?"<br/>• "What does 'raise NewError from original_error' do?"<br/>• "When does the finally block NOT execute?"<br/>• "How do you add context to exceptions without losing the original traceback?"<br/>• "Explain structured logging vs print statements"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate design exception hierarchies that let callers catch at the right granularity — or do they raise bare Exception everywhere and log strings?</div>
+          </div>
+
+          <p>In production, exception handling is an API design problem. The reason custom hierarchies matter is that callers need to catch at different granularities: a DQ monitoring service catches <code>DataQualityError</code> specifically to route alerts; an orchestrator catches <code>PipelineError</code> broadly to mark the run failed; an outer framework catches <code>Exception</code> as a last resort. <code>raise NewError from e</code> is non-negotiable — it chains the original exception as <code>__cause__</code>, preserving the full traceback while adding context. Structured logging (JSON output with key-value fields) is what makes logs searchable in Datadog, CloudWatch, and Splunk.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"I build a hierarchy: PipelineError → DataQualityError, SchemaEvolutionError, UpstreamAPIError."</td></tr>
+              <tr><td>2</td><td>"raise DataQualityError(...) from original_exc — chains the original as __cause__, preserving full traceback."</td></tr>
+              <tr><td>3</td><td>"finally always runs — on success, on exception, even on SystemExit. The only exception is os._exit()."</td></tr>
+              <tr><td>4</td><td>"Structured JSON logging: logger.info('pipeline_complete', rows=84321, table='fact_sales') — searchable fields in Datadog."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Airbnb:</strong> Custom exception hierarchy with 15+ exception types lets their pipeline observability system route alerts by type — DataQualityErrors go to the DQ Slack channel, SchemaErrors go to the platform team, UpstreamAPIErrors auto-retry with backoff.<br/><strong>Uber:</strong> All pipeline exceptions include structured context fields (pipeline_id, run_id, stage, rows_processed) — Datadog can filter by any field without parsing log strings. Reduced mean-time-to-debug from 45 minutes to 8 minutes.<br/><strong>Netflix:</strong> Uses structlog with bound context — each pipeline worker binds pipeline_id + run_id at startup. Every log line auto-includes these fields, enabling correlation across 10,000 concurrent pipeline runs.</div>
+          </div>
+
           <ErrorsDiagram />
           <ErrorHierarchyAnimation />
           <CodeBlock lang="python">{`import logging
@@ -1451,11 +1970,40 @@ log = PipelineLogger(pipeline_id="sales_daily", run_id="2024-01-15T02:00:00")
 log.info("Pipeline started", source="s3://bucket/sales/")
 log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I wrap everything in try/except Exception to be safe"</td><td>"I catch the most specific exception type possible — bare except hides bugs silently"</td></tr>
+              <tr><td>"I use print() for debugging errors"</td><td>"I use structured JSON logging with bound context — pipeline_id, run_id on every line, searchable in Datadog"</td></tr>
+              <tr><td>"raise CustomError(str(e)) passes the message along"</td><td>"raise CustomError(...) from e chains __cause__ — full original traceback is preserved and visible in Sentry/Datadog"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-errors" questions={[
-            { question: "What is the purpose of 'raise NewException from original_exception' in Python?", options: ["It suppresses the original exception", "It raises a new exception while explicitly chaining the original as __cause__, preserving the full error context", "It logs both exceptions", "It retries the operation after the original exception"], correct: 1 },
-            { question: "Why define a custom exception hierarchy (e.g. DataQualityError inheriting PipelineError) instead of using generic Exception?", options: ["Custom exceptions are always faster", "A hierarchy allows callers to catch at different granularities  -  catch DataQualityError for DQ issues, PipelineError for any pipeline failure, Exception as last resort", "Python requires custom exceptions for logging", "Generic exceptions cannot be re-raised"], correct: 1 },
-            { question: "When does the finally block execute in a try/except/finally?", options: ["Only when no exception is raised", "Only when an exception is raised", "Always  -  whether an exception was raised, caught, or not raised at all", "Only after the except block completes"], correct: 2 },
+            { question: "raise DataQualityError('nulls in key column') from original_exc — what does the 'from original_exc' clause do?", options: ["It suppresses original_exc and only raises DataQualityError", "It logs original_exc to the default logger before raising", "It sets DataQualityError.__cause__ = original_exc, preserving the full original traceback in Sentry/Datadog", "It retries the operation that raised original_exc"], correct: 2 },
+            { question: "Your pipeline catches DataQualityError and routes it to a DQ Slack channel, but a schema mismatch (SchemaEvolutionError) goes to the platform team. What hierarchy design enables this?", options: ["Both errors should extend builtins.ValueError for simplicity", "SchemaEvolutionError and DataQualityError both inherit PipelineError — callers choose catch granularity per their concern", "Use a single PipelineError with an error_type string field instead of subclasses", "Catch all errors as Exception and inspect the message string to route alerts"], correct: 1 },
+            { question: "A try block raises RuntimeError. The except block raises ValueError. The finally block calls cleanup(). Which statement is true?", options: ["finally runs only if the except block succeeds without raising", "cleanup() never runs because ValueError was raised inside except", "finally always runs — cleanup() executes, then ValueError propagates as the active exception", "The original RuntimeError is re-raised; ValueError is silently discarded"], correct: 2 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Build exception hierarchies — PipelineError → DataQualityError, SchemaEvolutionError</li>
+                <li>Use raise NewError(...) from original_exc to chain context</li>
+                <li>Structured JSON logging with bound fields (pipeline_id, run_id, stage)</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Catch bare except: or except Exception: without re-raising or logging specifically</li>
+                <li>Lose the original traceback with raise CustomError(str(e)) instead of raise ... from e</li>
+                <li>Use print() or unstructured log strings that aren't searchable in production observability tools</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-errors')) { await unmarkTopicComplete('py-errors'); onUnmark('py-errors') } else { await markTopicComplete('py-errors'); onComplete('py-errors') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-errors') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-errors') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1465,7 +2013,34 @@ log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</C
             <h1 className="topic-title">Async Programming & asyncio</h1>
             <p className="topic-desc">asyncio enables high-throughput I/O-bound pipelines  -  concurrent API calls, database queries, and file operations on a single thread. async/await, gather, aiohttp, and asyncpg are the core primitives.</p>
           </div>
-          <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body"><strong>Concurrency vs Parallelism:</strong> asyncio is single-threaded cooperative concurrency  -  ideal for I/O-bound work (network, DB). For CPU-bound work, use multiprocessing or concurrent.futures.ProcessPoolExecutor instead.</div></div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What's the difference between concurrency and parallelism in Python?"<br/>• "When would you use asyncio.gather vs asyncio.create_task?"<br/>• "Why can't you use requests inside an async function?"<br/>• "How do you handle backpressure in async pipelines?"<br/>• "What is the event loop and when does it block?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand that async is cooperative concurrency on one thread — ideal for I/O-bound work — or do they confuse it with multi-threading or assume it speeds up CPU-bound code?</div>
+          </div>
+
+          <p>In production, asyncio unlocks throughput for I/O-bound pipelines. The reason it matters is that network I/O (API calls, DB queries) spends 95% of its time waiting — synchronous code wastes that time doing nothing. With asyncio.gather, you fire 100 API requests concurrently; they all wait simultaneously on one thread. The event loop blocks the moment you call any sync-blocking code (requests.get, time.sleep) — use aiohttp and asyncpg instead. asyncio.Semaphore is the throttle valve — without it, 1000 concurrent requests will overwhelm an API or exhaust DB connection pools.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"asyncio is cooperative concurrency — one thread, tasks voluntarily yield at await points. It's not parallelism."</td></tr>
+              <tr><td>2</td><td>"asyncio.gather fires all coroutines concurrently — they all wait simultaneously. Sequential awaits waste I/O time."</td></tr>
+              <tr><td>3</td><td>"Semaphore limits concurrency — Semaphore(50) caps concurrent requests to 50, preventing API rate-limit or connection exhaustion."</td></tr>
+              <tr><td>4</td><td>"CPU-bound work? Use ProcessPoolExecutor via run_in_executor — async can offload CPU tasks without blocking the event loop."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Stripe:</strong> Async ingestion pipeline fetches from 200+ payment processors concurrently. asyncio.gather with Semaphore(50) enforces rate limits per processor. Reduced hourly ETL runtime from 4.2 minutes (sequential) to 18 seconds (concurrent).<br/><strong>Robinhood:</strong> Market data ingestion uses asyncpg connection pools — 20 concurrent DB writes vs sequential reduces latency from 800ms to under 60ms for end-of-day reconciliation batches.<br/><strong>Coinbase:</strong> Async streaming pipeline uses async generators to process WebSocket price feeds — yields records as they arrive rather than buffering everything, keeping memory flat at high throughput.</div>
+          </div>
+
           <AsyncDiagram />
           <AsyncAnimation />
           <CodeBlock lang="python">{`import asyncio
@@ -1595,11 +2170,40 @@ async def fetch_with_timeout(url: str) -> dict | None:
     except TimeoutError:
         logging.warning(f"Timed out fetching {url}")
         return None`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"async/await makes my code run in parallel across multiple CPUs"</td><td>"asyncio is single-threaded cooperative concurrency — tasks yield at await points. For parallelism I use multiprocessing or ProcessPoolExecutor"</td></tr>
+              <tr><td>"I use requests.get inside async functions"</td><td>"requests blocks the event loop — I use aiohttp or httpx[async]. Blocking calls freeze all concurrent tasks"</td></tr>
+              <tr><td>"asyncio.gather runs everything at once — no limits needed"</td><td>"Without Semaphore, 1000 concurrent requests overwhelm APIs and exhaust DB pools. I wrap gather with Semaphore(50) for throttling"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-async" questions={[
-            { question: "What does asyncio.gather() do?", options: ["Runs coroutines sequentially one by one", "Runs multiple coroutines concurrently on the event loop and waits for all to finish", "Creates a thread pool for async tasks", "Converts async functions to synchronous ones"], correct: 1 },
-            { question: "Why use asyncio.Semaphore when making concurrent API requests?", options: ["To make requests sequential", "To cap the number of concurrent requests  -  prevents overwhelming the API server with too many simultaneous connections", "To retry failed requests automatically", "To add authentication headers"], correct: 1 },
-            { question: "What is the difference between asyncio concurrency and multiprocessing?", options: ["asyncio uses multiple CPU cores; multiprocessing uses one", "asyncio is single-threaded cooperative concurrency for I/O-bound tasks; multiprocessing spawns separate processes for CPU-bound work", "asyncio is faster for all workloads", "multiprocessing is for I/O; asyncio is for CPU tasks"], correct: 1 },
+            { question: "You have 200 API endpoints to fetch. Which pattern gets all results fastest while respecting a rate limit of 50 concurrent requests?", options: ["for url in endpoints: result = await fetch(url)  # sequential", "asyncio.gather(*[fetch(url) for url in endpoints]) with no semaphore", "sem = asyncio.Semaphore(50); asyncio.gather(*[bounded_fetch(sem, url) for url in endpoints])", "threading.ThreadPoolExecutor(max_workers=200) with requests.get"], correct: 2 },
+            { question: "You call requests.get() inside an async function. What happens to your other concurrent tasks?", options: ["They continue running normally on other threads", "They are cancelled immediately", "The event loop blocks — all other coroutines freeze until requests.get() returns", "Python raises a RuntimeError automatically"], correct: 2 },
+            { question: "asyncio vs multiprocessing — which workload fits each correctly?", options: ["asyncio for CPU-bound (NumPy transforms); multiprocessing for network I/O", "Both work equally well for both CPU and I/O workloads", "asyncio for I/O-bound (API calls, DB queries); multiprocessing for CPU-bound (data transforms, ML inference)", "multiprocessing for I/O because it uses multiple threads"], correct: 2 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use asyncio.gather with Semaphore for bounded concurrent requests</li>
+                <li>Use aiohttp, httpx[async], asyncpg for async-native I/O libraries</li>
+                <li>Use run_in_executor to offload CPU-bound work without blocking the event loop</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Call blocking libraries (requests, time.sleep, open()) inside async functions</li>
+                <li>Assume async speeds up CPU-bound work — it only helps I/O-bound tasks</li>
+                <li>Use asyncio.gather without Semaphore on external APIs — you'll hit rate limits and connection limits</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-async')) { await unmarkTopicComplete('py-async'); onUnmark('py-async') } else { await markTopicComplete('py-async'); onComplete('py-async') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-async') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-async') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1609,6 +2213,34 @@ async def fetch_with_timeout(url: str) -> dict | None:
             <h1 className="topic-title">File I/O, pathlib, CSV, JSON, YAML, TOML & Config</h1>
             <p className="topic-desc">Data engineers read and write files constantly. pathlib provides modern OS-agnostic path handling. Parsing CSV, JSON, YAML, TOML, and .env files correctly is fundamental for building configurable, portable pipeline code.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you handle large files that don't fit in memory?"<br/>• "What's the difference between pathlib and os.path?"<br/>• "How would you read a gzipped JSONL file efficiently?"<br/>• "Where should pipeline configuration live — YAML, TOML, or env vars?"<br/>• "Why use Path('/data') / 'subdir' instead of string concatenation?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use pathlib fluently and process large files as streams rather than loading everything into memory — or do they concatenate paths as strings and read entire multi-GB files with read()?</div>
+          </div>
+
+          <p>In production, file I/O is about two things: correct path handling and memory-safe processing. The reason pathlib matters is that Path('/data') / 'subdir' / filename.with_suffix('.parquet') is OS-agnostic, composable, and IDE-completable. String concatenation breaks on Windows, loses context, and is error-prone. For large files, streaming is non-negotiable — read line-by-line or in chunks. A 50GB JSONL log file read with f.read() crashes your pod; read with for line in f processes it in constant memory. YAML and TOML for config, dotenv for secrets — never hardcode either.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"I use pathlib.Path — composable, OS-agnostic, with .stem, .suffix, .parent, .glob() built-in."</td></tr>
+              <tr><td>2</td><td>"For large files: stream line-by-line. for line in gzip.open(path): — constant memory regardless of file size."</td></tr>
+              <tr><td>3</td><td>"Config hierarchy: YAML/TOML for pipeline config, .env/Vault for secrets, never hardcode either."</td></tr>
+              <tr><td>4</td><td>"Atomic writes: write to temp file, then Path.replace(dest) — no partial writes visible to downstream readers."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Spotify:</strong> Event log pipelines process 50GB+ JSONL files streamed line-by-line with gzip.open. Memory footprint stays under 50MB regardless of file size — pod OOMKill incidents dropped 90% after migrating from json.load(f) to streaming.<br/><strong>LinkedIn:</strong> pathlib.Path.glob('**/*.parquet') discovers daily partition files across date-sharded S3 mounts. Path.stem / .suffix extraction replaces fragile regex-based filename parsing.<br/><strong>Databricks:</strong> Pipeline configs stored in TOML (pyproject-compatible); secrets injected via environment variables at runtime. Separate config from secrets — enables config in Git, secrets in Vault.</div>
+          </div>
+
           <FileIODiagram />
           <FileIOAnimation />
           <CodeBlock lang="python">{`from pathlib import Path
@@ -1734,11 +2366,40 @@ def atomic_write_json(data: dict, path: Path) -> None:
     except Exception:
         tmp_path.unlink(missing_ok=True)
         raise`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use os.path.join() to build paths"</td><td>"I use pathlib.Path — the / operator composes paths, .glob() discovers files, .stem/.suffix parse names. OS-agnostic and no string bugs"</td></tr>
+              <tr><td>"I open the file and call f.read() to load it"</td><td>"For files over 100MB I stream line-by-line — for line in gzip.open(path): — constant memory regardless of file size"</td></tr>
+              <tr><td>"I put config values in environment variables directly in the script"</td><td>"Config in YAML/TOML (version-controlled), secrets in .env or Vault (gitignored). Never hardcode — separation enables environment-specific deployments"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-io" questions={[
-            { question: "Why use yaml.safe_load() instead of yaml.load() for config files?", options: ["safe_load is faster", "yaml.load() can execute arbitrary Python code embedded in YAML; safe_load restricts to safe types only", "safe_load supports more YAML features", "yaml.load() is deprecated"], correct: 1 },
-            { question: "What advantage does pathlib.Path have over os.path string manipulation?", options: ["pathlib is faster than os.path", "pathlib provides an object-oriented API with / operator for joining, .stem/.suffix/.parent properties, and cross-platform path handling", "pathlib supports cloud paths natively", "pathlib paths are immutable"], correct: 1 },
-            { question: "Why use load_dotenv() for environment variables in pipelines?", options: ["It encrypts environment variables", "It loads key=value pairs from a .env file into os.environ, enabling local development without setting system env vars  -  the .env file is gitignored", "It validates environment variable types", "It synchronizes env vars across machines"], correct: 1 },
+            { question: "Your pipeline reads a 40GB gzipped JSONL file. Which approach is memory-safe?", options: ["with gzip.open(path) as f: data = json.load(f)  # load all at once", "data = Path(path).read_bytes()  # read raw bytes", "with gzip.open(path, 'rt') as f: for line in f: record = json.loads(line)  # stream line-by-line", "pd.read_json(path, compression='gzip')  # pandas handles it"], correct: 2 },
+            { question: "Why does yaml.safe_load() exist as a separate function from yaml.load()?", options: ["safe_load is 3x faster due to a C parser", "yaml.load() can deserialize arbitrary Python objects from YAML — an attacker can embed os.system('rm -rf /') in a config file", "safe_load supports YAML 1.2 spec; yaml.load() only supports YAML 1.1", "yaml.load() is deprecated in PyYAML 6+"], correct: 1 },
+            { question: "Path('/data/raw') / 'events' / f'{date}.csv.gz' — what does the / operator return?", options: ["A string '/data/raw/events/2024-01-15.csv.gz'", "A pathlib.Path object with OS-appropriate separators, composable further and usable directly in open()", "A URL-encoded path safe for HTTP requests", "It raises TypeError — Path objects don't support division"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use pathlib.Path for all file path operations — composable, OS-agnostic</li>
+                <li>Stream large files line-by-line to keep memory footprint constant</li>
+                <li>Atomic writes: write to temp, then Path.replace(dest) for safe handoff</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Load entire large files into memory with f.read() or json.load(f)</li>
+                <li>Use yaml.load() without Loader= argument — arbitrary code execution risk</li>
+                <li>Hardcode paths or secrets in source code — use config files and env vars</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-io')) { await unmarkTopicComplete('py-io'); onUnmark('py-io') } else { await markTopicComplete('py-io'); onComplete('py-io') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-io') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-io') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1748,6 +2409,34 @@ def atomic_write_json(data: dict, path: Path) -> None:
             <h1 className="topic-title">Regular Expressions (re module)</h1>
             <p className="topic-desc">Regular expressions are essential for parsing log files, extracting data from unstructured text, validating formats, and transforming messy strings in ETL pipelines.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you extract structured data from unstructured log files?"<br/>• "What's the difference between re.match and re.search?"<br/>• "Explain greedy vs non-greedy matching with an example"<br/>• "How do named capture groups improve regex maintainability?"<br/>• "When would you compile a regex vs use re.findall directly?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate compile regexes outside loops, use named groups for readability, and understand greedy vs non-greedy — or do they write unmaintainable one-liners that break on edge cases?</div>
+          </div>
+
+          <p>In production, regex is a parsing tool — not a parsing strategy for everything. The reason re.compile matters is performance: compiling once and reusing in a loop saves re-parsing the pattern on every iteration. Named groups ((?P&lt;name&gt;...)) transform a match object into a readable dict — critical when you're parsing 15-field log lines. Greedy vs non-greedy is a common bug: r"&lt;.*&gt;" matches from the first &lt; to the last &gt; in a line; r"&lt;.*?&gt;" stops at the first &gt;. For complex parsing (nested structures, context-dependent rules), use a proper parser like pyparsing or lark.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"re.compile() outside the loop — compiles the pattern once, reuses the compiled object in every iteration."</td></tr>
+              <tr><td>2</td><td>"Named groups: (?P&lt;bucket&gt;[^/]+) — m.groupdict() gives you a readable dict instead of m.group(2)."</td></tr>
+              <tr><td>3</td><td>"Non-greedy .*? — stops at the first match. Greedy .* — consumes as much as possible, causes over-matching bugs."</td></tr>
+              <tr><td>4</td><td>"re.search anywhere in string; re.match only at the start; re.fullmatch requires the entire string to match."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Cloudflare:</strong> Log parsing pipeline processes 50M+ log lines/hour with compiled regexes. Named groups parse 12 fields per line into structured records — pattern compiled once at module load, reused across all workers. Switching from re.findall(pattern_str, ...) to compiled.findall() reduced CPU by 18%.<br/><strong>Palantir:</strong> Data quality pipeline validates 40+ field formats (email, phone, tax ID, date) with compiled regex validators. Pattern objects are module-level constants — no recompilation in hot paths.<br/><strong>GitHub:</strong> Webhook log parser extracts repo, event type, and user from structured log lines using named capture groups. m.groupdict() feeds directly into Datadog metrics tags without positional index bugs.</div>
+          </div>
+
           <RegexDiagram />
           <RegexAnimation />
           <CodeBlock lang="python">{`import re
@@ -1833,11 +2522,40 @@ def validate_table_name(name: str) -> str:
     if not TABLE_NAME_RE.match(name):
         raise ValueError(f"Invalid table name: {name!r}")
     return name`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I write re.findall(r'pattern', text) inline each time"</td><td>"I compile module-level constants: EMAIL_RE = re.compile(r'...'). No re-parsing in hot paths, and the constant name documents intent"</td></tr>
+              <tr><td>"I use .* to match anything between two delimiters"</td><td>"Greedy .* over-matches — it extends to the last delimiter. I use .*? (non-greedy) to stop at the first match"</td></tr>
+              <tr><td>"m.group(1), m.group(2) extracts the fields"</td><td>"Named groups (?P&lt;name&gt;...) — m.groupdict() returns a readable dict. No off-by-one index bugs when fields reorder"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-regex" questions={[
-            { question: "What is the difference between re.match() and re.search()?", options: ["They are identical", "re.match() only matches at the beginning of the string; re.search() scans the entire string for a match", "re.search() is faster than re.match()", "re.match() returns all matches; re.search() returns the first only"], correct: 1 },
-            { question: "Why use re.compile() when applying a pattern inside a loop?", options: ["compile() makes the pattern case-insensitive", "Compiled patterns are parsed once and reused  -  avoids re-parsing the regex string on every iteration", "compile() is required for group extraction", "compile() enables multiline matching"], correct: 1 },
-            { question: "What does the non-greedy quantifier *? do differently from *?", options: ["*? matches zero occurrences; * matches one or more", "*? matches as few characters as possible; * is greedy and matches as many as possible", "*? is case-insensitive; * is case-sensitive", "They are identical"], correct: 1 },
+            { question: "Pattern: r'&lt;.*&gt;' applied to '&lt;a href=\"x\"&gt;click&lt;/a&gt;'. What does it match?", options: ["'&lt;a href=\"x\"&gt;' only — stops at first closing &gt;", "'&lt;a href=\"x\"&gt;click&lt;/a&gt;' — greedy .* consumes everything up to the last &gt;", "Nothing — the pattern is invalid", "'click' — the content between tags"], correct: 1 },
+            { question: "You parse 10M log lines in a loop. Which regex approach has lowest CPU overhead?", options: ["re.findall(r'pattern', line) — Python caches the last 512 compiled patterns automatically", "pattern = re.compile(r'pattern') at module level; pattern.findall(line) in the loop — compiled once, reused 10M times", "re.fullmatch(r'pattern', line) — fullmatch is faster than findall", "Compile inside the loop: re.compile(r'pattern').findall(line) — fresh compile is cleaner"], correct: 1 },
+            { question: "re.match(r'\\d+', 'abc123') vs re.search(r'\\d+', 'abc123') — what does each return?", options: ["Both return a match object for '123'", "re.match returns None (digits not at start); re.search returns a match for '123' (found anywhere in string)", "re.match returns '123'; re.search returns None", "Both return None — digits appear after letters"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Compile regexes at module level as constants — reused across all calls</li>
+                <li>Use named groups (?P&lt;field&gt;...) for readable, maintainable extraction</li>
+                <li>Use non-greedy .*? for matching between delimiters</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Compile regexes inside loops — wasteful recompilation on every iteration</li>
+                <li>Use .* (greedy) when you mean .*? (non-greedy) — causes over-matching bugs</li>
+                <li>Use regex for HTML/XML parsing — use BeautifulSoup or lxml instead</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-regex')) { await unmarkTopicComplete('py-regex'); onUnmark('py-regex') } else { await markTopicComplete('py-regex'); onComplete('py-regex') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-regex') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-regex') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1847,6 +2565,34 @@ def validate_table_name(name: str) -> str:
             <h1 className="topic-title">Testing with pytest  -  fixtures, parametrize, mocking</h1>
             <p className="topic-desc">Quality data pipelines need automated tests. pytest fixtures provide reusable test setup, parametrize covers edge cases efficiently, and unittest.mock patches external dependencies so tests run without real DBs or APIs.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you test a pipeline that writes to a production database?"<br/>• "What's the difference between a fixture and a helper function in pytest?"<br/>• "How would you test 20 edge cases without writing 20 test functions?"<br/>• "What does @patch do and where should the patch target point?"<br/>• "When would you use a session-scoped fixture vs function-scoped?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate isolate external dependencies with mocks, use parametrize for comprehensive coverage, and structure fixtures to minimize test coupling — or do they write integration tests that require a live database to run?</div>
+          </div>
+
+          <p>In production, pipeline tests must run in CI without real databases, APIs, or cloud storage. The reason mocking matters is that @patch replaces the real dependency at call time — your pipeline function calls s3_client.put_object, the test intercepts that call and verifies it was called with the right arguments. Fixtures are dependency injection for tests: session-scoped fixtures (real DB connections, expensive setups) are created once per test session; function-scoped fixtures reset for each test, preventing state leakage. @pytest.mark.parametrize is how you test 20 edge cases (empty, null, duplicate, wrong type) with one test function.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Fixtures inject reusable setup — @pytest.fixture(scope='session') for expensive setup (DB conn); default function scope resets per test."</td></tr>
+              <tr><td>2</td><td>"@pytest.mark.parametrize — one test function, 20 input/expected pairs. Tests all edge cases without 20 duplicated functions."</td></tr>
+              <tr><td>3</td><td>"@patch('pipeline.load.boto3.client') patches the boto3 import in the module under test. Patch where it's used, not where it's defined."</td></tr>
+              <tr><td>4</td><td>"mock.assert_called_once_with(Bucket='data-lake', Key=expected_key) — verifies the function was called with correct arguments, not just called."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Airbnb:</strong> Data pipeline test suite runs 2,400 tests in 90 seconds using session-scoped test DB containers (pytest-docker). Zero real AWS calls — all S3/Glue interactions mocked. CI passes without cloud credentials.<br/><strong>DoorDash:</strong> @pytest.mark.parametrize tests order validation logic across 35 edge cases (null address, past timestamp, zero amount, duplicate order_id). Single parametrized test replaced 35 separate test functions.<br/><strong>Stripe:</strong> Payment pipeline mocks are strict — MagicMock(spec=boto3.client('s3')) ensures any unexpected method call raises AttributeError. Prevents tests from accidentally passing when code calls wrong methods.</div>
+          </div>
+
           <TestingDiagram />
           <TestingAnimation />
           <CodeBlock lang="python">{`# tests/test_pipeline.py
@@ -1959,11 +2705,40 @@ async def test_async_pipeline():
 
 # conftest.py - shared fixtures across test files
 # (place in tests/ directory)`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I test by running the pipeline and checking the output manually"</td><td>"Each transform function has a parametrized test covering happy path, empty input, nulls, duplicates, and type errors — runs in CI with no external dependencies"</td></tr>
+              <tr><td>"I patch the function where it's defined: @patch('boto3.client')"</td><td>"Patch where it's imported and used: @patch('pipeline.load.boto3.client') — patches the name in the module under test, not the source"</td></tr>
+              <tr><td>"I create a new DB with test data before each test"</td><td>"Session-scoped fixture creates the test DB once per test run; function-scoped fixtures insert/rollback per test. Expensive setup amortized across the suite"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-testing" questions={[
-            { question: "What is a pytest fixture and why use it?", options: ["A hard-coded test value", "A reusable setup/teardown function that pytest injects into test functions  -  enables DRY test code and proper resource cleanup", "A test assertion helper", "A way to skip tests conditionally"], correct: 1 },
-            { question: "What does @pytest.mark.parametrize do?", options: ["Marks a test as expected to fail", "Runs the same test function with multiple different input/output combinations  -  reduces duplicate test code", "Skips the test in CI", "Runs tests in parallel"], correct: 1 },
-            { question: "When mocking with unittest.mock.patch, what does the mock replace?", options: ["The test function itself", "The named object in the module under test for the duration of the test, then restores the original", "All functions in the test file", "Only the return value of the patched function"], correct: 1 },
+            { question: "@patch('pipeline.loader.boto3.client') vs @patch('boto3.client') — which is correct and why?", options: ["@patch('boto3.client') — always patch at the source module where boto3 lives", "@patch('pipeline.loader.boto3.client') — patch where the name is used (imported into pipeline.loader), not where it's defined", "Both are equivalent — Python resolves them to the same object", "@patch is unnecessary — MagicMock() directly replaces boto3 in the test"], correct: 1 },
+            { question: "You need to test validate_price() with inputs: -1, 0, 0.01, 999.99, 1000, None, 'abc'. What's the most maintainable approach?", options: ["Write 7 separate test functions, one per input", "@pytest.mark.parametrize('price,expected', [(-1, False), (0, False), ...]) — one test function, 7 parameterized cases", "Use a for loop inside the test function calling validate_price()", "Write one test with assert all([validate_price(x) == expected for x, expected in cases])"], correct: 1 },
+            { question: "A session-scoped fixture vs a function-scoped fixture — which creates its resource once per test session vs once per test function?", options: ["function-scoped creates once per session; session-scoped resets per function", "Both create resources once and never clean up", "session-scoped creates the resource once for the entire test run; function-scoped creates/tears down for each individual test", "scope has no effect — pytest always creates a new fixture instance per test"], correct: 2 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Patch at the import site in the module under test, not at the definition site</li>
+                <li>Use @pytest.mark.parametrize for edge cases — one function, many inputs</li>
+                <li>Use session-scoped fixtures for expensive setup (DB containers, S3 mocks)</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Write tests that require real database connections or live API calls to pass</li>
+                <li>Use MagicMock without spec= — spec ensures only real methods/attributes are called</li>
+                <li>Skip testing edge cases (null, empty, wrong type) — pipelines break on real-world messy data</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-testing')) { await unmarkTopicComplete('py-testing'); onUnmark('py-testing') } else { await markTopicComplete('py-testing'); onComplete('py-testing') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-testing') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-testing') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1973,6 +2748,34 @@ async def test_async_pipeline():
             <h1 className="topic-title">Package Management  -  pip, venv, poetry, pyproject.toml</h1>
             <p className="topic-desc">Reproducible Python environments are critical for data pipelines. Understanding virtual environments, pyproject.toml, poetry, and conda prevents the "works on my machine" problem and enables reliable CI/CD deployments.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you ensure reproducible builds across dev, staging, and production?"<br/>• "What's the difference between poetry.lock and requirements.txt?"<br/>• "Why pin exact package versions in production pipelines?"<br/>• "What problem does pyproject.toml solve over setup.py?"<br/>• "How would you manage Python version differences across team members?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use lockfiles for reproducibility and separate dev from prod dependencies — or do they pip install randomly with no version pinning and wonder why prod breaks when a package releases a minor update?</div>
+          </div>
+
+          <p>In production, package management is a reliability problem. The reason exact version pinning matters is that pandas==2.1.4 installs the same bytes everywhere; pandas&gt;=2.0 installs 2.2.0 in March and breaks your pipeline when 2.2 changes a default. poetry.lock captures the full dependency graph (transitive dependencies included) — poetry install reproduces the exact environment byte-for-byte. pyproject.toml replaces setup.py, setup.cfg, and requirements.txt with one standard file (PEP 518/621). For Docker deployments: copy pyproject.toml + poetry.lock first, run poetry install --only=main, then copy source — this layer caches the install step unless dependencies change.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Virtual environment per project — python -m venv .venv isolates dependencies. Never install into the system Python."</td></tr>
+              <tr><td>2</td><td>"Pin exact versions in production: pandas==2.1.4 not pandas&gt;=2.0. Minor releases break pipelines on silent behavior changes."</td></tr>
+              <tr><td>3</td><td>"poetry.lock — full transitive dependency graph pinned. poetry install --only=main for production; --with=dev for development."</td></tr>
+              <tr><td>4</td><td>"pyproject.toml is the single config file: project metadata, dependencies, tool config (mypy, ruff, pytest) all in one place."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Netflix:</strong> All Python pipeline Docker images built from poetry.lock — same transitive dependency graph in every environment. Eliminated "works on my machine" incidents — 34 production breakages in 2022 from unpinned deps, 2 in 2023 after enforcing lockfiles.<br/><strong>Lyft:</strong> pyproject.toml with poetry groups: [tool.poetry.group.dev.dependencies] includes pytest, mypy, ruff. Production Docker images install --only=main — dev tools never ship to prod.<br/><strong>Snowflake:</strong> pip-compile generates a pinned requirements.txt from abstract requirements.in. requirements.in specifies ranges (pandas&gt;=2.0); pip-compile resolves and pins exact versions. Both files are committed to Git.</div>
+          </div>
+
           <PackagesDiagram />
           <PackagesAnimation />
           <CodeBlock lang="bash">{`# Virtual environments  -  isolate project dependencies
@@ -2071,11 +2874,40 @@ conda env export > environment.yml
 # RUN pip install --no-cache-dir -r requirements.txt
 # COPY . .
 # CMD ["python", "pipeline.py"]`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I install packages globally and use pip install in my Dockerfile"</td><td>"Virtual environment per project, lockfile committed to Git. Docker: COPY pyproject.toml poetry.lock → poetry install --only=main → COPY src/ — caches the install layer"</td></tr>
+              <tr><td>"I add pandas to requirements.txt as pandas&gt;=1.0"</td><td>"Exact pin in production: pandas==2.1.4. Range specs mean different versions install on different machines — silent behavior changes break pipelines"</td></tr>
+              <tr><td>"requirements.txt captures everything I pip installed"</td><td>"poetry.lock captures the full transitive graph — every dependency of every dependency, pinned. requirements.txt only captures what you explicitly installed"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-packages" questions={[
-            { question: "What is the purpose of a virtual environment in Python?", options: ["To run Python faster", "To isolate project dependencies from the system Python and other projects  -  prevents version conflicts", "To enable async programming", "To compile Python to bytecode"], correct: 1 },
-            { question: "What does 'pip freeze > requirements.txt' do and when should you use it?", options: ["Installs packages from requirements.txt", "Saves a snapshot of all currently installed packages with exact versions  -  use before committing to pin a reproducible environment", "Updates all packages to latest versions", "Checks for conflicting dependencies"], correct: 1 },
-            { question: "What advantage does poetry have over plain pip + requirements.txt?", options: ["poetry is faster at installing packages", "poetry manages a lock file with transitive dependencies, handles virtual environments automatically, and separates dev/prod dependency groups in pyproject.toml", "poetry supports conda packages", "poetry automatically publishes to PyPI"], correct: 1 },
+            { question: "Your pipeline works locally with pandas 2.1.4 but breaks in production. The Dockerfile has 'RUN pip install pandas>=2.0'. What happened?", options: ["Docker installs a different Python version by default", "pandas>=2.0 installed pandas 2.2.0 in production when it released — a minor version with a behavior change that broke your code", "pip install in Docker always fails without --no-cache-dir", "The pandas version isn't the issue — it must be a Python path problem"], correct: 1 },
+            { question: "What does poetry.lock contain that requirements.txt from 'pip freeze' doesn't?", options: ["poetry.lock is faster to parse than requirements.txt", "poetry.lock pins the full transitive dependency graph with hashes for verification; pip freeze only captures directly installed packages, missing indirect dependencies", "poetry.lock includes development dependencies; pip freeze does not", "They contain identical information — poetry just formats it differently"], correct: 1 },
+            { question: "pyproject.toml replaces which files from the old Python packaging ecosystem?", options: ["Only setup.py", "setup.py, setup.cfg, MANIFEST.in, and requirements.txt — one standard file for project metadata, dependencies, and tool config (PEP 518/621)", "Only requirements.txt and setup.cfg", "Only Makefile and tox.ini"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Pin exact versions in production — pandas==2.1.4 not pandas&gt;=2.0</li>
+                <li>Commit poetry.lock or requirements.txt to Git for reproducible builds</li>
+                <li>Separate dev deps from prod deps — don't ship pytest and mypy to production</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Install packages globally — always use a virtual environment per project</li>
+                <li>Use range specifiers (&gt;=, ~=) for production dependencies without testing the range</li>
+                <li>Ignore transitive dependencies — a minor update to a subdependency can break your pipeline</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-packages')) { await unmarkTopicComplete('py-packages'); onUnmark('py-packages') } else { await markTopicComplete('py-packages'); onComplete('py-packages') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-packages') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-packages') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2085,6 +2917,34 @@ conda env export > environment.yml
             <h1 className="topic-title">pandas Deep Dive for Data Engineering</h1>
             <p className="topic-desc">pandas is the workhorse of Python-based data pipelines. Mastering dtype optimization, vectorized operations, groupby, merge, pivot_table, memory management, and chunked reading is essential for handling real-world datasets efficiently.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "A pandas operation on a 5GB CSV is running out of memory. How do you fix it?"<br/>• "Why is .apply() with a lambda slow compared to vectorized operations?"<br/>• "What's the difference between merge and join in pandas?"<br/>• "How do you reduce a DataFrame's memory footprint without changing data?"<br/>• "When would you use category dtype?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate reach for vectorized operations and dtype optimization by default — or do they write Python for-loops over DataFrame rows and wonder why their pipeline takes 2 hours on a 1M-row dataset?</div>
+          </div>
+
+          <p>In production, pandas performance is determined by three decisions made before you write a single transform: dtype selection, operation choice, and whether you read the full file or chunk it. The reason category dtype matters is that a column with 5 unique values stored as object uses the full string for every row — as category it's a 4-byte integer with a 5-entry lookup table. .apply() is a Python for-loop in disguise — it's 10-100x slower than vectorized column operations that run in C. For files larger than available RAM: pd.read_csv(chunksize=100_000) processes 100K rows at a time.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Specify dtypes explicitly on read: event_type as category saves 90% memory vs object. Never let pandas infer dtypes on large files."</td></tr>
+              <tr><td>2</td><td>"Vectorized arithmetic: df['rev'] = df['price'] * df['qty'] runs in C. .apply(lambda r: r.price*r.qty) is a Python loop — 100x slower."</td></tr>
+              <tr><td>3</td><td>"Files larger than RAM: pd.read_csv(chunksize=100_000) — process, aggregate each chunk, concat results."</td></tr>
+              <tr><td>4</td><td>"merge() is SQL JOIN — specify how='left'/'inner'/'right', validate='one_to_many' to catch unexpected duplicates."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Shopify:</strong> Order analytics pipeline reduced memory from 18GB to 4GB by switching 3 string columns to category dtype and 4 int64 columns to int32. Same data, 78% less memory, fits in a standard 8GB pod.<br/><strong>Instacart:</strong> Replaced .apply(lambda) in 12 pipeline transforms with vectorized operations. Daily pipeline runtime dropped from 3.2 hours to 11 minutes — vectorized pandas uses NumPy's SIMD instructions, .apply() uses a Python interpreter loop.<br/><strong>Wayfair:</strong> 50GB daily events file processed with chunksize=500_000 — each chunk filtered and aggregated, results concatenated. Eliminated OOMKill pod restarts that plagued the previous approach.</div>
+          </div>
+
           <PandasDiagram />
           <PandasAnimation />
           <PythonMemoryAnimation />
@@ -2187,11 +3047,40 @@ df["user_id"]  = pd.to_numeric(df["user_id"], downcast="integer")
 
 # Write parquet with compression
 df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=False)`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use df.apply(lambda row: row['price'] * row['qty'], axis=1)"</td><td>"Vectorized: df['rev'] = df['price'] * df['qty']. .apply() is a Python for-loop — 100x slower than NumPy C operations for arithmetic"</td></tr>
+              <tr><td>"I read the whole file and filter after loading"</td><td>{"pd.read_csv(path, usecols=['user_id','amount'], dtype={'amount':'float32'}) — only load what you need. usecols + dtypes reduce memory 70-80% before a single transform"}</td></tr>
+              <tr><td>"object dtype works fine for string columns"</td><td>"category dtype for low-cardinality strings (event_type, region, status). 90% memory reduction — stores ints + 5-entry lookup instead of full strings for every row"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-pandas" questions={[
-            { question: "Why use dtype='category' for a column like event_type in pandas?", options: ["It enables sorting", "It stores unique string values once and uses integer codes internally  -  reduces memory from O(n strings) to O(unique strings + n ints)", "It speeds up merge operations", "It enables SQL-style queries"], correct: 1 },
-            { question: "What is the key reason to avoid df.apply(lambda row: ..., axis=1) for arithmetic?", options: ["apply() has a bug with lambda functions", "apply() runs a Python function per row in a Python loop  -  vectorized pandas/numpy ops run in C and are 10-100x faster", "apply() doesn't support arithmetic", "apply() produces incorrect results with float columns"], correct: 1 },
-            { question: "What does pd.read_csv(path, chunksize=100_000) return?", options: ["A DataFrame with the first 100,000 rows", "A TextFileReader iterator that yields DataFrames of 100,000 rows at a time  -  enables processing files larger than RAM", "A list of 100,000 DataFrames", "An error if the file has more than 100,000 rows"], correct: 1 },
+            { question: "A 5GB events CSV has an event_type column with 8 unique values across 50M rows. What dtype reduces its memory footprint most?", options: ["str — Python native string type is most efficient", "object — pandas default for strings, optimized for arbitrary text", "category — stores 8 unique strings once + an integer code per row vs full string per row", "bytes — binary encoding of strings"], correct: 2 },
+            { question: "df.apply(lambda row: row['price'] * row['qty'], axis=1) vs df['price'] * df['qty'] — what's the performance difference?", options: ["They're identical — pandas optimizes apply() automatically", "apply() is 2-3x faster because it uses multiprocessing", "Vectorized multiplication runs in C via NumPy; apply() runs a Python interpreter loop per row — 10-100x slower for arithmetic", "apply() with axis=1 is faster; apply() with axis=0 is slower"], correct: 2 },
+            { question: "pd.merge(orders, customers, on='customer_id', how='left', validate='m:1') — what does validate='m:1' check?", options: ["That the merge key is of type int64 on both sides", "That each key in orders maps to at most one row in customers — raises MergeError if customers has duplicate customer_ids", "That the result has m times as many rows as customers", "That both DataFrames have the same number of columns"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Specify dtypes explicitly on read — category for low-cardinality strings, int32 for IDs</li>
+                <li>Use vectorized column operations for arithmetic — avoid .apply() with Python lambdas</li>
+                <li>Use chunksize for files larger than available RAM</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Let pandas infer dtypes on large files — inference reads the file twice and often guesses wrong</li>
+                <li>Use .apply(lambda row: ..., axis=1) for arithmetic — it's a Python loop in disguise</li>
+                <li>Load 50GB files fully into memory — use chunksize or switch to Polars/DuckDB</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-pandas')) { await unmarkTopicComplete('py-pandas'); onUnmark('py-pandas') } else { await markTopicComplete('py-pandas'); onComplete('py-pandas') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-pandas') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-pandas') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2201,6 +3090,34 @@ df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=Fa
             <h1 className="topic-title">Database Connections  -  psycopg2, SQLAlchemy, Connection Pooling</h1>
             <p className="topic-desc">Proper database connection management prevents connection leaks, ensures transactional integrity, and maximizes throughput. psycopg2 for direct Postgres, SQLAlchemy for ORM/abstraction, and connection pooling for high-concurrency workloads.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you prevent database connection leaks in a long-running pipeline?"<br/>• "What's the difference between execute() and execute_values() for bulk inserts?"<br/>• "How does connection pooling work and when do you need it?"<br/>• "What happens if you forget to commit a transaction in psycopg2?"<br/>• "When would you choose psycopg2 directly vs SQLAlchemy?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate manage connections with context managers, use bulk insert APIs, and understand connection pooling — or do they open connections per row, use executemany() for 100K records, and leave connections open on exceptions?</div>
+          </div>
+
+          <p>In production, database connections are expensive resources. The reason context managers matter is deterministic cleanup: the connection closes whether the operation succeeds or fails, even if an exception bypasses your cleanup code. execute_values() batches all rows into a single round-trip; executemany() sends one INSERT per row — for 100K records that's 100K round trips vs 1. Connection pools (psycopg2.pool.ThreadedConnectionPool) maintain a fixed pool of reusable connections — critical when your pipeline runs 20 concurrent workers, each needing a DB connection.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Context manager for connections — commit on success, rollback on exception, close in finally. No connection leaks."</td></tr>
+              <tr><td>2</td><td>"execute_values() for bulk inserts — one round trip for all rows. executemany() is one INSERT per row — 100x slower for large batches."</td></tr>
+              <tr><td>3</td><td>"ON CONFLICT DO UPDATE for upserts — idempotent loads. Run the pipeline twice on the same data with no duplicates."</td></tr>
+              <tr><td>4</td><td>"Connection pool for concurrent workers: ThreadedConnectionPool(minconn=2, maxconn=10) — acquire/release connections, never exhaust Postgres's limit."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Square:</strong> Payment reconciliation pipeline uses execute_values() to bulk-insert 500K records in 3 seconds vs 8 minutes with executemany(). Single round-trip: Postgres receives one 40MB INSERT statement vs 500K individual statements.<br/><strong>Twilio:</strong> Connection pool with maxconn=20 serves 50 concurrent pipeline workers — pool blocks when exhausted rather than opening new connections and exceeding Postgres's max_connections=100 limit.<br/><strong>PagerDuty:</strong> All pipeline inserts use ON CONFLICT DO UPDATE — pipelines are retried on failure with identical data. Idempotent writes mean 0 duplicate records despite retries, vs 10,000+ duplicates with plain INSERT.</div>
+          </div>
+
           <DBConnectionDiagram />
           <DBConnectionAnimation />
           <CodeBlock lang="python">{`import psycopg2
@@ -2318,11 +3235,40 @@ def run_upsert(records: list[dict], table: str) -> int:
     with engine.begin() as conn:   # engine.begin() = auto-commit transaction
         result = conn.execute(sql, records)
         return result.rowcount`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use conn = psycopg2.connect() and close it in a try/finally"</td><td>"Context manager: @contextmanager def get_connection() — commits on success, rollbacks on exception, closes in finally. No way to leak a connection"</td></tr>
+              <tr><td>"I use executemany() to insert a list of records"</td><td>"execute_values() sends all rows in a single round trip. executemany() is one INSERT per row — for 100K records that's 100K network round trips vs 1"</td></tr>
+              <tr><td>{"I build SQL queries with f-strings: f'SELECT * FROM {table}'"}</td><td>"SQL injection vulnerability. Parameterized queries: text('SELECT * FROM events WHERE user_id = :uid').bindparams(uid=user_id). User input never touches the SQL string"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-db" questions={[
-            { question: "What is the advantage of psycopg2.extras.execute_values over executemany?", options: ["execute_values is the standard API; executemany is deprecated", "execute_values sends all rows in one or few SQL statements; executemany sends one statement per row  -  execute_values is typically 10-100x faster for bulk loads", "execute_values supports transactions; executemany does not", "execute_values works with any database; executemany is PostgreSQL-only"], correct: 1 },
-            { question: "What does pool_pre_ping=True do in SQLAlchemy?", options: ["Pings the DB to measure latency before each query", "Tests each connection for liveness before checking it out from the pool  -  prevents 'connection already closed' errors after network drops", "Limits the number of connections to the pool size", "Enables connection compression"], correct: 1 },
-            { question: "Why use parameterized queries (text() with :param) instead of string formatting for SQL?", options: ["Parameterized queries are faster", "String formatting creates SQL injection vulnerabilities  -  parameterized queries safely escape user input", "Parameterized queries support more SQL features", "String formatting doesn't work with SQLAlchemy"], correct: 1 },
+            { question: "execute_values(cur, sql, [(r1), (r2), ...]) vs executemany(cur, sql, [(r1), (r2), ...]) — what's the throughput difference for 100K rows?", options: ["executemany is faster — it uses psycopg2's C extension for batch execution", "execute_values sends all rows in one SQL statement; executemany sends 100K individual statements — execute_values is typically 50-100x faster for large batches", "They have identical performance — both use server-side prepared statements", "execute_values only works with COPY command, not INSERT"], correct: 1 },
+            { question: "Your pipeline opens a psycopg2 connection at startup and never closes it. A network blip drops the connection after 4 hours. What happens to subsequent pipeline runs?", options: ["psycopg2 automatically reconnects — it detects the dead connection and creates a new one", "The pipeline fails with 'connection is closed' errors on every subsequent query until the process restarts", "Postgres sends a keepalive that restores the connection automatically", "The cursor retries the last failed query up to 3 times"], correct: 1 },
+            { question: "When should you choose raw psycopg2 over SQLAlchemy Core for a data pipeline?", options: ["Always use SQLAlchemy — it's the standard and psycopg2 is deprecated", "Raw psycopg2 when you need maximum control and performance for bulk loads (execute_values, COPY); SQLAlchemy when you need cross-database portability, ORM relationships, or connection pool management", "psycopg2 only supports Python 2; use SQLAlchemy for Python 3", "SQLAlchemy Core is always slower than psycopg2 and should be avoided"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use context managers for connections — guaranteed commit/rollback/close</li>
+                <li>Use execute_values() or COPY for bulk inserts — single round trip for all rows</li>
+                <li>Use parameterized queries — never build SQL with string formatting</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Keep long-lived connections open without keepalive or reconnection logic</li>
+                <li>Use executemany() for bulk inserts at scale — O(n) round trips</li>
+                <li>Build SQL with f-strings or .format() — SQL injection risk and no type safety</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-db')) { await unmarkTopicComplete('py-db'); onUnmark('py-db') } else { await markTopicComplete('py-db'); onComplete('py-db') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-db') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-db') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2332,6 +3278,34 @@ def run_upsert(records: list[dict], table: str) -> int:
             <h1 className="topic-title">HTTP Clients  -  requests, httpx, retry, pagination, rate limiting</h1>
             <p className="topic-desc">Data engineers constantly pull data from REST APIs. Handling pagination, rate limits, OAuth, retry with backoff, and session management correctly is critical for reliable API ingestion pipelines.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you handle a paginated API with 10,000+ pages of results?"<br/>• "What's the difference between requests.get() and a requests.Session()?"<br/>• "How do you implement exponential backoff for API retries?"<br/>• "What does HTTP 429 mean and how do you handle it automatically?"<br/>• "When would you use httpx instead of requests?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use sessions for connection reuse, implement exponential backoff with jitter, respect rate limits, and handle pagination correctly — or do they call requests.get() in a bare loop that crashes on the first 429?</div>
+          </div>
+
+          <p>In production, API clients are reliability engineering. The reason sessions matter is TCP connection reuse — requests.Session() keeps the connection alive across calls; requests.get() opens a new TCP connection per request. Exponential backoff with jitter is required for retry logic: 2^attempt + random jitter prevents all retrying workers from slamming the API simultaneously (thundering herd). HTTP 429 (Too Many Requests) should read Retry-After header and sleep exactly that long. For async pipelines, httpx is the drop-in async replacement for requests.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"requests.Session() — reuses TCP connections, shares headers/auth across all calls. Always use a session, not bare requests.get()."</td></tr>
+              <tr><td>2</td><td>"Exponential backoff: sleep(2**attempt + random.uniform(0,1)) — prevents thundering herd. Cap at ~60s max."</td></tr>
+              <tr><td>3</td><td>"HTTP 429: read Retry-After header — sleep exactly that long. Retrying immediately on 429 just triggers more 429s."</td></tr>
+              <tr><td>4</td><td>"Pagination: follow next_page token or offset until response has no next page. Generator pattern yields records as pages arrive."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>HubSpot:</strong> CRM data ingestion pipeline handles paginated Contact API — cursor-based pagination with generator yields 1000 records/page, 50 pages deep. Session with persistent auth header: zero re-auth overhead across 50 requests.<br/><strong>Salesforce:</strong> API rate limit is 15,000 calls/day. Pipeline uses token bucket rate limiter — 1 call per 5.76 seconds sustained. Exponential backoff with jitter on 429 responses: never exhausts daily limit despite retries.<br/><strong>Twitter/X:</strong> Academic Research API uses bearer token auth via session headers. Backoff decorator retries on 429/503/504 with 2^n + jitter delay — ingestion pipeline runs unattended for 8-hour historical pulls.</div>
+          </div>
+
           <HTTPDiagram />
           <HTTPAnimation />
           <CodeBlock lang="python">{`import requests
@@ -2478,11 +3452,40 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
         if not cursor:
             break
     return all_records`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I call requests.get() for each API endpoint in a loop"</td><td>"requests.Session() reuses TCP connections — one handshake, all calls share it. Critical for 1000+ requests to the same host"</td></tr>
+              <tr><td>"I retry on any error after 1 second"</td><td>"Exponential backoff with jitter: sleep(min(60, 2**attempt + random.uniform(0,1))). Jitter prevents thundering herd — all retrying workers desync"</td></tr>
+              <tr><td>"I loop through page=1, page=2... until I get an empty result"</td><td>"Cursor-based pagination: follow next_cursor token from the response. Page numbers drift when records are inserted/deleted — cursors stay stable"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-http" questions={[
-            { question: "Why use a requests.Session() instead of requests.get() for repeated API calls?", options: ["Session is asynchronous; requests.get is synchronous", "Session reuses TCP connections (keep-alive), shares headers/cookies across requests, and manages cookies  -  much more efficient for many calls to the same host", "Session automatically handles retries", "requests.get() doesn't support authentication"], correct: 1 },
-            { question: "What is cursor-based pagination and when is it preferred over page-number pagination?", options: ["Cursor pagination uses a database cursor", "Cursor pagination uses an opaque pointer to the next page position  -  it handles insertions/deletions correctly and is preferred for large, frequently-updated datasets where page numbers can skip or duplicate records", "Cursor pagination is faster for small datasets", "Page-number pagination always returns duplicate records"], correct: 1 },
-            { question: "What HTTP status code indicates rate limiting and how should your client handle it?", options: ["404  -  retry immediately", "429 Too Many Requests  -  read the Retry-After header and sleep for that duration before retrying", "500  -  switch to a different endpoint", "401  -  refresh the OAuth token"], correct: 1 },
+            { question: "Your pipeline makes 5,000 API calls to the same host. requests.get() vs requests.Session() — what's the key performance difference?", options: ["Session automatically parallelizes requests; requests.get() is sequential only", "requests.get() opens a new TCP connection per call; Session reuses connections via HTTP keep-alive — eliminates 5,000 TCP handshakes", "Session caches responses; requests.get() fetches fresh data every time", "They're identical — both use the same urllib3 connection pool"], correct: 1 },
+            { question: "An API returns HTTP 429 with 'Retry-After: 30'. Your backoff logic computes 2^3 + jitter = 12 seconds. Which retry delay should your client use?", options: ["12 seconds — your computed backoff takes precedence", "The larger of 30 and your computed delay — always respect Retry-After as a minimum", "30 seconds — Retry-After always overrides your backoff computation", "0 seconds — 429 just means slow down slightly"], correct: 2 },
+            { question: "Page-number pagination vs cursor-based pagination — which is safer for a high-churn dataset where records are inserted frequently?", options: ["Page-number is safer — simpler to implement and debug", "Cursor-based — a new record inserted on page 1 shifts all subsequent pages, causing duplicates/gaps with page numbers; cursors point to a stable position", "They're equivalent for all practical purposes", "Page-number is safer because it's stateless — each request is independent"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use requests.Session() for all API calls — TCP connection reuse, shared headers</li>
+                <li>Implement exponential backoff with jitter — prevents thundering herd on retries</li>
+                <li>Follow cursor-based pagination for high-churn datasets</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Retry immediately on failure — adds load to an already struggling API</li>
+                <li>Ignore HTTP 429 Retry-After headers — they tell you exactly how long to wait</li>
+                <li>Use bare requests.get() inside high-frequency loops — new TCP connection per call</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-http')) { await unmarkTopicComplete('py-http'); onUnmark('py-http') } else { await markTopicComplete('py-http'); onComplete('py-http') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-http') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-http') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2492,6 +3495,34 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
             <h1 className="topic-title">Linux & Shell Scripting for Data Engineers</h1>
             <p className="topic-desc">Data engineers work in Linux environments daily  -  managing file systems, scheduling jobs with cron, monitoring processes, piping data between commands, and writing robust shell scripts for pipeline orchestration.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What does 'set -euo pipefail' do at the top of a shell script?"<br/>• "How do you run 4 pipeline scripts in parallel using shell?"<br/>• "How do you find all files modified in the last 24 hours and process them?"<br/>• "What is a cron expression for 'every weekday at 2:30 AM'?"<br/>• "How do you make a shell script send an alert on failure?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate write defensive scripts with set -euo pipefail, use trap for cleanup, and understand pipe chaining — or do they write scripts that silently continue after errors and leave temp files on failure?</div>
+          </div>
+
+          <p>In production, shell scripts are the glue between pipeline steps. The reason set -euo pipefail is the first line of every production script: -e exits on any command failure (no silent errors), -u treats unset variables as errors (no mysterious empty values), -o pipefail catches errors in pipes (grep | sort | awk — without pipefail, if grep fails, the exit code is awk's exit code). trap cleanup EXIT ensures your cleanup function runs whether the script succeeds, fails, or is killed with Ctrl+C. xargs -P 4 runs 4 parallel processes against a list of files — no Python needed for simple fan-out.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"set -euo pipefail at the top of every script — exits on error, catches unset vars and pipe failures."</td></tr>
+              <tr><td>2</td><td>"trap cleanup EXIT — runs cleanup function on any exit (success, error, SIGTERM). Always leaves the system clean."</td></tr>
+              <tr><td>3</td><td>"xargs -P 4 -I{} python3 process.py --file {} — fan-out to 4 parallel processes. Simple and effective for file processing."</td></tr>
+              <tr><td>4</td><td>"Cron '30 2 * * 1-5' — 2:30 AM Monday-Friday. Use absolute paths in cron jobs — $PATH differs from your shell session."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Airflow at Uber:</strong> All pipeline entry-point shell scripts use set -euo pipefail. Before this standard, a misconfigured variable in 3 scripts caused pipelines to silently process empty datasets for 6 hours — no error, wrong output.<br/><strong>Confluent:</strong> ETL scripts use trap for atomic cleanup — temp files, lock files, and Slack notifications sent on abnormal exit. Engineers are paged on failure automatically without external monitoring for these shell-level failures.<br/><strong>Pinterest:</strong> xargs -P 8 fans out image processing across 8 parallel workers per host. Combined with find -mtime -1 for incremental discovery — only processes new files since last run.</div>
+          </div>
+
           <LinuxScriptDiagram />
           <LinuxScriptAnimation />
           <CodeBlock lang="bash">{`#!/bin/bash
@@ -2600,11 +3631,40 @@ source /opt/pipelines/.env         # load .env file in bash
 tail -f /var/log/pipelines/*.log   # follow all pipeline logs
 grep -E "ERROR|CRITICAL" /var/log/pipelines/pipeline_2024-01-15.log
 wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I write bash scripts without any error handling"</td><td>"set -euo pipefail is always the first line. -e stops on any error, -u catches unset variables, -o pipefail catches errors inside pipes silently ignored otherwise"</td></tr>
+              <tr><td>"I use a for loop to process files sequentially"</td><td>"find -name '*.csv' | xargs -P 8 -I{} python3 process.py {} — fans out to 8 parallel workers. 8x throughput with one line"</td></tr>
+              <tr><td>"I write cleanup code at the end of the script"</td><td>"trap cleanup EXIT runs even if the script crashes or is killed. Code at the end of a script never runs on error — trap does"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-linux" questions={[
-            { question: "What does 'set -euo pipefail' do at the top of a bash script?", options: ["Sets environment variables", "-e exits on any error, -u treats unset variables as errors, -o pipefail catches errors in pipes  -  together they prevent silent failures", "Sets file permissions", "Enables debug output"], correct: 1 },
-            { question: "What does 'xargs -P 4' do in a shell pipeline?", options: ["Limits file size to 4MB", "Runs up to 4 parallel processes of the given command  -  enables parallel file processing", "Sets process priority to 4", "Retries failed commands 4 times"], correct: 1 },
-            { question: "Why use 'trap cleanup EXIT' in a shell script?", options: ["It logs all commands", "It registers a function to run when the script exits  -  whether normally or due to an error  -  ensuring cleanup always happens", "It prevents the script from exiting on errors", "It sends an exit signal to child processes"], correct: 1 },
+            { question: "A pipeline script runs: grep 'ERROR' app.log | sort | uniq -c. grep finds nothing and exits code 1. With 'set -o pipefail', what happens?", options: ["The script continues — grep exit code 1 means 'no matches', which is not an error", "The entire pipeline expression exits with grep's exit code 1, causing the script to terminate (with -e set)", "sort catches the failed pipe and outputs empty results", "uniq -c raises an exception when receiving empty input"], correct: 1 },
+            { question: "cron expression '30 2 * * 1-5' — when does this job run?", options: ["Every 2 hours and 30 minutes, weekdays only", "At 2:30 AM every day of the week", "At 2:30 AM Monday through Friday only", "30 minutes after midnight, 5 days a week starting Monday"], correct: 2 },
+            { question: "Your pipeline script creates a lock file /tmp/pipeline.lock to prevent concurrent runs. The script crashes mid-run. How do you guarantee the lock file is always deleted?", options: ["Use rm /tmp/pipeline.lock at the end of the script", "Use trap 'rm -f /tmp/pipeline.lock' EXIT — runs on any exit including crashes and SIGTERM", "Use a finally block in the shell script", "Cron automatically cleans up tmp files after each run"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Start every script with set -euo pipefail — prevents silent failures</li>
+                <li>Use trap cleanup EXIT for guaranteed resource cleanup</li>
+                <li>Use absolute paths in cron jobs — $PATH is minimal in cron's environment</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Write scripts without set -euo pipefail — errors continue silently</li>
+                <li>Rely on cleanup code at the end of a script — it never runs if the script crashes</li>
+                <li>Use relative paths in cron jobs — the working directory and PATH differ from your interactive shell</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-linux')) { await unmarkTopicComplete('py-linux'); onUnmark('py-linux') } else { await markTopicComplete('py-linux'); onComplete('py-linux') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-linux') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-linux') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2614,6 +3674,34 @@ wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</Cod
             <h1 className="topic-title">Git Deep Dive for Data Engineers</h1>
             <p className="topic-desc">Git is not just version control  -  it's the backbone of CI/CD, code review, and collaborative development. Data engineers need fluency in branching strategies, rebase vs merge, cherry-pick, bisect, hooks, and GitHub Actions for pipeline automation.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What's the difference between git merge and git rebase?"<br/>• "How would you find which commit introduced a performance regression?"<br/>• "When would you use git cherry-pick?"<br/>• "What does interactive rebase allow you to do before opening a PR?"<br/>• "How do you set up a pre-commit hook to run linting?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use rebase to maintain a clean linear history, know how to bisect a regression across 200 commits, and understand when cherry-pick is appropriate — or do they only know git add/commit/push and merge everything with a merge commit?</div>
+          </div>
+
+          <p>In production, Git discipline determines how fast your team can review, debug, and roll back changes. The reason rebase matters over merge is linear history — a merge creates a merge commit that muddies the log; rebase replays your commits on top of main, making git log read like a coherent story. git bisect binary-searches through commits to find the exact commit that introduced a bug — critical for regressions that appear after 200 commits. cherry-pick applies a specific commit (hotfix) to a different branch without bringing all other commits along.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Feature branch off main, rebase origin/main before PR — linear history, no merge commits cluttering the log."</td></tr>
+              <tr><td>2</td><td>"Interactive rebase: git rebase -i HEAD~N — squash fixup commits, reword message. Reviewers see clean logical commits, not 'WIP' noise."</td></tr>
+              <tr><td>3</td><td>"git bisect start; git bisect bad HEAD; git bisect good v1.2.0 — binary search across commits to find the regression in O(log N) steps."</td></tr>
+              <tr><td>4</td><td>"Pre-commit hooks (pre-commit framework): ruff, mypy, pytest fast tests run on every commit — never push broken code."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Airbnb:</strong> All data pipeline PRs require rebase before merge — no merge commits in main. git log --oneline reads as a clean feature history, making rollbacks and cherry-picks surgical rather than guesswork.<br/><strong>Meta:</strong> git bisect used to find pipeline performance regression in 200-commit range — binary search found the culprit in 8 steps (2^8=256). Would have taken days of manual investigation without bisect.<br/><strong>Databricks:</strong> pre-commit hooks run ruff (lint), mypy (types), and unit tests under 5 seconds on every commit. Broken code never reaches CI — engineers get instant feedback before push.</div>
+          </div>
+
           <GitDiagram />
           <GitAnimation />
           <CodeBlock lang="bash">{`# Branching strategy: GitHub Flow for data engineering teams
@@ -2735,11 +3823,40 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4`}</CodeBlock>
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I commit everything to main directly"</td><td>"Feature branches off main, rebased before PR. main is always deployable — no broken code ever touches it"</td></tr>
+              <tr><td>"I use 'git log' to manually search for which commit broke things"</td><td>"git bisect: mark HEAD as bad, last known good as good. Git binary-searches 200 commits in 8 steps — finds the regression in minutes"</td></tr>
+              <tr><td>"I merge main into my branch to get the latest changes"</td><td>"git rebase origin/main — replays my commits on top of latest main. Linear history, no merge commits, cherry-pick and rollback stay clean"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-git" questions={[
-            { question: "What is the difference between git rebase and git merge when integrating feature branches?", options: ["They are identical", "merge creates a merge commit preserving branch history; rebase replays your commits on top of the target branch creating a linear history  -  rebase is cleaner but rewrites commit hashes", "rebase is safer for shared branches; merge rewrites history", "merge is faster; rebase is more accurate"], correct: 1 },
-            { question: "When should you use git cherry-pick?", options: ["When you want to merge entire branches", "When you need to apply a specific commit (e.g., a hotfix) to another branch without merging all commits from the source branch", "When you want to undo a commit", "When bisecting to find a bug"], correct: 1 },
-            { question: "What does 'git bisect run <test-command>' do?", options: ["Runs tests on the current branch only", "Automates the bisect process  -  git checks out commits and runs the test command; the exit code (0=good, non-zero=bad) tells git which direction to bisect until the offending commit is found", "Bisects the codebase into modules for parallel testing", "Runs all commits in parallel"], correct: 1 },
+            { question: "You need to apply a critical fix (commit abc1234 from a hotfix branch) to main without merging the entire hotfix branch. Which command is correct?", options: ["git merge hotfix/fix-null-keys -- squash", "git cherry-pick abc1234 — applies just that commit's changes to the current branch", "git rebase --onto main hotfix/fix-null-keys", "git stash apply abc1234"], correct: 1 },
+            { question: "git rebase origin/main vs git merge origin/main — what does each produce in your feature branch history?", options: ["rebase creates a merge commit; merge replays commits linearly", "merge creates a merge commit preserving both histories; rebase replays your feature commits on top of main — linear history, no merge commit", "They're identical — both update your branch with the latest main changes", "rebase is for shared branches; merge is for feature branches"], correct: 1 },
+            { question: "git bisect start; git bisect bad HEAD; git bisect good v1.5.0. There are 256 commits between v1.5.0 and HEAD. How many git bisect steps to find the regression?", options: ["256 steps — git tests each commit sequentially", "8 steps — binary search halves the range each step: 2^8 = 256", "1 step — git analyzes the diff automatically", "Depends on how many files were changed in each commit"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Rebase feature branches onto main before PRs — linear history, clean log</li>
+                <li>Use git bisect to find regressions — O(log N) steps not O(N)</li>
+                <li>Use pre-commit hooks to enforce lint/type checks before every commit</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Force-push to shared branches — rewrites history other engineers have pulled</li>
+                <li>Commit directly to main without a PR — no code review, no CI gate</li>
+                <li>Mix merge and rebase strategies on the same branch — causes duplicated commits</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-git')) { await unmarkTopicComplete('py-git'); onUnmark('py-git') } else { await markTopicComplete('py-git'); onComplete('py-git') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-git') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-git') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2750,6 +3867,34 @@ jobs:
             <h1 className="topic-title">Pydantic Data Validation</h1>
             <p className="topic-desc">Pydantic v2 is the standard library for data validation in Python data engineering. Built on Rust (via pydantic-core), it validates data at the boundary between untrusted inputs and your pipeline logic  -  parsing JSON API responses, validating pipeline configs, and enforcing schema contracts at runtime. Pydantic models serve as living documentation for your data contracts.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you validate API response data before it enters your pipeline?"<br/>• "What's the difference between @field_validator and @model_validator in Pydantic v2?"<br/>• "How do you use Pydantic for pipeline configuration management?"<br/>• "What happens when a Pydantic model receives an invalid field — does it raise immediately or collect all errors?"<br/>• "How is Pydantic v2 different from v1?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use Pydantic as the validation boundary between untrusted external data and pipeline logic — or do they manually check types inline with isinstance() scattered throughout the pipeline?</div>
+          </div>
+
+          <p>In production, Pydantic is a data contract enforcement layer. The reason it matters is that external data (API responses, user uploads, config files) is untrusted. A Pydantic model defines what the data must look like — and validation happens automatically at the boundary when you instantiate the model. A ValidationError collects all errors across all fields and raises once, not field by field. @field_validator adds custom logic per field; @model_validator runs after all fields parse and validates cross-field invariants. BaseSettings loads config from environment variables automatically — perfect for 12-factor app config.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Pydantic validates at the boundary — EventRecord(data) coerces types and raises ValidationError with all field errors at once."</td></tr>
+              <tr><td>2</td><td>"Field constraints: Annotated[float, Field(gt=0, le=1_000_000)] — validates range at parse time, not in application logic."</td></tr>
+              <tr><td>3</td><td>"@field_validator('amount') for per-field logic; @model_validator(mode='after') for cross-field rules (end_date &gt; start_date)."</td></tr>
+              <tr><td>4</td><td>"BaseSettings for pipeline config — automatically reads from env vars, .env files, with type coercion. No manual os.environ.get()."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>FastAPI (used by Netflix, Uber, Microsoft):</strong> All request/response bodies are Pydantic models — validation, coercion, and OpenAPI schema generation happen automatically. Zero manual validation code.<br/><strong>Robinhood:</strong> Pydantic models define the data contract between upstream API responses and the warehouse ingestion pipeline. 847 schema violations caught per day at the boundary before bad data enters the warehouse.<br/><strong>Stripe:</strong> BaseSettings loads 40+ pipeline config values from environment variables with type coercion and required field validation. Missing config raises ValidationError at startup, not mid-run when it would corrupt partial data.</div>
+          </div>
+
           <PydanticDiagram />
           <PydanticAnimation />
           <div className="callout callout-info">
@@ -2979,11 +4124,40 @@ for raw_record in raw_batch:
     except ValidationError as e:
         invalid_records.append({"record": raw_record, "errors": e.errors()})`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I validate API responses with if/isinstance() checks scattered in my pipeline"</td><td>"Pydantic model at the boundary: EventRecord.model_validate(api_response) — coerces types, validates all fields, raises ValidationError with all failures at once"</td></tr>
+              <tr><td>"I use @validator on fields in Pydantic v2"</td><td>"v2 uses @field_validator for single fields and @model_validator(mode='after') for cross-field rules. @validator is v1 API — causes warnings and deprecation errors"</td></tr>
+              <tr><td>"I read config with os.environ.get('DB_HOST', 'localhost')"</td><td>"BaseSettings with Pydantic — class PipelineConfig(BaseSettings): db_host: str. Reads from env, validates types, raises ValidationError at startup if required config is missing"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-pydantic" questions={[
-            { question: "In Pydantic v2, which decorator replaced the v1 @root_validator for cross-field validation that runs after all fields are set?", options: ["@field_validator(mode='all')", "@model_validator(mode='after')", "@cross_validator", "@validator(always=True)"], correct: 1 },
-            { question: "What is the primary purpose of BaseSettings in pydantic-settings?", options: ["Validate JSON schemas at runtime", "Load and validate configuration from environment variables and .env files with type checking and defaults", "Store Pydantic models in a settings registry", "Configure Pydantic's validation behavior globally"], correct: 1 },
-            { question: "When using Field(gt=0, lt=1_000_000) on a float field, what does 'gt' enforce?", options: ["The value must be greater than or equal to 0 (inclusive lower bound)", "The value must be strictly greater than 0 (exclusive lower bound  -  0.0 would fail validation)", "The value must be a positive integer", "The field is globally typed (gt = global type)"], correct: 1 },
+            { question: "A Pydantic model has 5 fields, 3 of which fail validation in a single call. What does Pydantic raise?", options: ["3 separate ValidationErrors, one per field, raised sequentially", "A single ValidationError containing all 3 field errors — you get all failures at once, not just the first", "A TypeError — Pydantic only raises TypeError for wrong Python types", "Nothing — Pydantic sets invalid fields to None by default"], correct: 1 },
+            { question: "class PipelineConfig(BaseSettings): db_host: str — the DB_HOST environment variable is not set. What happens when the class is instantiated?", options: ["db_host defaults to an empty string ''", "ValidationError is raised at instantiation — db_host is required with no default", "Python raises KeyError when accessing config.db_host", "The field is skipped and excluded from config.model_dump()"], correct: 1 },
+            { question: "@field_validator('amount') vs @model_validator(mode='after') — which is the right choice for validating that end_date > start_date?", options: ["@field_validator('end_date') — run validation when end_date is parsed", "@model_validator(mode='after') — runs after all fields are set, so both start_date and end_date are available for comparison", "@field_validator('start_date', 'end_date') with multiple field names", "@model_validator(mode='before') — runs before type coercion so dates are still strings"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Validate at the boundary — parse and validate untrusted data immediately on entry</li>
+                <li>Use Field constraints for range, pattern, and length — not in application logic</li>
+                <li>Use BaseSettings for pipeline config — type-safe, env-var backed, validated at startup</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Pydantic v1 decorators (@validator, @root_validator) in new code — they're deprecated in v2</li>
+                <li>Validate data deep inside pipeline logic — validate at the entry point, trust internally</li>
+                <li>Silently ignore ValidationError — log all errors with structured context before failing</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-pydantic')) { await unmarkTopicComplete('py-pydantic'); onUnmark('py-pydantic') } else { await markTopicComplete('py-pydantic'); onComplete('py-pydantic') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-pydantic') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-pydantic') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2994,6 +4168,34 @@ for raw_record in raw_batch:
             <h1 className="topic-title">Docker for Data Engineering</h1>
             <p className="topic-desc">Docker solves the "works on my machine" problem by packaging your pipeline code, dependencies, and runtime into a portable, reproducible image. For data engineers, Docker is essential for local development stacks, CI/CD pipelines, containerized Spark applications, and deploying Airflow, dbt, and other DE tools consistently across environments.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you minimize a Docker image size for a data pipeline?"<br/>• "What is a multi-stage Docker build and when do you use it?"<br/>• "Why should pipeline containers not run as root?"<br/>• "How does layer caching work and how do you optimize Dockerfile layer order?"<br/>• "How do you pass secrets into a Docker container without baking them into the image?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate use multi-stage builds, optimize layer caching by copying requirements before code, and run containers as non-root — or do they write a single FROM python:3.11 stage that ships gcc, g++, and build tools to production?</div>
+          </div>
+
+          <p>In production, Docker image design is a performance and security problem. The reason multi-stage builds matter: the builder stage installs gcc, g++, and libpq-dev (needed to compile psycopg2) — but those build tools should never ship to production. The runtime stage copies only the compiled packages from builder, resulting in a 600MB builder image producing a 180MB production image. Layer caching: COPY requirements.txt; RUN pip install; COPY src/ — this order caches the expensive pip install step as long as requirements.txt doesn't change. Never run pipeline containers as root — a container escape vulnerability in root context compromises the host.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Multi-stage build: builder stage installs build tools + deps, runtime stage copies only the packages. 60-80% smaller final image."</td></tr>
+              <tr><td>2</td><td>"Layer caching: COPY requirements.txt → RUN pip install → COPY src/. pip install only re-runs when requirements.txt changes."</td></tr>
+              <tr><td>3</td><td>"Non-root user: RUN useradd appuser; USER appuser. Container escape with root = host compromise."</td></tr>
+              <tr><td>4</td><td>"Secrets via environment variables at runtime — never COPY .env or ARG secrets that bake into image layers (visible in docker history)."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Lyft:</strong> Multi-stage Dockerfiles reduced pipeline image sizes from 2.1GB to 380MB. Kubernetes pod cold-start time dropped from 4 minutes to 45 seconds — critical for burst-scale Spark executors.<br/><strong>DoorDash:</strong> Layer caching optimization (requirements.txt before code COPY) cut CI build time from 8 minutes to 90 seconds for unchanged dependency stages — 5x faster iteration cycle.<br/><strong>Slack:</strong> All data pipeline containers run as non-root (uid 1001). Security audit requirement — passing container escape CVE simulation required non-root to contain the blast radius.</div>
+          </div>
+
           <DockerPyDiagram />
           <DockerPyAnimation />
           <div className="callout callout-info">
@@ -3211,11 +4413,40 @@ cat .dockerignore
 # .venv
 # dist/`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use FROM python:3.11 and install everything in one RUN"</td><td>"Multi-stage: builder installs gcc + psycopg2-binary; runtime copies /app/packages. Production image has no build tools — 600MB → 180MB"</td></tr>
+              <tr><td>"I copy my whole project first, then install requirements"</td><td>"COPY requirements.txt first, pip install, then COPY src/. Docker only re-runs pip install when requirements.txt changes — code changes don't invalidate the dependency layer"</td></tr>
+              <tr><td>"I run the container as root because it's simpler"</td><td>"USER appuser — always non-root. Container escape vulnerabilities with root = host compromise. Security policy at most orgs prohibits root containers in prod"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-docker" questions={[
-            { question: "Why should you use a multi-stage Docker build for a PySpark application?", options: ["Multi-stage builds allow parallel compilation of Python files", "The builder stage installs build tools and compiles dependencies; the runtime stage copies only the final artifacts  -  producing a much smaller final image without gcc, g++, and other build tools", "Multi-stage builds are required for Docker Compose", "Multi-stage builds enable hot-reloading in development"], correct: 1 },
-            { question: "What is the difference between ENTRYPOINT and CMD in a Dockerfile?", options: ["They are identical  -  CMD is just an alias for ENTRYPOINT", "ENTRYPOINT defines the fixed executable that always runs; CMD provides default arguments that can be overridden at docker run time without replacing the entrypoint", "CMD runs at build time; ENTRYPOINT runs at container start", "ENTRYPOINT is for scripts; CMD is for binary executables only"], correct: 1 },
-            { question: "Why should you run container processes as a non-root user in data pipelines?", options: ["Root containers are slower due to kernel overhead", "If the container is compromised or a pipeline bug escapes the container, a non-root user limits the blast radius  -  root would have full host privileges", "Docker requires non-root for bind mounts to work", "Non-root users have access to more memory"], correct: 1 },
+            { question: "Your Dockerfile has: COPY . .; RUN pip install -r requirements.txt. You change one line in main.py. Which layers rebuild?", options: ["Only the changed file — Docker detects the diff and rebuilds minimally", "COPY . . and everything after — COPY . . cache is invalidated by any file change, forcing pip install to re-run every time", "Only RUN pip install — Docker tracks requirements.txt separately from other files", "No layers rebuild — Docker uses the cached layers for unchanged commands"], correct: 1 },
+            { question: "What is the security risk of running a data pipeline container as root (uid 0)?", options: ["Root containers are rejected by Docker Hub — they fail to push", "A container escape vulnerability gives the attacker root access on the host machine — non-root limits blast radius to container-scoped permissions", "Root containers cannot access bind-mounted volumes from the host", "Root containers use twice the memory due to Linux kernel privilege overhead"], correct: 1 },
+            { question: "ENTRYPOINT ['python', 'pipeline.py'] and CMD ['--date', '2024-01-15'] — what happens when you run 'docker run myimage --date 2024-01-16'?", options: ["--date 2024-01-16 replaces the entire command including ENTRYPOINT", "The container runs python pipeline.py --date 2024-01-16 — CMD arguments are overridden, ENTRYPOINT is preserved", "--date 2024-01-16 is appended to CMD, running with both dates", "ENTRYPOINT is ignored and only --date 2024-01-16 runs"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Multi-stage builds — compile in builder, ship only runtime artifacts</li>
+                <li>Optimize layer order: requirements.txt → pip install → source code</li>
+                <li>Run as non-root user (uid 1001) — security requirement for production</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>COPY source code before requirements.txt — every code change forces full pip reinstall</li>
+                <li>Bake secrets into images with ARG or ENV — visible in docker history and image layers</li>
+                <li>Ship build tools (gcc, g++, make) in production images — bloats size and increases attack surface</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-docker')) { await unmarkTopicComplete('py-docker'); onUnmark('py-docker') } else { await markTopicComplete('py-docker'); onComplete('py-docker') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-docker') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-docker') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3226,6 +4457,34 @@ cat .dockerignore
             <h1 className="topic-title">Kubernetes for Data Engineering</h1>
             <p className="topic-desc">Kubernetes (K8s) is the production standard for running containerized data workloads at scale. For data engineers, the key use cases are: running Spark on Kubernetes (driver + executor pods), using KubernetesPodOperator in Airflow for isolated task execution, and deploying data services (APIs, dbt, Flink) with automatic scaling and self-healing.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "What's the difference between a Pod, Job, and CronJob in Kubernetes?"<br/>• "Why do you set both resource requests and limits — what happens if you only set one?"<br/>• "How do you pass secrets into a K8s pod without hardcoding them?"<br/>• "What is a readinessProbe and why does it matter for pipeline services?"<br/>• "How does Spark on Kubernetes differ from Spark on YARN?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate understand the difference between resource requests (scheduling) and limits (enforcement), and know how K8s Jobs vs CronJobs model batch pipeline runs — or do they think of Kubernetes as "just Docker but more complicated"?</div>
+          </div>
+
+          <p>In production, Kubernetes data engineering is resource management and workload isolation. The reason requests matter: K8s uses requests for bin-packing decisions — without requests, K8s schedules pods on any node and they fight for resources. Without limits, a runaway Spark executor consumes all memory and OOMKills other workloads on the node. K8s Job (not Pod) is the correct abstraction for batch pipelines: restartPolicy: OnFailure automatically retries failed pods; a bare Pod with restartPolicy: Never leaves you debugging why your ETL silently didn't retry. Secrets are injected via secretKeyRef — never hardcoded in YAML.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"Requests for scheduling guarantee, limits for OOMKill protection. Set both — without requests K8s can't bin-pack; without limits one runaway job starves the node."</td></tr>
+              <tr><td>2</td><td>"K8s Job for batch pipelines — restartPolicy: OnFailure retries. CronJob wraps Job with a cron schedule. Never use bare Pod for batch."</td></tr>
+              <tr><td>3</td><td>"Secrets via secretKeyRef — K8s API serves the secret at pod startup. Never hardcode passwords in YAML (committed to Git)."</td></tr>
+              <tr><td>4</td><td>"KubernetesPodOperator in Airflow: each task runs in its own pod — isolated dependencies, separate resource limits, no Airflow worker memory leaks."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Spotify:</strong> Spark pipelines run as K8s Jobs on dedicated node pools with resource limits. Executor memory limit: 8Gi — OOMKill before starving co-located dbt pods. Job-level parallelism=50 fan-out for partition processing.<br/><strong>Shopify:</strong> KubernetesPodOperator for all Airflow pipeline tasks. Each task runs in its own pod with isolated pip environment — dependency conflicts between ETL tasks eliminated completely.<br/><strong>LinkedIn:</strong> CronJob YAML for hourly metrics pipelines — K8s manages the schedule, retries, and history. schedule: '0 * * * *' replaces fragile cron entries that can silently stop running.</div>
+          </div>
+
           <K8sDiagram />
           <K8sAnimation />
           <div className="callout callout-info">
@@ -3437,11 +4696,40 @@ with DAG(
 # Delete completed jobs
 # kubectl delete jobs --field-selector status.successful=1 -n data-pipelines`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I deploy pipelines as bare Pods with restartPolicy: Never"</td><td>"K8s Job with restartPolicy: OnFailure — Job controller retries failed pods automatically. CronJob for scheduled pipelines — K8s manages schedule, history, and retries"</td></tr>
+              <tr><td>"I don't set resource limits because I'm not sure how much the pipeline needs"</td><td>"Always set requests and limits. Requests for scheduling guarantee (K8s won't place pod on a node with less). Limits for isolation — a runaway job OOMKills only itself, not neighbor pods"</td></tr>
+              <tr><td>"I hardcode the DB password in the YAML env block"</td><td>"secretKeyRef — K8s Secret injected at pod startup. YAML is committed to Git; secrets should never appear in YAML or environment block inline values"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-k8s" questions={[
-            { question: "What is the difference between resource requests and resource limits in Kubernetes?", options: ["They are identical  -  requests and limits must always be equal", "Requests are the guaranteed allocation used for pod scheduling; limits are the hard cap  -  exceeding CPU causes throttling, exceeding memory causes OOMKill", "Limits are set by the cluster admin; requests are set by the developer", "Requests apply to memory only; limits apply to CPU only"], correct: 1 },
-            { question: "When running Spark on Kubernetes, what role do executor pods play?", options: ["They run the Spark UI and store job history", "They are dynamically created by the driver pod to perform distributed computation; they are destroyed when the job finishes", "They are permanent pods that must be pre-provisioned before spark-submit", "They store shuffle data in persistent volumes only"], correct: 1 },
-            { question: "What is the main advantage of using KubernetesPodOperator in Airflow over PythonOperator?", options: ["KubernetesPodOperator is always faster", "Each task runs in an isolated container with its own image, dependencies, and resource limits  -  preventing dependency conflicts between tasks and enabling fine-grained resource control", "KubernetesPodOperator has built-in retry logic that PythonOperator lacks", "KubernetesPodOperator automatically parallelizes tasks across nodes"], correct: 1 },
+            { question: "A K8s pod has memory request: 4Gi and memory limit: 8Gi. The pipeline consumes 9Gi. What does Kubernetes do?", options: ["The pod is evicted gracefully and rescheduled on a node with more memory", "The container is OOMKilled — Linux kernel terminates the process because it exceeded the memory limit", "The memory limit is automatically increased to match actual usage", "K8s throttles memory access to stay at the 8Gi limit"], correct: 1 },
+            { question: "K8s Job vs a bare Pod for a batch data pipeline — what critical operational behavior does Job add?", options: ["Job provides a built-in web UI for monitoring pipeline progress", "Job tracks completion and retry policy — restartPolicy: OnFailure retries failed pods; completions/parallelism controls fan-out. A bare Pod with restartPolicy: Never just stops", "Job is faster because it uses a separate scheduler than regular pods", "Job automatically scales based on CPU utilization via HPA"], correct: 1 },
+            { question: "Airflow KubernetesPodOperator vs PythonOperator — a pipeline task requires psycopg2==2.9.9 but the Airflow worker has psycopg2==2.8.0. Which operator handles this without reinstalling on the Airflow worker?", options: ["PythonOperator — set the PYTHONPATH environment variable to override the version", "Neither — dependency conflicts require rebuilding the Airflow worker image", "KubernetesPodOperator — the task runs in its own container with its own psycopg2==2.9.9 image, isolated from the Airflow worker environment", "PythonOperator with a virtualenv_callable wrapper resolves the conflict automatically"], correct: 2 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use K8s Job for batch pipelines — automatic retry, completion tracking</li>
+                <li>Set both resource requests and limits — scheduling + OOMKill protection</li>
+                <li>Inject secrets via secretKeyRef — never hardcode in YAML</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run batch pipeline logic in bare Pods — no retry, no completion tracking</li>
+                <li>Set limits without requests or requests without limits — incomplete resource spec</li>
+                <li>Hardcode credentials in YAML or ConfigMap — committed to Git, visible in etcd</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-k8s')) { await unmarkTopicComplete('py-k8s'); onUnmark('py-k8s') } else { await markTopicComplete('py-k8s'); onComplete('py-k8s') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-k8s') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-k8s') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3452,6 +4740,34 @@ with DAG(
             <h1 className="topic-title">Data Quality with Deequ + Great Expectations</h1>
             <p className="topic-desc">Data quality (DQ) validation is a critical gate in production data pipelines. Amazon Deequ (open source, Spark-native) and Great Expectations (Python-native, multi-engine) are the two leading frameworks. They let you define constraints on your data, run them as part of your pipeline, and fail fast when data violates your contracts  -  before bad data reaches downstream consumers.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "How do you prevent bad data from reaching downstream consumers?"<br/>• "What's the difference between Deequ and Great Expectations?"<br/>• "How would you define a data quality check for a primary key constraint?"<br/>• "What does 'fail fast' mean in the context of data pipelines?"<br/>• "How do you handle DQ failures — quarantine, alert, or stop the pipeline?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate design DQ as a pipeline gate that fails early before bad data propagates — or do they check data quality as an afterthought in a separate monitoring job hours after bad data has already reached the data warehouse?</div>
+          </div>
+
+          <p>In production, data quality is a pipeline architecture decision. The reason fail-fast DQ matters: a 2% null rate in order_id discovered in the Silver layer costs an hour of cleanup; the same error discovered in the Gold layer (after 6 downstream joins) costs a day of backfill plus executive escalation. Deequ's VerificationSuite runs as a Spark job — it computes column statistics in one pass and evaluates all constraints at once. CheckLevel.Error stops the pipeline; CheckLevel.Warning allows it to continue with an alert. Great Expectations adds profiling-based expectation generation and HTML documentation.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"DQ as a pipeline gate — run checks before writing to Silver/Gold layers. Fail the pipeline, quarantine bad records, alert the on-call."</td></tr>
+              <tr><td>2</td><td>"Deequ: VerificationSuite computes all metrics in one Spark pass. isComplete, isUnique, hasMin/Max — declarative constraints on column stats."</td></tr>
+              <tr><td>3</td><td>"CheckLevel.Error fails the pipeline; CheckLevel.Warning continues with an alert. Design for the SLA — which failures are blocking vs advisory?"</td></tr>
+              <tr><td>4</td><td>"Great Expectations: multi-engine, works on Pandas/Spark/SQL. Expectation suite = named, versioned set of checks. HTML docs from validation runs."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Amazon (Deequ origin):</strong> Deequ was built at Amazon to validate product catalog data — 3 billion items. VerificationSuite runs checks on 100M+ row Spark DataFrames in minutes as a native Spark job. Used in 100+ internal pipelines.<br/><strong>Airbnb:</strong> Great Expectations integrated into Airflow DAGs as a DQ gate. expectation suites version-controlled in Git — schema evolution tracked via expectation diffs in PRs. 5,000+ expectations across 200+ tables.<br/><strong>Intuit:</strong> DQ framework quarantines failed records to a DQ_REJECT table with failure reason and timestamp. Pipeline continues with valid records, operations team reviews rejects daily. Zero silent bad data in Gold layer since adoption.</div>
+          </div>
+
           <DataQualityPyDiagram />
           <DataQualityPyAnimation />
           <div className="callout callout-info">
@@ -3626,11 +4942,40 @@ def validate_data_quality(execution_date: str) -> None:
 # | Best For             | Large-scale   | Multi-engine       | SQL DW   | dbt projects|
 # |                      | Spark DQ      | data platforms     | validation|            |`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I check data quality with a few assert statements at the end of the pipeline"</td><td>"DQ gate before Silver write: VerificationSuite runs all constraints in one Spark pass. CheckLevel.Error fails the pipeline before bad data propagates downstream"</td></tr>
+              <tr><td>"I use Great Expectations for everything"</td><td>"Deequ for large-scale Spark pipelines — it's a native Spark job. Great Expectations for multi-engine platforms (Pandas/SQL). Pick based on your execution engine"</td></tr>
+              <tr><td>"I alert the team when DQ checks fail and they fix it manually"</td><td>"Quarantine pattern: valid records proceed, failed records go to DQ_REJECT table with failure reason + timestamp. Pipeline continues; ops team reviews rejects"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-deequ" questions={[
-            { question: "In Amazon Deequ, what is the difference between a Check and an Analyzer?", options: ["They are identical  -  Analyzers are just named Checks", "A Check defines a pass/fail constraint (e.g., isComplete, isUnique) that produces SUCCESS/ERROR; an Analyzer computes a metric (e.g., Completeness, Mean) without a pass/fail threshold", "Analyzers run on Pandas; Checks run on Spark", "Checks run during writes; Analyzers run during reads"], correct: 1 },
-            { question: "What is Deequ's constraint suggestions feature and when would you use it?", options: ["It suggests SQL indexes for faster queries", "It profiles the data and auto-generates Deequ constraint code based on observed statistics  -  useful when onboarding a new dataset with no existing DQ rules", "It suggests schema changes to reduce data size", "It suggests partition strategies based on cardinality"], correct: 1 },
-            { question: "What does Great Expectations DataDocs provide that raw validation results do not?", options: ["Faster validation execution", "A human-readable HTML report showing expectation definitions, validation results, and historical trends  -  useful for stakeholder communication and debugging", "Automatic data remediation", "Streaming validation in real-time"], correct: 1 },
+            { question: "Your orders pipeline DQ check finds 0.8% null order_ids (within SLA tolerance) and 12% null discount_codes (expected — not all orders have discounts). How should CheckLevel be configured for each?", options: ["Both CheckLevel.Error — any null in any field is unacceptable", "order_id: CheckLevel.Error (primary key must be 100% complete); discount_code: CheckLevel.Warning (high null rate is expected — alert but don't block)", "Both CheckLevel.Warning — blocking pipelines for DQ is too disruptive", "Neither — null rate checks belong in monitoring dashboards, not pipeline code"], correct: 1 },
+            { question: "Deequ vs Great Expectations — you're running DQ on a 500M row Spark DataFrame. Which framework is more appropriate and why?", options: ["Great Expectations — it has better documentation and a larger community", "Deequ — it runs natively as a Spark job, computing column statistics in one distributed pass. Great Expectations running against Spark adds serialization overhead", "They have identical performance on Spark DataFrames", "Neither — DQ on 500M rows should use SQL assertions in the data warehouse"], correct: 1 },
+            { question: "What is the 'fail fast' principle in DQ pipeline design?", options: ["Pipelines should complete as quickly as possible even with bad data", "DQ checks run before writing to downstream layers — fail the pipeline early so bad data doesn't propagate through Bronze→Silver→Gold and corrupt downstream consumers", "Pipeline errors should immediately restart the pipeline without alerting", "DQ should only run in development, not production, to avoid latency"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run DQ checks as a pipeline gate before writing to Silver/Gold layers</li>
+                <li>Use CheckLevel.Error for primary keys and critical fields; CheckLevel.Warning for advisory metrics</li>
+                <li>Quarantine bad records with failure reason — pipeline continues, rejects are reviewable</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Run DQ checks after writing to the data warehouse — bad data has already propagated</li>
+                <li>Use assert statements for production DQ — no threshold support, no reporting, no audit trail</li>
+                <li>Fail the entire pipeline for advisory DQ issues (high null rate in optional fields) — use CheckLevel.Warning instead</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-deequ')) { await unmarkTopicComplete('py-deequ'); onUnmark('py-deequ') } else { await markTopicComplete('py-deequ'); onComplete('py-deequ') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-deequ') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-deequ') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3641,6 +4986,34 @@ def validate_data_quality(execution_date: str) -> None:
             <h1 className="topic-title">Python Memory Profiling</h1>
             <p className="topic-desc">Memory bugs in data pipelines are insidious  -  a pipeline that works on 100 MB of data crashes on 10 GB. Python's built-in tracemalloc, the memory_profiler library, and objgraph give you progressively deeper visibility into what is consuming memory. Mastering memory-efficient patterns (streaming, generators, chunked reads, explicit deletion) is what separates production-grade DE code from fragile notebook scripts.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>• "Your pipeline OOMKills on large datasets. How do you diagnose and fix it?"<br/>• "What is tracemalloc and how do you use it?"<br/>• "How do Python generators help with memory efficiency?"<br/>• "What's the difference between a pandas view and a copy — and why does it matter for memory?"<br/>• "How do you detect a memory leak in a long-running pipeline?"</div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>Does the candidate know how to profile memory usage to find the specific line causing OOMKill, and apply streaming/generator patterns to fix it — or do they just "add more memory to the pod" without understanding the root cause?</div>
+          </div>
+
+          <p>In production, memory OOMKills are a pipeline architecture problem, not a hardware problem. The reason tracemalloc matters is that it tells you exactly which line allocated the most memory — not a guess. Take a snapshot before and after a batch iteration: the delta shows what's accumulating. Generators solve memory growth by yielding one record at a time rather than materializing the full list. pd.read_csv(chunksize=) keeps memory flat for large files. Explicit del + gc.collect() releases large intermediate DataFrames that Python's refcount hasn't freed yet.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say / do</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>"tracemalloc: start(), run the suspect code, take_snapshot().statistics('lineno') — shows which file/line holds the most memory."</td></tr>
+              <tr><td>2</td><td>"Compare snapshots across loop iterations — growing delta = memory leak. The leaked objects accumulate between iterations."</td></tr>
+              <tr><td>3</td><td>"Fix: generators instead of lists, chunksize reading, explicit del df_intermediate; gc.collect() after large allocations."</td></tr>
+              <tr><td>4</td><td>"Pandas Copy-on-Write (v2+): df[condition] creates a copy. Chain transforms with .assign() to minimize intermediate DataFrame copies."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/><strong>Uber:</strong> Batch pipeline OOMKilling at 8GB (pod limit 8Gi). tracemalloc identified a list comprehension accumulating all intermediate transform results in memory. Replacing with a generator reduced peak memory from 8GB to 340MB — 24x reduction on the same dataset.<br/><strong>Airbnb:</strong> Long-running pipeline worker developed a memory leak — RSS grew 50MB per hour. objgraph.show_growth() identified unclosed SQLAlchemy connection objects being held in a global cache. Fixed in one PR with explicit connection.close() in finally block.<br/><strong>Snowflake Python SDK:</strong> Customer pipeline: tracemalloc snapshot comparison between batch iterations showed 200MB accumulating per iteration. Root cause: appending to a growing list instead of yielding from a generator. Migration to generator pattern: flat memory regardless of batch count.</div>
+          </div>
+
           <MemoryProfileDiagram />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3804,11 +5177,40 @@ def iter_records(parquet_files: list[str]):
 
 total = sum(row.amount for row in iter_records(parquet_files))  # O(1) memory`}</CodeBlock>
 
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"The pod keeps OOMKilling, I'll just bump the memory limit to 16Gi"</td><td>"tracemalloc first — take snapshots before and after the suspect code, find the specific line. Fix the root cause (generator vs list, chunksize vs full read) before scaling resources"</td></tr>
+              <tr><td>"I build the full results list and return it"</td><td>"yield instead of append/return. Generators keep memory flat — caller consumes one record at a time rather than all N records in memory simultaneously"</td></tr>
+              <tr><td>"Python's garbage collector handles memory automatically"</td><td>"Reference cycles aren't freed by refcounting — gc.collect() after del large_df forces collection. Critical in long-running workers processing thousands of batches"</td></tr>
+            </tbody>
+          </table>
+
           <Quiz topicId="py-memory" questions={[
-            { question: "What does tracemalloc.take_snapshot().compare_to(earlier_snapshot, 'lineno') reveal?", options: ["The total memory used by the Python process at that moment", "The net memory allocated between the two snapshots broken down by source line  -  useful for identifying memory leaks in iterative pipeline code", "The time elapsed between the two snapshots", "The CPU usage per line of code"], correct: 1 },
-            { question: "A Pandas pipeline processing a 10 GB CSV hits OOM. Which approach fixes this with minimal code change?", options: ["Switch to PyPy  -  it has a more efficient garbage collector", "Use pd.read_csv(path, chunksize=N) to process the file in chunks, processing and writing each chunk before reading the next", "Increase Python recursion limit with sys.setrecursionlimit()", "Use multiprocessing to read the file in parallel  -  each process uses less memory"], correct: 1 },
-            { question: "In a long-running Python pipeline, why should you explicitly call 'del large_df' followed by 'gc.collect()' after you are done with a large DataFrame?", options: ["del is required before a variable can be reassigned", "CPython's reference counting frees objects immediately on del; gc.collect() handles reference cycles that reference counting alone cannot detect  -  together they ensure memory is returned to the OS promptly rather than waiting for the next GC cycle", "gc.collect() compresses memory to reduce fragmentation", "This is required for thread safety in multi-threaded pipelines"], correct: 1 },
+            { question: "tracemalloc.take_snapshot().compare_to(snapshot1, 'lineno') in a pipeline loop shows 200MB growing each iteration. What does this mean?", options: ["The pipeline is processing 200MB more data each iteration — expected behavior", "Python's garbage collector is deferred and will clean up at the end", "An object allocated at a specific source line is not being released between iterations — this is a memory leak pattern", "tracemalloc's overhead itself consumes 200MB per snapshot"], correct: 2 },
+            { question: "A function returns list(process(record) for record in load_all_records()). load_all_records() loads 10M records into memory. How do you fix the memory profile?", options: ["Use a ThreadPoolExecutor — parallel processing reduces peak memory", "Make load_all_records() a generator (yield instead of return/append) and the caller iterates lazily — memory stays flat regardless of record count", "Use pd.read_csv(chunksize=10_000) — this applies to all Python iterables", "Use __slots__ on the record object to reduce per-object memory overhead"], correct: 1 },
+            { question: "A long-running pipeline worker processes batches in a loop. After 500 batches, RSS is 4GB but the current batch is only 10MB. What should you do?", options: ["Restart the worker every 500 batches using a cron job", "Use objgraph.show_growth() to find which object types are accumulating, then fix the root cause (unclosed connections, growing caches, reference cycles)", "Increase the pod memory limit to 8Gi — this is expected behavior for long-running workers", "Use sys.getsizeof() on each batch to identify the largest objects"], correct: 1 },
           ]} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Profile with tracemalloc before adding memory — fix root cause, not symptoms</li>
+                <li>Use generators for large sequences — yield keeps memory flat regardless of count</li>
+                <li>del large_df; gc.collect() after large intermediate allocations in long-running loops</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Blindly increase pod memory limits without profiling the root cause</li>
+                <li>Build large lists when a generator would do — list materializes all items, generator yields one at a time</li>
+                <li>Ignore growing RSS in long-running workers — memory leaks compound over thousands of batches</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('py-memory')) { await unmarkTopicComplete('py-memory'); onUnmark('py-memory') } else { await markTopicComplete('py-memory'); onComplete('py-memory') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('py-memory') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('py-memory') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
