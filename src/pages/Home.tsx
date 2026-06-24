@@ -604,11 +604,22 @@ export default function Home({ completed }: Props) {
         </div>
 
         <div className="features-grid" style={{
-          display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',
-          gap:18,maxWidth:1100,margin:'0 auto',
+          display:'grid', gridTemplateColumns:'repeat(4,1fr)',
+          gap:18, maxWidth:1100, margin:'0 auto',
         }}>
-          {FEATURES.map(([icon, title, desc, bg, border], i) => (
+          {FEATURES.slice(0, 4).map(([icon, title, desc, bg, border], i) => (
             <FeatureCard key={String(title)} icon={icon} title={title} desc={desc} bg={bg} border={border} i={i} />
+          ))}
+        </div>
+        {/* Last 2 — centred row */}
+        <div style={{
+          display:'flex', justifyContent:'center', gap:18,
+          maxWidth:1100, margin:'18px auto 0',
+        }}>
+          {FEATURES.slice(4).map(([icon, title, desc, bg, border], i) => (
+            <div key={String(title)} style={{ width:'calc(25% - 9px)', minWidth:220, maxWidth:300 }}>
+              <FeatureCard icon={icon} title={title} desc={desc} bg={bg} border={border} i={i + 4} />
+            </div>
           ))}
         </div>
       </section>
