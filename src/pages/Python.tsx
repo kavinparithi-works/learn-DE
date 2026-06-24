@@ -75,6 +75,7 @@ export default function Python({ completed, onComplete, onUnmark }: Props) {
             <p className="topic-desc">Python's execution model is unique among mainstream languages. Understanding the GIL (Global Interpreter Lock) explains why Python threads don't parallelize CPU work, why data engineers default to multiprocessing or asyncio, and how PySpark bypasses these constraints entirely by running in the JVM.</p>
           </div>
 
+          <GILDiagram />
           <PythonGilAnimation />
 
           <div className="callout callout-warning">
@@ -198,6 +199,7 @@ print(f"CPython implementation: {sys.implementation.name}")  # cpython
             <p className="topic-desc">Python is dynamically typed at runtime but supports static type annotations checked by tools like mypy and Pyright. In production data pipelines, type hints are not optional  -  they prevent entire classes of bugs, make IDE auto-complete reliable, and serve as living documentation for schema contracts.</p>
           </div>
 
+          <TypeHintsDiagram />
           <TypeHintsAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -374,6 +376,7 @@ def write_dataset(
             <p className="topic-desc">Choosing the right data structure is a multiplier on pipeline performance. A membership test that costs O(n) in a list costs O(1) in a set. A priority queue implemented with a sorted list costs O(n log n) per insert; heapq costs O(log n). These differences dominate at pipeline scale.</p>
           </div>
 
+          <DataStructuresDiagram />
           <DataStructuresAnimation />
           <div style={{ overflowX: 'auto', marginBottom: 24 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem', fontFamily: 'var(--font-mono)' }}>
@@ -529,6 +532,7 @@ combined = today_counts + yesterday_counts`}</CodeBlock>
             <p className="topic-desc">Comprehensions are Python's most idiomatic feature for building collections. They're faster than equivalent for-loops because the iteration is implemented in C inside the interpreter. Generator expressions look identical but produce values lazily  -  critical when processing files or streams that don't fit in memory.</p>
           </div>
 
+          <ComprehensionDiagram />
           <ComprehensionAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -680,6 +684,7 @@ t_gen = timeit.timeit("sum(x**2 for x in range(100_000))", number=100)
 
         <section id="py-functions" ref={el => { if (el) sectionRefs.current['py-functions'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Functions, args/kwargs, closures, functools</h1><p className="topic-desc">Python functions are first-class objects. Mastering args/kwargs, closures, functools.partial, and lru_cache is essential for building flexible, reusable pipeline components.</p></div>
+          <FunctionsDiagram />
           <FunctoolsAnimation />
           <CodeBlock lang="python">{`from typing import Any, Callable
 import functools
@@ -782,6 +787,7 @@ def _(obj: pd.DataFrame) -> str:
 
         <section id="py-generators" ref={el => { if (el) sectionRefs.current['py-generators'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Generators &amp; itertools</h1><p className="topic-desc">Generators are the cornerstone of memory-efficient data pipelines in Python. itertools provides lazy, composable building blocks for data stream processing.</p></div>
+          <GeneratorDiagram />
           <GeneratorAnimation />
           <CodeBlock lang="python">{`from typing import Iterator, Generator
 import itertools
@@ -900,6 +906,7 @@ cumulative = list(itertools.accumulate(daily_sales, operator.add))
 
         <section id="py-decorators" ref={el => { if (el) sectionRefs.current['py-decorators'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Decorators</h1><p className="topic-desc">Decorators let you wrap functions with cross-cutting concerns (logging, retry, timing, caching) without modifying business logic. They are the backbone of clean, DRY pipeline code.</p></div>
+          <DecoratorDiagram />
           <DecoratorAnimation />
           <CodeBlock lang="python">{`import functools, time, logging, threading
 from typing import TypeVar, Callable, Any
@@ -1041,6 +1048,7 @@ def process_event(record: dict) -> dict:
 
         <section id="py-oop" ref={el => { if (el) sectionRefs.current['py-oop'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">OOP, ABC, Protocol, dataclasses, __slots__</h1><p className="topic-desc">Python's OOP supports multiple inheritance, abstract base classes, structural typing via Protocol, and zero-boilerplate value objects with dataclasses. Understanding MRO and __dunder__ methods is critical for building reusable DE frameworks.</p></div>
+          <OOPDiagram />
           <OOPAnimation />
           <CodeBlock lang="python">{`from abc import ABC, abstractmethod
 from typing import Protocol, runtime_checkable
@@ -1187,6 +1195,7 @@ full_etl = ingest | enrich   # DataPipeline(name='ingest|enrich', stages=6)`}</C
 
         <section id="py-context" ref={el => { if (el) sectionRefs.current['py-context'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Context Managers</h1><p className="topic-desc">Context managers guarantee resource cleanup even when exceptions occur. __enter__/__exit__, contextlib.contextmanager, suppress, and ExitStack are essential for robust database connections, file handles, and distributed locks.</p></div>
+          <ContextManagerDiagram />
           <ContextManagerAnimation />
           <CodeBlock lang="python">{`from contextlib import contextmanager, suppress, ExitStack
 import time, logging
@@ -1308,6 +1317,7 @@ def pipeline_stage(name: str, conn):
 
         <section id="py-errors" ref={el => { if (el) sectionRefs.current['py-errors'] = el }} className="topic-section">
           <div className="topic-header"><div className="topic-eyebrow">Level 5 - Python for Data Engineering</div><h1 className="topic-title">Error Handling, Custom Exceptions &amp; Logging</h1><p className="topic-desc">Robust pipelines need structured error handling with custom exception hierarchies, exception chaining (raise X from Y), and structured logging. structlog and Python's logging module are the standard tools.</p></div>
+          <ErrorsDiagram />
           <ErrorHierarchyAnimation />
           <CodeBlock lang="python">{`import logging
 import sys
@@ -1456,6 +1466,7 @@ log.audit("load_complete", rows_affected=84_321, target_table="fact_sales")`}</C
             <p className="topic-desc">asyncio enables high-throughput I/O-bound pipelines  -  concurrent API calls, database queries, and file operations on a single thread. async/await, gather, aiohttp, and asyncpg are the core primitives.</p>
           </div>
           <div className="callout callout-info"><span className="callout-icon">💡</span><div className="callout-body"><strong>Concurrency vs Parallelism:</strong> asyncio is single-threaded cooperative concurrency  -  ideal for I/O-bound work (network, DB). For CPU-bound work, use multiprocessing or concurrent.futures.ProcessPoolExecutor instead.</div></div>
+          <AsyncDiagram />
           <AsyncAnimation />
           <CodeBlock lang="python">{`import asyncio
 import aiohttp
@@ -1598,6 +1609,7 @@ async def fetch_with_timeout(url: str) -> dict | None:
             <h1 className="topic-title">File I/O, pathlib, CSV, JSON, YAML, TOML & Config</h1>
             <p className="topic-desc">Data engineers read and write files constantly. pathlib provides modern OS-agnostic path handling. Parsing CSV, JSON, YAML, TOML, and .env files correctly is fundamental for building configurable, portable pipeline code.</p>
           </div>
+          <FileIODiagram />
           <FileIOAnimation />
           <CodeBlock lang="python">{`from pathlib import Path
 import json, csv, gzip, io
@@ -1736,6 +1748,7 @@ def atomic_write_json(data: dict, path: Path) -> None:
             <h1 className="topic-title">Regular Expressions (re module)</h1>
             <p className="topic-desc">Regular expressions are essential for parsing log files, extracting data from unstructured text, validating formats, and transforming messy strings in ETL pipelines.</p>
           </div>
+          <RegexDiagram />
           <RegexAnimation />
           <CodeBlock lang="python">{`import re
 
@@ -1834,6 +1847,7 @@ def validate_table_name(name: str) -> str:
             <h1 className="topic-title">Testing with pytest  -  fixtures, parametrize, mocking</h1>
             <p className="topic-desc">Quality data pipelines need automated tests. pytest fixtures provide reusable test setup, parametrize covers edge cases efficiently, and unittest.mock patches external dependencies so tests run without real DBs or APIs.</p>
           </div>
+          <TestingDiagram />
           <TestingAnimation />
           <CodeBlock lang="python">{`# tests/test_pipeline.py
 import pytest
@@ -1959,6 +1973,7 @@ async def test_async_pipeline():
             <h1 className="topic-title">Package Management  -  pip, venv, poetry, pyproject.toml</h1>
             <p className="topic-desc">Reproducible Python environments are critical for data pipelines. Understanding virtual environments, pyproject.toml, poetry, and conda prevents the "works on my machine" problem and enables reliable CI/CD deployments.</p>
           </div>
+          <PackagesDiagram />
           <PackagesAnimation />
           <CodeBlock lang="bash">{`# Virtual environments  -  isolate project dependencies
 python -m venv .venv
@@ -2070,6 +2085,7 @@ conda env export > environment.yml
             <h1 className="topic-title">pandas Deep Dive for Data Engineering</h1>
             <p className="topic-desc">pandas is the workhorse of Python-based data pipelines. Mastering dtype optimization, vectorized operations, groupby, merge, pivot_table, memory management, and chunked reading is essential for handling real-world datasets efficiently.</p>
           </div>
+          <PandasDiagram />
           <PandasAnimation />
           <PythonMemoryAnimation />
           <CodeBlock lang="python">{`import pandas as pd
@@ -2185,6 +2201,7 @@ df.to_parquet("output.parquet", engine="pyarrow", compression="snappy", index=Fa
             <h1 className="topic-title">Database Connections  -  psycopg2, SQLAlchemy, Connection Pooling</h1>
             <p className="topic-desc">Proper database connection management prevents connection leaks, ensures transactional integrity, and maximizes throughput. psycopg2 for direct Postgres, SQLAlchemy for ORM/abstraction, and connection pooling for high-concurrency workloads.</p>
           </div>
+          <DBConnectionDiagram />
           <DBConnectionAnimation />
           <CodeBlock lang="python">{`import psycopg2
 import psycopg2.extras
@@ -2315,6 +2332,7 @@ def run_upsert(records: list[dict], table: str) -> int:
             <h1 className="topic-title">HTTP Clients  -  requests, httpx, retry, pagination, rate limiting</h1>
             <p className="topic-desc">Data engineers constantly pull data from REST APIs. Handling pagination, rate limits, OAuth, retry with backoff, and session management correctly is critical for reliable API ingestion pipelines.</p>
           </div>
+          <HTTPDiagram />
           <HTTPAnimation />
           <CodeBlock lang="python">{`import requests
 import time
@@ -2474,6 +2492,7 @@ async def paginate_cursor(client: httpx.AsyncClient, url: str) -> list[dict]:
             <h1 className="topic-title">Linux & Shell Scripting for Data Engineers</h1>
             <p className="topic-desc">Data engineers work in Linux environments daily  -  managing file systems, scheduling jobs with cron, monitoring processes, piping data between commands, and writing robust shell scripts for pipeline orchestration.</p>
           </div>
+          <LinuxScriptDiagram />
           <LinuxScriptAnimation />
           <CodeBlock lang="bash">{`#!/bin/bash
 # Robust pipeline shell script
@@ -2595,6 +2614,7 @@ wc -l /data/processed/events_2024-01-15.jsonl   # count processed records`}</Cod
             <h1 className="topic-title">Git Deep Dive for Data Engineers</h1>
             <p className="topic-desc">Git is not just version control  -  it's the backbone of CI/CD, code review, and collaborative development. Data engineers need fluency in branching strategies, rebase vs merge, cherry-pick, bisect, hooks, and GitHub Actions for pipeline automation.</p>
           </div>
+          <GitDiagram />
           <GitAnimation />
           <CodeBlock lang="bash">{`# Branching strategy: GitHub Flow for data engineering teams
 # main → always deployable
@@ -2730,6 +2750,7 @@ jobs:
             <h1 className="topic-title">Pydantic Data Validation</h1>
             <p className="topic-desc">Pydantic v2 is the standard library for data validation in Python data engineering. Built on Rust (via pydantic-core), it validates data at the boundary between untrusted inputs and your pipeline logic  -  parsing JSON API responses, validating pipeline configs, and enforcing schema contracts at runtime. Pydantic models serve as living documentation for your data contracts.</p>
           </div>
+          <PydanticDiagram />
           <PydanticAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -2973,6 +2994,7 @@ for raw_record in raw_batch:
             <h1 className="topic-title">Docker for Data Engineering</h1>
             <p className="topic-desc">Docker solves the "works on my machine" problem by packaging your pipeline code, dependencies, and runtime into a portable, reproducible image. For data engineers, Docker is essential for local development stacks, CI/CD pipelines, containerized Spark applications, and deploying Airflow, dbt, and other DE tools consistently across environments.</p>
           </div>
+          <DockerPyDiagram />
           <DockerPyAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3204,6 +3226,7 @@ cat .dockerignore
             <h1 className="topic-title">Kubernetes for Data Engineering</h1>
             <p className="topic-desc">Kubernetes (K8s) is the production standard for running containerized data workloads at scale. For data engineers, the key use cases are: running Spark on Kubernetes (driver + executor pods), using KubernetesPodOperator in Airflow for isolated task execution, and deploying data services (APIs, dbt, Flink) with automatic scaling and self-healing.</p>
           </div>
+          <K8sDiagram />
           <K8sAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3429,6 +3452,7 @@ with DAG(
             <h1 className="topic-title">Data Quality with Deequ + Great Expectations</h1>
             <p className="topic-desc">Data quality (DQ) validation is a critical gate in production data pipelines. Amazon Deequ (open source, Spark-native) and Great Expectations (Python-native, multi-engine) are the two leading frameworks. They let you define constraints on your data, run them as part of your pipeline, and fail fast when data violates your contracts  -  before bad data reaches downstream consumers.</p>
           </div>
+          <DataQualityPyDiagram />
           <DataQualityPyAnimation />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
@@ -3617,7 +3641,7 @@ def validate_data_quality(execution_date: str) -> None:
             <h1 className="topic-title">Python Memory Profiling</h1>
             <p className="topic-desc">Memory bugs in data pipelines are insidious  -  a pipeline that works on 100 MB of data crashes on 10 GB. Python's built-in tracemalloc, the memory_profiler library, and objgraph give you progressively deeper visibility into what is consuming memory. Mastering memory-efficient patterns (streaming, generators, chunked reads, explicit deletion) is what separates production-grade DE code from fragile notebook scripts.</p>
           </div>
-
+          <MemoryProfileDiagram />
           <div className="callout callout-info">
             <span className="callout-icon">💡</span>
             <div className="callout-body"><strong>Pandas copies vs views:</strong> Operations like <code>df[df['col'] &gt; 0]</code> and <code>df.loc[...]</code> may return a view (no copy) or a copy (doubled memory). After Pandas 2.0 with Copy-on-Write (CoW), assignments always create copies. Use <code>df.query()</code>, <code>df.assign()</code> and chain transformations to minimise intermediate copies. For very large data, use chunked reads with <code>pd.read_csv(chunksize=N)</code>.</div>
@@ -3789,6 +3813,589 @@ total = sum(row.amount for row in iter_records(parquet_files))  # O(1) memory`}<
         </section>
 
       </main>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────── PYTHON DIAGRAM COMPONENTS ──
+
+function GILDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">GIL — Global Interpreter Lock</text>
+        {['Thread 1','Thread 2','Thread 3'].map((t,i)=>(
+          <g key={t}>
+            <rect x="10" y={20+i*22} width="80" height="16" rx="3" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x="50" y={32+i*22} fontSize="8" fill="#4f8ef7" textAnchor="middle">{t}</text>
+            {[0,1,2,3,4].map(s=>(
+              <rect key={s} x={100+s*72} y={20+i*22} width={s===i*2%5?60:20} height="16" rx="2"
+                fill={s===i*2%5?'#22c55e':'#ef4444'} opacity={s===i*2%5?.4:.12}/>
+            ))}
+          </g>
+        ))}
+        <text x="100" y="82" fontSize="7.5" fill="#22c55e">Green = holds GIL (runs Python bytecode)</text>
+        <text x="260" y="82" fontSize="7.5" fill="#ef4444">Red = waiting for GIL</text>
+      </svg>
+    </div>
+  )
+}
+
+function TypeHintsDiagram() {
+  const hints = [
+    {code:'x: int = 42',type:'int',color:'#4f8ef7'},
+    {code:'name: str = "hi"',type:'str',color:'#22c55e'},
+    {code:'flag: bool = True',type:'bool',color:'#f59e0b'},
+    {code:'items: list[int]',type:'list[int]',color:'#8b5cf6'},
+    {code:'data: dict[str,Any]',type:'dict',color:'#ef4444'},
+    {code:'result: Optional[int]',type:'int|None',color:'#ec4899'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Type Hints — Static Annotations</text>
+        {hints.map((h,i)=>(
+          <g key={h.code}>
+            <rect x={4+(i%3)*158} y={18+Math.floor(i/3)*38} width="150" height="30" rx="4" fill={h.color} opacity=".1" stroke={h.color} strokeWidth="1.2"/>
+            <text x={14+(i%3)*158} y={32+Math.floor(i/3)*38} fontSize="8.5" fontFamily="monospace" fill="#1e293b">{h.code}</text>
+            <text x={14+(i%3)*158} y={43+Math.floor(i/3)*38} fontSize="8" fill={h.color}>type: {h.type}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DataStructuresDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Python Data Structures Comparison</text>
+        {[
+          {name:'list',props:'ordered, mutable, dupes ok',ops:'O(1) append, O(n) search',color:'#4f8ef7'},
+          {name:'dict',props:'key→value, insertion-ordered',ops:'O(1) get/set/del',color:'#22c55e'},
+          {name:'set',props:'unordered, unique values only',ops:'O(1) add/remove/in',color:'#8b5cf6'},
+          {name:'tuple',props:'ordered, immutable',ops:'O(1) index, hashable',color:'#f59e0b'},
+        ].map((s,i)=>(
+          <g key={s.name}>
+            <rect x={4+i*118} y="18" width="112" height="52" rx="5" fill={s.color} opacity=".1" stroke={s.color} strokeWidth="1.2"/>
+            <text x={60+i*118} y="32" fontSize="10" fontWeight="800" fill={s.color} textAnchor="middle">{s.name}</text>
+            <text x={60+i*118} y="44" fontSize="7" fill="#475569" textAnchor="middle">{s.props}</text>
+            <text x={60+i*118} y="56" fontSize="7.5" fontWeight="600" fill="#1e293b" textAnchor="middle">{s.ops}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function ComprehensionDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Comprehensions — Compact Iteration</text>
+        {[
+          {label:'List',code:'[x*2 for x in range(5)]',result:'[0,2,4,6,8]',color:'#4f8ef7'},
+          {label:'Dict',code:'{k:v for k,v in d.items()}',result:'{k:v, ...}',color:'#22c55e'},
+          {label:'Set',code:'{x%3 for x in range(6)}',result:'{0,1,2}',color:'#8b5cf6'},
+          {label:'Generator',code:'(x**2 for x in data)',result:'lazy iterator',color:'#f59e0b'},
+        ].map((c,i)=>(
+          <g key={c.label}>
+            <rect x={4+(i%2)*238} y={18+Math.floor(i/2)*34} width="228" height="26" rx="4" fill={c.color} opacity=".1" stroke={c.color} strokeWidth="1.2"/>
+            <text x={14+(i%2)*238} y={29+Math.floor(i/2)*34} fontSize="8.5" fontWeight="700" fill={c.color}>{c.label}:  </text>
+            <text x={60+(i%2)*238} y={29+Math.floor(i/2)*34} fontSize="8.5" fontFamily="monospace" fill="#1e293b">{c.code}</text>
+            <text x={14+(i%2)*238} y={40+Math.floor(i/2)*34} fontSize="8" fill="#475569">→ {c.result}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function FunctionsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">functools — Higher-Order Tools</text>
+        {[
+          {fn:'partial(f, arg)',desc:'Pre-fill arguments → new fn',color:'#4f8ef7'},
+          {fn:'reduce(f, seq)',desc:'Left-fold sequence to 1 value',color:'#22c55e'},
+          {fn:'lru_cache(maxsize)',desc:'Memoize fn results (in-memory)',color:'#8b5cf6'},
+          {fn:'wraps(fn)',desc:'Preserve metadata in decorators',color:'#f59e0b'},
+          {fn:'total_ordering',desc:'Auto-fill comparison methods',color:'#ef4444'},
+          {fn:'cache',desc:'lru_cache with no size limit',color:'#ec4899'},
+        ].map((f,i)=>(
+          <g key={f.fn}>
+            <rect x={4+(i%3)*158} y={18+Math.floor(i/3)*34} width="150" height="26" rx="4" fill={f.color} opacity=".1" stroke={f.color} strokeWidth="1.1"/>
+            <text x={14+(i%3)*158} y={30+Math.floor(i/3)*34} fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={f.color}>{f.fn}</text>
+            <text x={14+(i%3)*158} y={40+Math.floor(i/3)*34} fontSize="7.5" fill="#475569">{f.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function GeneratorDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Generator — Lazy Evaluation</text>
+        <text x="4" y="26" fontSize="8.5" fill="#64748b">next() pulls one value at a time — no full list in memory</text>
+        {[0,1,2,3,4].map(i=>(
+          <g key={i}>
+            <rect x={10+i*84} y="34" width="72" height="24" rx="4" fill={i===2?'#22c55e':'#4f8ef7'} opacity={i===2?.35:.1} stroke={i===2?'#22c55e':'#4f8ef7'} strokeWidth={i===2?2:1}/>
+            <text x={46+i*84} y="43" fontSize="8" fill="#64748b" textAnchor="middle">item {i}</text>
+            <text x={46+i*84} y="53" fontSize="9" fontWeight="700" fill={i===2?'#22c55e':'#1e293b'} textAnchor="middle">{i===2?'← here':'yield'}</text>
+            {i<4&&<polygon points={`${82+i*84},46 ${90+i*84},42 ${90+i*84},50`} fill="#94a3b8"/>}
+          </g>
+        ))}
+        <text x="4" y="76" fontSize="8" fill="#64748b">Regular list: all items in RAM at once. Generator: one at a time.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DecoratorDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Decorator Pattern</text>
+        <rect x="10" y="20" width="140" height="36" rx="5" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="80" y="35" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">@decorator</text>
+        <text x="80" y="48" fontSize="8" fill="#475569" textAnchor="middle">def my_func(): ...</text>
+        <polygon points="155,38 165,34 165,42" fill="#f59e0b"/>
+        <rect x="170" y="20" width="130" height="36" rx="5" fill="#8b5cf6" opacity=".15" stroke="#8b5cf6" strokeWidth="1.5"/>
+        <text x="235" y="33" fontSize="8.5" fill="#8b5cf6" textAnchor="middle">wrapper()</text>
+        <text x="235" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">calls original fn + adds logic</text>
+        <polygon points="305,38 315,34 315,42" fill="#22c55e"/>
+        <rect x="320" y="20" width="110" height="36" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="375" y="33" fontSize="8.5" fill="#22c55e" textAnchor="middle">my_func()</text>
+        <text x="375" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">= decorated fn</text>
+        <text x="4" y="72" fontSize="8" fill="#64748b">Use cases: logging, timing, retry, auth, caching, rate-limiting</text>
+      </svg>
+    </div>
+  )
+}
+
+function OOPDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 110" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">OOP — Class Hierarchy + Dunder Methods</text>
+        <rect x="175" y="18" width="130" height="20" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="240" y="32" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">class BaseIngester</text>
+        {[
+          {name:'class CSVIngester',x:60,color:'#22c55e'},
+          {name:'class ParquetIngester',x:230,color:'#f59e0b'},
+          {name:'class JSONIngester',x:380,color:'#8b5cf6'},
+        ].map((c)=>(
+          <g key={c.name}>
+            <line x1="240" y1="38" x2={c.x+65} y2="54" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+            <rect x={c.x} y="54" width="130" height="18" rx="4" fill={c.color} opacity=".15" stroke={c.color} strokeWidth="1.2"/>
+            <text x={c.x+65} y="67" fontSize="8" fontWeight="600" fill={c.color} textAnchor="middle">{c.name}</text>
+          </g>
+        ))}
+        <text x="4" y="86" fontSize="8" fill="#64748b">Dunder methods: __init__ __repr__ __len__ __getitem__ __enter__ __exit__</text>
+        <text x="4" y="98" fontSize="8" fill="#94a3b8">@dataclass auto-generates __init__, __repr__, __eq__ from field annotations</text>
+      </svg>
+    </div>
+  )
+}
+
+function ContextManagerDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 440 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Context Manager — with Statement Lifecycle</text>
+        {[
+          {label:'__enter__',desc:'Acquire resource',color:'#22c55e'},
+          {label:'body executes',desc:'Use resource safely',color:'#4f8ef7'},
+          {label:'__exit__',desc:'Release (even on exception)',color:'#ef4444'},
+        ].map((s,i)=>(
+          <g key={s.label}>
+            <rect x={10+i*140} y="20" width="128" height="42" rx="5" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.5"/>
+            <text x={74+i*140} y="36" fontSize="9" fontWeight="700" fill={s.color} textAnchor="middle">{s.label}</text>
+            <text x={74+i*140} y="50" fontSize="8" fill="#475569" textAnchor="middle">{s.desc}</text>
+            {i<2&&<polygon points={`${140+i*140},41 ${148+i*140},37 ${148+i*140},45`} fill={s.color} opacity=".6"/>}
+          </g>
+        ))}
+        <text x="4" y="76" fontSize="8" fill="#64748b">with open(f) as fh: / with conn: / with tempfile.TemporaryDirectory() as d:</text>
+      </svg>
+    </div>
+  )
+}
+
+function ErrorsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Exception Hierarchy</text>
+        <rect x="190" y="18" width="100" height="16" rx="3" fill="#ef4444" opacity=".2" stroke="#ef4444" strokeWidth="1.5"/>
+        <text x="240" y="30" fontSize="8.5" fontWeight="700" fill="#ef4444" textAnchor="middle">BaseException</text>
+        {[{label:'Exception',x:90,color:'#f59e0b'},{label:'SystemExit',x:240,color:'#8b5cf6'},{label:'KeyboardInterrupt',x:390,color:'#64748b'}].map((e)=>(
+          <g key={e.label}>
+            <line x1="240" y1="34" x2={e.x} y2="50" stroke="#94a3b8" strokeWidth="1"/>
+            <rect x={e.x-50} y="50" width="100" height="14" rx="3" fill={e.color} opacity=".15" stroke={e.color} strokeWidth="1"/>
+            <text x={e.x} y="61" fontSize="7.5" fill={e.color} textAnchor="middle">{e.label}</text>
+          </g>
+        ))}
+        {[{label:'ValueError',x:30},{label:'TypeError',x:90},{label:'IOError',x:150}].map((e)=>(
+          <g key={e.label}>
+            <line x1="90" y1="64" x2={e.x} y2="78" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 1"/>
+            <rect x={e.x-32} y="78" width="64" height="13" rx="2" fill="#f59e0b" opacity=".12"/>
+            <text x={e.x} y="88" fontSize="7" fill="#64748b" textAnchor="middle">{e.label}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function AsyncDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">async/await — Event Loop Concurrency</text>
+        <text x="4" y="26" fontSize="8.5" fill="#64748b">Single thread, multiple coroutines suspended at I/O boundaries</text>
+        {['fetch_url_1','fetch_url_2','fetch_url_3'].map((t,i)=>(
+          <g key={t}>
+            <text x="10" y={42+i*16} fontSize="8" fill="#475569">{t}</text>
+            {[0,1,2,3,4,5].map(s=>(
+              <rect key={s} x={90+s*58} y={34+i*16} width="52" height="12" rx="2"
+                fill={s%2===i%2?'#4f8ef7':'#e2e8f0'} opacity={s%2===i%2?.4:.3}/>
+            ))}
+          </g>
+        ))}
+        <text x="4" y="82" fontSize="8" fill="#22c55e">Blue = running   Gray = awaiting I/O (yields control back to event loop)</text>
+      </svg>
+    </div>
+  )
+}
+
+function FileIODiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">File I/O Modes and Paths</text>
+        {[
+          {mode:'r',desc:'Read text',color:'#4f8ef7'},
+          {mode:'w',desc:'Write (truncate)',color:'#ef4444'},
+          {mode:'a',desc:'Append',color:'#f59e0b'},
+          {mode:'rb',desc:'Read binary',color:'#8b5cf6'},
+          {mode:'r+',desc:'Read + write',color:'#22c55e'},
+          {mode:'x',desc:'Create (fail if exists)',color:'#ec4899'},
+        ].map((m,i)=>(
+          <g key={m.mode}>
+            <rect x={4+i*74} y="18" width="68" height="44" rx="5" fill={m.color} opacity=".12" stroke={m.color} strokeWidth="1.2"/>
+            <text x={38+i*74} y="35" fontSize="12" fontWeight="800" fontFamily="monospace" fill={m.color} textAnchor="middle">'{m.mode}'</text>
+            <text x={38+i*74} y="52" fontSize="7.5" fill="#475569" textAnchor="middle">{m.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function RegexDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Regex — Pattern Anatomy</text>
+        <text x="4" y="26" fontSize="10" fontFamily="monospace" fill="#1e293b">^(\d{4})-(\d{2})-(\d{2})$</text>
+        {[
+          {pat:'^',desc:'start of string',color:'#ef4444',x:4},
+          {pat:'(\\d{4})',desc:'4 digits (group 1)',color:'#4f8ef7',x:70},
+          {pat:'-',desc:'literal dash',color:'#64748b',x:200},
+          {pat:'(\\d{2})',desc:'2 digits (group 2)',color:'#22c55e',x:240},
+          {pat:'$',desc:'end of string',color:'#ef4444',x:370},
+        ].map((p)=>(
+          <g key={p.pat+p.x}>
+            <line x1={p.x+10} y1="30" x2={p.x+10} y2="42" stroke={p.color} strokeWidth="1.2" strokeDasharray="2 1"/>
+            <rect x={p.x} y="42" width="80" height="18" rx="3" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1"/>
+            <text x={p.x+40} y="55" fontSize="7.5" fill={p.color} textAnchor="middle">{p.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="76" fontSize="8" fill="#64748b">Methods: re.match() re.search() re.findall() re.sub() re.compile()</text>
+      </svg>
+    </div>
+  )
+}
+
+function TestingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Testing Pyramid</text>
+        {[
+          {label:'E2E Tests',width:120,y:18,color:'#ef4444',desc:'few, slow, high confidence'},
+          {label:'Integration Tests',width:200,y:36,color:'#f59e0b',desc:'some, medium speed'},
+          {label:'Unit Tests',width:300,y:54,color:'#22c55e',desc:'many, fast, cheap'},
+        ].map(t=>(
+          <g key={t.label}>
+            <rect x={(460-t.width)/2} y={t.y} width={t.width} height="16" rx="3" fill={t.color} opacity=".2" stroke={t.color} strokeWidth="1.5"/>
+            <text x="230" y={t.y+11} fontSize="8.5" fontWeight="700" fill={t.color} textAnchor="middle">{t.label}</text>
+            <text x="235" y={t.y+11} fontSize="7.5" fill="#64748b" textAnchor="start" style={{display:'none'}}>{t.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="74" fontSize="8" fill="#64748b">pytest: fixtures, parametrize, monkeypatch — mock.patch for external I/O</text>
+      </svg>
+    </div>
+  )
+}
+
+function PackagesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Package Management Landscape</text>
+        {[
+          {tool:'pip',desc:'Standard installer\n(PyPI packages)',color:'#4f8ef7'},
+          {tool:'venv / uv',desc:'Virtual environment\nisolation',color:'#22c55e'},
+          {tool:'poetry',desc:'Dependency groups +\nlock file',color:'#8b5cf6'},
+          {tool:'conda',desc:'Binary packages +\nnon-Python deps',color:'#f59e0b'},
+        ].map((p,i)=>(
+          <g key={p.tool}>
+            <rect x={4+i*114} y="18" width="108" height="48" rx="5" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.2"/>
+            <text x={58+i*114} y="33" fontSize="10" fontWeight="700" fill={p.color} textAnchor="middle">{p.tool}</text>
+            {p.desc.split('\n').map((d,j)=><text key={j} x={58+i*114} y={46+j*12} fontSize="7.5" fill="#475569" textAnchor="middle">{d}</text>)}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function PandasDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">pandas — Core Operations</text>
+        {[
+          {op:'read_csv/parquet',desc:'Ingestion with dtypes',color:'#4f8ef7'},
+          {op:'groupby().agg()',desc:'Split-Apply-Combine',color:'#22c55e'},
+          {op:'merge()',desc:'SQL-style joins',color:'#8b5cf6'},
+          {op:'pivot_table()',desc:'Aggregate + reshape',color:'#f59e0b'},
+          {op:'to_parquet()',desc:'Write columnar output',color:'#ef4444'},
+          {op:'query()',desc:'Filter (evaluates expr)',color:'#ec4899'},
+        ].map((o,i)=>(
+          <g key={o.op}>
+            <rect x={4+(i%3)*156} y={18+Math.floor(i/3)*34} width="148" height="26" rx="4" fill={o.color} opacity=".1" stroke={o.color} strokeWidth="1.1"/>
+            <text x={14+(i%3)*156} y={30+Math.floor(i/3)*34} fontSize="8.5" fontWeight="700" fontFamily="monospace" fill={o.color}>{o.op}</text>
+            <text x={14+(i%3)*156} y={40+Math.floor(i/3)*34} fontSize="7.5" fill="#475569">{o.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function MemoryProfileDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Memory Profiling Tools</text>
+        {[
+          {tool:'tracemalloc',desc:'Built-in — trace allocs by file/line',color:'#4f8ef7'},
+          {tool:'memory_profiler',desc:'@profile decorator — line-by-line MB',color:'#22c55e'},
+          {tool:'objgraph',desc:'Object counts + reference graph',color:'#8b5cf6'},
+          {tool:'sys.getsizeof',desc:'Object shallow size in bytes',color:'#f59e0b'},
+        ].map((t,i)=>(
+          <g key={t.tool}>
+            <rect x={4+(i%2)*230} y={18+Math.floor(i/2)*30} width="220" height="22" rx="4" fill={t.color} opacity=".1" stroke={t.color} strokeWidth="1.1"/>
+            <text x={14+(i%2)*230} y={28+Math.floor(i/2)*30} fontSize="9" fontWeight="700" fontFamily="monospace" fill={t.color}>{t.tool}</text>
+            <text x={14+(i%2)*230} y={37+Math.floor(i/2)*30} fontSize="7.5" fill="#475569">{t.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DBConnectionDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DB Connection Layers</text>
+        {[
+          {name:'Application',color:'#4f8ef7',y:18},
+          {name:'ORM / SQLAlchemy',color:'#8b5cf6',y:36},
+          {name:'DB-API 2.0 Driver (psycopg2 / pyodbc)',color:'#f59e0b',y:54},
+          {name:'Database Server (Postgres / Snowflake)',color:'#22c55e',y:72},
+        ].map(l=>(
+          <g key={l.name}>
+            <rect x="10" y={l.y} width="440" height="15" rx="3" fill={l.color} opacity=".15" stroke={l.color} strokeWidth="1"/>
+            <text x="16" y={l.y+11} fontSize="8.5" fontWeight="600" fill="#1e293b">{l.name}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function HTTPDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">HTTP Request / Response Cycle</text>
+        <rect x="10" y="20" width="80" height="44" rx="5" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="50" y="46" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Client</text>
+        <text x="50" y="57" fontSize="7.5" fill="#475569" textAnchor="middle">requests</text>
+        <line x1="90" y1="36" x2="200" y2="36" stroke="#22c55e" strokeWidth="2"/>
+        <polygon points="196,32 204,36 196,40" fill="#22c55e"/>
+        <text x="145" y="30" fontSize="8" fill="#22c55e" textAnchor="middle">GET /api/data</text>
+        <rect x="205" y="20" width="80" height="44" rx="5" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="245" y="46" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Server</text>
+        <text x="245" y="57" fontSize="7.5" fill="#475569" textAnchor="middle">REST API</text>
+        <line x1="205" y1="54" x2="95" y2="54" stroke="#f59e0b" strokeWidth="2"/>
+        <polygon points="99,50 91,54 99,58" fill="#f59e0b"/>
+        <text x="150" y="66" fontSize="8" fill="#f59e0b" textAnchor="middle">200 OK + JSON body</text>
+        <text x="310" y="32" fontSize="8" fill="#64748b">Status codes:</text>
+        {['2xx OK','3xx Redirect','4xx Client err','5xx Server err'].map((s,i)=>(
+          <text key={s} x="310" y={44+i*10} fontSize="7.5" fill={i===0?'#22c55e':i===1?'#f59e0b':i===2?'#ef4444':'#8b5cf6'}>{s}</text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function LinuxScriptDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Linux — Pipe & Redirect</text>
+        {['cat data.csv','grep "ERROR"','awk \'{print $3}\'','sort','uniq -c','sort -rn'].map((cmd,i)=>(
+          <g key={cmd}>
+            <rect x={4+i*74} y="20" width="68" height="24" rx="3" fill="#1e293b" opacity=".08" stroke="#475569" strokeWidth="1"/>
+            <text x={38+i*74} y="35" fontSize="8" fontFamily="monospace" fill="#1e293b" textAnchor="middle">{cmd}</text>
+            {i<5&&<polygon points={`${72+i*74},32 ${76+i*74},28 ${76+i*74},36`} fill="#4f8ef7"/>}
+          </g>
+        ))}
+        <text x="4" y="62" fontSize="8" fill="#64748b">Pipeline: stdout of each command feeds stdin of next via |</text>
+        <text x="4" y="74" fontSize="8" fill="#94a3b8">Redirect: &gt; overwrite, &gt;&gt; append, 2&gt;&amp;1 combine stderr+stdout</text>
+      </svg>
+    </div>
+  )
+}
+
+function GitDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Git Data Flow</text>
+        {[
+          {label:'Working Dir',color:'#4f8ef7',x:10},
+          {label:'Index / Stage',color:'#f59e0b',x:130},
+          {label:'Local Repo',color:'#22c55e',x:250},
+          {label:'Remote (GitHub)',color:'#8b5cf6',x:360},
+        ].map(s=>(
+          <g key={s.label}>
+            <rect x={s.x} y="18" width="108" height="36" rx="5" fill={s.color} opacity=".15" stroke={s.color} strokeWidth="1.5"/>
+            <text x={s.x+54} y="40" fontSize="8.5" fontWeight="700" fill={s.color} textAnchor="middle">{s.label}</text>
+          </g>
+        ))}
+        {[{cmd:'git add',x1:118,x2:130},{cmd:'git commit',x1:238,x2:250},{cmd:'git push',x1:358,x2:360}].map(a=>(
+          <g key={a.cmd}>
+            <polygon points={`${a.x1},38 ${a.x2-4},34 ${a.x2-4},42`} fill="#64748b"/>
+            <text x={(a.x1+a.x2)/2} y="55" fontSize="7" fill="#64748b" textAnchor="middle">{a.cmd}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function PydanticDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 90" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Pydantic — Validation Pipeline</text>
+        <rect x="10" y="20" width="90" height="36" rx="5" fill="#64748b" opacity=".15" stroke="#64748b" strokeWidth="1.5"/>
+        <text x="55" y="33" fontSize="9" fontWeight="700" fill="#64748b" textAnchor="middle">Raw Input</text>
+        <text x="55" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">dict / JSON</text>
+        <polygon points="102,38 110,34 110,42" fill="#f59e0b"/>
+        <rect x="112" y="20" width="120" height="36" rx="5" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="172" y="33" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Pydantic Model</text>
+        <text x="172" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">validate + coerce types</text>
+        <polygon points="234,38 242,34 242,42" fill="#22c55e"/>
+        <rect x="244" y="20" width="100" height="36" rx="5" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="294" y="33" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Valid Object</text>
+        <text x="294" y="48" fontSize="7.5" fill="#475569" textAnchor="middle">typed attrs</text>
+        <polygon points="124,38 116,38" fill="none"/>
+        <text x="350" y="30" fontSize="8" fill="#ef4444">Validation</text>
+        <text x="350" y="42" fontSize="8" fill="#ef4444">Error</text>
+        <text x="350" y="54" fontSize="7.5" fill="#64748b">(if bad input)</text>
+        <line x1="172" y1="56" x2="350" y2="60" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 2"/>
+        <text x="4" y="78" fontSize="8" fill="#64748b">v2: model_validator, field_validator, model_serializer — fastest Python validator</text>
+      </svg>
+    </div>
+  )
+}
+
+function DockerPyDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 95" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Docker — Image Layers</text>
+        {[
+          {label:'FROM python:3.12-slim',color:'#1e293b',opacity:'.12'},
+          {label:'RUN pip install -r requirements.txt',color:'#4f8ef7',opacity:'.15'},
+          {label:'COPY src/ /app/src/',color:'#8b5cf6',opacity:'.15'},
+          {label:'CMD ["python", "-m", "pipeline"]',color:'#22c55e',opacity:'.2'},
+        ].map((l,i)=>(
+          <g key={l.label}>
+            <rect x="10" y={18+i*17} width="440" height="14" rx="2" fill={l.color} opacity={l.opacity} stroke={l.color} strokeWidth="1"/>
+            <text x="16" y={29+i*17} fontSize="8.5" fontFamily="monospace" fill="#1e293b">{l.label}</text>
+            <text x="436" y={29+i*17} fontSize="7.5" fill="#94a3b8" textAnchor="end">layer {i+1}</text>
+          </g>
+        ))}
+        <text x="4" y="88" fontSize="8" fill="#64748b">Each instruction = one immutable layer. Docker caches unchanged layers → fast rebuilds.</text>
+      </svg>
+    </div>
+  )
+}
+
+function K8sDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 100" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Kubernetes Object Hierarchy</text>
+        <rect x="160" y="18" width="140" height="18" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="230" y="31" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Cluster</text>
+        <line x1="230" y1="36" x2="230" y2="46" stroke="#4f8ef7" strokeWidth="1"/>
+        <rect x="150" y="46" width="160" height="16" rx="3" fill="#8b5cf6" opacity=".18" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="230" y="58" fontSize="9" fontWeight="700" fill="#8b5cf6" textAnchor="middle">Namespace</text>
+        {[{label:'Deployment',x:60},{label:'Service',x:210},{label:'ConfigMap',x:360}].map(o=>(
+          <g key={o.label}>
+            <line x1="230" y1="62" x2={o.x+50} y2="74" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 1"/>
+            <rect x={o.x} y="74" width="100" height="14" rx="3" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1"/>
+            <text x={o.x+50} y="84" fontSize="8" fill="#22c55e" textAnchor="middle">{o.label}</text>
+          </g>
+        ))}
+        <text x="4" y="98" fontSize="8" fill="#64748b">Pod = one or more containers. ReplicaSet = desired pod count. Deployment = rolling update controller.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DataQualityPyDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Quality — Validation Layers</text>
+        {[
+          {tool:'Great Expectations',desc:'Expectation suites + data docs',color:'#4f8ef7'},
+          {tool:'Deequ (PySpark)',desc:'Column-level constraints at scale',color:'#8b5cf6'},
+          {tool:'Soda Core',desc:'YAML-defined checks + alerting',color:'#22c55e'},
+          {tool:'Pandera',desc:'pandas DataFrame schema validation',color:'#f59e0b'},
+        ].map((t,i)=>(
+          <g key={t.tool}>
+            <rect x={4+(i%2)*228} y={18+Math.floor(i/2)*28} width="218" height="22" rx="4" fill={t.color} opacity=".12" stroke={t.color} strokeWidth="1.1"/>
+            <text x={14+(i%2)*228} y={27+Math.floor(i/2)*28} fontSize="8.5" fontWeight="700" fill={t.color}>{t.tool}</text>
+            <text x={14+(i%2)*228} y={37+Math.floor(i/2)*28} fontSize="7.5" fill="#475569">{t.desc}</text>
+          </g>
+        ))}
+      </svg>
     </div>
   )
 }
