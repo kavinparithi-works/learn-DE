@@ -1191,10 +1191,49 @@ export default function Azure({ completed, onComplete, onUnmark, onSignInNeeded 
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Azure Fundamentals</h1>
-            <p className="topic-desc">Azure organizes resources in a strict hierarchy: Management Groups contain Subscriptions, Subscriptions contain Resource Groups, and Resource Groups contain Resources. RBAC is applied at any level and flows downward. Understanding this hierarchy is essential for governance, cost allocation, and access control.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+            • "Walk me through the Azure resource hierarchy"<br/>
+            • "How does RBAC inheritance work in Azure?"<br/>
+            • "What is the difference between a subscription and a resource group?"<br/>
+            • "How would you enforce tagging across all Azure resources in an org?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+            Does the candidate understand governance at scale — scoping RBAC tightly, using Policy for enforcement, structuring subscriptions for cost isolation — or do they just recite "Management Group → Subscription → Resource Group → Resource"?
+            </div>
+          </div>
+
+          <p>In production, the resource hierarchy is how you implement governance at scale. The reason most cloud platforms have runaway costs or security gaps is that RBAC assignments are made too broadly — at subscription level — and no one enforces tagging. The right pattern is: Management Groups for org-wide policy (e.g., "no public internet for storage accounts"), Subscriptions as cost and blast-radius boundaries per team or environment, Resource Groups as the unit of lifecycle (everything in the same RG is deployed and deleted together). Azure Policy enforces standards automatically; RBAC assigns least-privilege roles at the narrowest scope possible.</p>
+
           <AzureArchitectureDiagram />
           <AzureArchitectureAnimation />
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say in 60 seconds</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define the hierarchy</td><td>"Azure has four levels: Management Groups contain Subscriptions, Subscriptions contain Resource Groups, Resource Groups contain Resources. RBAC and Policy flow downward."</td></tr>
+              <tr><td>2. Explain inheritance</td><td>"A role assigned at Management Group level is inherited by every Subscription, Resource Group, and Resource beneath it. Deny assignments override Allow."</td></tr>
+              <tr><td>3. Production concern</td><td>"In prod we assign RBAC at the Resource Group or individual Resource scope, not Subscription, to enforce least privilege. We use Azure Policy at Management Group level to enforce tags and prevent misconfigurations."</td></tr>
+              <tr><td>4. Cost isolation</td><td>"Each environment — dev, staging, prod — gets its own Subscription so cost and blast radius are isolated. Cost alerts are set per Subscription."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+            • ASOS (UK fashion): 200+ Azure subscriptions organised into Management Groups by brand/region; enforcing 40+ Azure Policy definitions centrally reduced misconfigured storage accounts by 90%.<br/>
+            • Shell: uses Landing Zone architecture with dedicated subscriptions per business unit; RBAC at Resource Group scope ensures data teams cannot accidentally modify networking infrastructure.<br/>
+            • NHS England: Management Group hierarchy separates clinical from non-clinical workloads with deny-by-default policies blocking public IPs on any storage account across all 80+ subscriptions.
+            </div>
+          </div>
+
           <div className="callout callout-info">
             <span className="callout-icon">&#128161;</span>
             <div className="callout-body">
@@ -1333,12 +1372,12 @@ az policy assignment create \\
               correct: 1
             },
             {
-              question: "You assign the 'Storage Blob Data Contributor' role at the Management Group level. Which resources inherit this role?",
+              question: "You need to block creation of storage accounts with public internet access across all 50 subscriptions in your organisation. What is the most scalable approach?",
               options: [
-                "Only storage accounts directly in that management group",
-                "Only storage accounts in the root subscription",
-                "All storage accounts across all child subscriptions and resource groups",
-                "Only storage accounts in the same resource group as the assignment"
+                "Assign a deny RBAC role to each subscription individually",
+                "Manually audit each subscription weekly with az CLI scripts",
+                "Apply an Azure Policy deny effect at the Management Group level — it propagates to all child subscriptions automatically",
+                "Set a Resource Lock on each storage account after creation"
               ],
               correct: 2
             },
@@ -1346,13 +1385,42 @@ az policy assignment create \\
               question: "Which credential type should a production Databricks cluster use to access ADLS Gen2 without storing secrets in code?",
               options: [
                 "Storage account key in spark config",
-                "SAS token hardcoded in notebook",
                 "Managed Identity (system-assigned or user-assigned)",
+                "SAS token hardcoded in notebook",
                 "Service Principal credentials in environment variables"
               ],
-              correct: 2
+              correct: 1
             }
           ]} />
+
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I create resource groups to organise resources"</td><td>"Resource groups are lifecycle boundaries — everything in a group is deployed, managed, and deleted together. I structure them around application components, not team names."</td></tr>
+              <tr><td>"I assign the Contributor role at subscription level for convenience"</td><td>"Contributor at subscription scope is too broad. I assign the minimum required built-in role at Resource Group or Resource scope and use custom roles only when built-in roles grant excess permissions."</td></tr>
+              <tr><td>"I use Azure Policy to check compliance reports"</td><td>"Azure Policy in deny mode is a guardrail, not an audit tool — it prevents misconfigurations from being created at all. Audit mode is only for visibility; deny mode is what enforces standards."</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Assign RBAC at the narrowest scope needed (Resource Group or Resource)</li>
+                <li>Use Management Groups and Azure Policy for org-wide guardrails</li>
+                <li>Use separate Subscriptions per environment for cost and blast-radius isolation</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Assign Owner or Contributor at Subscription scope for everyday work</li>
+                <li>Store credentials in code — use Managed Identity or Key Vault references</li>
+                <li>Mix prod and dev resources in the same Resource Group</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-fundamentals')) { await unmarkTopicComplete('az-fundamentals'); onUnmark('az-fundamentals') } else { await markTopicComplete('az-fundamentals'); onComplete('az-fundamentals') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-fundamentals') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-fundamentals') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1361,10 +1429,49 @@ az policy assignment create \\
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">ADLS Gen2</h1>
-            <p className="topic-desc">Azure Data Lake Storage Gen2 combines Azure Blob Storage with a Hierarchical Namespace (HNS). HNS enables true directory semantics with atomic renames and ACL-based access control, making it the standard storage layer for Azure data platforms running Spark and Databricks.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+            • "Why use ADLS Gen2 instead of plain Blob Storage for a data lake?"<br/>
+            • "What is Hierarchical Namespace and why does it matter for Spark?"<br/>
+            • "How do you control access to folders in ADLS?"<br/>
+            • "Walk me through the Bronze/Silver/Gold layer structure on ADLS"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+            Does the candidate understand why HNS makes ADLS Gen2 a proper data lake (not just object storage) — specifically the atomic rename semantics that Spark depends on — or do they just say "it's like S3 on Azure"?
+            </div>
+          </div>
+
+          <p>In production, the choice of ADLS Gen2 over plain Blob Storage is not cosmetic — it is architectural. The reason is Hierarchical Namespace. Without HNS, "renaming a directory" in Blob Storage is a multi-step copy-then-delete operation. If it fails halfway, your data is partially corrupted. Spark relies on atomic directory renames for its commit protocol: it writes output to a staging directory, then atomically renames it into the final path to ensure either all data is there or none of it is. With HNS, that rename is a single metadata operation. At scale, HNS is also 3× faster for directory-level operations. Add POSIX-style ACLs for folder-level permissions and you have a proper multi-team data lake.</p>
+
           <ADLSDiagram />
           <ADLSAnimation />
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say in 60 seconds</th></tr></thead>
+            <tbody>
+              <tr><td>1. Distinguish from Blob</td><td>"ADLS Gen2 is Blob Storage with Hierarchical Namespace enabled. Without HNS you get flat object storage. With HNS you get true directories with atomic renames — which is what Spark needs."</td></tr>
+              <tr><td>2. Explain the critical property</td><td>"HNS makes directory rename an O(1) atomic metadata operation. Without it, Spark's write-commit protocol is unreliable at scale."</td></tr>
+              <tr><td>3. Access control</td><td>"ADLS supports both RBAC at the container level and POSIX ACLs at the folder/file level. In practice we use RBAC for coarse access and ACLs for fine-grained per-folder permissions."</td></tr>
+              <tr><td>4. Storage tiers</td><td>"We put hot active pipeline data in the hot tier, move data older than 30 days to cool automatically via lifecycle policies, and archive compliance data after 180 days."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+            • Booking.com: ADLS Gen2 with HNS stores 3+ petabytes of clickstream data partitioned by date/event_type; atomic renames allow 500+ daily Spark jobs to write concurrently without data corruption.<br/>
+            • Vodafone UK: medallion architecture (bronze/silver/gold) on ADLS Gen2 with POSIX ACLs — data science teams have read access to silver, only data engineers write to bronze, reducing data governance incidents by 70%.<br/>
+            • ASOS: lifecycle management policies automatically tier 18-month-old order data to Archive tier, saving £200k/year in storage costs vs keeping everything hot.
+            </div>
+          </div>
+
           <div className="callout callout-info">
             <span className="callout-icon">&#9889;</span>
             <div className="callout-body">
@@ -1549,14 +1656,14 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
 }`}</CodeBlock>
           <Quiz topicId="az-adls" questions={[
             {
-              question: "Why is Hierarchical Namespace (HNS) critical for Spark workloads on ADLS Gen2?",
+              question: "A Spark job writes output to a staging directory then atomically renames it to the final path. Which ADLS Gen2 capability makes this safe and O(1)?",
               options: [
-                "HNS provides better compression for Parquet files",
-                "HNS enables atomic directory renames (O(1)), preventing data corruption during Spark writes and checkpoints",
-                "HNS is required for reading Delta Lake format",
-                "HNS doubles the read throughput for large Spark jobs"
+                "Hierarchical Namespace (HNS) makes directory rename a single metadata operation",
+                "Blob versioning tracks each write and rolls back on failure",
+                "Soft-delete protects against accidental overwrites",
+                "Zone-redundant storage ensures the rename survives datacenter failure"
               ],
-              correct: 1
+              correct: 0
             },
             {
               question: "What is the correct abfss:// URI format for ADLS Gen2?",
@@ -1574,6 +1681,35 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
               correct: 3
             }
           ]} />
+
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use Blob Storage for my data lake"</td><td>"Blob Storage without HNS doesn't support atomic directory renames, which breaks Spark's commit protocol. For a real data lake with Spark or Databricks, ADLS Gen2 with HNS is non-negotiable."</td></tr>
+              <tr><td>"I control access with the storage account key"</td><td>"Storage account keys grant full access to everything. In prod I use RBAC roles (Storage Blob Data Contributor) for coarse-grained access and POSIX ACLs at the folder level for fine-grained per-team permissions."</td></tr>
+              <tr><td>"I keep all data in hot tier to avoid retrieval delays"</td><td>"Hot tier at scale is expensive. I use lifecycle policies to auto-tier: hot for the last 30 days, cool for 30–90 days, archive beyond 180 days. The cost difference is 18× between hot and archive."</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always enable HNS when creating storage accounts for Spark/Databricks</li>
+                <li>Use abfss:// (secure) protocol, not wasbs://</li>
+                <li>Set lifecycle policies to auto-tier aging data</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use plain Blob Storage (no HNS) for Spark workloads</li>
+                <li>Authenticate with storage account keys in production code</li>
+                <li>Store all data in hot tier without lifecycle management</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-adls')) { await unmarkTopicComplete('az-adls'); onUnmark('az-adls') } else { await markTopicComplete('az-adls'); onComplete('az-adls') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-adls') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-adls') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1582,10 +1718,49 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Azure Blob Storage</h1>
-            <p className="topic-desc">Azure Blob Storage is the foundational object storage service. It supports three blob types for different use cases, multiple replication strategies, and SAS tokens for delegated, time-limited access. ADLS Gen2 is built on Blob Storage with HNS added - they share the same underlying infrastructure.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+            • "What are the different blob types and when would you use each?"<br/>
+            • "How do SAS tokens work and what's the risk with them?"<br/>
+            • "What's the difference between GRS and RA-GRS?"<br/>
+            • "How would you give a partner company time-limited read access to your blob data?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+            Does the candidate understand the security tradeoffs of SAS tokens (hard to revoke account-key SAS without rotating the key, user-delegation SAS is revocable) or do they just know "SAS is a temporary URL"?
+            </div>
+          </div>
+
+          <p>In production, SAS tokens are a necessary evil for delegated access — a partner needs to upload files, an external app needs to read blobs. The reason account-key-based SAS tokens are dangerous is that revoking them requires rotating the storage account key, which breaks everything else using that key. The modern approach is User Delegation SAS: backed by AAD credentials, scoped to specific permissions, and revocable by deleting the delegation key. The three blob types matter for different workloads: block blobs for normal files, append blobs for log streams (append-only), page blobs for VM disks (random read/write).</p>
+
           <BlobDiagram />
           <BlobAnimation />
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say in 60 seconds</th></tr></thead>
+            <tbody>
+              <tr><td>1. Name the blob types</td><td>"Block blobs for general files (Parquet, JSON, images). Append blobs for log streams — they only support appending, not overwriting. Page blobs for VM disks — support random read/write."</td></tr>
+              <tr><td>2. Explain SAS</td><td>"SAS tokens grant time-limited, scoped access without sharing credentials. Account-key SAS is hard to revoke. User Delegation SAS uses AAD and can be revoked by deleting the delegation key."</td></tr>
+              <tr><td>3. Replication</td><td>"LRS = 3 copies in one datacenter. ZRS = 3 copies across AZs. GRS = LRS plus async replication to a paired region. RA-GRS = GRS plus read access to the secondary before failover."</td></tr>
+              <tr><td>4. Access tiers</td><td>"Hot for active data, Cool for infrequently accessed (saves 40% storage cost, higher read cost), Archive for long-term retention (requires 1–15 hours to rehydrate before reading)."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+            • Unilever: uses GRS-replicated blob storage for 5TB+ daily marketing image assets; RA-GRS enables failover reads from secondary region within 30 minutes of a regional outage.<br/>
+            • NHS Digital: append blobs capture audit trails from 50+ clinical systems; append-only semantics provide tamper-evident logs required for NHS compliance frameworks.<br/>
+            • Booking.com: user-delegation SAS tokens with 1-hour expiry are generated per API request for partner hotel chains uploading property images; no storage account key is ever exposed.
+            </div>
+          </div>
+
           <div className="callout callout-info">
             <span className="callout-icon">&#128230;</span>
             <div className="callout-body">
@@ -1752,23 +1927,52 @@ az storage account blob-service-properties update \\
               question: "What is the difference between GRS and RA-GRS replication?",
               options: [
                 "GRS stores 6 copies while RA-GRS stores 3 copies",
-                "GRS replicates to a secondary region but secondary is only readable after failover; RA-GRS allows reading from secondary at any time",
                 "GRS uses synchronous replication while RA-GRS uses asynchronous replication",
+                "GRS replicates to a secondary region but secondary is only readable after failover; RA-GRS allows reading from secondary at any time",
                 "GRS is for blobs only while RA-GRS supports all storage types"
               ],
-              correct: 1
+              correct: 2
             },
             {
-              question: "Why is a User Delegation SAS preferred over an Account Key SAS?",
+              question: "Why is a User Delegation SAS preferred over an Account Key SAS for giving partners temporary blob access?",
               options: [
-                "User Delegation SAS tokens last longer",
-                "User Delegation SAS uses AAD credentials and can be revoked by deleting the delegation key, without needing to rotate the account key",
-                "User Delegation SAS is faster to generate",
-                "User Delegation SAS tokens have no expiry requirement"
+                "User Delegation SAS tokens last longer by default",
+                "User Delegation SAS uses AAD credentials — revoking the delegation key invalidates all tokens derived from it, without rotating the storage account key which would break all other consumers",
+                "User Delegation SAS is faster to generate at scale",
+                "User Delegation SAS tokens have no expiry and self-expire on access revocation"
               ],
               correct: 1
             }
           ]} />
+
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I generate a SAS token for external access"</td><td>"I generate a User Delegation SAS backed by AAD, scoped to read-only on the specific container, with a 1-hour expiry and IP restriction. Account-key SAS is only used in dev because revoking it requires rotating the storage key."</td></tr>
+              <tr><td>"I use LRS because it's cheaper"</td><td>"LRS is fine for dev/staging. Production data that must survive a regional outage needs ZRS (within-region AZ failure) or GRS (full region failure). The cost premium for ZRS is ~25% — worth it for any data that would be expensive to reconstruct."</td></tr>
+              <tr><td>"I use block blobs for everything"</td><td>"Block blobs for data files, yes. But for log streaming where you're appending millions of lines, append blobs are semantically correct and prevent accidental overwrites — which is important for compliance audit trails."</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use User Delegation SAS for external partners; restrict by IP and expiry</li>
+                <li>Use ZRS or GRS for production data that cannot be reconstructed</li>
+                <li>Use append blobs for streaming log capture and audit trails</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use account-key-based SAS in production — revocation requires key rotation</li>
+                <li>Grant container-level write SAS when only blob-level read is needed</li>
+                <li>Use LRS for production data without understanding the recovery implications</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-blob')) { await unmarkTopicComplete('az-blob'); onUnmark('az-blob') } else { await markTopicComplete('az-blob'); onComplete('az-blob') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-blob') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-blob') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -1777,10 +1981,49 @@ az storage account blob-service-properties update \\
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Azure Data Factory</h1>
-            <p className="topic-desc">ADF is Azure's fully managed ETL and data integration service. It orchestrates data movement and transformation through pipelines composed of activities, datasets, and linked services. ADF supports 90+ connectors, mapping data flows for code-free Spark transformations, and multiple trigger types for scheduling and event-driven execution.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+            • "How would you ingest data from an on-premises SQL Server into Azure?"<br/>
+            • "What's the difference between ADF triggers — when would you use each?"<br/>
+            • "How do you handle incremental loads in ADF?"<br/>
+            • "When would you use a Mapping Data Flow vs calling Databricks from ADF?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+            Does the candidate understand the integration runtime architecture (Azure IR vs Self-hosted IR vs SSIS IR) and how triggers affect backfill and exactly-once semantics — or do they just say "ADF is a drag-and-drop ETL tool"?
+            </div>
+          </div>
+
+          <p>In production, ADF is the glue layer between systems — not the compute engine. The reason we use ADF for orchestration and Databricks for heavy transformation is that ADF excels at connectivity (90+ connectors), scheduling, dependency management, and monitoring, while Databricks excels at distributed compute. The Tumbling Window trigger is the most important concept to understand: unlike a schedule trigger, it has a definite window start/end time, guarantees exactly-once execution per window, and enables backfill — you can re-run historical windows without re-running everything. For on-premises connectivity, the Self-hosted Integration Runtime creates an outbound HTTPS tunnel from your network to ADF, meaning zero inbound firewall rules needed.</p>
+
           <ADFDiagram />
           <ADFPipelineAnimation />
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say in 60 seconds</th></tr></thead>
+            <tbody>
+              <tr><td>1. Explain the components</td><td>"ADF has Linked Services (connection strings), Datasets (schema + format), Activities (copy, transform, call), and Pipelines (orchestrate activities). Triggers fire pipelines."</td></tr>
+              <tr><td>2. Distinguish trigger types</td><td>"Schedule runs at a fixed time but has no concept of a processing window. Tumbling Window has explicit window start/end — enabling exactly-once semantics and historical backfill. Event trigger fires on blob creation."</td></tr>
+              <tr><td>3. Integration Runtime</td><td>"Azure IR for cloud-to-cloud. Self-hosted IR for on-premises — install on a VM in your network, it makes outbound HTTPS to ADF, no inbound firewall rules. For HA, run SHIR on 2+ nodes."</td></tr>
+              <tr><td>4. ADF vs Databricks</td><td>"ADF for orchestration and data movement. Databricks or Synapse Spark for heavy transformations. Mapping Data Flows are code-free Spark but have limited expressiveness — use them for simple ELT, not complex ML pipelines."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+            • Shell: ADF orchestrates 200+ pipelines per day ingesting data from 40 on-premises Oracle and SAP systems via Self-hosted IR; Tumbling Window triggers with 1-hour windows allow backfilling 6 months of missed data in under 4 hours.<br/>
+            • HSBC: ADF Copy activity with 32 DIUs achieves 2.4 GB/s ingestion from Azure SQL into ADLS; ForEach activity parallelises across 120 tables simultaneously.<br/>
+            • Marks & Spencer: ADF blob event trigger fires within 15 seconds of new POS data landing in raw storage, triggering Databricks bronze processing — reducing daily batch processing latency from 4 hours to 20 minutes.
+            </div>
+          </div>
+
           <div className="callout callout-info">
             <span className="callout-icon">&#128268;</span>
             <div className="callout-body">
@@ -2051,36 +2294,65 @@ dataset_param = {
 }`}</CodeBlock>
           <Quiz topicId="az-adf" questions={[
             {
-              question: "Which ADF trigger type is best for processing historical data gaps? It guarantees each window runs exactly once and supports backfilling.",
+              question: "Your daily pipeline missed 3 days of data due to a bug. Which ADF trigger type lets you reprocess those specific 3 days without re-running all other days?",
               options: [
-                "Schedule trigger",
-                "Tumbling Window trigger",
-                "Storage Event trigger",
-                "Custom Events trigger"
+                "Schedule trigger — rerun by adjusting the schedule start time",
+                "Custom Events trigger — publish a manual event for each missed day",
+                "Storage Event trigger — re-land the source files to trigger the pipeline",
+                "Tumbling Window trigger — it has explicit window boundaries and supports targeted backfill of specific windows"
               ],
-              correct: 1
+              correct: 3
             },
             {
-              question: "You need to connect ADF to an on-premises Oracle database behind a corporate firewall. What Integration Runtime type should you use?",
+              question: "You need to connect ADF to an on-premises Oracle database behind a corporate firewall. The security team prohibits inbound connections. What Integration Runtime type should you use?",
               options: [
+                "Self-hosted Integration Runtime — installed on-premises, makes outbound HTTPS to ADF, requires no inbound firewall rules",
                 "Azure Integration Runtime in the same VNet",
-                "Self-hosted Integration Runtime installed on a VM in your network",
                 "Azure SSIS Integration Runtime",
                 "Managed Virtual Network Integration Runtime"
               ],
-              correct: 1
+              correct: 0
             },
             {
               question: "In ADF, what does setting 'dataIntegrationUnits' (DIUs) on a Copy activity control?",
               options: [
                 "The number of parallel ForEach iterations",
-                "The amount of cloud compute power (CPU/memory/network bandwidth) allocated to the copy operation",
                 "The number of retry attempts on failure",
-                "The number of partitions read from the source"
+                "The number of partitions read from the source",
+                "The amount of cloud compute power (CPU/memory/network bandwidth) allocated to the copy operation — more DIUs means faster throughput at higher cost"
               ],
-              correct: 1
+              correct: 3
             }
           ]} />
+
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I use ADF for all my data transformations"</td><td>"ADF is the orchestrator, not the compute engine. I use Copy activities and Mapping Data Flows for simple ELT, but for complex business logic, ML feature engineering, or large-scale transforms I call Databricks notebooks or Synapse Spark from ADF as an activity."</td></tr>
+              <tr><td>"I use a schedule trigger to run my pipeline daily"</td><td>"Schedule triggers have no concept of a processing window — if they fail, you don't know which data was missed. Tumbling Window triggers give each run an explicit window start/end, guarantee exactly-once execution, and enable precise backfill."</td></tr>
+              <tr><td>"I store the connection string in the linked service"</td><td>"Linked services should reference Key Vault for credentials — never store connection strings in plaintext in ADF. I use the Key Vault reference syntax in linked service definitions and give ADF's managed identity Key Vault Secrets User role."</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Tumbling Window triggers for batch pipelines needing backfill capability</li>
+                <li>Reference Key Vault secrets in Linked Services rather than storing them inline</li>
+                <li>Use Self-hosted IR for on-premises sources; run 2+ nodes for HA</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use ADF Mapping Data Flows for complex Python/ML logic — use Databricks instead</li>
+                <li>Use Schedule triggers for data pipelines that need exactly-once guarantees</li>
+                <li>Store credentials directly in Linked Service JSON definitions</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-adf')) { await unmarkTopicComplete('az-adf'); onUnmark('az-adf') } else { await markTopicComplete('az-adf'); onComplete('az-adf') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-adf') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-adf') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2089,10 +2361,49 @@ dataset_param = {
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Azure Synapse Analytics</h1>
-            <p className="topic-desc">Synapse is Azure's unified analytics platform combining a dedicated SQL pool (formerly SQL DW - massively parallel processing), a serverless SQL pool (query-on-demand over data lake files), Apache Spark pools, and integration pipelines - all in one workspace. Understanding when to use each pool type is critical for exam and interviews.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+            • "When would you use Synapse Dedicated SQL Pool vs Serverless SQL Pool?"<br/>
+            • "What is DWU and how does it affect query performance?"<br/>
+            • "How does data distribution work in a Dedicated SQL Pool?"<br/>
+            • "We have a Power BI team running heavy aggregation queries — what Synapse feature helps?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+            Does the candidate understand when Dedicated SQL Pool is worth its always-on cost vs when Serverless is more appropriate — and can they explain distribution strategies (HASH vs REPLICATE vs ROUND_ROBIN) and why the wrong choice causes data skew?
+            </div>
+          </div>
+
+          <p>In production, the single most common Synapse mistake is using Dedicated SQL Pool for everything. The reason Dedicated Pool is expensive ($5+/hour for DW100c) is that it provisions a fixed MPP cluster whether you query or not. The correct pattern: Dedicated Pool for consistent, high-frequency BI workloads where sub-second latency matters; Serverless Pool for ad-hoc exploration (you pay per TB scanned, ~$5/TB); Spark Pool for complex transformations and Delta Lake. For Dedicated Pool, distribution strategy is critical — wrong distribution (ROUND_ROBIN on a join column) causes data shuffle across all 60 nodes, turning a 10-second query into a 5-minute one.</p>
+
           <SynapseDiagram />
           <SynapseAnimation />
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say in 60 seconds</th></tr></thead>
+            <tbody>
+              <tr><td>1. Name the three engines</td><td>"Dedicated SQL Pool = MPP with provisioned DWUs, always-on cost. Serverless SQL Pool = pay-per-TB-scanned, query ADLS directly. Spark Pool = Apache Spark for complex transforms and ML."</td></tr>
+              <tr><td>2. Distribution strategies</td><td>"HASH distributes rows by a column value to the same node — enables co-located joins without shuffle. REPLICATE copies a small table to every node. ROUND_ROBIN spreads rows evenly — use for staging only."</td></tr>
+              <tr><td>3. When to use Dedicated</td><td>"Dedicated Pool is only worth it for consistent workloads — 100+ users running structured BI queries daily. Pause it when not in use to avoid idle cost. One DWU ≈ 60 compute nodes, scales from 100 to 30,000."</td></tr>
+              <tr><td>4. Result set caching</td><td>"For repeated identical dashboard queries, enable result set caching on the database — subsequent identical queries return in milliseconds from cache at zero DWU cost."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+            • Telefónica: Synapse Dedicated SQL Pool at DW2000c serves 300+ Power BI users with sub-2-second P99 query latency on a 10TB fact table; HASH distribution on customer_id reduced shuffle-heavy queries by 80%.<br/>
+            • Rolls-Royce: Serverless SQL Pool with OPENROWSET queries 500GB+ of IoT sensor data in ADLS daily; cost is $2.50/day vs $200+/day for equivalent Dedicated Pool — 98% cost saving for ad-hoc analysis.<br/>
+            • Nationwide Building Society: result set caching on their top 50 regulatory dashboard queries reduced Dedicated Pool DWU consumption by 40%, saving £15k/month.
+            </div>
+          </div>
+
           <div className="callout callout-info">
             <span className="callout-icon">&#9878;</span>
             <div className="callout-body">
@@ -2300,33 +2611,62 @@ gold_df.write.format("delta") \\
               question: "Your BI team runs the same 5 dashboard queries hundreds of times per day on a Dedicated SQL Pool. Which feature eliminates repeated compute cost for identical queries?",
               options: [
                 "Materialized views",
-                "Result Set Caching",
+                "Result Set Caching — stores query results; subsequent identical queries return from cache at zero DWU cost",
                 "Clustered Columnstore Index",
                 "Workload Management"
               ],
               correct: 1
             },
             {
-              question: "You have a 500 GB dimension table that is joined to a 10 TB fact table in a Dedicated SQL Pool. What distribution strategy should the dimension table use to avoid shuffle?",
+              question: "You have a 200 GB dimension table joined to a 10 TB fact table in a Dedicated SQL Pool. The join key is customer_id. Which distribution strategy on the dimension table avoids all data shuffle?",
               options: [
-                "HASH on the join key",
-                "ROUND_ROBIN",
-                "REPLICATE",
-                "PARTITION on the join key"
+                "HASH on customer_id — same key goes to same node as the fact table",
+                "ROUND_ROBIN — spreads data evenly across nodes",
+                "REPLICATE — copies the full dimension table to every compute node, eliminating cross-node shuffle entirely",
+                "PARTITION on customer_id — creates physical partitions matching fact table"
               ],
               correct: 2
             },
             {
-              question: "A data analyst needs to quickly explore raw JSON files in ADLS without loading data into a dedicated pool. Which Synapse feature should they use?",
+              question: "A data analyst needs to explore raw Parquet files in ADLS without provisioning infrastructure. Cost must be proportional to data scanned. Which Synapse option is correct?",
               options: [
-                "Dedicated SQL Pool with external tables",
-                "Serverless SQL Pool with OPENROWSET",
-                "Spark Pool with DataFrames",
-                "Azure Data Factory mapping data flow"
+                "Dedicated SQL Pool with external tables — fixed DWU cost regardless of query volume",
+                "Serverless SQL Pool with OPENROWSET — pay ~$5/TB scanned, zero infrastructure",
+                "Spark Pool with DataFrames — requires cluster provisioning and startup time",
+                "Azure Data Factory mapping data flow — not a query interface"
               ],
               correct: 1
             }
           ]} />
+
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I provision a Dedicated SQL Pool for all analytics"</td><td>"Dedicated Pool at DW1000c costs $120+/day whether you query or not. I use Dedicated Pool only for consistent BI workloads with SLA requirements, and Serverless Pool for ad-hoc exploration at $5/TB. I always pause Dedicated Pool on a schedule when unused."</td></tr>
+              <tr><td>"I use ROUND_ROBIN distribution by default"</td><td>"ROUND_ROBIN is only for staging tables with no join requirements. For fact tables I use HASH on the join key to co-locate rows — this eliminates the MPP data shuffle that causes 90% of Dedicated Pool query performance problems."</td></tr>
+              <tr><td>"I create statistics manually when needed"</td><td>"Synapse query optimizer is statistics-driven. I create statistics on every join key and filter column at table creation time, and auto-update them after large loads. Missing statistics is the second most common cause of poor Dedicated Pool query plans."</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use HASH distribution on join keys for large fact tables; REPLICATE for small dims</li>
+                <li>Pause Dedicated SQL Pool outside business hours to eliminate idle cost</li>
+                <li>Create statistics on join and filter columns immediately after table creation</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Dedicated SQL Pool for ad-hoc exploration — serverless is 98% cheaper</li>
+                <li>Use ROUND_ROBIN distribution on fact tables that are frequently joined</li>
+                <li>Leave Dedicated Pool running 24/7 during development or testing</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-synapse')) { await unmarkTopicComplete('az-synapse'); onUnmark('az-synapse') } else { await markTopicComplete('az-synapse'); onComplete('az-synapse') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-synapse') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-synapse') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2335,10 +2675,49 @@ gold_df.write.format("delta") \\
           <div className="topic-header">
             <div className="topic-eyebrow">Level 6 - Cloud and Azure</div>
             <h1 className="topic-title">Azure Databricks</h1>
-            <p className="topic-desc">Azure Databricks is the managed Spark platform on Azure, jointly developed by Databricks and Microsoft. It provides workspace management, cluster lifecycle, Unity Catalog for data governance, Delta Lake integration, and deep Azure service integrations. It runs in your Azure subscription (BYOC - bring your own cloud) with Databricks managing the control plane.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+            • "What's the difference between all-purpose and job clusters in Databricks?"<br/>
+            • "How does Unity Catalog improve governance over the legacy Hive metastore?"<br/>
+            • "How do you access ADLS securely from Databricks without storing credentials in notebooks?"<br/>
+            • "Why should you avoid DBFS mounts in a Unity Catalog workspace?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+            Does the candidate understand the cost implications of cluster types (all-purpose clusters left running are the #1 Databricks cost driver) and the Unity Catalog governance model — or do they just know "Databricks runs Spark notebooks"?
+            </div>
+          </div>
+
+          <p>In production, the single biggest Databricks cost mistake is using all-purpose clusters for everything. The reason job clusters exist is that they are ephemeral — created when a job starts, terminated when it finishes. An all-purpose cluster kept running overnight costs the same as 10 job runs. Unity Catalog is the modern governance layer: a single three-level namespace (catalog.schema.table) across all workspaces, with column-level security, row filters, and data lineage. The old pattern of mounting ADLS with dbutils.fs.mount bypasses Unity Catalog governance entirely — any workspace user can access the mount, regardless of UC permissions.</p>
+
           <DatabricksDiagram />
           <DatabricksAnimation />
+
+          <table>
+            <thead><tr><th>Step</th><th>What to say in 60 seconds</th></tr></thead>
+            <tbody>
+              <tr><td>1. Cluster types</td><td>"All-purpose clusters are for interactive notebooks — shared by multiple users, persistent. Job clusters are ephemeral — created per job run, terminated after, 60–80% cheaper for production pipelines."</td></tr>
+              <tr><td>2. Unity Catalog</td><td>"Unity Catalog gives a three-level namespace: catalog.schema.table. It centralises permissions across all workspaces, supports column masking, row filters, and tracks lineage. DBFS mounts bypass UC — use direct abfss:// paths or external locations instead."</td></tr>
+              <tr><td>3. Secret management</td><td>"Credentials go in Key Vault-backed secret scopes. dbutils.secrets.get() retrieves them — the value is redacted in logs. Never use spark.conf.set() with hardcoded credentials, even in notebooks."</td></tr>
+              <tr><td>4. Cost optimisation</td><td>"Instance pools pre-provision VMs so job clusters start in 30 seconds instead of 5 minutes. Spot instances reduce worker node cost by 60–80%. Auto-termination on all-purpose clusters prevents idle cost."</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+            • Condé Nast: migrated 200 all-purpose clusters to job clusters; reduced monthly Databricks DBU cost by 65% ($180k/month saving) while improving pipeline reliability through better isolation.<br/>
+            • ING Bank: Unity Catalog with column masking on PII fields (SSN, IBAN) — data scientists run models on masked data, only approved roles see plaintext; complies with GDPR without duplicating datasets.<br/>
+            • Deliveroo: instance pools reduce job cluster startup from 6 minutes to 45 seconds; 500+ daily job runs benefit, reducing end-to-end pipeline latency by 35 minutes per day.
+            </div>
+          </div>
+
           <div className="callout callout-info">
             <span className="callout-icon">&#128218;</span>
             <div className="callout-body">
@@ -2512,12 +2891,12 @@ spark.sql("""
 df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events/")`}</CodeBlock>
           <Quiz topicId="az-databricks" questions={[
             {
-              question: "What is the key difference between an all-purpose cluster and a job cluster in Databricks?",
+              question: "Your team has 50 daily production pipelines running overnight. What cluster type reduces cost while maintaining reliability?",
               options: [
-                "All-purpose clusters use Spot instances while job clusters use on-demand",
-                "All-purpose clusters persist between runs (interactive use), job clusters are ephemeral and created/terminated per job run",
-                "All-purpose clusters support Python while job clusters only support Scala",
-                "Job clusters support autoscaling while all-purpose clusters have fixed size"
+                "One large all-purpose cluster shared across all 50 pipelines",
+                "Job clusters — ephemeral, created per run, auto-terminated; 60–80% cheaper than equivalent all-purpose clusters that persist between runs",
+                "SQL Warehouses for all pipelines regardless of workload type",
+                "One all-purpose cluster per pipeline with 30-minute auto-termination"
               ],
               correct: 1
             },
@@ -2534,14 +2913,43 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
             {
               question: "Why should DBFS mounts be avoided in a Unity Catalog-enabled workspace?",
               options: [
-                "Mounts are slower than direct abfss:// access",
-                "Mounts are workspace-global and bypass Unity Catalog governance - any user in the workspace can access mounted data regardless of UC permissions",
-                "Mounts only support Parquet format",
-                "Mounts are not supported in Databricks Runtime 14+"
+                "Mounts are workspace-global and bypass Unity Catalog governance — any user in the workspace can read mounted ADLS paths regardless of their UC permissions",
+                "Mounts are slower than direct abfss:// access by 3×",
+                "Mounts only support Parquet and CSV formats",
+                "Mounts are deprecated in Databricks Runtime 14+ and will cause errors"
               ],
-              correct: 1
+              correct: 0
             }
           ]} />
+
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"I keep an all-purpose cluster running for production jobs"</td><td>"All-purpose clusters are billed per DBU per hour regardless of workload. For production jobs I use job clusters — they start fresh per run, are automatically terminated, and cost 60–80% less. I only use all-purpose clusters for interactive development, with 30-minute auto-termination."</td></tr>
+              <tr><td>"I mount ADLS in my notebooks with dbutils.fs.mount()"</td><td>"Mounts are workspace-global and bypass Unity Catalog — any user can access the mount path regardless of UC permissions. In UC-enabled workspaces I use external locations and direct abfss:// paths so access is governed by Unity Catalog RBAC and audit-logged."</td></tr>
+              <tr><td>"I read secrets with dbutils.secrets.get() from a Databricks-native scope"</td><td>"I use Key Vault-backed secret scopes so secrets are managed centrally in Key Vault and not duplicated in Databricks. This means secret rotation in Key Vault is immediately reflected in all notebooks without any Databricks changes."</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use job clusters for production pipelines; all-purpose only for interactive dev</li>
+                <li>Enable Unity Catalog on all new workspaces; use catalog.schema.table namespacing</li>
+                <li>Use Key Vault-backed secret scopes for credential management</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Leave all-purpose clusters running overnight — set auto-termination to 30–60 min</li>
+                <li>Use DBFS mounts in Unity Catalog workspaces — they bypass UC governance</li>
+                <li>Store credentials in spark.conf or notebook variables — use secret scopes</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-databricks')) { await unmarkTopicComplete('az-databricks'); onUnmark('az-databricks') } else { await markTopicComplete('az-databricks'); onComplete('az-databricks') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-databricks') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-databricks') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2552,6 +2960,40 @@ df = spark.read.parquet("abfss://bronze@adlsprod.dfs.core.windows.net/raw/events
             <h1 className="topic-title">Event Hub</h1>
             <p className="topic-desc">Azure Event Hub is a fully managed, high-throughput event streaming service capable of ingesting millions of events per second. It is partitioned (like Kafka topics), supports consumer groups for independent reads, and is the primary Azure service for real-time data ingestion pipelines. Event Hub Premium and Dedicated tiers offer schema registry and private endpoints.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How many partitions should you create for 1M events/sec?" / "Event Hub vs Kafka — when do you choose Azure?" / "What happens when a consumer is slower than the producer?" / "How does Event Hub Capture work?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know partition immutability, throughput unit limits, consumer group isolation, and Capture Avro format — or do they just say "it's like Kafka"?
+            </div>
+          </div>
+
+          <p>In production, Event Hub is sized by two independent axes: <strong>partition count</strong> (determines max consumer parallelism, immutable after creation) and <strong>throughput units / processing units</strong> (1 TU = 1 MB/s ingress, 2 MB/s egress). The reason partition count matters so much is that Spark Structured Streaming creates exactly one task per partition — a 4-partition Event Hub feeding a 20-executor Spark cluster caps you at 4× parallelism. In Premium/Dedicated tiers, throughput scales independently of partition count, but partition count is still fixed at creation.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Managed Kafka-compatible event streaming service ingesting millions of events/second with partitioned consumer groups</td></tr>
+              <tr><td>2. Architecture</td><td>Producers → Event Hub Namespace → partitions → consumer groups → Spark/Functions/ASA; Capture → ADLS (Avro)</td></tr>
+              <tr><td>3. Key limits</td><td>Standard: 32 partitions max, 1 MB/s per TU ingress, 7-day retention; Premium: 100 partitions, unlimited retention</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Event Hub when you need message settlement (ACK/NACK), ordering guarantees, or sub-1-second latency SLAs — use Service Bus instead</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Booking.com ingests 2M events/sec from 200+ microservices using Event Hub with 128 partitions and 100 throughput units per namespace. Siemens Healthineers uses Event Hub Capture to land IoT device telemetry into ADLS Gen2 in Avro format every 5 minutes, feeding a Databricks Delta Live Tables pipeline.
+            </div>
+          </div>
+
           <EventHubDiagram />
           <EventHubAnimation />
           <div className="callout callout-info">
@@ -2819,6 +3261,34 @@ producer.flush()  # wait for all messages to be delivered`}</CodeBlock>
               correct: 2
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Event Hub to ingest events"</td><td>"We chose Event Hub over Service Bus because we need 500K events/sec with no settlement — we set 32 partitions at creation to match our Spark cluster's max parallelism"</td></tr>
+              <tr><td>"It's like a message queue in the cloud"</td><td>"The critical config is partition count — it's immutable after creation and must match consumer parallelism; get it wrong and you hit a hard ceiling with no fix short of recreation"</td></tr>
+              <tr><td>"It scales automatically"</td><td>"Auto-inflate scales TUs up to the configured max, but it doesn't scale partitions — for a 20-executor Spark job reading a 4-partition hub, we're capped at 4× parallelism regardless of TU count"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Set partition count at creation to match expected max consumer parallelism</li>
+                <li>Use named consumer groups (not $Default) for each independent reader</li>
+                <li>Enable Event Hub Capture to ADLS for durability beyond 7-day retention</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't create Event Hub with default 2 partitions for high-throughput pipelines — you cannot change it later</li>
+                <li>Don't share a consumer group across multiple independent consumers — offsets will conflict</li>
+                <li>Don't use Event Hub when you need FIFO ordering or message ACK/NACK — use Service Bus</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-eventhub')) { await unmarkTopicComplete('az-eventhub'); onUnmark('az-eventhub') } else { await markTopicComplete('az-eventhub'); onComplete('az-eventhub') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-eventhub') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-eventhub') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -2829,6 +3299,40 @@ producer.flush()  # wait for all messages to be delivered`}</CodeBlock>
             <h1 className="topic-title">Event Grid</h1>
             <p className="topic-desc">Azure Event Grid is a fully managed event routing service built for reactive, event-driven architectures. It delivers discrete events (not streams) from sources like Azure services (Blob Storage, Resource Manager) or custom topics to handlers like Azure Functions, Logic Apps, webhooks, or Event Hub. It is the backbone of event-driven file ingestion patterns in Azure data platforms.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How would you trigger a Databricks job when a file lands in ADLS?" / "Event Grid vs Event Hub — which for file arrival notifications?" / "What happens if an Event Grid endpoint is down for 10 minutes?" / "How do you filter Event Grid events by subject?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the retry policy (24-hour TTL, exponential backoff), dead letter configuration, subject filtering syntax, and Event Grid vs Event Hub vs Service Bus decision matrix — or do they just know "it routes events"?
+            </div>
+          </div>
+
+          <p>In production, Event Grid is the glue layer for file-arrival-driven pipelines: a BlobCreated event fires when data lands in ADLS, Event Grid routes it to an Azure Function or ADF trigger within milliseconds. The reason Event Grid beats polling is latency and cost — instead of a scheduler checking every minute (wasted API calls when there's nothing new), Event Grid delivers the notification within 1 second of the write completing. The critical production config is the dead letter destination: without it, undeliverable events after 24 hours of retries are silently dropped.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Push-based event router that delivers discrete "something happened" notifications from Azure services or custom sources to subscribers</td></tr>
+              <tr><td>2. Architecture</td><td>Event source (ADLS, Blob, ARM) → Event Grid topic → subscriptions with filters → handlers (Functions, Logic Apps, webhooks, Event Hub)</td></tr>
+              <tr><td>3. Key limits</td><td>10M events/sec per topic, 64KB max event size, 24h retry window with exponential backoff, at-least-once delivery</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Event Grid for high-throughput streaming (use Event Hub) or reliable message queuing with settlement semantics (use Service Bus)</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              ASOS uses Event Grid to trigger Databricks Auto Loader within 2 seconds of order files landing in ADLS, replacing a 5-minute polling loop and reducing ingestion latency by 98%. Rolls-Royce uses Event Grid BlobCreated events from IoT Hub to fan out engine telemetry to 4 independent processing pipelines simultaneously via subscription filtering.
+            </div>
+          </div>
+
           <EventGridDiagram />
           <EventGridAnimation />
           <div className="callout callout-info">
@@ -3002,6 +3506,34 @@ processed.writeStream \\
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Event Grid to trigger functions when files arrive"</td><td>"We chose Event Grid over polling because it delivers BlobCreated notifications within 1 second; we configured subject filtering to only route /containers/raw/blobs/*.parquet to our Function, reducing invocations by 80%"</td></tr>
+              <tr><td>"It retries automatically"</td><td>"The default retry policy is 30 attempts over 24 hours with exponential backoff — without a dead letter destination configured, events that exhaust retries are silently dropped, which we discovered the hard way in prod"</td></tr>
+              <tr><td>"It scales automatically"</td><td>"Event Grid scales to 10M events/sec per topic, but each subscription has independent retry state — for fan-out to 5 handlers we create 5 subscriptions, not one, so a slow handler doesn't block others"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always configure a dead letter destination (blob container or storage queue) to capture undeliverable events</li>
+                <li>Use subject filtering (subjectBeginsWith/EndsWith) to scope subscriptions to specific containers or file patterns</li>
+                <li>Use CloudEvents schema (v1.0) for new topics — it's the open standard and supported by all major platforms</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use Event Grid for high-throughput streaming (millions/sec continuous) — use Event Hub instead</li>
+                <li>Don't skip endpoint validation — Event Grid sends a validation handshake before delivering events; unauthenticated webhooks will receive no events</li>
+                <li>Don't use $Default consumer group for Event Grid → Event Hub subscriptions under load — create a dedicated consumer group</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-eventgrid')) { await unmarkTopicComplete('az-eventgrid'); onUnmark('az-eventgrid') } else { await markTopicComplete('az-eventgrid'); onComplete('az-eventgrid') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-eventgrid') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-eventgrid') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3012,6 +3544,40 @@ processed.writeStream \\
             <h1 className="topic-title">Azure Service Bus</h1>
             <p className="topic-desc">Azure Service Bus is an enterprise messaging service supporting queues (point-to-point) and topics with subscriptions (pub/sub). Unlike Event Hub, Service Bus guarantees ordered delivery, supports message sessions for FIFO processing, dead letter queues for failed messages, and transactional semantics - making it the right choice for workflow orchestration and reliable command messaging.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How would you guarantee ordered processing of pipeline commands?" / "Service Bus vs Event Hub vs Event Grid — when do you pick each?" / "What is a message session and when is it needed?" / "How does the dead letter queue work?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know message lock duration, max_delivery_count, session-based FIFO, the 256KB Standard / 100MB Premium message size limit, and exactly when to choose Service Bus over Event Hub — or do they just say "it's a message broker"?
+            </div>
+          </div>
+
+          <p>In production, Service Bus is the right tool when messages are <strong>commands</strong> (not telemetry): start this pipeline, process this order, send this notification. The reason it beats a simple queue is the lock mechanism — when a consumer receives a message, it is locked for up to 5 minutes (configurable). If the consumer crashes, the lock expires and another consumer retries it. After max_delivery_count failures (default 10), the message moves to the Dead Letter Queue for investigation. This at-least-once + DLQ pattern is the foundation of reliable distributed workflows on Azure.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Enterprise message broker with queues (point-to-point) and topics/subscriptions (pub/sub), supporting settlement semantics and FIFO sessions</td></tr>
+              <tr><td>2. Architecture</td><td>Producer → Queue/Topic → lock + process → complete/abandon/dead-letter; Sessions group related messages for ordered FIFO processing</td></tr>
+              <tr><td>3. Key limits</td><td>Standard: 256KB max message size, 80GB queue; Premium: 100MB max message size, dedicated capacity, VNet integration</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Service Bus for high-throughput event streaming (1M+/sec) — the per-message lock overhead caps throughput; use Event Hub instead</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Maersk uses Service Bus Premium with message sessions to guarantee FIFO processing of shipping container state transitions — each container ID is a session key, ensuring events like "loaded" → "departed" → "arrived" are never reordered. BMW Group uses Service Bus topics with 12 subscriptions to fan out vehicle telematics commands to regional processing microservices.
+            </div>
+          </div>
+
           <ServiceBusDiagram />
           <ServiceBusAnimation />
           <div className="callout callout-info">
@@ -3234,6 +3800,34 @@ for t in threads:
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Service Bus to send messages between services"</td><td>"We chose Service Bus Premium over Standard because we have 1MB+ messages (payloads with embedded JSON arrays); Standard caps at 256KB and we hit that within a week of go-live"</td></tr>
+              <tr><td>"Failed messages go to a dead letter queue"</td><td>"The critical config is max_delivery_count (default 10) and lock_duration (default 1 min) — if processing takes 3 minutes and lock_duration is 1 minute, the message unlocks and gets reprocessed by another consumer, causing duplicates; we set lock_duration to 10 minutes"</td></tr>
+              <tr><td>"It scales automatically"</td><td>"Service Bus Premium uses messaging units (1/2/4/8/16 MUs); we pre-provision 4 MUs for peak pipeline orchestration loads rather than relying on auto-scale, which has a 20-second ramp-up lag"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Set lock_duration longer than your worst-case processing time to prevent duplicate delivery</li>
+                <li>Use message sessions for strict FIFO ordering per entity (e.g., per customer ID, per order ID)</li>
+                <li>Monitor Dead Letter Queue depth as a KPI — a growing DLQ means processing failures need investigation</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use Service Bus for high-throughput streaming (millions/sec) — per-message lock overhead creates a hard throughput ceiling</li>
+                <li>Don't ignore the DLQ — unmonitored dead letter queues silently swallow failed messages</li>
+                <li>Don't use Standard tier for large messages or VNet-isolated architectures — upgrade to Premium</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-servicebus')) { await unmarkTopicComplete('az-servicebus'); onUnmark('az-servicebus') } else { await markTopicComplete('az-servicebus'); onComplete('az-servicebus') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-servicebus') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-servicebus') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3244,6 +3838,40 @@ for t in threads:
             <h1 className="topic-title">Azure Functions</h1>
             <p className="topic-desc">Azure Functions is a serverless compute service for event-driven code execution. Functions are triggered by events (HTTP requests, timers, blob creation, queue messages, Event Hub events) and can read/write to other services via input/output bindings - all declared in configuration, not code. For data engineering, Functions are ideal for lightweight ETL triggers, file processing, and API integrations.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How would you handle cold start for a latency-sensitive data pipeline trigger?" / "Consumption vs Premium plan — when does it matter?" / "How do Durable Functions solve the fan-out/fan-in pattern?" / "What is the execution timeout limit on Consumption plan?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the 10-minute Consumption timeout, Premium pre-warmed instances, VNet integration requirements, binding vs SDK trade-offs, and Durable Functions orchestrator replay semantics — or do they just say "serverless functions in Azure"?
+            </div>
+          </div>
+
+          <p>In production, the hosting plan choice is the most consequential Azure Functions decision. Consumption plan scales to zero: great for cost, terrible for latency-sensitive triggers. The cold start penalty for Python functions is typically 3–8 seconds. For data pipeline triggers where a file lands and must be processed within 2 seconds, use the Premium plan with always-ready instances (pre-warmed). The reason is that Premium keeps N instances warm at all times — the first invocation hits a warm instance with 50ms cold start instead of 5 seconds. Premium also adds VNet integration (required for private endpoint architectures) and removes the 10-minute execution cap.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Serverless event-driven compute with declarative bindings for 30+ Azure services, triggered by HTTP/timer/queue/blob/Event Hub events</td></tr>
+              <tr><td>2. Architecture</td><td>Trigger fires → Function processes → output bindings write to sinks; Durable Functions add stateful orchestration with checkpointing</td></tr>
+              <tr><td>3. Key limits</td><td>Consumption: 10-min timeout, cold start 3–8s (Python), scale to 200 instances; Premium: unlimited timeout, pre-warmed, VNet integration</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Functions for long-running batch jobs (30+ min) — use Databricks Jobs or ADF instead; Functions excel at sub-10-minute event-driven processing</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Heineken uses Azure Functions Premium with 5 always-ready instances to process POS transaction files within 3 seconds of landing in ADLS, feeding a real-time inventory dashboard. Vodafone uses Durable Functions fan-out orchestration to parallelize CDR (call detail record) enrichment across 50 activity functions, reducing processing time from 4 hours to 12 minutes.
+            </div>
+          </div>
+
           <FunctionsDiagram />
           <AzureFunctionsAnimation />
           <div className="callout callout-info">
@@ -3531,6 +4159,34 @@ func azure functionapp publish func-data-platform-realtime --python`}</CodeBlock
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Azure Functions to trigger our data pipeline"</td><td>"We use Functions Premium with 3 always-ready instances — Consumption cold starts were causing 5-second delays on file arrival triggers, which violated our 2-second SLA for downstream dashboards"</td></tr>
+              <tr><td>"It's serverless so it scales automatically"</td><td>"The critical config is FUNCTIONS_WORKER_PROCESS_COUNT — Python defaults to 1 worker process per instance; we set it to 4 to handle concurrent Event Hub partition processing without provisioning more instances"</td></tr>
+              <tr><td>"Durable Functions handle long-running workflows"</td><td>"Durable Functions orchestrators must be deterministic — no DateTime.now(), no random calls, no external I/O directly in the orchestrator; replay will re-execute orchestrator code and non-deterministic calls break the replay invariant"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use Premium plan with always-ready instances for latency-sensitive triggers (&lt;2s SLA)</li>
+                <li>Use output bindings instead of SDK calls for standard sinks — the runtime handles retry and connection pooling</li>
+                <li>Store all secrets in Key Vault and reference via @Microsoft.KeyVault() syntax in app settings</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use Consumption plan for Python functions with cold-start SLAs under 5 seconds</li>
+                <li>Don't put non-deterministic code (DateTime.now, random) directly in Durable Functions orchestrators — it breaks replay</li>
+                <li>Don't exceed the 10-minute Consumption timeout for batch processing — switch to Premium or use ADF/Databricks</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-functions')) { await unmarkTopicComplete('az-functions'); onUnmark('az-functions') } else { await markTopicComplete('az-functions'); onComplete('az-functions') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-functions') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-functions') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3541,6 +4197,40 @@ func azure functionapp publish func-data-platform-realtime --python`}</CodeBlock
             <h1 className="topic-title">Azure Stream Analytics</h1>
             <p className="topic-desc">Azure Stream Analytics (ASA) is a fully managed, serverless real-time analytics service. It uses a SQL-like query language with temporal windowing functions to process streaming data from Event Hubs, IoT Hub, or Blob Storage and route results to 20+ sinks.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "Explain the difference between Tumbling, Hopping, and Sliding windows with examples" / "How do you handle late-arriving events in Stream Analytics?" / "ASA vs Spark Structured Streaming — when do you choose ASA?" / "What is a Streaming Unit and how do you size a job?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the four window types, late arrival tolerance configuration, Streaming Unit sizing (1 SU ≈ 1 MB/s), the 6-SU-per-partition parallelism rule, and when ASA beats Spark — or do they just say "it's a streaming SQL service"?
+            </div>
+          </div>
+
+          <p>In production, Stream Analytics is the right choice when your streaming logic is expressible in SQL with window functions and you want zero infrastructure management. The reason teams choose ASA over Spark Structured Streaming for IoT/telemetry use cases is operational simplicity: no cluster to size, no Spark version to manage, autoscale SUs up to 192. The critical sizing rule is 6 SUs per input partition for maximum throughput — a 32-partition Event Hub needs at least 192 SUs for a fully parallel ASA job. The late arrival tolerance (TIMESTAMP BY with WITHIN clause) is essential in production: IoT devices with clock skew or network buffers regularly deliver events 30–120 seconds late.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Managed serverless streaming analytics with SQL-like SAQL, 4 window types, and 20+ built-in output sinks</td></tr>
+              <tr><td>2. Architecture</td><td>Event Hub / IoT Hub → ASA job (SAQL query) → outputs (ADLS, Power BI, SQL DB, Event Hub, Cosmos DB)</td></tr>
+              <tr><td>3. Key limits</td><td>1 SU ≈ 1 MB/s throughput, max 192 SUs, 6 SUs needed per input partition for full parallelism, 21-day late arrival window max</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use ASA for complex ML inference, Python UDFs requiring heavy libraries, or joins across more than 3 streams — use Spark Structured Streaming instead</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              ThyssenKrupp uses Azure Stream Analytics with 96 SUs to process 800K elevator sensor events/minute, detecting anomalies in real-time with a 30-second Tumbling window and routing alerts to Service Bus within 500ms. Shell uses ASA Hopping windows (5-min window, 1-min hop) on 32-partition Event Hub to compute rolling average pipeline pressure metrics feeding Power BI dashboards.
+            </div>
+          </div>
+
           <StreamAnalyticsDiagram />
           <StreamAnalyticsAnimation />
           <div className="callout callout-info">
@@ -3683,6 +4373,34 @@ az stream-analytics job start \
               correct: 2
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Stream Analytics for real-time processing"</td><td>"We chose ASA over Spark Streaming because our logic is pure windowed aggregations — no ML, no Python UDFs. ASA at 48 SUs costs 40% less than an equivalent Databricks cluster and requires zero cluster management"</td></tr>
+              <tr><td>"It has different window types"</td><td>"The critical distinction: Tumbling windows fire once per interval (non-overlapping); Hopping windows fire every hop even if the window overlaps the previous; Sliding windows fire on every event entry/exit — Sliding is the most expensive because it emits a result for every single event"</td></tr>
+              <tr><td>"It scales automatically"</td><td>"Auto-scale between 3–192 SUs has a ~2 minute scale-out lag — for bursty workloads with sudden 10× spikes (e.g., Black Friday), we pre-scale to max SUs 30 minutes before the event rather than relying on auto-scale"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always use TIMESTAMP BY with a late arrival tolerance to handle clock skew from IoT devices and network buffers</li>
+                <li>Size at 6 SUs per input partition for full parallelism — under-sizing creates a processing backlog that grows silently</li>
+                <li>Use Tumbling windows for fixed-interval aggregations and Hopping for rolling metrics — avoid Sliding unless you need per-event output</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use ASA for Python ML inference or complex multi-stream joins — switch to Spark Structured Streaming</li>
+                <li>Don't omit TIMESTAMP BY — without it ASA uses arrival time, which causes incorrect window assignments for late events</li>
+                <li>Don't under-provision SUs and ignore the watermark delay metric — a growing delay means the job is falling behind and needs more SUs</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-streamanalytics')) { await unmarkTopicComplete('az-streamanalytics'); onUnmark('az-streamanalytics') } else { await markTopicComplete('az-streamanalytics'); onComplete('az-streamanalytics') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-streamanalytics') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-streamanalytics') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3693,6 +4411,40 @@ az stream-analytics job start \
             <h1 className="topic-title">Key Vault Deep Dive</h1>
             <p className="topic-desc">Azure Key Vault centralises secrets, encryption keys, and TLS certificates. It integrates natively with ADF linked services, Azure Functions app settings, Databricks secret scopes, and virtually every Azure service via managed identity.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How do you rotate a database password without downtime in Azure?" / "Key Vault Access Policies vs RBAC — which do you use and why?" / "What is Soft Delete and Purge Protection and when would you enable them?" / "How does Databricks read secrets from Key Vault?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the RBAC role names (Key Vault Secrets User, Secrets Officer), soft-delete retention window, Databricks secret scope types, and the Key Vault reference syntax for Functions/App Service — or do they just say "store secrets in Key Vault"?
+            </div>
+          </div>
+
+          <p>In production, Key Vault is not just a secret store — it is the <strong>rotation orchestration hub</strong>. When a storage account key is regenerated, an Event Grid event triggers a Function that updates the Key Vault secret version; all services referencing the secret via @Microsoft.KeyVault() syntax pick up the new version automatically on the next request. The reason RBAC beats Access Policies is auditability: RBAC assignments appear in Azure Activity Log with the principal, action, and timestamp, while Access Policy changes are harder to trace. Always use RBAC authorization mode for new Key Vaults.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Managed HSM-backed store for secrets (strings), keys (cryptographic), and certificates (X.509 TLS) with RBAC access control</td></tr>
+              <tr><td>2. Architecture</td><td>Services authenticate via managed identity → Key Vault RBAC check → secret returned; ADF/Functions reference via @Microsoft.KeyVault(SecretUri=...) in linked service / app settings</td></tr>
+              <tr><td>3. Key limits</td><td>25,000 transactions/10s per vault (Standard), soft-delete retention 7–90 days, purge protection locks deletion for the full retention period</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Key Vault for high-volume per-request secret lookups (&gt;1000 req/s) without caching — throttling at 25K TPS per vault is a hard limit; cache secrets in memory with a 5-minute TTL</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              ING Bank uses Azure Key Vault with RBAC and purge protection enabled across 200+ microservices, achieving automated 90-day secret rotation with zero-downtime via Event Grid-triggered Functions. Lufthansa Systems uses Databricks Key Vault-backed secret scopes to inject ADLS access keys into 50+ notebooks with secrets redacted in all Spark logs.
+            </div>
+          </div>
+
           <KeyVaultDiagram />
           <KeyVaultAnimation />
           <div className="callout callout-danger">
@@ -3831,6 +4583,34 @@ spark.conf.set(
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We store our secrets in Key Vault"</td><td>"We use Key Vault RBAC mode with Key Vault Secrets User role on managed identities — no client secrets to rotate, and every access is logged in Activity Log for compliance audit"</td></tr>
+              <tr><td>"It's integrated with everything"</td><td>"The critical config is enabling RBAC authorization mode at vault creation — legacy Access Policies mode can't be audited at the operation level and isn't inheritable via management group policies"</td></tr>
+              <tr><td>"Secrets are secure and auto-rotated"</td><td>"Auto-rotation requires an Event Grid subscription on the vault plus a rotation Function; without that wiring, secrets only rotate if someone manually triggers it — we've seen 3-year-old secrets in 'automated' pipelines"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Enable RBAC authorization mode (not Access Policies) for all new Key Vaults for consistent IAM governance</li>
+                <li>Enable soft-delete with 90-day retention and purge protection for production vaults to prevent accidental permanent deletion</li>
+                <li>Cache secrets client-side with a 5-minute TTL to avoid Key Vault throttling at high request rates</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't call Key Vault on every single request in a hot path — you'll hit the 25K TPS throttle and trigger 429 errors in production</li>
+                <li>Don't store secrets in environment variables, config files, or code comments — always reference Key Vault by URI</li>
+                <li>Don't use a single vault for all environments — maintain separate Key Vaults per environment (dev/staging/prod) with different RBAC assignments</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-keyvault')) { await unmarkTopicComplete('az-keyvault'); onUnmark('az-keyvault') } else { await markTopicComplete('az-keyvault'); onComplete('az-keyvault') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-keyvault') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-keyvault') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3841,6 +4621,40 @@ spark.conf.set(
             <h1 className="topic-title">Azure AD / Entra ID and Identity</h1>
             <p className="topic-desc">Microsoft Entra ID (formerly Azure Active Directory) is the identity platform for Azure. For data engineering, the critical concepts are service principals, managed identities, workload identity federation, and OAuth 2.0 token flows used by SDKs and pipelines.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "Managed identity vs service principal — when do you use each?" / "How does GitHub Actions authenticate to Azure without storing credentials?" / "What is workload identity federation?" / "System-assigned vs user-assigned managed identity — what's the trade-off?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the OAuth 2.0 client credentials flow, DefaultAzureCredential chain order, the difference between system/user-assigned managed identity lifecycles, and OIDC workload identity federation for CI/CD — or do they just say "use managed identity"?
+            </div>
+          </div>
+
+          <p>In production, the identity hierarchy for data platforms is: <strong>managed identity first</strong> (for Azure-to-Azure auth), <strong>workload identity federation second</strong> (for GitHub Actions / Kubernetes), <strong>service principal with certificate third</strong>, and client secrets as a last resort. The reason managed identity beats service principals is that there are no credentials to store, rotate, or accidentally commit to git. DefaultAzureCredential in the Azure SDK tries: managed identity → environment variables (SP) → Azure CLI → Visual Studio — this chain means the same code works in production (managed identity) and locally (Azure CLI login) without any code change.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Entra ID provides OAuth 2.0 / OIDC identity for Azure resources; managed identities eliminate credential management entirely</td></tr>
+              <tr><td>2. Architecture</td><td>Resource → IMDS (169.254.169.254) → token → RBAC check on target resource; WIF: external OIDC token → Entra federated credential → Azure token</td></tr>
+              <tr><td>3. Key limits</td><td>Token lifetime: 1 hour (access), up to 24h (refresh); SP client secret max 2 years; managed identity tokens cached by IMDS until 5 min before expiry</td></tr>
+              <tr><td>4. Trade-off</td><td>User-assigned managed identity adds complexity but enables reuse across resources and survives resource deletion; system-assigned is simpler but dies with the resource</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Unilever eliminated 340 service principal client secrets across their Azure data platform by migrating to user-assigned managed identities, reducing secret rotation toil by 100% and eliminating 3 security incidents per year caused by expired secrets. HSBC uses workload identity federation for all GitHub Actions deployments to Azure, achieving zero stored Azure credentials in their CI/CD system.
+            </div>
+          </div>
+
           <IdentityDiagram />
           <IdentityAnimation />
           <div className="callout callout-info">
@@ -3977,6 +4791,34 @@ print(result.stdout.strip())`}</CodeBlock>
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use a service principal to authenticate our pipelines"</td><td>"We migrated from service principals to user-assigned managed identity — no client secret to rotate, no risk of accidental git commit, and the token is auto-refreshed by IMDS 5 minutes before expiry"</td></tr>
+              <tr><td>"Managed identity is more secure"</td><td>"The critical choice is system-assigned vs user-assigned: system-assigned is 1:1 with the resource and auto-deleted, but you lose audit history; user-assigned persists independently, so we use it for shared identities (e.g., one identity for all ADF pipelines across 3 linked services)"</td></tr>
+              <tr><td>"GitHub Actions can use Azure credentials"</td><td>"We use OIDC workload identity federation — GitHub Actions requests a JWT from GitHub's OIDC provider, Entra ID validates the issuer/subject claim, and issues an Azure access token. Zero secrets stored in GitHub, and the token is valid for 1 hour per workflow run"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use user-assigned managed identity for shared resources (ADF, Databricks cluster) so the identity survives resource recreation</li>
+                <li>Use workload identity federation for GitHub Actions and Kubernetes workloads — eliminates all stored Azure credentials</li>
+                <li>Assign the minimum required RBAC role at the narrowest scope (resource &gt; resource group &gt; subscription)</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't create service principal client secrets with 2-year expiry and no rotation plan — secrets get forgotten and expire in production</li>
+                <li>Don't assign Owner or Contributor at subscription scope to a pipeline identity — use the minimum role at resource scope</li>
+                <li>Don't hardcode tenant ID or client ID in code — use DefaultAzureCredential which reads from environment / managed identity automatically</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-identity')) { await unmarkTopicComplete('az-identity'); onUnmark('az-identity') } else { await markTopicComplete('az-identity'); onComplete('az-identity') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-identity') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-identity') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -3987,6 +4829,40 @@ print(result.stdout.strip())`}</CodeBlock>
             <h1 className="topic-title">VNet Deep Dive</h1>
             <p className="topic-desc">Azure networking for data engineers focuses on isolating data platform resources inside a VNet, locking down storage accounts and databases behind private endpoints, and controlling traffic with NSGs and route tables.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "Private Endpoint vs Service Endpoint — what's the actual difference?" / "How do you lock down an ADLS account so only your Databricks cluster can access it?" / "What is a Private DNS zone and why is it required with Private Endpoints?" / "How does VNet injection work for Databricks?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know that Private Endpoints give the service a private IP (public access can be disabled), that Private DNS zones are mandatory for hostname resolution, and that Databricks VNet injection requires two dedicated subnets with specific delegations — or do they just say "use private endpoints"?
+            </div>
+          </div>
+
+          <p>In production, the network security baseline for a data platform is: all PaaS services (ADLS, Key Vault, SQL, Synapse) behind private endpoints with public access disabled, Databricks workspace VNet-injected into dedicated subnets, and NSGs allowing only intra-VNet traffic. The reason private endpoints beat service endpoints is that service endpoints still expose a public IP — a misconfigured firewall rule can expose data. With private endpoints, the storage account has a private IP (e.g., 10.0.3.5) and public access is disabled entirely. The mandatory companion is a Private DNS zone (privatelink.dfs.core.windows.net) — without it, DNS resolves the storage hostname to the old public IP, causing connection failures even though the private endpoint exists.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>VNet isolates the data platform; Private Endpoints inject PaaS services with private IPs; NSGs filter traffic; Private DNS zones resolve internal hostnames</td></tr>
+              <tr><td>2. Architecture</td><td>Databricks (VNet-injected) → private endpoint → ADLS/Key Vault/SQL; NSG on each subnet; Private DNS zone linked to VNet for name resolution</td></tr>
+              <tr><td>3. Key limits</td><td>1000 private endpoints per VNet, /26 subnet minimum for Databricks (64 IPs), NSG rules evaluated by priority (100–4096, lower = first)</td></tr>
+              <tr><td>4. Trade-off</td><td>Private endpoints add complexity (DNS zones, NIC in subnet) and cost (~$7.30/month/endpoint + data processing); for dev environments, service endpoints may be sufficient</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Barclays deployed private endpoints for all 45 PaaS services in their Azure data platform with public access disabled, passing PCI-DSS audit with zero firewall exceptions. NatWest uses Databricks VNet injection with a /24 public subnet and /24 private subnet, routing all cluster traffic through an Azure Firewall with application rules allowing only approved outbound destinations.
+            </div>
+          </div>
+
           <NetworkingDiagram />
           <AzureNetworkAnimation />
           <div className="callout callout-info">
@@ -4112,6 +4988,34 @@ az network vnet peering create \
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use private endpoints to secure our storage"</td><td>"We use private endpoints with public access disabled and a Private DNS zone (privatelink.dfs.core.windows.net) linked to the VNet — without the DNS zone, the storage hostname resolves to the public IP even though the private endpoint exists, causing intermittent connection failures"</td></tr>
+              <tr><td>"We have NSG rules to block public internet"</td><td>"The critical NSG rule is a Deny Internet inbound at priority 4096 with an Allow VNet inbound at priority 100 — NSGs are stateful so you only need inbound rules; return traffic is automatically allowed"</td></tr>
+              <tr><td>"Databricks is in our VNet"</td><td>"Databricks VNet injection requires two dedicated subnets with Microsoft.Databricks/workspaces delegation and specific NSG rules (DatabricksControlPlane allow) — missing the delegation or wrong CIDR causes workspace creation to fail silently"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Always create a Private DNS zone and link it to the VNet when deploying private endpoints — hostname resolution fails without it</li>
+                <li>Disable public network access on ADLS, Key Vault, and SQL after creating private endpoints to prevent bypass via public IP</li>
+                <li>Size Databricks subnets at /23 or larger (512 IPs each) for clusters that may scale to 50+ workers</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't create private endpoints without immediately disabling public access — the endpoint provides no security if the public IP is still reachable</li>
+                <li>Don't use overlapping CIDR ranges between peered VNets — Azure blocks peering with overlapping address spaces and the only fix is recreation</li>
+                <li>Don't forget to update DNS when adding new private endpoint sub-resources (e.g., adding blob endpoint to a storage account that already has dfs endpoint)</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-networking')) { await unmarkTopicComplete('az-networking'); onUnmark('az-networking') } else { await markTopicComplete('az-networking'); onComplete('az-networking') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-networking') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-networking') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -4122,6 +5026,40 @@ az network vnet peering create \
             <h1 className="topic-title">Azure Monitor Deep Dive</h1>
             <p className="topic-desc">Azure Monitor is the unified observability platform for Azure. It collects metrics (numerical time-series), logs (structured/unstructured text), and traces. Log Analytics workspace stores logs queryable with KQL. Application Insights adds APM for applications.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How would you alert when an ADF pipeline fails?" / "Metrics vs Logs — when do you use each for alerting?" / "Write a KQL query to find the slowest ADF activities in the last 7 days" / "What is the retention period for Log Analytics and how do you control cost?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know KQL pipe syntax (where, summarize, project, render), the difference between metric alerts (near real-time) and log query alerts (5-min minimum), Log Analytics pricing tiers, and Diagnostic Settings as the ingestion mechanism — or do they just say "use Azure Monitor"?
+            </div>
+          </div>
+
+          <p>In production, observability for a data platform requires three layers: <strong>metrics</strong> for fast alerting (ADF pipeline failure count, Event Hub consumer lag, Databricks job duration — evaluated every 1 minute), <strong>logs</strong> for root cause analysis (KQL queries over AzureDiagnostics table in Log Analytics), and <strong>dashboards</strong> (Azure Workbooks or Grafana over Azure Monitor data source). The reason metrics beat logs for alerting is latency: metric alerts evaluate every 1 minute with near real-time data, while log query alerts have a 5-minute minimum evaluation window. The critical infrastructure piece is Diagnostic Settings — every Azure service must have a diagnostic setting configured to ship logs to Log Analytics, otherwise the AzureDiagnostics table has no data.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Unified observability: metrics (1-min granularity, 93-day retention), logs (KQL-queryable in Log Analytics), traces (Application Insights), and alerts/dashboards</td></tr>
+              <tr><td>2. Architecture</td><td>Azure service → Diagnostic Settings → Log Analytics workspace; Azure Monitor Metrics → metric alerts; Log Analytics → log query alerts → Action Groups (email/PagerDuty/webhook)</td></tr>
+              <tr><td>3. Key limits</td><td>Log Analytics: 30-day interactive retention (default), up to 7 years archive; ingestion &lt;500MB/day free then ~$2.30/GB; metric alert min eval: 1 min; log alert min eval: 5 min</td></tr>
+              <tr><td>4. Trade-off</td><td>Log Analytics cost scales with ingestion volume — enable table-level retention and exclude noisy diagnostic categories (e.g., AzureMetrics table if you're not using it) to reduce spend</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Vodafone monitors 2,000+ ADF pipeline runs/day using Azure Monitor log query alerts on the AzureDiagnostics table, with KQL queries detecting p95 activity duration regressions and alerting PagerDuty within 5 minutes of a slowdown. BP uses Azure Workbooks with KQL over Log Analytics to build a real-time data platform health dashboard tracking Databricks job success rates, Event Hub consumer lag, and Synapse query queue depth.
+            </div>
+          </div>
+
           <MonitorDiagram />
           <MonitorAnimation />
           <div className="callout callout-info">
@@ -4262,6 +5200,34 @@ az monitor action-group create \
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We have alerting set up in Azure Monitor"</td><td>"We use metric alerts for SLA-critical failures (ADF pipeline failure rate &gt;1% triggers PagerDuty within 1 minute) and log query alerts for trend-based detection (p95 Databricks job duration 2× baseline, evaluated every 5 minutes)"</td></tr>
+              <tr><td>"We query logs with KQL"</td><td>"The critical KQL pattern for data engineering is: AzureDiagnostics | where Category == 'PipelineRuns' | summarize failures = countif(status_s == 'Failed') by bin(TimeGenerated, 1h), pipelineName_s | where failures &gt; 0 | order by TimeGenerated desc — this gives hourly failure trends per pipeline"</td></tr>
+              <tr><td>"Log Analytics stores all our logs"</td><td>"Log Analytics cost is dominated by ingestion volume — we use Commitment Tiers (100GB/day tier saves 30% vs pay-as-you-go) and set 30-day interactive retention with 90-day archive on high-volume tables like AzureMetrics that we rarely query interactively"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Configure Diagnostic Settings on every data platform resource to ship logs to Log Analytics at deployment time (Terraform/Bicep)</li>
+                <li>Use metric alerts for real-time failure detection (1-min eval) and log alerts for trend/anomaly detection (5-min eval)</li>
+                <li>Set up Action Groups with multiple notification channels (email + PagerDuty webhook) and test them quarterly</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't ingest all diagnostic categories to Log Analytics without reviewing volume — AzureMetrics alone can be thousands of rows/minute per resource</li>
+                <li>Don't use the default 30-day retention for compliance-sensitive audit logs — configure 90+ day retention or archive to Azure Storage</li>
+                <li>Don't rely solely on Azure Portal for KQL queries at scale — use workbooks for repeatable dashboards and share them via Azure Monitor Workbook Gallery</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-monitor')) { await unmarkTopicComplete('az-monitor'); onUnmark('az-monitor') } else { await markTopicComplete('az-monitor'); onComplete('az-monitor') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-monitor') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-monitor') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -4272,6 +5238,40 @@ az monitor action-group create \
             <h1 className="topic-title">Cosmos DB Deep Dive</h1>
             <p className="topic-desc">Azure Cosmos DB is a globally distributed, multi-model NoSQL database with guaranteed single-digit millisecond latency at any scale. The partition key is the single most important design decision  -  it determines data distribution, query efficiency, and throughput consumption.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How do you choose a partition key for a 1-billion-document orders collection?" / "What is a hot partition and how do you fix it?" / "Cosmos DB consistency levels — when do you use Session vs Strong?" / "How does the Change Feed work and what can you build with it?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the 20GB logical partition limit, the RU cost difference between point reads (1 RU) vs cross-partition queries (N×RU), the 5 consistency levels and their trade-offs, and Change Feed as a CDC mechanism — or do they just say "it's a NoSQL database that scales globally"?
+            </div>
+          </div>
+
+          <p>In production, Cosmos DB's performance is almost entirely determined by partition key choice. A point read (item ID + partition key) costs 1 RU regardless of document size. A cross-partition query (no partition key in filter) fans out to every partition and costs N × per-partition RU — on a 100-partition container, a cross-partition query costs 100× more than a partition-scoped query. The reason this matters in production is RU throttling: exceed your provisioned RU/s and Cosmos returns HTTP 429, causing retries and latency spikes. The fix is either increase RU/s (cost), redesign the partition key (requires data migration), or use autoscale RU/s with a max cap.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Globally distributed multi-model NoSQL DB with SLA-backed &lt;10ms p99 latency, 5 consistency levels, and RU-based throughput model</td></tr>
+              <tr><td>2. Architecture</td><td>Partition key → logical partitions (max 20GB each) → physical partitions (managed by Cosmos); Change Feed → Functions/Spark for CDC; autoscale RU/s scales 10×–1× of max</td></tr>
+              <tr><td>3. Key limits</td><td>20GB max per logical partition, 1 RU point read, 2.5MB max document size, 400 RU/s min (manual), 100 RU/s min (autoscale), 10,000 RU/s per physical partition</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Cosmos for complex joins, aggregations over full datasets, or ACID transactions spanning many partitions — use Azure SQL or Synapse instead</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Coca-Cola uses Cosmos DB with customerId as partition key for 2B+ loyalty records, achieving 2ms p99 point reads at 500K RU/s across 3 regions. Xbox Live uses Cosmos DB Change Feed to process 10M+ player state updates/hour, feeding a Spark Structured Streaming job that maintains real-time leaderboards with sub-5-second latency.
+            </div>
+          </div>
+
           <CosmosDiagram />
           <CosmosAnimation />
           <div className="callout callout-danger">
@@ -4417,6 +5417,34 @@ az cosmosdb sql container query-throughput \
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Cosmos DB for low-latency reads"</td><td>"We chose customerId as partition key over orderId — 80% of queries filter by customer, so partition-scoped queries cost 1–5 RU vs 100+ RU for cross-partition fan-out on a 50-partition container"</td></tr>
+              <tr><td>"It has hot partition issues sometimes"</td><td>"Hot partitions happen when a partition key has low cardinality (e.g., status = active/inactive) or skewed distribution (one customer has 10M orders). The fix is a synthetic partition key: customerId + '_' + year creates 10× more partitions with even distribution"</td></tr>
+              <tr><td>"It scales automatically with autoscale"</td><td>"Autoscale scales between 10% and 100% of max RU/s — if max is 10,000 RU/s, min cost is 1,000 RU/s (10%). For idle containers that must stay available, this is 10× more expensive than manual at 400 RU/s; we use manual throughput for dev/test containers"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Choose a partition key with high cardinality and even write distribution — this is the most impactful Cosmos DB design decision</li>
+                <li>Use point reads (item ID + partition key) for single-document lookups — 1 RU vs potentially hundreds for queries</li>
+                <li>Enable autoscale RU/s for production containers with variable traffic; use manual for dev/test to minimize idle cost</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use low-cardinality fields (status, region, type) as partition keys — they create hot partitions that cannot be rebalanced</li>
+                <li>Don't run cross-partition queries on large containers without a partition key filter — costs scale linearly with partition count</li>
+                <li>Don't use Strong consistency for globally distributed reads unless absolutely required — it doubles read latency and halves read throughput</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-cosmos')) { await unmarkTopicComplete('az-cosmos'); onUnmark('az-cosmos') } else { await markTopicComplete('az-cosmos'); onComplete('az-cosmos') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-cosmos') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-cosmos') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -4427,6 +5455,40 @@ az cosmosdb sql container query-throughput \
             <h1 className="topic-title">Azure SQL Database</h1>
             <p className="topic-desc">Azure SQL Database is a fully managed PaaS relational database built on SQL Server. Key choices: DTU vs vCore purchasing model, single database vs elastic pool vs Managed Instance, and geo-replication strategy.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "DTU vs vCore — when does the choice matter?" / "How would you design Azure SQL for a multi-tenant SaaS application?" / "What is the difference between Active Geo-Replication and Auto-Failover Groups?" / "How do Temporal Tables work and when would you use them?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the GP vs BC vs Hyperscale tier differences, elastic pool eDTU sharing mechanics, Always Encrypted vs TDE distinction, and Temporal Table FOR SYSTEM_TIME AS OF syntax — or do they just say "it's a managed SQL Server"?
+            </div>
+          </div>
+
+          <p>In production, the three most important Azure SQL decisions are: <strong>tier</strong> (General Purpose for typical OLTP, Business Critical for in-memory OLTP + readable secondary at no extra cost, Hyperscale for 100TB+ with 100ms backup regardless of size), <strong>purchasing model</strong> (vCore for reserved capacity discounts and explicit CPU/memory control), and <strong>HA strategy</strong> (Auto-Failover Groups for automatic DNS-based failover to secondary region vs Active Geo-Replication for manual failover with custom read routing). The reason Business Critical beats General Purpose for read-heavy workloads is the free built-in readable secondary — offload reporting queries there without extra cost.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Fully managed PaaS SQL Server with 3 service tiers (General Purpose, Business Critical, Hyperscale), vCore/DTU purchasing, and built-in HA</td></tr>
+              <tr><td>2. Architecture</td><td>Primary replica + HA secondary (zone-redundant); BC tier adds free readable secondary; Auto-Failover Group provides DNS-based geo-failover; elastic pool shares eDTUs across databases</td></tr>
+              <tr><td>3. Key limits</td><td>GP: 4TB max, 7000 IOPS; BC: 4TB max, 200K+ IOPS (local SSD); Hyperscale: 100TB max, 15-min restore SLA; elastic pool max 500 databases</td></tr>
+              <tr><td>4. Trade-off</td><td>Don't use Azure SQL for data warehouse queries scanning billions of rows — use Synapse Dedicated SQL Pool or Synapse Serverless; Azure SQL is optimized for OLTP, not OLAP</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Stack Overflow uses Azure SQL Hyperscale (32 vCores, 170GB RAM) for their primary database, achieving 15-minute restore time for a 4TB database that previously took 8 hours on standard tiers. Sage Group uses Azure SQL elastic pools with 800 eDTUs shared across 200 SMB customer databases, reducing per-database cost by 60% vs individual database provisioning.
+            </div>
+          </div>
+
           <AzureSQLDiagram />
           <AzureSQLAnimation />
           <div className="callout callout-info">
@@ -4570,6 +5632,34 @@ rows = cursor.fetchall()`}</CodeBlock>
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Azure SQL for our production database"</td><td>"We use Azure SQL Business Critical (8 vCores) because our reporting team runs heavy read queries — BC's free built-in readable secondary offloads those queries with zero additional cost vs a separate read replica on General Purpose"</td></tr>
+              <tr><td>"We have geo-replication for disaster recovery"</td><td>"Active Geo-Replication requires manual failover (you call the failover API); Auto-Failover Group adds a listener endpoint (server.database.windows.net) that auto-updates DNS on failover — apps reconnect without any connection string change"</td></tr>
+              <tr><td>"We use DTU pricing because it's simpler"</td><td>"DTU pricing is opaque — you can't see CPU vs IO utilization separately. We use vCore so we can right-size based on actual CPU (Query Performance Insight) and qualify for Azure Hybrid Benefit, saving 30–55% with existing SQL Server licenses"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use vCore model for new databases — it enables reserved capacity pricing, Azure Hybrid Benefit, and explicit resource control</li>
+                <li>Use Auto-Failover Groups (not just Active Geo-Replication) for automatic DNS-based failover without connection string changes</li>
+                <li>Enable Azure AD-only authentication and disable SQL authentication for compliance and to eliminate password-based attack vectors</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't use Azure SQL for analytical queries scanning billions of rows — it's OLTP-optimized; use Synapse Analytics for OLAP workloads</li>
+                <li>Don't leave the DTU model for high-value workloads — you can't qualify for reserved capacity pricing or Azure Hybrid Benefit</li>
+                <li>Don't skip Query Performance Insight after sizing — a single missing index on a hot query can account for 80% of DTU/vCore consumption</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-sql')) { await unmarkTopicComplete('az-sql'); onUnmark('az-sql') } else { await markTopicComplete('az-sql'); onComplete('az-sql') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-sql') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-sql') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -4580,6 +5670,40 @@ rows = cursor.fetchall()`}</CodeBlock>
             <h1 className="topic-title">Azure DevOps and GitHub Actions</h1>
             <p className="topic-desc">CI/CD for data engineering pipelines: automatically test, build, and deploy ADF pipelines, Databricks notebooks, Terraform infrastructure, and dbt models when code is merged. Azure DevOps and GitHub Actions are the two dominant platforms.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How do you deploy ADF pipelines without downtime?" / "How does GitHub Actions authenticate to Azure without storing credentials?" / "What is the adf_publish branch and how does it work?" / "How would you structure a CI/CD pipeline for a Databricks + dbt + ADF data platform?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the ADF publish → adf_publish → ARM template deploy workflow, OIDC workload identity federation for GitHub Actions, GitHub Environments as manual approval gates, and the pre/post-deployment stop/start linked triggers pattern — or do they just say "we use CI/CD for deployments"?
+            </div>
+          </div>
+
+          <p>In production, ADF CI/CD has a specific workflow that trips up most candidates: developers work in a feature branch connected to ADF, hit "Publish" in the ADF UI which exports ARM templates to the adf_publish branch, then CI/CD deploys those ARM templates to other environments. The reason you stop ADF triggers before deployment and restart after is that deploying while triggers are active can cause duplicate pipeline runs or mid-run schema changes. The pre-deployment script (stop triggers) + ARM template deploy + post-deployment script (start triggers) is the production-proven pattern from Microsoft's own ADF CI/CD documentation.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>CI/CD automates testing and deployment of data platform components (ADF, Databricks, dbt, Terraform) from code commit to production</td></tr>
+              <tr><td>2. Architecture</td><td>Feature branch → PR → merge to main → GitHub Actions/Azure DevOps pipeline → validate → deploy to staging → manual approval → deploy to prod</td></tr>
+              <tr><td>3. Key limits</td><td>GitHub Actions: 6h job timeout, 20 concurrent jobs (free), 500MB artifact storage; ADF: ARM template deploy replaces entire factory — always stop triggers first</td></tr>
+              <tr><td>4. Trade-off</td><td>ADF's ARM-based deployment replaces the whole factory atomically — it cannot do rolling deploys of individual pipelines; plan maintenance windows for major ADF changes</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Marks &amp; Spencer deploys 300+ ADF pipelines via GitHub Actions using OIDC workload identity federation with zero stored Azure credentials, achieving 4-minute deploy-to-production cycles with automated pre/post-deployment trigger management. Heineken uses Azure DevOps multi-stage pipelines with manual approval gates between staging and production, requiring 2 data engineering leads to approve before any ADF or Databricks production deployment.
+            </div>
+          </div>
+
           <DevOpsDiagram />
           <DevOpsAnimation />
           <div className="callout callout-info">
@@ -4763,6 +5887,34 @@ jobs:
               correct: 1
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use GitHub Actions to deploy our ADF pipelines"</td><td>"We use OIDC workload identity federation — no Azure credentials stored in GitHub. The workflow requests a JWT, Entra ID validates the github.com OIDC issuer and repo/environment subject claim, then issues a 1-hour Azure access token"</td></tr>
+              <tr><td>"We deploy ADF from the adf_publish branch"</td><td>"The critical sequence is: (1) run pre-deployment script to stop all triggers, (2) deploy ARM template from adf_publish to target factory, (3) run post-deployment script to restart triggers with environment-specific overrides — skip step 1 and you get duplicate pipeline runs mid-deploy"</td></tr>
+              <tr><td>"We have staging and production environments"</td><td>"GitHub Environments add required reviewers (manual approval gates) and environment-scoped secrets — production secrets are only accessible after 2 reviewers approve, preventing accidental or unauthorized production deploys"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Use OIDC workload identity federation for GitHub Actions — eliminates all stored Azure credentials and associated rotation toil</li>
+                <li>Always stop ADF triggers before ARM template deployment and restart after — prevents duplicate runs and mid-deploy schema conflicts</li>
+                <li>Use GitHub Environments with required reviewers for production deployments — human approval gates for production changes</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't store Azure client secrets in GitHub Actions secrets — use OIDC workload identity federation instead</li>
+                <li>Don't deploy ADF ARM templates while triggers are running — this causes duplicate pipeline executions and potential data duplication</li>
+                <li>Don't deploy directly to production from feature branches — always go through a PR review + staging environment + manual approval gate</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-devops')) { await unmarkTopicComplete('az-devops'); onUnmark('az-devops') } else { await markTopicComplete('az-devops'); onComplete('az-devops') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-devops') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-devops') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -4773,6 +5925,40 @@ jobs:
             <h1 className="topic-title">Terraform for Azure</h1>
             <p className="topic-desc">Terraform is the de-facto IaC tool for Azure data platforms. It declaratively manages all Azure resources  -  VNets, storage accounts, ADF, Databricks workspaces  -  with a state file tracking what exists, enabling plan/apply/destroy workflows.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "Why must Terraform state be stored remotely for team workflows?" / "What happens if two engineers run terraform apply simultaneously?" / "How do you import an existing Azure resource into Terraform?" / "What is terraform taint and when would you use it?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the Azure Blob Storage backend with lease-based state locking, the plan/apply/destroy workflow, terraform import vs terraform state mv, and the azurerm provider ~&gt; version pinning pattern — or do they just say "we use Terraform for infrastructure"?
+            </div>
+          </div>
+
+          <p>In production, the two most critical Terraform practices are: <strong>remote state with locking</strong> (Azure Blob Storage backend uses blob lease to prevent concurrent applies — two engineers running apply simultaneously without locking will corrupt the state file), and <strong>always running plan before apply</strong> in CI/CD (the plan output shows exactly what will be created, modified, or destroyed — reviewing it catches accidental deletions before they hit production). The reason azurerm provider version is pinned (~&gt; 3.90 not ~&gt; 3) is that minor versions occasionally introduce breaking changes to resource schema, and an unpinned upgrade during a production apply can fail mid-way, leaving partial state.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Declarative IaC tool with a state file tracking actual vs desired Azure infrastructure, enabling idempotent plan/apply/destroy workflows</td></tr>
+              <tr><td>2. Architecture</td><td>HCL config → terraform plan (diff) → terraform apply (create/update/delete) → state updated in Azure Blob; CI/CD runs plan on PR, apply on merge</td></tr>
+              <tr><td>3. Key limits</td><td>Blob Storage backend state locking via lease (15s lock acquisition timeout), state file size up to 100MB practical limit, azurerm provider 3.x has 1000+ resources</td></tr>
+              <tr><td>4. Trade-off</td><td>Terraform manages infrastructure lifecycle; it does not manage ADF pipeline JSON content or Databricks notebook code — use ADF CI/CD and Databricks Repos for those layers</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Expedia manages 2,000+ Azure resources across 5 environments with Terraform, using Azure Blob Storage remote state with Entra ID authentication (no storage keys) and workspace-per-environment isolation. Société Générale uses Terraform modules for their data platform blueprint (VNet + ADLS + ADF + Databricks + Key Vault) that spins up a complete compliant environment in 12 minutes.
+            </div>
+          </div>
+
           <TerraformDiagram />
           <TerraformAnimation />
           <div className="callout callout-info">
@@ -5029,6 +6215,34 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
               correct: 2
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We use Terraform to manage our Azure infrastructure"</td><td>"We use Azure Blob Storage backend with use_azuread_auth = true so the service principal authenticates via managed identity — no storage account key stored anywhere, and state access is audited via Entra ID"</td></tr>
+              <tr><td>"We run terraform plan before apply"</td><td>"The critical CI/CD pattern is: plan on PR (save plan file with -out=tfplan), apply on merge using the saved plan — this guarantees exactly what was reviewed gets applied, not a re-plan that might differ due to drift"</td></tr>
+              <tr><td>"We use modules to reuse infrastructure code"</td><td>"We pin module versions with git tags (source = git::https://...?ref=v2.3.1) and provider versions with ~&gt; (azurerm ~&gt; 3.90 means &gt;=3.90.0 &lt;4.0.0) — unpinned versions caused a production apply failure when azurerm 3.95 changed the ADLS hierarchical namespace attribute schema"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Store state in Azure Blob Storage with use_azuread_auth = true — no storage keys to rotate, access is auditable via Entra ID</li>
+                <li>Pin provider versions with ~&gt; (pessimistic constraint) and module versions with exact git tags to prevent surprise breaking changes</li>
+                <li>Run terraform plan in CI on every PR and require review of the plan output before merging — catches accidental deletions</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't store Terraform state locally for team workflows — concurrent applies without locking corrupt the state file irreversibly</li>
+                <li>Don't run terraform apply without reviewing plan output — a single resource rename in HCL causes destroy + recreate, which deletes production data</li>
+                <li>Don't use terraform state edit manually — use terraform state mv and terraform import for state manipulations to preserve history</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-terraform')) { await unmarkTopicComplete('az-terraform'); onUnmark('az-terraform') } else { await markTopicComplete('az-terraform'); onComplete('az-terraform') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-terraform') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-terraform') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
@@ -5039,6 +6253,40 @@ terraform state mv azurerm_storage_account.datalake azurerm_storage_account.adls
             <h1 className="topic-title">Azure Cost Management</h1>
             <p className="topic-desc">Cloud cost is an engineering concern. Data platforms commonly overspend on idle Databricks clusters, over-provisioned Synapse dedicated pools, and unnecessary data egress. Understanding Azure Cost Management tools lets you monitor, alert, and optimise spend proactively.</p>
           </div>
+
+          <div className="callout callout-warning">
+            <span className="callout-icon">🎯</span>
+            <div className="callout-body"><strong>Interview Triggers</strong><br/>
+              "How do you identify the biggest cost drivers in a $100K/month Azure data platform?" / "Reserved Instances vs Savings Plans — what's the difference?" / "How would you cut Databricks costs by 40% without reducing capacity?" / "What is the difference between an Actual and Forecasted budget alert?"
+            </div>
+          </div>
+
+          <div className="callout callout-info">
+            <span className="callout-icon">🔍</span>
+            <div className="callout-body"><strong>What Interviewers Want</strong><br/>
+              Does the candidate know the top Azure data platform cost drivers (Databricks DBU, Synapse DWU, egress), the 30–70% Reserved Instance discount range, auto-termination vs job cluster cost difference, and the lifecycle management policy for ADLS tiering — or do they just say "use cost alerts"?
+            </div>
+          </div>
+
+          <p>In production, the top three Azure data platform cost drivers are: (1) <strong>Databricks all-purpose clusters left running</strong> — an 8-node Standard_DS3_v2 cluster running 24/7 costs ~$3,200/month; the same workload on job clusters (auto-created/destroyed per job run) costs ~$400/month, an 87% reduction. (2) <strong>Synapse Dedicated SQL Pool always-on</strong> — a DW1000c running 24/7 costs ~$14,000/month; pausing overnight and weekends cuts this to ~$5,000/month. (3) <strong>Data egress across regions</strong> — $0.08/GB adds up quickly when Databricks in East US reads data from West Europe ADLS. The reason Reserved Instances beat pay-as-you-go for stable workloads is simple math: 1-year reservations save 30–40%, 3-year reservations save 50–70% on the same VM SKU.</p>
+
+          <table>
+            <thead><tr><th>Step</th><th>60-Second Framework</th></tr></thead>
+            <tbody>
+              <tr><td>1. Define</td><td>Azure Cost Management provides cost analysis, budgets with alerts, and recommendations via Azure Advisor to monitor and optimize cloud spend</td></tr>
+              <tr><td>2. Architecture</td><td>Cost data → Cost Management → budgets (Actual + Forecasted alerts) → Action Groups; Advisor recommendations → right-sizing + reserved capacity opportunities</td></tr>
+              <tr><td>3. Key limits</td><td>Reserved Instances: 1-year (30–40% savings) or 3-year (50–70% savings), instance size flexibility within VM family, cancelable within 12 months with 12% early termination fee</td></tr>
+              <tr><td>4. Trade-off</td><td>Reserved Instances only make sense for stable 24/7 workloads — for bursty workloads (&lt;50% utilization), pay-as-you-go + auto-scale is cheaper than reservations for underutilized capacity</td></tr>
+            </tbody>
+          </table>
+
+          <div className="callout callout-example">
+            <span className="callout-icon">🏢</span>
+            <div className="callout-body"><strong>In Production</strong><br/>
+              Zalando reduced their Azure Databricks spend by $180K/year by converting all-purpose clusters to job clusters with auto-termination (30-min timeout) and purchasing 3-year Reserved Instances for their always-on Standard_DS5_v2 driver nodes. Santander cut ADLS Gen2 storage costs by 45% by implementing a lifecycle management policy that moves Bronze layer data to Cool tier after 30 days and Archive tier after 365 days.
+            </div>
+          </div>
+
           <CostDiagram />
           <CostAnimation />
           <div className="callout callout-info">
@@ -5211,6 +6459,34 @@ az advisor recommendation list \
               correct: 2
             }
           ]} />
+          <table>
+            <thead><tr><th>Junior Says</th><th>Senior Says</th></tr></thead>
+            <tbody>
+              <tr><td>"We have cost alerts set up"</td><td>"We use both Actual (fires when spend crosses threshold) and Forecasted alerts (fires when Azure predicts we'll exceed threshold by month-end) — Forecasted gives us 2 weeks of lead time to react before we actually overspend"</td></tr>
+              <tr><td>"We use job clusters to save money"</td><td>"Job clusters save 80%+ vs always-on all-purpose clusters, but cold start takes 4–7 minutes — for SLA-sensitive jobs we use instance pools (pre-provisioned idle VMs at low DBU rate) to cut cold start to under 60 seconds while still auto-terminating"</td></tr>
+              <tr><td>"We bought Reserved Instances for savings"</td><td>"We reserved 3-year Standard_DS5_v2 for driver nodes (always running) and Standard_DS3_v2 for a baseline worker count (80% utilization) — the remaining 20% peak capacity runs on pay-as-you-go spot VMs, saving 58% overall vs full pay-as-you-go"</td></tr>
+            </tbody>
+          </table>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, margin:'20px 0' }}>
+            <div className="card-success">
+              <strong>✓ Do</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Convert all-purpose Databricks clusters to job clusters — the single biggest cost optimization for most data platforms</li>
+                <li>Pause Synapse Dedicated SQL Pool outside business hours and weekends — saves 60–70% of pool cost</li>
+                <li>Implement ADLS lifecycle management: Hot → Cool after 30 days, Cool → Archive after 365 days for raw/bronze layer data</li>
+              </ul>
+            </div>
+            <div className="card-danger" style={{background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:'18px 22px'}}>
+              <strong>✗ Don't</strong>
+              <ul style={{marginTop:8,paddingLeft:18}}>
+                <li>Don't buy Reserved Instances for bursty or experimental workloads — reservations are 1–3 year commitments, and underutilized reservations waste money</li>
+                <li>Don't store all data in Hot access tier — ADLS Cool tier costs 50% less for storage (higher access cost) and Archive is 90% less for rarely accessed data</li>
+                <li>Don't ignore data egress costs when designing multi-region architectures — $0.08/GB adds up to thousands per month for large cross-region pipelines</li>
+              </ul>
+            </div>
+          </div>
+
           <button onClick={async () => { try { if (completed.has('az-cost')) { await unmarkTopicComplete('az-cost'); onUnmark('az-cost') } else { await markTopicComplete('az-cost'); onComplete('az-cost') } } catch (e: any) { if (e.message === 'Not signed in') { onSignInNeeded() } } }} className={`complete-btn-inline${completed.has('az-cost') ? ' complete-btn-inline-done' : ''}`} style={{ marginTop: 16 }}>{completed.has('az-cost') ? 'Undo ✕' : 'Mark Complete ✓'}</button>
         </section>
 
