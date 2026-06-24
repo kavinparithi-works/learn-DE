@@ -7,6 +7,462 @@ import { markTopicComplete, unmarkTopicComplete } from '../lib/firebase'
 interface Props { completed: Set<string>; onComplete: (id?: string) => void; onUnmark: (id: string) => void }
 
 // ── Animation Components ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────── PRODUCTION DIAGRAM COMPONENTS ───
+
+function ArchitectureDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Architecture Patterns</text>
+        {[
+          {name:'Lambda',layers:'Batch + Speed + Serving',note:'2 codebases',color:'#4f8ef7'},
+          {name:'Kappa',layers:'Stream-only + Serving',note:'1 codebase',color:'#8b5cf6'},
+          {name:'Lakehouse',layers:'ADLS + Delta + Compute',note:'Best practice',color:'#f59e0b'},
+        ].map((a,i)=>(
+          <g key={a.name}>
+            <rect x={4+i*158} y="18" width="152" height="44" rx="5" fill={a.color} opacity=".13" stroke={a.color} strokeWidth="1.5"/>
+            <text x={80+i*158} y="32" fontSize="9.5" fontWeight="700" fill={a.color} textAnchor="middle">{a.name}</text>
+            <text x={80+i*158} y="44" fontSize="7.5" fill="#475569" textAnchor="middle">{a.layers}</text>
+            <text x={80+i*158} y="55" fontSize="7.5" fontStyle="italic" fill="#94a3b8" textAnchor="middle">{a.note}</text>
+          </g>
+        ))}
+        <text x="4" y="70" fontSize="8" fill="#64748b">Lakehouse = open formats + ACID + direct BI queries — replaces Lambda/Kappa for most orgs</text>
+      </svg>
+    </div>
+  )
+}
+
+function SystemDesignDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 75" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Production System Design Pillars</text>
+        {[
+          {name:'Scalability',desc:'Horizontal sharding,\npartitioning',color:'#4f8ef7'},
+          {name:'Reliability',desc:'Retries, idempotency,\ncircuit breakers',color:'#22c55e'},
+          {name:'Maintainability',desc:'Modular DAGs,\nIaC, docs',color:'#8b5cf6'},
+          {name:'Observability',desc:'Logs, metrics,\ntraces, alerts',color:'#f59e0b'},
+        ].map((p,i)=>(
+          <g key={p.name}>
+            <rect x={4+i*118} y="18" width="112" height="44" rx="5" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.5"/>
+            <text x={60+i*118} y="32" fontSize="9" fontWeight="700" fill={p.color} textAnchor="middle">{p.name}</text>
+            {p.desc.split('\n').map((l,j)=><text key={j} x={60+i*118} y={44+j*11} fontSize="7.5" fill="#475569" textAnchor="middle">{l}</text>)}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function PipelinePatternsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Pipeline Patterns</text>
+        {[
+          {name:'Bronze/Silver/Gold',desc:'Medallion layering — raw → clean → agg',color:'#f59e0b'},
+          {name:'Event-driven',desc:'Trigger on file arrival or Kafka event',color:'#22c55e'},
+          {name:'Backfill',desc:'Reprocess historical partitions idempotently',color:'#4f8ef7'},
+          {name:'Fan-out',desc:'One source → multiple domain datasets',color:'#8b5cf6'},
+        ].map((p,i)=>(
+          <g key={p.name}>
+            <rect x={4+i*118} y="18" width="112" height="38" rx="4" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.2"/>
+            <text x={60+i*118} y="30" fontSize="8.5" fontWeight="700" fill={p.color} textAnchor="middle">{p.name}</text>
+            <text x={60+i*118} y="42" fontSize="7" fill="#475569" textAnchor="middle">{p.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="66" fontSize="8" fill="#64748b">Write idempotent pipelines: same input → same output regardless of retries.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SCDTypesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Slowly Changing Dimensions (SCD)</text>
+        {[
+          {type:'Type 0',desc:'Never update',color:'#64748b'},
+          {type:'Type 1',desc:'Overwrite old value',color:'#ef4444'},
+          {type:'Type 2',desc:'New row, eff/exp dates',color:'#22c55e'},
+          {type:'Type 3',desc:'Add prev_value column',color:'#4f8ef7'},
+          {type:'Type 4',desc:'History in mini-dim',color:'#8b5cf6'},
+          {type:'Type 6',desc:'1+2+3 hybrid',color:'#f59e0b'},
+        ].map((s,i)=>(
+          <g key={s.type}>
+            <rect x={4+(i%3)*158} y={18+Math.floor(i/3)*22} width="152" height="18" rx="3" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1"/>
+            <text x={14+(i%3)*158} y={30+Math.floor(i/3)*22} fontSize="8.5" fontWeight="700" fill={s.color}>{s.type}:</text>
+            <text x={66+(i%3)*158} y={30+Math.floor(i/3)*22} fontSize="8" fill="#475569">{s.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="66" fontSize="8" fill="#64748b">Type 2 most common. Use is_current flag or surrogate key for point-in-time joins.</text>
+      </svg>
+    </div>
+  )
+}
+
+function CiCdDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">DE CI/CD Pipeline</text>
+        {['PR Lint\n+ Tests','Build\nImage','Deploy Dev\n(preview)','Integration\nTests','Deploy Prod\n(Helm/DABs)'].map((s,i)=>(
+          <g key={s}>
+            <rect x={4+i*94} y="18" width="88" height="30" rx="4" fill="#4f8ef7" opacity={.1+i*.04} stroke="#4f8ef7" strokeWidth="1.2"/>
+            {s.split('\n').map((l,j)=><text key={j} x={48+i*94} y={29+j*11} fontSize="8" fontWeight="700" fill="#4f8ef7" textAnchor="middle">{l}</text>)}
+            {i<4&&<polygon points={`${94+i*94},33 ${98+i*94},29 ${98+i*94},37`} fill="#4f8ef7" opacity=".6"/>}
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Gate on data quality checks. Environment-specific configs via Terraform workspace / DAB targets.</text>
+      </svg>
+    </div>
+  )
+}
+
+function TestingDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Engineering Testing Pyramid</text>
+        <polygon points="230,16 430,54 30,54" fill="#1e293b" opacity=".04" stroke="#1e293b" strokeWidth="1"/>
+        <text x="230" y="28" fontSize="8" fontWeight="700" fill="#ef4444" textAnchor="middle">E2E / Integration</text>
+        <text x="230" y="39" fontSize="8" fontWeight="700" fill="#f59e0b" textAnchor="middle">Component / Contract Tests</text>
+        <text x="230" y="50" fontSize="8.5" fontWeight="700" fill="#22c55e" textAnchor="middle">Unit Tests (transformations, helpers)</text>
+        <text x="4" y="63" fontSize="8" fill="#64748b">pytest + great_expectations / soda for DQ. Mock external connections in unit tests.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DBTDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">dbt Core Concepts</text>
+        {[
+          {name:'Sources',desc:'Raw tables, freshness tests',color:'#64748b'},
+          {name:'Models',desc:'SQL SELECT → materialization',color:'#4f8ef7'},
+          {name:'Tests',desc:'not_null, unique, refs',color:'#22c55e'},
+          {name:'Macros',desc:'Jinja templating helpers',color:'#8b5cf6'},
+          {name:'Docs',desc:'Auto-generated lineage',color:'#f59e0b'},
+        ].map((d,i)=>(
+          <g key={d.name}>
+            <rect x={4+i*94} y="18" width="88" height="36" rx="4" fill={d.color} opacity=".12" stroke={d.color} strokeWidth="1.2"/>
+            <text x={48+i*94} y="30" fontSize="9" fontWeight="700" fill={d.color} textAnchor="middle">{d.name}</text>
+            <text x={48+i*94} y="42" fontSize="7.5" fill="#475569" textAnchor="middle">{d.desc}</text>
+            {i<4&&<polygon points={`${94+i*94},36 ${98+i*94},32 ${98+i*94},40`} fill={d.color} opacity=".5"/>}
+          </g>
+        ))}
+        <text x="4" y="64" fontSize="8" fill="#64748b">dbt run → compile SQL, execute. dbt test → run assertions. dbt docs generate → lineage graph.</text>
+      </svg>
+    </div>
+  )
+}
+
+function TerraformDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Terraform for Data Infrastructure (IaC)</text>
+        {['Write\n.tf files','terraform\ninit','terraform\nplan','terraform\napply','State in\nremote backend'].map((s,i)=>(
+          <g key={s}>
+            <rect x={4+i*90} y="18" width="84" height="30" rx="4" fill="#8b5cf6" opacity={.1+i*.04} stroke="#8b5cf6" strokeWidth="1.2"/>
+            {s.split('\n').map((l,j)=><text key={j} x={46+i*90} y={29+j*10} fontSize="8" fontWeight="700" fill="#8b5cf6" textAnchor="middle">{l}</text>)}
+            {i<4&&<polygon points={`${90+i*90},33 ${94+i*90},29 ${94+i*90},37`} fill="#8b5cf6" opacity=".6"/>}
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Resources: azurerm_data_factory, databricks_job, azurerm_storage_account — all version-controlled.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SecurityDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Security Layers</text>
+        {[
+          {layer:'Encryption at Rest',desc:'AES-256, customer-managed keys',color:'#ef4444'},
+          {layer:'Encryption in Transit',desc:'TLS 1.2+, HTTPS endpoints',color:'#f59e0b'},
+          {layer:'Access Control',desc:'RBAC, Unity Catalog, ABAC',color:'#4f8ef7'},
+          {layer:'Auditing',desc:'Activity logs, query history',color:'#22c55e'},
+        ].map((s,i)=>(
+          <g key={s.layer}>
+            <rect x={4+i*113} y="18" width="107" height="32" rx="4" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="30" fontSize="8.5" fontWeight="700" fill={s.color} textAnchor="middle">{s.layer}</text>
+            <text x={57+i*113} y="42" fontSize="7" fill="#475569" textAnchor="middle">{s.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">PII → column masking + row filters. Manage secrets via Key Vault / AWS SSM, not env vars.</text>
+      </svg>
+    </div>
+  )
+}
+
+function ObservabilityDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Observability — Three Pillars</text>
+        <rect x="10" y="18" width="130" height="36" rx="5" fill="#4f8ef7" opacity=".14" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="75" y="32" fontSize="10" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Logs</text>
+        <text x="75" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">Structured JSON events</text>
+        <rect x="165" y="18" width="130" height="36" rx="5" fill="#22c55e" opacity=".14" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="230" y="32" fontSize="10" fontWeight="700" fill="#22c55e" textAnchor="middle">Metrics</text>
+        <text x="230" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">Counters, gauges, histograms</text>
+        <rect x="320" y="18" width="130" height="36" rx="5" fill="#8b5cf6" opacity=".14" stroke="#8b5cf6" strokeWidth="1.5"/>
+        <text x="385" y="32" fontSize="10" fontWeight="700" fill="#8b5cf6" textAnchor="middle">Traces</text>
+        <text x="385" y="46" fontSize="7.5" fill="#475569" textAnchor="middle">Distributed span timings</text>
+        <text x="4" y="60" fontSize="8" fill="#64748b">Stack: OpenTelemetry → Prometheus → Grafana. Correlate with trace_id across services.</text>
+      </svg>
+    </div>
+  )
+}
+
+function MonitoringProdDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Production Pipeline Monitoring</text>
+        {[
+          {kpi:'Data Freshness',target:'&lt; 30 min lag',color:'#4f8ef7'},
+          {kpi:'Row Count Δ',target:'±10% vs yesterday',color:'#22c55e'},
+          {kpi:'Schema Drift',target:'0 unexpected changes',color:'#ef4444'},
+          {kpi:'Pipeline SLA',target:'≤ 6 AM delivery',color:'#f59e0b'},
+        ].map((m,i)=>(
+          <g key={m.kpi}>
+            <rect x={4+i*113} y="18" width="107" height="32" rx="4" fill={m.color} opacity=".12" stroke={m.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="30" fontSize="8.5" fontWeight="700" fill={m.color} textAnchor="middle">{m.kpi}</text>
+            <text x={57+i*113} y="42" fontSize="7.5" fill="#475569" textAnchor="middle">{m.target}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Alert → PagerDuty/Slack. Runbook per alert. On-call rotation. Auto-remediation for known failures.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DisasterRecoveryDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Disaster Recovery Strategy</text>
+        {[
+          {metric:'RTO',full:'Recovery Time Objective',example:'Target: &lt; 4 hours',color:'#ef4444'},
+          {metric:'RPO',full:'Recovery Point Objective',example:'Target: &lt; 1 hour data loss',color:'#f59e0b'},
+          {metric:'DR Strategy',full:'Backup / Warm standby / Hot',example:'Choose by cost vs risk',color:'#22c55e'},
+          {metric:'Runbooks',full:'Step-by-step recovery docs',example:'Tested quarterly',color:'#4f8ef7'},
+        ].map((d,i)=>(
+          <g key={d.metric}>
+            <rect x={4+i*113} y="18" width="107" height="34" rx="4" fill={d.color} opacity=".12" stroke={d.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="30" fontSize="9" fontWeight="700" fill={d.color} textAnchor="middle">{d.metric}</text>
+            <text x={57+i*113} y="40" fontSize="7" fill="#475569" textAnchor="middle">{d.example}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function CostDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Cloud Data Cost Optimisation</text>
+        {[
+          {tip:'Right-size clusters',impact:'30-50% savings',color:'#22c55e'},
+          {tip:'Spot/preemptible nodes',impact:'60-80% compute savings',color:'#4f8ef7'},
+          {tip:'Lifecycle policies on storage',impact:'~40% storage savings',color:'#8b5cf6'},
+          {tip:'OPTIMIZE + VACUUM Delta',impact:'Reduce query & scan cost',color:'#f59e0b'},
+        ].map((c,i)=>(
+          <g key={c.tip}>
+            <rect x={4+i*113} y="18" width="107" height="32" rx="4" fill={c.color} opacity=".12" stroke={c.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="29" fontSize="8" fontWeight="700" fill={c.color} textAnchor="middle">{c.tip}</text>
+            <text x={57+i*113} y="41" fontSize="7.5" fill="#475569" textAnchor="middle">{c.impact}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Tag resources by team/project. Budget alerts at 80%. Review Databricks DBU cost breakdown weekly.</text>
+      </svg>
+    </div>
+  )
+}
+
+function PerformanceDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Pipeline Performance Tuning</text>
+        {[
+          {area:'Spark',tips:'Partition pruning, broadcast joins, AQE',color:'#4f8ef7'},
+          {area:'Delta',tips:'OPTIMIZE + ZORDER before reads',color:'#f59e0b'},
+          {area:'SQL',tips:'Predicate pushdown, column pruning',color:'#22c55e'},
+          {area:'Infra',tips:'Network colocation, SSD caches',color:'#8b5cf6'},
+        ].map((p,i)=>(
+          <g key={p.area}>
+            <rect x={4+i*113} y="18" width="107" height="32" rx="4" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="29" fontSize="9" fontWeight="700" fill={p.color} textAnchor="middle">{p.area}</text>
+            <text x={57+i*113} y="40" fontSize="7" fill="#475569" textAnchor="middle">{p.tips}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Profile before optimizing. Spark UI → stage timeline, task skew. Identify the bottleneck first.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DataContractDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Contracts</text>
+        <rect x="10" y="18" width="200" height="40" rx="5" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="110" y="30" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Producer (Data Team)</text>
+        <text x="110" y="42" fontSize="7.5" fill="#475569" textAnchor="middle">Guarantees: schema, SLA, semantics</text>
+        <text x="110" y="52" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Versioned YAML contract</text>
+        <rect x="250" y="18" width="200" height="40" rx="5" fill="#22c55e" opacity=".12" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="350" y="30" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Consumer (Analytics/ML)</text>
+        <text x="350" y="42" fontSize="7.5" fill="#475569" textAnchor="middle">Depends on: fields, freshness</text>
+        <text x="350" y="52" fontSize="7.5" fill="#94a3b8" textAnchor="middle">Tests validate contract compliance</text>
+        <text x="4" y="66" fontSize="8" fill="#64748b">Contract = schema + quality rules + SLAs + ownership. Break = producer notifies consumers.</text>
+      </svg>
+    </div>
+  )
+}
+
+function AdvancedPatternsDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 65" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Advanced DE Patterns</text>
+        {[
+          {name:'Data Mesh',desc:'Decentralised domain ownership',color:'#4f8ef7'},
+          {name:'Data Fabric',desc:'Unified metadata + AI discov.',color:'#8b5cf6'},
+          {name:'Event Sourcing',desc:'Immutable event log as truth',color:'#22c55e'},
+          {name:'CQRS',desc:'Separate read/write models',color:'#f59e0b'},
+        ].map((p,i)=>(
+          <g key={p.name}>
+            <rect x={4+i*113} y="18" width="107" height="30" rx="4" fill={p.color} opacity=".12" stroke={p.color} strokeWidth="1.2"/>
+            <text x={57+i*113} y="29" fontSize="8.5" fontWeight="700" fill={p.color} textAnchor="middle">{p.name}</text>
+            <text x={57+i*113} y="40" fontSize="7" fill="#475569" textAnchor="middle">{p.desc}</text>
+          </g>
+        ))}
+        <text x="4" y="60" fontSize="8" fill="#64748b">Data Mesh = federated governance + product thinking. Domain teams own their data products end-to-end.</text>
+      </svg>
+    </div>
+  )
+}
+
+function InterviewProjectDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">End-to-End DE Project Blueprint</text>
+        {[
+          {phase:'Ingest',desc:'Autoloader / Kafka',color:'#4f8ef7'},
+          {phase:'Bronze',desc:'Raw Delta table',color:'#f59e0b'},
+          {phase:'Silver',desc:'Clean + DQ checks',color:'#22c55e'},
+          {phase:'Gold',desc:'Agg / star schema',color:'#8b5cf6'},
+          {phase:'Serve',desc:'SQL WH / API',color:'#ef4444'},
+        ].map((s,i)=>(
+          <g key={s.phase}>
+            <rect x={4+i*94} y="18" width="88" height="44" rx="4" fill={s.color} opacity=".12" stroke={s.color} strokeWidth="1.5"/>
+            <text x={48+i*94} y="34" fontSize="9.5" fontWeight="700" fill={s.color} textAnchor="middle">{s.phase}</text>
+            <text x={48+i*94} y="47" fontSize="7.5" fill="#475569" textAnchor="middle">{s.desc}</text>
+            {i<4&&<polygon points={`${94+i*94},40 ${98+i*94},36 ${98+i*94},44`} fill={s.color} opacity=".6"/>}
+          </g>
+        ))}
+        <text x="4" y="74" fontSize="8" fill="#64748b">Add: CI/CD (GitHub Actions), IaC (Terraform), monitoring (Grafana), data contracts for full project.</text>
+      </svg>
+    </div>
+  )
+}
+
+function StarSchemaDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 85" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Star Schema</text>
+        <rect x="175" y="26" width="110" height="28" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="2"/>
+        <text x="230" y="44" fontSize="9.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Fact Table</text>
+        {[{name:'dim_date',x:10,y:16},{name:'dim_customer',x:10,y:52},{name:'dim_product',x:340,y:16},{name:'dim_store',x:340,y:52}].map(d=>(
+          <g key={d.name}>
+            <rect x={d.x} y={d.y} width="110" height="22" rx="3" fill="#22c55e" opacity=".14" stroke="#22c55e" strokeWidth="1.2"/>
+            <text x={d.x+55} y={d.y+14} fontSize="8.5" fill="#22c55e" textAnchor="middle">{d.name}</text>
+            <line x1={d.x>200?d.x:d.x+110} y1={d.y+11} x2={d.x>200?340:175} y2="40" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+          </g>
+        ))}
+        <text x="4" y="82" fontSize="8" fill="#64748b">Fact = FK refs + measures. Dim = descriptive attributes. Simple joins, fast BI queries.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SnowflakeSchemaDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Snowflake Schema — Normalised Dims</text>
+        <rect x="175" y="26" width="110" height="24" rx="4" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="2"/>
+        <text x="230" y="42" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Fact Table</text>
+        <rect x="10" y="20" width="120" height="18" rx="3" fill="#22c55e" opacity=".14" stroke="#22c55e" strokeWidth="1.2"/>
+        <text x="70" y="32" fontSize="8.5" fill="#22c55e" textAnchor="middle">dim_date</text>
+        <rect x="10" y="46" width="120" height="18" rx="3" fill="#22c55e" opacity=".14" stroke="#22c55e" strokeWidth="1.2"/>
+        <text x="70" y="58" fontSize="8.5" fill="#22c55e" textAnchor="middle">dim_customer</text>
+        <rect x="330" y="20" width="120" height="18" rx="3" fill="#8b5cf6" opacity=".14" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="390" y="32" fontSize="8.5" fill="#8b5cf6" textAnchor="middle">dim_product</text>
+        <rect x="330" y="46" width="120" height="18" rx="3" fill="#8b5cf6" opacity=".14" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="390" y="58" fontSize="8.5" fill="#8b5cf6" textAnchor="middle">dim_category</text>
+        <line x1="130" y1="29" x2="175" y2="38" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="130" y1="55" x2="175" y2="42" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="330" y1="29" x2="285" y2="38" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+        <line x1="330" y1="55" x2="390" y2="35" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+        <text x="4" y="76" fontSize="8" fill="#64748b">Snowflaked dims are normalised (3NF). More joins, less storage redundancy. Less common in DWH.</text>
+      </svg>
+    </div>
+  )
+}
+
+function DataVaultDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 80" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">Data Vault 2.0 — Hub / Link / Satellite</text>
+        <rect x="170" y="18" width="120" height="28" rx="4" fill="#4f8ef7" opacity=".18" stroke="#4f8ef7" strokeWidth="2"/>
+        <text x="230" y="36" fontSize="9.5" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Hub (business key)</text>
+        <rect x="10" y="40" width="140" height="28" rx="4" fill="#22c55e" opacity=".14" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="80" y="58" fontSize="9" fill="#22c55e" textAnchor="middle">Link (relationship)</text>
+        <rect x="310" y="40" width="140" height="28" rx="4" fill="#8b5cf6" opacity=".14" stroke="#8b5cf6" strokeWidth="1.5"/>
+        <text x="380" y="58" fontSize="9" fill="#8b5cf6" textAnchor="middle">Satellite (attributes)</text>
+        <line x1="170" y1="32" x2="150" y2="40" stroke="#94a3b8" strokeWidth="1.2"/>
+        <line x1="290" y1="32" x2="310" y2="40" stroke="#94a3b8" strokeWidth="1.2"/>
+        <text x="4" y="76" fontSize="8" fill="#64748b">Hubs = distinct business keys. Links = M:M relations. Satellites = history + context. Fully auditable.</text>
+      </svg>
+    </div>
+  )
+}
+
+function SCDCodeDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 460 70" width="100%" style={{display:'block'}}>
+        <text x="4" y="12" fontSize="10" fontWeight="700" fill="#1e293b">SCD Type 2 — MERGE Pattern</text>
+        {[['Step','Action','Detail'],['1','Expire current row','SET effective_end = today, is_current = false WHERE key matches AND is_current = true'],['2','Insert new row','INSERT with new values, effective_start = today, is_current = true'],['3','Skip unchanged','WHERE hash(cols) = hash(source_cols)']].map((r,i)=>(
+          <g key={r[0]+i}>
+            <rect x="4" y={14+i*13} width="452" height="11" rx="1" fill={i===0?'#1e293b':i%2===0?'#f8fafc':'white'} opacity={i===0?.08:.4}/>
+            <text x="10" y={24+i*13} fontSize="7.5" fontWeight={i===0?'700':'400'} fill={i===0?'#64748b':'#64748b'}>{r[0]}</text>
+            <text x="50" y={24+i*13} fontSize="7.5" fontWeight={i===0?'700':'500'} fill={i===0?'#64748b':i===1?'#ef4444':i===2?'#22c55e':'#4f8ef7'}>{r[1]}</text>
+            <text x="180" y={24+i*13} fontSize="7" fill="#64748b">{r[2]}</text>
+          </g>
+        ))}
+        <text x="4" y="66" fontSize="8" fill="#64748b">Delta MERGE INTO handles SCD2 atomically. Add hash column for change detection efficiency.</text>
+      </svg>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function ArchitectureAnimation() {
   const archs = [
@@ -620,6 +1076,7 @@ export default function Production({ completed, onComplete, onUnmark }: Props) {
             <h1 className="topic-title">Data Architecture Patterns</h1>
             <p className="topic-desc">Lambda, Kappa, Data Mesh, Lakehouse, and Data Fabric  -  knowing when to choose each architecture is one of the most important senior DE skills. Each solves a different problem at a different cost.</p>
           </div>
+          <ArchitectureDiagram />
           <ArchitectureAnimation />
           <CodeBlock lang="text">{`ARCHITECTURE COMPARISON
 
@@ -674,6 +1131,7 @@ Data Fabric
             <h1 className="topic-title">System Design for Data Platforms</h1>
             <p className="topic-desc">Capacity planning, scalability, fault tolerance, CAP theorem applied to data systems, eventual consistency, backpressure handling, and rate limiting  -  the building blocks of resilient data platforms.</p>
           </div>
+          <SystemDesignDiagram />
           <SystemDesignAnimation />
           <CodeBlock lang="text">{`CAP THEOREM FOR DATA SYSTEMS
 ═══════════════════════════════════════════════════════════════
@@ -773,6 +1231,7 @@ spark.sparkContext.setCheckpointDir("/checkpoints")  # RDD checkpointing
             <h1 className="topic-title">Pipeline Design Patterns</h1>
             <p className="topic-desc">Medallion architecture, idempotency, exactly-once semantics, fan-out/fan-in, and event-driven triggers  -  patterns that separate amateur pipelines from production-grade ones.</p>
           </div>
+          <PipelinePatternsDiagram />
           <PipelinePatternsAnimation />
           <CodeBlock lang="text">{`MEDALLION ARCHITECTURE (Bronze → Silver → Gold)
 ═══════════════════════════════════════════════════════════════
@@ -875,6 +1334,7 @@ def silver_upsert(bronze_df, target_table: str, key_cols: list[str]):
             <h1 className="topic-title">Slowly Changing Dimensions</h1>
             <p className="topic-desc">SCD Types 1 - 6, implementation patterns in Delta Lake, and how to choose the right type based on business requirements for historical tracking.</p>
           </div>
+          <SCDTypesDiagram />
           <SCDTypesAnimation />
           <CodeBlock lang="text">{`SLOWLY CHANGING DIMENSIONS (SCD)  -  DECISION GUIDE
 ═══════════════════════════════════════════════════════════════
@@ -992,6 +1452,7 @@ spark.sql("""
             <h1 className="topic-title">CI/CD for Data Pipelines</h1>
             <p className="topic-desc">Automating deployment of ADF pipelines, Databricks notebooks, and dbt models with Azure DevOps. Blue/green deployments, feature flags, and safe rollback strategies.</p>
           </div>
+          <CiCdDiagram />
           <CiCdAnimation />
           <CodeBlock lang="yaml">{`# azure-pipelines.yml  -  CI/CD for Databricks + ADF
 trigger:
@@ -1140,6 +1601,7 @@ def process_orders(df):
             <h1 className="topic-title">Testing Strategy</h1>
             <p className="topic-desc">Unit tests with PySpark, data quality validation with Great Expectations, contract testing, and the testing pyramid for data pipelines  -  how to ship with confidence.</p>
           </div>
+          <TestingDiagram />
           <TestingAnimation />
           <CodeBlock lang="text">{`TESTING PYRAMID FOR DATA PIPELINES
 ═══════════════════════════════════════════════════════════════
@@ -1243,6 +1705,7 @@ if not results.success:
             <h1 className="topic-title">dbt (data build tool)</h1>
             <p className="topic-desc">dbt transforms raw data in your warehouse using SQL. It handles dependency resolution, testing, documentation, and lineage  -  the backbone of the modern data stack's transformation layer.</p>
           </div>
+          <DBTDiagram />
           <DBTAnimation />
           <CodeBlock lang="yaml">{`# dbt project structure
 my_project/
@@ -1364,6 +1827,7 @@ models:
             <h1 className="topic-title">Infrastructure as Code (Terraform)</h1>
             <p className="topic-desc">Provisioning Azure data platform resources with Terraform  -  ADLS Gen2, Databricks workspaces, ADF, Key Vault, and networking. State management, modules, and workspace patterns.</p>
           </div>
+          <TerraformDiagram />
           <TerraformAnimation />
           <CodeBlock lang="hcl">{`# terraform/main.tf  -  Azure Data Platform
 terraform {
@@ -1493,6 +1957,7 @@ module "silver_orders_job" {
             <h1 className="topic-title">Security for Data Platforms</h1>
             <p className="topic-desc">RBAC, column-level security, row-level security, encryption at rest and in transit, PII handling, managed identities, Key Vault integration, and Unity Catalog permissions.</p>
           </div>
+          <SecurityDiagram />
           <SecurityAnimation />
           <CodeBlock lang="text">{`SECURITY LAYERS FOR AZURE DATA PLATFORMS
 ═══════════════════════════════════════════════════════════════
@@ -1594,6 +2059,7 @@ bronze_df = pseudonymize(raw_df, ["email", "phone", "ssn"], salt=dbutils.secrets
             <h1 className="topic-title">Observability</h1>
             <p className="topic-desc">The three pillars of observability  -  metrics, logs, and traces  -  applied to data pipelines. OpenTelemetry, Azure Monitor, Log Analytics, and distributed tracing across ADF and Databricks.</p>
           </div>
+          <ObservabilityDiagram />
           <ObservabilityAnimation />
           <CodeBlock lang="python">{`# STRUCTURED LOGGING  -  machine-readable, queryable in Log Analytics
 import logging
@@ -1708,6 +2174,7 @@ WHERE r.last_run IS NULL
             <h1 className="topic-title">Pipeline Monitoring</h1>
             <p className="topic-desc">SLA management, alerting strategies, Kafka consumer lag monitoring, ADF activity monitoring, data freshness checks, and on-call runbook patterns for data engineers.</p>
           </div>
+          <MonitoringProdDiagram />
           <MonitoringProdAnimation />
           <CodeBlock lang="python">{`# SLA MONITORING  -  alert if pipeline is late
 from datetime import datetime, timedelta
@@ -1827,6 +2294,7 @@ def check_data_freshness(table: str, ts_col: str, max_age_hours: int):
             <h1 className="topic-title">Disaster Recovery</h1>
             <p className="topic-desc">RTO/RPO targets, backup strategies for Delta Lake, cross-region replication, ADF pipeline export, geo-redundant storage, and tested failover procedures.</p>
           </div>
+          <DisasterRecoveryDiagram />
           <DisasterRecoveryAnimation />
           <CodeBlock lang="text">{`DISASTER RECOVERY CONCEPTS
 ═══════════════════════════════════════════════════════════════
@@ -1929,6 +2397,7 @@ def restore_from_backup(backup_path: str, restore_table: str):
             <h1 className="topic-title">Cost Optimization</h1>
             <p className="topic-desc">Databricks DBU optimization, Delta OPTIMIZE/VACUUM, storage lifecycle policies, spot instances, cluster auto-termination, and cost tagging strategies for Azure data platforms.</p>
           </div>
+          <CostDiagram />
           <CostAnimation />
           <CodeBlock lang="text">{`COST LEVERS FOR AZURE DATA PLATFORMS
 ═══════════════════════════════════════════════════════════════
@@ -2037,6 +2506,7 @@ spark.sql("""
             <h1 className="topic-title">Performance Engineering</h1>
             <p className="topic-desc">Spark query optimization, partition tuning, broadcast joins, Z-ordering, bloom filters, caching strategies, and reading the Spark UI to diagnose bottlenecks.</p>
           </div>
+          <PerformanceDiagram />
           <PerformanceAnimation />
           <CodeBlock lang="text">{`SPARK PERFORMANCE MENTAL MODEL
 ═══════════════════════════════════════════════════════════════
@@ -2141,6 +2611,7 @@ spark.sql("""
             <h1 className="topic-title">Data Contracts</h1>
             <p className="topic-desc">Formal agreements between data producers and consumers  -  defining schema, SLAs, quality expectations, and versioning. The tool that prevents silent data breakage at scale.</p>
           </div>
+          <DataContractDiagram />
           <DataContractAnimation />
           <CodeBlock lang="yaml">{`# data-contract.yaml  -  orders_events topic contract
 # Follows the Data Contract Specification (datacontract.com)
@@ -2265,6 +2736,7 @@ def read_with_contract_validation(topic: str, contract_path: str, spark):
             <h1 className="topic-title">Enterprise Patterns</h1>
             <p className="topic-desc">Data catalog integration, master data management, data lineage, governance frameworks, data product thinking, and operating a data platform at enterprise scale.</p>
           </div>
+          <AdvancedPatternsDiagram />
           <AdvancedPatternsAnimation />
           <CodeBlock lang="text">{`ENTERPRISE DATA PLATFORM OPERATING MODEL
 ═══════════════════════════════════════════════════════════════
@@ -2373,6 +2845,7 @@ downstream_query = spark.sql("""
             <h1 className="topic-title">End-to-End Capstone Project</h1>
             <p className="topic-desc">Design and implement a production-grade data platform for a fictional e-commerce company. This project ties together every concept from Level 9 into a cohesive system design and working implementation.</p>
           </div>
+          <InterviewProjectDiagram />
           <InterviewProjectAnimation />
           <CodeBlock lang="text">{`CAPSTONE: E-COMMERCE DATA PLATFORM
 ═══════════════════════════════════════════════════════════════
@@ -2512,6 +2985,7 @@ def erase_customer(customer_id: str):
             <h1 className="topic-title">Star Schema Deep Dive</h1>
             <p className="topic-desc">The star schema is the foundation of dimensional modeling in data warehousing. Its center is the grain  -  the single most important design decision, defining exactly what one row in your fact table represents. Everything else flows from the grain.</p>
           </div>
+          <StarSchemaDiagram />
           <StarSchemaAnimation />
           <CodeBlock lang="text">{`THE GRAIN  -  MOST IMPORTANT DECISION IN DATA MODELING
 ═══════════════════════════════════════════════════════════════
@@ -2694,6 +3168,7 @@ ORDER BY total_net_revenue DESC;`}</CodeBlock>
             <h1 className="topic-title">Snowflake Schema vs Star Schema</h1>
             <p className="topic-desc">The snowflake schema normalizes dimension tables into sub-dimensions. Understanding when to use star, snowflake, or galaxy (fact constellation) schemas  -  and the foundational Kimball vs Inmon debate  -  is essential for senior data modeling interviews.</p>
           </div>
+          <SnowflakeSchemaDiagram />
           <SnowflakeSchemaAnimation />
           <CodeBlock lang="text">{`SNOWFLAKE SCHEMA  -  NORMALIZED DIMENSIONS
 ═══════════════════════════════════════════════════════════════
@@ -2852,6 +3327,7 @@ WHERE s.order_date >= (SELECT MAX(order_date) FROM {{ this }}) - INTERVAL 3 DAYS
             <h1 className="topic-title">Data Vault 2.0</h1>
             <p className="topic-desc">Data Vault 2.0 is a modeling methodology built for enterprise data warehouse agility and auditability. Unlike star schemas, it handles multiple source systems naturally and provides a full, immutable audit trail  -  every row ever loaded is preserved forever.</p>
           </div>
+          <DataVaultDiagram />
           <DataVaultAnimation />
           <CodeBlock lang="text">{`DATA VAULT 2.0  -  THREE ENTITY TYPES
 ═══════════════════════════════════════════════════════════════
@@ -3086,6 +3562,7 @@ def load_satellite(source_df, sat_table: str, parent_hash_key_col: str,
             <h1 className="topic-title">SCD Implementation Code (All Types)</h1>
             <p className="topic-desc">Full implementation of all SCD types using Delta Lake and PySpark. SCD Type 2 is the most common in production  -  mastering the MERGE pattern for slowly changing history is a core senior data engineering skill.</p>
           </div>
+          <SCDCodeDiagram />
           <SCDCodeAnimation />
           <CodeBlock lang="text">{`SCD TYPE DECISION TABLE
 ═══════════════════════════════════════════════════════════════
