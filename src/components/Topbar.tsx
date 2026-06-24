@@ -25,9 +25,16 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
   const [signingOut, setSigningOut] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [readPct, setReadPct] = useState(0)
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 8)
+    const fn = () => {
+      setScrolled(window.scrollY > 8)
+      const el = document.documentElement
+      const scrollTop = window.scrollY || el.scrollTop
+      const scrollHeight = el.scrollHeight - el.clientHeight
+      setReadPct(scrollHeight > 0 ? Math.min(100, Math.round((scrollTop / scrollHeight) * 100)) : 0)
+    }
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
@@ -44,11 +51,15 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
       className="topbar"
       style={{
         boxShadow: scrolled
-          ? '0 1px 0 rgba(0,0,0,.06),0 8px 40px rgba(15,23,42,.12)'
+          ? '0 1px 0 rgba(0,0,0,.08),0 8px 48px rgba(15,23,42,.14)'
           : '0 1px 0 rgba(0,0,0,.03),0 4px 20px rgba(15,23,42,.05)',
         transition: 'box-shadow 300ms ease',
       }}
     >
+      {/* Reading progress bar */}
+      <div className="reading-progress" aria-hidden="true">
+        <div className="reading-progress-fill" style={{ width: `${readPct}%` }} />
+      </div>
       <NavLink to="/" className="topbar-logo" style={{ textDecoration: 'none' }}>
         <div className="topbar-logo-mark" aria-hidden="true">
           <svg className="topbar-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -89,17 +100,15 @@ export default function Topbar({ user, streak, onSignInClick }: Props) {
             style={{ textDecoration: 'none', position: 'relative' }}
           >
             {({ isActive }) => (
-              <>
-                <span style={{ display:'flex',alignItems:'center',gap:5 }}>
-                  <span style={{
-                    width:7,height:7,borderRadius:'50%',flexShrink:0,
-                    background: isActive ? color : dot,
-                    boxShadow: isActive ? `0 0 6px ${color}80` : 'none',
-                    transition:'all 180ms ease',
-                  }} />
-                  <span style={{ color: isActive ? color : undefined }}>{label}</span>
-                </span>
-              </>
+              <span style={{ display:'flex',alignItems:'center',gap:5 }}>
+                <span style={{
+                  width:isActive?8:6,height:isActive?8:6,borderRadius:'50%',flexShrink:0,
+                  background: isActive ? color : dot,
+                  boxShadow: isActive ? `0 0 0 2px ${color}30, 0 0 8px ${color}60` : 'none',
+                  transition:'all 220ms cubic-bezier(.34,1.56,.64,1)',
+                }} />
+                <span style={{ color: isActive ? color : undefined, fontWeight: isActive ? 700 : undefined }}>{label}</span>
+              </span>
             )}
           </NavLink>
         ))}
