@@ -18,8 +18,8 @@ interface Props {
 }
 
 const SECTION_COLORS = [
-  '#a5b4fc','#c4b5fd','#f9a8d4','#fcd34d',
-  '#86efac','#67e8f9','#fed7aa','#fca5a5',
+  '#818cf8','#a78bfa','#f472b6','#fbbf24',
+  '#4ade80','#22d3ee','#fb923c','#f87171',
 ]
 
 export default function Sidebar({ sections, activeId, completed, onItemClick }: Props) {
@@ -41,14 +41,12 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
             <svg viewBox="0 0 76 76" width="76" height="76" style={{ display:'block' }}>
               <defs>
                 <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#a5b4fc" />
-                  <stop offset="50%" stopColor="#c4b5fd" />
-                  <stop offset="100%" stopColor="#f9a8d4" />
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="50%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#ec4899" />
                 </linearGradient>
               </defs>
-              {/* Track */}
-              <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="5.5" />
-              {/* Progress arc */}
+              <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(99,102,241,.1)" strokeWidth="5.5" />
               <circle
                 cx={cx} cy={cy} r={r}
                 fill="none"
@@ -60,10 +58,9 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
                 transform={`rotate(-90 ${cx} ${cy})`}
                 style={{
                   transition:'stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)',
-                  filter:'drop-shadow(0 0 5px rgba(165,180,252,.6))',
+                  filter:'drop-shadow(0 0 6px rgba(99,102,241,.7)) drop-shadow(0 0 12px rgba(139,92,246,.4))',
                 }}
               />
-              {/* Center text */}
               <text
                 x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
                 fill="white" fontWeight="900" fontSize="13.5"
@@ -82,13 +79,13 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
         </div>
 
         {pct > 0 && pct < 100 && (
-          <div style={{ marginTop:9, fontSize:'.66rem', color:'rgba(255,255,255,.22)', display:'flex', alignItems:'center', gap:5 }}>
-            <span style={{ color:'#fcd34d' }}>●</span>
+          <div style={{ marginTop:9, fontSize:'.66rem', color:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', gap:5 }}>
+            <span style={{ color:'#fbbf24' }}>●</span>
             {totalTopics - doneCount} topics remaining
           </div>
         )}
         {pct === 100 && (
-          <div style={{ marginTop:9, fontSize:'.73rem', fontWeight:800, color:'#86efac', display:'flex', alignItems:'center', gap:6 }}>
+          <div style={{ marginTop:9, fontSize:'.73rem', fontWeight:800, color:'#4ade80', display:'flex', alignItems:'center', gap:6 }}>
             🏆 All complete!
           </div>
         )}
@@ -104,25 +101,26 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
           <div key={section.title} className="sidebar-section">
             <div className="sidebar-section-title" style={{ display:'flex', alignItems:'center', gap:6 }}>
               <span style={{
-                width:6, height:6, borderRadius:'50%', flexShrink:0,
-                background:color, boxShadow:`0 0 7px ${color}`,
+                width:5, height:5, borderRadius:'50%', flexShrink:0,
+                background:color,
+                boxShadow:`0 0 8px ${color}, 0 0 16px ${color}55`,
               }} />
               <span style={{ flex:1 }}>{section.title}</span>
               <span style={{
                 fontSize:'.58rem', fontWeight:900,
-                color: sectionDone === section.items.length ? '#86efac' : 'rgba(255,255,255,.2)',
+                color: sectionDone === section.items.length ? '#4ade80' : 'rgba(255,255,255,.18)',
               }}>
                 {sectionDone}/{section.items.length}
               </span>
             </div>
 
             {/* Section mini progress */}
-            <div style={{ height:2, borderRadius:2, background:'rgba(255,255,255,.06)', marginBottom:5, overflow:'hidden' }}>
+            <div style={{ height:2, borderRadius:2, background:'rgba(255,255,255,.05)', marginBottom:5, overflow:'hidden' }}>
               <div style={{
                 height:'100%', width:`${sectionPct}%`,
                 background:color, borderRadius:2,
                 transition:'width 800ms ease',
-                boxShadow:`0 0 6px ${color}88`,
+                boxShadow:`0 0 8px ${color}`,
               }} />
             </div>
 
@@ -133,6 +131,7 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
                 onClick={() => onItemClick(item.id)}
                 style={{
                   borderLeft: activeId === item.id ? `2px solid ${color}` : '2px solid transparent',
+                  boxShadow: activeId === item.id ? `inset 0 0 0 1px ${color}33, 0 0 16px rgba(0,0,0,.3)` : undefined,
                 }}
               >
                 <div className={`sidebar-check${completed.has(item.id) ? ' sidebar-check-anim' : ''}`}>
@@ -142,7 +141,8 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
                 {activeId === item.id && (
                   <span style={{
                     width:4, height:4, borderRadius:'50%', flexShrink:0,
-                    background:color, boxShadow:`0 0 8px ${color}`,
+                    background:color,
+                    boxShadow:`0 0 8px ${color}, 0 0 16px ${color}66`,
                   }} />
                 )}
               </button>
