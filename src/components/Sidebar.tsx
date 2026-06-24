@@ -18,8 +18,8 @@ interface Props {
 }
 
 const SECTION_COLORS = [
-  '#818cf8','#a78bfa','#f472b6','#fbbf24',
-  '#4ade80','#22d3ee','#fb923c','#f87171',
+  '#4f8ef7','#8b5cf6','#ec4899','#f59e0b',
+  '#22c55e','#06b6d4','#f97316','#ef4444',
 ]
 
 export default function Sidebar({ sections, activeId, completed, onItemClick }: Props) {
@@ -28,121 +28,142 @@ export default function Sidebar({ sections, activeId, completed, onItemClick }: 
   const doneCount = allItems.filter(i => completed.has(i.id)).length
   const pct = totalTopics > 0 ? Math.round((doneCount / totalTopics) * 100) : 0
 
-  const r = 30, cx = 38, cy = 38
+  // Circular arc progress
+  const r = 28
+  const cx = 36
+  const cy = 36
   const circumference = 2 * Math.PI * r
 
   return (
     <aside className="sidebar">
-
-      {/* ── Progress ring ── */}
+      {/* Progress */}
       <div className="sidebar-progress">
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:12 }}>
-          <div style={{ position:'relative', width:76, height:76 }}>
-            <svg viewBox="0 0 76 76" width="76" height="76" style={{ display:'block' }}>
+        {/* Circular arc indicator */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ position: 'relative', width: 72, height: 72 }}>
+            <svg viewBox="0 0 72 72" width="72" height="72" style={{ display: 'block' }}>
               <defs>
-                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="50%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#ec4899" />
+                <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#4f8ef7" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
                 </linearGradient>
               </defs>
-              <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(99,102,241,.1)" strokeWidth="5.5" />
+              {/* Background circle */}
               <circle
-                cx={cx} cy={cy} r={r}
+                cx={cx}
+                cy={cy}
+                r={r}
                 fill="none"
-                stroke="url(#ringGrad)"
-                strokeWidth="5.5"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="5"
+              />
+              {/* Foreground arc */}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill="none"
+                stroke="url(#arcGradient)"
+                strokeWidth="5"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={circumference * (1 - pct / 100)}
                 transform={`rotate(-90 ${cx} ${cy})`}
-                style={{
-                  transition:'stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)',
-                  filter:'drop-shadow(0 0 6px rgba(99,102,241,.7)) drop-shadow(0 0 12px rgba(139,92,246,.4))',
-                }}
+                style={{ transition: 'stroke-dashoffset 1s cubic-bezier(.22,1,.36,1)' }}
               />
+              {/* Center percentage text */}
               <text
-                x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
-                fill="white" fontWeight="900" fontSize="13.5"
+                x={cx}
+                y={cy}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="white"
+                fontWeight="800"
+                fontSize="13"
                 fontFamily="var(--font-display, sans-serif)"
-                style={{ letterSpacing:'-.03em' }}
               >
                 {pct}%
               </text>
             </svg>
           </div>
-          <div className="sidebar-progress-label" style={{ marginTop:8 }}>Your Progress</div>
+          <div className="sidebar-progress-label" style={{ marginTop: 6 }}>Your Progress</div>
         </div>
 
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <div className="sidebar-progress-text">{doneCount} of {totalTopics} topics done</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="sidebar-progress-text">{doneCount} of {totalTopics} topics</div>
         </div>
-
         {pct > 0 && pct < 100 && (
-          <div style={{ marginTop:9, fontSize:'.66rem', color:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', gap:5 }}>
-            <span style={{ color:'#fbbf24' }}>●</span>
+          <div style={{
+            marginTop: 10, fontSize: '.7rem', color: 'rgba(255,255,255,.3)',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            <span style={{ color: '#f59e0b' }}>●</span>
             {totalTopics - doneCount} topics remaining
           </div>
         )}
         {pct === 100 && (
-          <div style={{ marginTop:9, fontSize:'.73rem', fontWeight:800, color:'#4ade80', display:'flex', alignItems:'center', gap:6 }}>
-            🏆 All complete!
+          <div style={{
+            marginTop: 10, fontSize: '.75rem', fontWeight: 700,
+            color: '#4ade80', display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            🏆 Section complete!
           </div>
         )}
       </div>
 
-      {/* ── Sections ── */}
+      {/* Sections */}
       {sections.map((section, si) => {
         const color = section.color ?? SECTION_COLORS[si % SECTION_COLORS.length]
         const sectionDone = section.items.filter(i => completed.has(i.id)).length
-        const sectionPct = section.items.length > 0 ? (sectionDone / section.items.length) * 100 : 0
-
         return (
-          <div key={section.title} className="sidebar-section">
-            <div className="sidebar-section-title" style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <div key={section.title} className="sidebar-section" style={{ overflow: 'hidden' }}>
+            <div className="sidebar-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{
-                width:5, height:5, borderRadius:'50%', flexShrink:0,
-                background:color,
-                boxShadow:`0 0 8px ${color}, 0 0 16px ${color}55`,
+                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                background: color, boxShadow: `0 0 6px ${color}80`,
               }} />
-              <span style={{ flex:1 }}>{section.title}</span>
+              <span style={{ flex: 1 }}>{section.title}</span>
               <span style={{
-                fontSize:'.58rem', fontWeight:900,
-                color: sectionDone === section.items.length ? '#4ade80' : 'rgba(255,255,255,.18)',
+                fontSize: '.62rem', fontWeight: 800,
+                color: sectionDone === section.items.length ? '#4ade80' : 'rgba(255,255,255,.25)',
               }}>
                 {sectionDone}/{section.items.length}
               </span>
             </div>
-
-            {/* Section mini progress */}
-            <div style={{ height:2, borderRadius:2, background:'rgba(255,255,255,.05)', marginBottom:5, overflow:'hidden' }}>
+            {/* Mini progress bar under section title */}
+            <div style={{
+              height: 3,
+              borderRadius: 2,
+              background: 'rgba(255,255,255,.08)',
+              marginBottom: 6,
+              overflow: 'hidden',
+            }}>
               <div style={{
-                height:'100%', width:`${sectionPct}%`,
-                background:color, borderRadius:2,
-                transition:'width 800ms ease',
-                boxShadow:`0 0 8px ${color}`,
+                height: '100%',
+                width: `${(sectionDone / section.items.length) * 100}%`,
+                background: color,
+                borderRadius: 2,
+                transition: 'width 800ms ease',
               }} />
             </div>
-
             {section.items.map(item => (
               <button
                 key={item.id}
                 className={`sidebar-item${activeId === item.id ? ' active' : ''}${completed.has(item.id) ? ' completed' : ''}`}
                 onClick={() => onItemClick(item.id)}
                 style={{
-                  borderLeft: activeId === item.id ? `2px solid ${color}` : '2px solid transparent',
-                  boxShadow: activeId === item.id ? `inset 0 0 0 1px ${color}33, 0 0 16px rgba(0,0,0,.3)` : undefined,
+                  position: 'relative',
+                  borderLeft: activeId === item.id ? `3px solid ${color}` : '3px solid transparent',
                 }}
               >
                 <div className={`sidebar-check${completed.has(item.id) ? ' sidebar-check-anim' : ''}`}>
                   {completed.has(item.id) ? '✓' : ''}
                 </div>
-                <span style={{ flex:1 }}>{item.label}</span>
+                <span style={{ flex: 1 }}>{item.label}</span>
                 {activeId === item.id && (
                   <span style={{
-                    width:4, height:4, borderRadius:'50%', flexShrink:0,
-                    background:color,
-                    boxShadow:`0 0 8px ${color}, 0 0 16px ${color}66`,
+                    width: 4, height: 4, borderRadius: '50%', flexShrink: 0,
+                    background: color, boxShadow: `0 0 8px ${color}`,
                   }} />
                 )}
               </button>
