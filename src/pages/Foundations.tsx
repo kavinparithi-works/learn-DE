@@ -81,6 +81,7 @@ export default function Foundations({ completed, onComplete, onUnmark }: Props) 
             index  -  is stored as patterns of these two states.
           </p>
 
+          <BinaryDiagram />
           <BinaryAnimation />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, margin: '24px 0' }}>
@@ -247,6 +248,7 @@ print(struct.pack('>f', 3.14).hex())  # '4048f5c3'`}</CodeBlock>
             </p>
           </div>
 
+          <CPUDiagram />
           <CpuAnimation />
 
           <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '28px 0 10px' }}>Core Components</h2>
@@ -426,6 +428,7 @@ print(f"Col-major: {time.perf_counter() - t:.3f}s")
             </p>
           </div>
 
+          <MemoryDiagram />
           <MemoryHierarchyAnimation />
 
           <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '28px 0 10px' }}>DRAM vs SRAM</h2>
@@ -590,6 +593,7 @@ print(df.memory_usage(deep=True).sum())  # ~0.5 MB  -  10x smaller!`}</CodeBlock
             </p>
           </div>
 
+          <StorageDiagram />
           <StorageAnimation />
 
           <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 10px' }}>HDD  -  Hard Disk Drives</h2>
@@ -793,6 +797,7 @@ du -sh /data/* # size of each item in /data`}</CodeBlock>
             <p className="topic-desc">The OS is the software layer between hardware and applications. Every Databricks cluster, Azure VM, and Docker container runs Linux. Understanding processes, scheduling, and IPC is essential for debugging distributed systems.</p>
           </div>
 
+          <OSDiagram />
           <OSAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Kernel vs User Space</h3>
@@ -893,6 +898,7 @@ asyncio.run(main())`}</CodeBlock>
             <p className="topic-desc">Linux powers every cloud VM, container, and Databricks cluster. Being fluent in the terminal is a force-multiplier  -  you can diagnose issues, automate workflows, and understand system behaviour that GUIs hide.</p>
           </div>
 
+          <LinuxDiagram />
           <LinuxAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>File System Hierarchy</h3>
@@ -1013,6 +1019,7 @@ log "Pipeline complete"`} />
             <p className="topic-desc">Data engineers work with networks constantly  -  ingesting from APIs, configuring VNets, setting up private endpoints, and troubleshooting latency. Understanding the full networking stack helps you diagnose issues and design secure architectures.</p>
           </div>
 
+          <NetworkingDiagram />
           <NetworkAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 16 }}>OSI Model  -  All 7 Layers</h3>
@@ -1146,6 +1153,7 @@ def paginate(url):
             <p className="topic-desc">Docker packages your code, dependencies, and runtime into a portable container. Every modern data pipeline runs in containers  -  Airflow workers, dbt runs, Spark executors on Kubernetes. Containers are lightweight VMs without the overhead.</p>
           </div>
 
+          <DockerDiagram />
           <DockerAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Images vs Containers</h3>
@@ -1289,6 +1297,7 @@ docker system prune -af       # clean up stopped containers, images, volumes`}</
             <p className="topic-desc">Choosing the right data type directly impacts storage size, query performance, and correctness. A poorly typed schema can silently corrupt billions of rows  -  decimal precision errors in financial data, timezone bugs in timestamps, integer overflow in large IDs.</p>
           </div>
 
+          <DataTypesDiagram />
           <DataTypesAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Primitive Data Types</h3>
@@ -1392,6 +1401,7 @@ df = df.withColumn("days_since",  datediff(current_date(), "date"))`}</CodeBlock
             <p className="topic-desc">File format choice is one of the highest-leverage decisions in data engineering. The wrong format can make a query 100x slower or double your storage costs. Understanding the internals of Parquet  -  the dominant analytical format  -  is essential.</p>
           </div>
 
+          <FileFormatsDiagram />
           <FileFormatAnimation />
           <ParquetInternalsAnimation />
 
@@ -1485,6 +1495,7 @@ for i in range(pf.num_row_groups):
             <p className="topic-desc">Compression reduces storage costs and speeds up I/O  -  especially important when reading from object storage like ADLS or S3. Understanding the speed vs ratio tradeoffs helps you choose the right codec for each layer of the medallion architecture.</p>
           </div>
 
+          <CompressionDiagram />
           <CompressionAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Codec Comparison</h3>
@@ -1586,6 +1597,7 @@ print(f"Zstd:   {folder_size(path_zstd):.1f} MB")`}</CodeBlock>
             <p className="topic-desc">Serialization converts in-memory objects to bytes for transmission or storage. The format you choose affects schema evolution flexibility, performance, and compatibility between producers and consumers  -  critical for event streaming and microservice integration.</p>
           </div>
 
+          <SerializationDiagram />
           <SerializationAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Format Comparison</h3>
@@ -1685,6 +1697,7 @@ producer.produce(
             <p className="topic-desc">There is no single best database  -  each type is optimised for different access patterns. Knowing which database to use for which problem is a core data engineering skill. Using the wrong database type is one of the most expensive architectural mistakes.</p>
           </div>
 
+          <DatabasesDiagram />
           <DatabasesAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>OLTP vs OLAP</h3>
@@ -1781,6 +1794,7 @@ results = index.query(vector=query_embedding, top_k=10, include_metadata=True)`}
             <p className="topic-desc">Data warehouse modelling is about organising historical business data for fast analytical queries. Star schemas, SCDs, and surrogate keys are the vocabulary of every enterprise data warehouse and lakehouse Gold layer.</p>
           </div>
 
+          <DataWarehouseDiagram />
           <StarSchemaAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 16 }}>Star vs Snowflake Schema</h3>
@@ -1903,6 +1917,7 @@ ORDER BY 1,2,5 DESC;`}</CodeBlock>
             <p className="topic-desc">The Medallion (Bronze/Silver/Gold) architecture is the standard pattern for modern data lakehouses. It organises data into quality tiers, each with clear responsibilities. Understanding what belongs in each layer  -  and why  -  is a daily decision for data engineers.</p>
           </div>
 
+          <MedallionDiagram />
           <MedallionAnimation />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20, marginTop: 20, marginBottom: 24 }}>
@@ -2005,6 +2020,7 @@ spark.sql("""
             <p className="topic-desc">Bad data is worse than no data  -  it silently corrupts decisions. Data quality is not a one-time fix; it is an ongoing operational discipline. Every production pipeline should have DQ checks at every layer boundary.</p>
           </div>
 
+          <DataQualityDiagram />
           <DataQualityAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Six Dimensions of Data Quality</h3>
@@ -2101,6 +2117,7 @@ good.write.format("delta").mode("append").saveAsTable("silver.orders")`}</CodeBl
             <p className="topic-desc">Data governance is the framework of policies, roles, and processes that ensure data is trustworthy, secure, and compliant. As a data engineer, you implement governance  -  cataloguing assets, enforcing lineage, masking PII, and building the infrastructure for regulatory compliance.</p>
           </div>
 
+          <DataGovernanceDiagram />
           <DataGovernanceAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Core Components</h3>
@@ -2191,6 +2208,7 @@ spark.sql("""
             <p className="topic-desc">Batch and streaming are two fundamentally different processing paradigms, each with distinct tradeoffs. Most enterprise data platforms use both. Knowing when to choose each  -  and how they combine  -  is essential architectural knowledge.</p>
           </div>
 
+          <BatchStreamDiagram />
           <BatchStreamAnimation />
 
           <h3 style={{ marginBottom: 12, marginTop: 0 }}>Side-by-Side Comparison</h3>
@@ -2320,6 +2338,518 @@ windowed = (stream_df
         </section>
 
       </main>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────── DIAGRAM COMPONENTS
+
+function BinaryDiagram() {
+  const rows = [{bin:'00000000',hex:'00',dec:'0'},{bin:'00000001',hex:'01',dec:'1'},{bin:'01111111',hex:'7F',dec:'127'},{bin:'11111111',hex:'FF',dec:'255'}]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 560 160" width="100%" style={{display:'block'}}>
+        <text x="10" y="18" fontSize="11" fontWeight="700" fill="#1e293b">1 byte = 8 bits</text>
+        {[0,1,2,3,4,5,6,7].map(i=>(
+          <g key={i}>
+            <rect x={10+i*62} y={24} width={54} height={28} rx="5" fill={i<4?'#4f8ef7':'#8b5cf6'} opacity=".15" stroke={i<4?'#4f8ef7':'#8b5cf6'} strokeWidth="1.5"/>
+            <text x={37+i*62} y={42} fontSize="13" fontWeight="700" fill={i<4?'#4f8ef7':'#8b5cf6'} textAnchor="middle">b{7-i}</text>
+          </g>
+        ))}
+        <text x="10" y="72" fontSize="9" fill="#64748b">Bit position (b7=MSB … b0=LSB)</text>
+        <text x="10" y="92" fontSize="10" fontWeight="700" fill="#1e293b">Common values:</text>
+        <rect x="10" y="98" width="540" height="16" rx="3" fill="#f1f5f9"/>
+        {['Binary','Hex','Decimal'].map((h,i)=><text key={h} x={10+i*185} y="110" fontSize="9" fontWeight="700" fill="#475569">{h}</text>)}
+        {rows.map((r,i)=>(
+          <g key={r.dec}>
+            <rect x="10" y={116+i*11} width="540" height="10" rx="2" fill={i%2===0?'#f8fafc':'white'}/>
+            <text x="10" y={124+i*11} fontSize="9" fontFamily="monospace" fill="#1e293b">{r.bin}</text>
+            <text x="195" y={124+i*11} fontSize="9" fontFamily="monospace" fill="#8b5cf6">{r.hex}</text>
+            <text x="380" y={124+i*11} fontSize="9" fill="#1e293b">{r.dec}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function CPUDiagram() {
+  const layers = [
+    {label:'CPU Registers',sub:'~10 bytes · 0.3 ns',color:'#ef4444',h:22},
+    {label:'L1 Cache',sub:'32–64 KB · 1 ns',color:'#f59e0b',h:22},
+    {label:'L2 Cache',sub:'256 KB–1 MB · 5 ns',color:'#4f8ef7',h:22},
+    {label:'L3 Cache',sub:'4–32 MB · 10 ns',color:'#8b5cf6',h:22},
+    {label:'RAM (DRAM)',sub:'8–64 GB · 60–100 ns',color:'#22c55e',h:22},
+    {label:'SSD / NVMe',sub:'256 GB–4 TB · 100 µs',color:'#64748b',h:22},
+  ]
+  let y = 10
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 170" width="100%" style={{display:'block'}}>
+        <text x="8" y="12" fontSize="11" fontWeight="700" fill="#1e293b">Memory Hierarchy — Latency Pyramid</text>
+        {layers.map((l,i)=>{
+          const w=80+i*55; const x=(480-w)/2; const top=y; y+=l.h+5
+          return (
+            <g key={l.label}>
+              <rect x={x} y={top+16} width={w} height={l.h} rx="4" fill={l.color} opacity=".18" stroke={l.color} strokeWidth="1.5"/>
+              <text x={240} y={top+16+l.h/2+4} fontSize="10" fontWeight="700" fill={l.color} textAnchor="middle">{l.label}</text>
+              <text x={x+w+6} y={top+16+l.h/2+4} fontSize="8" fill="#64748b">{l.sub}</text>
+            </g>
+          )
+        })}
+        <text x="8" y="168" fontSize="8" fill="#94a3b8">Faster + smaller ↑    Slower + larger ↓</text>
+      </svg>
+    </div>
+  )
+}
+
+function MemoryDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 480 160" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Stack vs Heap Memory</text>
+        {/* Stack */}
+        <rect x="20" y="22" width="190" height="130" rx="6" fill="#4f8ef7" opacity=".08" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="115" y="36" fontSize="10" fontWeight="700" fill="#4f8ef7" textAnchor="middle">STACK</text>
+        <text x="115" y="47" fontSize="8" fill="#64748b" textAnchor="middle">Fixed size · LIFO · Fast</text>
+        {['main() frame','fn() frame','inner() frame'].map((f,i)=>(
+          <g key={f}>
+            <rect x="30" y={55+i*28} width="170" height="22" rx="3" fill="#4f8ef7" opacity={0.15+i*0.1} stroke="#4f8ef7" strokeWidth="1"/>
+            <text x="115" y={70+i*28} fontSize="9" fill="#1e293b" textAnchor="middle">{f}</text>
+          </g>
+        ))}
+        <text x="115" y="148" fontSize="8" fill="#4f8ef7" textAnchor="middle">← grows down</text>
+        {/* Heap */}
+        <rect x="270" y="22" width="190" height="130" rx="6" fill="#22c55e" opacity=".08" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="365" y="36" fontSize="10" fontWeight="700" fill="#22c55e" textAnchor="middle">HEAP</text>
+        <text x="365" y="47" fontSize="8" fill="#64748b" textAnchor="middle">Dynamic · GC-managed · Flexible</text>
+        {[{l:'Object A',x:280,y:55,w:80,h:20},{l:'List[1,2,3]',x:350,y:60,w:90,h:22},{l:'Dict{}',x:285,y:88,w:60,h:20},{l:'String',x:360,y:95,w:70,h:18}].map(o=>(
+          <g key={o.l}>
+            <rect x={o.x} y={o.y} width={o.w} height={o.h} rx="3" fill="#22c55e" opacity=".2" stroke="#22c55e" strokeWidth="1"/>
+            <text x={o.x+o.w/2} y={o.y+o.h/2+4} fontSize="8" fill="#1e293b" textAnchor="middle">{o.l}</text>
+          </g>
+        ))}
+        <text x="365" y="148" fontSize="8" fill="#22c55e" textAnchor="middle">grows up →</text>
+      </svg>
+    </div>
+  )
+}
+
+function StorageDiagram() {
+  const tiers = [
+    {label:'CPU Registers',cap:'Bytes',speed:'0.3 ns',color:'#ef4444'},
+    {label:'CPU Cache (L1-L3)',cap:'KB–MB',speed:'1–40 ns',color:'#f59e0b'},
+    {label:'RAM',cap:'GB',speed:'100 ns',color:'#4f8ef7'},
+    {label:'NVMe SSD',cap:'TB',speed:'100 µs',color:'#8b5cf6'},
+    {label:'HDD',cap:'TB',speed:'5–10 ms',color:'#22c55e'},
+    {label:'Cloud Object Store',cap:'Unlimited',speed:'100–200 ms',color:'#64748b'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 175" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Storage Hierarchy</text>
+        {tiers.map((t,i)=>(
+          <g key={t.label}>
+            <rect x="8" y={20+i*24} width="220" height="18" rx="3" fill={t.color} opacity=".18" stroke={t.color} strokeWidth="1.2"/>
+            <text x="118" y={33+i*24} fontSize="9" fontWeight="600" fill="#1e293b" textAnchor="middle">{t.label}</text>
+            <text x="240" y={33+i*24} fontSize="9" fill="#64748b">{t.cap}</text>
+            <text x="340" y={33+i*24} fontSize="9" fontFamily="monospace" fill={t.color}>{t.speed}</text>
+          </g>
+        ))}
+        <text x="8" y="170" fontSize="8" fill="#94a3b8">← Faster / smaller / more expensive  →  Slower / larger / cheaper</text>
+      </svg>
+    </div>
+  )
+}
+
+function OSDiagram() {
+  const layers = [
+    {label:'User Programs (Python, Java, bash)',color:'#4f8ef7'},
+    {label:'System Call Interface (open, read, write, fork…)',color:'#8b5cf6'},
+    {label:'Kernel (process/memory/file/network mgmt)',color:'#f59e0b'},
+    {label:'Hardware (CPU, RAM, Disk, NIC)',color:'#22c55e'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 130" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Operating System Layers</text>
+        {layers.map((l,i)=>(
+          <g key={l.label}>
+            <rect x="20" y={20+i*26} width="460" height="20" rx="4" fill={l.color} opacity=".18" stroke={l.color} strokeWidth="1.5"/>
+            <text x="250" y={34+i*26} fontSize="9" fontWeight="600" fill="#1e293b" textAnchor="middle">{l.label}</text>
+          </g>
+        ))}
+        <line x1="250" y1="115" x2="250" y2="125" stroke="#94a3b8" strokeWidth="1" markerEnd="url(#arr)"/>
+        <text x="250" y="128" fontSize="8" fill="#94a3b8" textAnchor="middle">syscall crosses user↔kernel boundary</text>
+      </svg>
+    </div>
+  )
+}
+
+function LinuxDiagram() {
+  const cmds = ['ls -la','grep "\\.py"','sort','head -10']
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 80" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Linux Pipe Pipeline</text>
+        {cmds.map((c,i)=>(
+          <g key={c}>
+            <rect x={10+i*125} y="22" width="110" height="32" rx="6" fill="#1e293b" stroke="#4f8ef7" strokeWidth="1.5"/>
+            <text x={65+i*125} y="42" fontSize="10" fontFamily="monospace" fill="#a5f3fc" textAnchor="middle">{c}</text>
+            {i<cmds.length-1&&<>
+              <line x1={120+i*125} y1="38" x2={135+i*125} y2="38" stroke="#4f8ef7" strokeWidth="2"/>
+              <polygon points={`${135+i*125},34 ${135+i*125},42 ${142+i*125},38`} fill="#4f8ef7"/>
+              <text x={128+i*125} y="30" fontSize="8" fill="#f59e0b" textAnchor="middle">|</text>
+            </>}
+          </g>
+        ))}
+        <text x="8" y="75" fontSize="8" fill="#64748b">stdout of each command pipes to stdin of the next</text>
+      </svg>
+    </div>
+  )
+}
+
+function NetworkingDiagram() {
+  const layers = [
+    {n:'Application',ex:'HTTP, gRPC, S3 API',color:'#4f8ef7'},
+    {n:'Transport',ex:'TCP (reliable), UDP (fast)',color:'#8b5cf6'},
+    {n:'Network',ex:'IP addressing, routing',color:'#f59e0b'},
+    {n:'Link / Physical',ex:'Ethernet, Wi-Fi, frames',color:'#22c55e'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 130" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">TCP/IP Network Layers</text>
+        {layers.map((l,i)=>(
+          <g key={l.n}>
+            <rect x="20" y={20+i*26} width="340" height="20" rx="4" fill={l.color} opacity=".18" stroke={l.color} strokeWidth="1.5"/>
+            <text x="30" y={34+i*26} fontSize="9" fontWeight="700" fill={l.color}>{l.n}</text>
+            <text x="160" y={34+i*26} fontSize="8" fill="#64748b">{l.ex}</text>
+          </g>
+        ))}
+        <text x="380" y="35" fontSize="9" fill="#4f8ef7" fontWeight="700">Send</text>
+        <line x1="390" y1="40" x2="390" y2="112" stroke="#4f8ef7" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <polygon points="386,108 394,108 390,116" fill="#4f8ef7"/>
+        <text x="410" y="35" fontSize="9" fill="#22c55e" fontWeight="700">Receive</text>
+        <line x1="460" y1="116" x2="460" y2="40" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4 2"/>
+        <polygon points="456,44 464,44 460,36" fill="#22c55e"/>
+        <text x="8" y="126" fontSize="8" fill="#94a3b8">Each layer adds/removes headers (encapsulation / decapsulation)</text>
+      </svg>
+    </div>
+  )
+}
+
+function DockerDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 155" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Container Isolation</text>
+        {/* Container A */}
+        <rect x="15" y="22" width="200" height="72" rx="6" fill="#4f8ef7" opacity=".1" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="115" y="36" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Container A</text>
+        {['App Code','Libraries','Python 3.11 Runtime'].map((l,i)=><rect key={l} x="25" y={40+i*16} width="180" height="12" rx="2" fill="#4f8ef7" opacity=".25" stroke="#4f8ef7" strokeWidth=".8"><title>{l}</title></rect>)}
+        {['App Code','Libraries','Python 3.11 Runtime'].map((l,i)=><text key={l+'-t'} x="115" y={50+i*16} fontSize="8" fill="#1e293b" textAnchor="middle">{l}</text>)}
+        {/* Container B */}
+        <rect x="285" y="22" width="200" height="72" rx="6" fill="#8b5cf6" opacity=".1" stroke="#8b5cf6" strokeWidth="1.5"/>
+        <text x="385" y="36" fontSize="9" fontWeight="700" fill="#8b5cf6" textAnchor="middle">Container B</text>
+        {['App Code','Deps','Node 20 Runtime'].map((l,i)=><rect key={l} x="295" y={40+i*16} width="180" height="12" rx="2" fill="#8b5cf6" opacity=".25" stroke="#8b5cf6" strokeWidth=".8"/>)}
+        {['App Code','Deps','Node 20 Runtime'].map((l,i)=><text key={l+'-t'} x="385" y={50+i*16} fontSize="8" fill="#1e293b" textAnchor="middle">{l}</text>)}
+        {/* Docker Engine */}
+        <rect x="15" y="100" width="470" height="22" rx="4" fill="#f59e0b" opacity=".18" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="250" y="115" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Docker Engine (container runtime)</text>
+        {/* Host OS */}
+        <rect x="15" y="128" width="470" height="18" rx="4" fill="#22c55e" opacity=".18" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="250" y="141" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Host OS Kernel + Hardware</text>
+      </svg>
+    </div>
+  )
+}
+
+function DataTypesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 140" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Python Type Hierarchy</text>
+        <rect x="195" y="22" width="110" height="18" rx="4" fill="#1e293b" opacity=".08" stroke="#1e293b" strokeWidth="1.2"/>
+        <text x="250" y="34" fontSize="9" fontWeight="700" fill="#1e293b" textAnchor="middle">object</text>
+        {/* Primitives */}
+        {['int','float','bool','str','bytes','None'].map((t,i)=>{
+          const x=10+i*82; const y=58
+          return (<g key={t}>
+            <line x1="250" y1="40" x2={x+35} y2={y} stroke="#4f8ef7" strokeWidth="1" strokeDasharray="3 2"/>
+            <rect x={x} y={y} width="72" height="16" rx="3" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x={x+36} y={y+11} fontSize="9" fontFamily="monospace" fill="#1e293b" textAnchor="middle">{t}</text>
+          </g>)
+        })}
+        {/* Collections */}
+        {['list','dict','set','tuple'].map((t,i)=>{
+          const x=60+i*100; const y=92
+          return (<g key={t}>
+            <line x1="250" y1="40" x2={x+40} y2={y} stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3 2"/>
+            <rect x={x} y={y} width="80" height="16" rx="3" fill="#8b5cf6" opacity=".15" stroke="#8b5cf6" strokeWidth="1"/>
+            <text x={x+40} y={y+11} fontSize="9" fontFamily="monospace" fill="#1e293b" textAnchor="middle">{t}</text>
+          </g>)
+        })}
+        <text x="8" y="128" fontSize="8" fill="#4f8ef7">— Primitives (immutable)</text>
+        <text x="160" y="128" fontSize="8" fill="#8b5cf6">— Collections (mutable except tuple)</text>
+      </svg>
+    </div>
+  )
+}
+
+function FileFormatsDiagram() {
+  const fmts = [
+    {name:'CSV',desc:'Text · row-oriented · no schema · splittable',pros:'Human-readable, universal',cons:'No types, slow for analytics',color:'#f59e0b'},
+    {name:'JSON',desc:'Text · nested · self-describing',pros:'Flexible schema, web-native',cons:'Verbose, slow to parse',color:'#4f8ef7'},
+    {name:'Parquet',desc:'Binary · columnar · schema-embedded',pros:'Fast analytics, compression',cons:'Not human-readable',color:'#22c55e'},
+    {name:'Delta',desc:'Parquet + transaction log',pros:'ACID, time travel, schema enforce',cons:'Needs Delta-aware reader',color:'#8b5cf6'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 160" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">File Format Comparison</text>
+        {fmts.map((f,i)=>(
+          <g key={f.name}>
+            <rect x="8" y={20+i*34} width="50" height="26" rx="4" fill={f.color} opacity=".2" stroke={f.color} strokeWidth="1.5"/>
+            <text x="33" y={37+i*34} fontSize="10" fontWeight="700" fill={f.color} textAnchor="middle">{f.name}</text>
+            <text x="66" y={31+i*34} fontSize="8.5" fill="#64748b">{f.desc}</text>
+            <text x="66" y={43+i*34} fontSize="8" fill="#16a34a">✓ {f.pros}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function CompressionDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 120" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Compression Algorithms</text>
+        {[
+          {name:'Snappy',ratio:'2–3×',speed:'Fastest',use:'Default Parquet/Spark',color:'#4f8ef7'},
+          {name:'Gzip',ratio:'4–6×',speed:'Slow compress, fast decomp',use:'Cold storage, HTTP',color:'#8b5cf6'},
+          {name:'Zstd',ratio:'3–5×',speed:'Fast+best ratio',use:'Parquet recommended',color:'#22c55e'},
+          {name:'LZ4',ratio:'2–3×',speed:'Extremely fast',use:'Shuffle files, cache',color:'#f59e0b'},
+        ].map((c,i)=>(
+          <g key={c.name}>
+            <rect x="8" y={20+i*22} width="60" height="16" rx="3" fill={c.color} opacity=".18" stroke={c.color} strokeWidth="1.2"/>
+            <text x="38" y={32+i*22} fontSize="9" fontWeight="700" fill={c.color} textAnchor="middle">{c.name}</text>
+            <text x="76" y={32+i*22} fontSize="8.5" fill="#1e293b">ratio: {c.ratio}</text>
+            <text x="200" y={32+i*22} fontSize="8.5" fill="#64748b">speed: {c.speed}</text>
+            <text x="390" y={32+i*22} fontSize="8.5" fill="#475569">use: {c.use}</text>
+          </g>
+        ))}
+        <text x="8" y="115" fontSize="8" fill="#94a3b8">Trade-off: higher ratio ↔ slower compression speed</text>
+      </svg>
+    </div>
+  )
+}
+
+function SerializationDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 100" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Serialization Flow</text>
+        {/* Object */}
+        <rect x="10" y="22" width="90" height="40" rx="6" fill="#4f8ef7" opacity=".15" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="55" y="38" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Python Object</text>
+        <text x="55" y="52" fontSize="8" fill="#64748b" textAnchor="middle">{'{id:1, name:"x"}'}</text>
+        {/* Serialize arrow */}
+        <line x1="100" y1="42" x2="150" y2="42" stroke="#f59e0b" strokeWidth="2"/>
+        <polygon points="147,38 155,42 147,46" fill="#f59e0b"/>
+        <text x="125" y="36" fontSize="8" fill="#f59e0b" textAnchor="middle">serialize</text>
+        {/* Bytes */}
+        <rect x="155" y="22" width="100" height="40" rx="6" fill="#f59e0b" opacity=".15" stroke="#f59e0b" strokeWidth="1.5"/>
+        <text x="205" y="38" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">Bytes on wire</text>
+        <text x="205" y="52" fontSize="8" fontFamily="monospace" fill="#64748b" textAnchor="middle">0x00 0x01 0xF3…</text>
+        {/* Deserialize arrow */}
+        <line x1="255" y1="42" x2="305" y2="42" stroke="#22c55e" strokeWidth="2"/>
+        <polygon points="302,38 310,42 302,46" fill="#22c55e"/>
+        <text x="280" y="36" fontSize="8" fill="#22c55e" textAnchor="middle">deserialize</text>
+        {/* Target Object */}
+        <rect x="310" y="22" width="90" height="40" rx="6" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.5"/>
+        <text x="355" y="38" fontSize="9" fontWeight="700" fill="#22c55e" textAnchor="middle">Target Object</text>
+        <text x="355" y="52" fontSize="8" fill="#64748b" textAnchor="middle">Java / Go / Spark</text>
+        {/* Format labels */}
+        {['Avro','Protobuf','JSON','Parquet'].map((f,i)=>(
+          <g key={f}>
+            <rect x={410+i*0} y={22+i*18} width="50" height="13" rx="3" fill="#8b5cf6" opacity=".15" stroke="#8b5cf6" strokeWidth="1"/>
+            <text x="435" y={32+i*18} fontSize="8" fill="#8b5cf6" textAnchor="middle">{f}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DatabasesDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 130" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">OLTP vs OLAP vs HTAP</text>
+        {/* OLTP */}
+        <circle cx="130" cy="75" r="55" fill="#4f8ef7" opacity=".12" stroke="#4f8ef7" strokeWidth="2"/>
+        <text x="130" y="55" fontSize="10" fontWeight="700" fill="#4f8ef7" textAnchor="middle">OLTP</text>
+        <text x="130" y="68" fontSize="8" fill="#475569" textAnchor="middle">Many small writes</text>
+        <text x="130" y="79" fontSize="8" fill="#475569" textAnchor="middle">Normalized</text>
+        <text x="130" y="90" fontSize="8" fill="#475569" textAnchor="middle">Transactional</text>
+        {/* OLAP */}
+        <circle cx="370" cy="75" r="55" fill="#8b5cf6" opacity=".12" stroke="#8b5cf6" strokeWidth="2"/>
+        <text x="370" y="55" fontSize="10" fontWeight="700" fill="#8b5cf6" textAnchor="middle">OLAP</text>
+        <text x="370" y="68" fontSize="8" fill="#475569" textAnchor="middle">Few large reads</text>
+        <text x="370" y="79" fontSize="8" fill="#475569" textAnchor="middle">Denormalized</text>
+        <text x="370" y="90" fontSize="8" fill="#475569" textAnchor="middle">Analytical</text>
+        {/* HTAP overlap */}
+        <text x="250" y="72" fontSize="9" fontWeight="700" fill="#f59e0b" textAnchor="middle">HTAP</text>
+        <text x="250" y="84" fontSize="7.5" fill="#92400e" textAnchor="middle">both</text>
+        <text x="8" y="126" fontSize="8" fill="#94a3b8">HTAP = Hybrid Transactional/Analytical (e.g. Databricks, Snowflake)</text>
+      </svg>
+    </div>
+  )
+}
+
+function DataWarehouseDiagram() {
+  const layers = [
+    {label:'Source Systems',sub:'CRM, ERP, APIs, Files, Streams',color:'#64748b',rows:'raw events'},
+    {label:'Bronze / Raw',sub:'Immutable, schema-on-read',color:'#f59e0b',rows:'billions of rows'},
+    {label:'Silver / Cleaned',sub:'Deduplicated, typed, joined',color:'#4f8ef7',rows:'millions of rows'},
+    {label:'Gold / Aggregated',sub:'Business KPIs, star schema',color:'#22c55e',rows:'thousands of rows'},
+    {label:'BI / ML Consumers',sub:'Dashboards, models, reports',color:'#8b5cf6',rows:'queries'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 160" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Medallion Architecture Flow</text>
+        {layers.map((l,i)=>(
+          <g key={l.label}>
+            <rect x="8" y={20+i*27} width="340" height="20" rx="4" fill={l.color} opacity=".18" stroke={l.color} strokeWidth="1.5"/>
+            <text x="178" y={34+i*27} fontSize="9" fontWeight="600" fill="#1e293b" textAnchor="middle">{l.label}</text>
+            <text x="356" y={34+i*27} fontSize="8" fill="#64748b">{l.sub}</text>
+            <text x="490" y={34+i*27} fontSize="8" fill={l.color} textAnchor="end">{l.rows}</text>
+            {i<layers.length-1&&<polygon points={`12,${40+i*27} 20,${40+i*27} 16,${47+i*27}`} fill={l.color} opacity=".6"/>}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function MedallionDiagram() {
+  const zones = [
+    {label:'Bronze',sub:'Raw ingest — immutable copy of source',rules:'No DQ gates — accept everything',color:'#f59e0b'},
+    {label:'Silver',sub:'Clean, deduplicate, type-cast, join',rules:'NOT NULL, unique key, valid ranges',color:'#4f8ef7'},
+    {label:'Gold',sub:'Business aggregations, KPIs',rules:'Schema match, row count vs yesterday ±20%',color:'#22c55e'},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 130" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Medallion Zones + DQ Gates</text>
+        {zones.map((z,i)=>(
+          <g key={z.label}>
+            <rect x={10+i*162} y="22" width="148" height="70" rx="6" fill={z.color} opacity=".12" stroke={z.color} strokeWidth="1.5"/>
+            <text x={84+i*162} y="38" fontSize="11" fontWeight="800" fill={z.color} textAnchor="middle">{z.label}</text>
+            <text x={84+i*162} y="52" fontSize="7.5" fill="#475569" textAnchor="middle">{z.sub}</text>
+            <rect x={18+i*162} y="60" width="132" height="26" rx="3" fill={z.color} opacity=".15" stroke={z.color} strokeWidth="1"/>
+            <text x={84+i*162} y="70" fontSize="7" fill="#1e293b" textAnchor="middle">DQ gate:</text>
+            <text x={84+i*162} y="82" fontSize="7" fill="#1e293b" textAnchor="middle">{z.rules}</text>
+            {i<zones.length-1&&<>
+              <polygon points={`158+${i*162},57 166+${i*162},57 162+${i*162},65`} fill={z.color} opacity=".5"/>
+            </>}
+          </g>
+        ))}
+        <text x="8" y="125" fontSize="8" fill="#94a3b8">Arrows with gates — failed DQ → dead-letter queue, not dropped silently</text>
+      </svg>
+    </div>
+  )
+}
+
+function DataQualityDiagram() {
+  const dims = [
+    {label:'Completeness',desc:'No missing values',color:'#4f8ef7',x:120,y:30},
+    {label:'Accuracy',desc:'Correct values',color:'#22c55e',x:300,y:30},
+    {label:'Consistency',desc:'Same across systems',color:'#8b5cf6',x:480,y:30},
+    {label:'Timeliness',desc:'Fresh data',color:'#f59e0b',x:120,y:110},
+    {label:'Uniqueness',desc:'No duplicates',color:'#ef4444',x:300,y:110},
+    {label:'Validity',desc:'Conforms to rules',color:'#ec4899',x:480,y:110},
+  ]
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 560 150" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Data Quality Dimensions</text>
+        <circle cx="280" cy="75" r="28" fill="#1e293b" opacity=".06" stroke="#1e293b" strokeWidth="1"/>
+        <text x="280" y="72" fontSize="8" fontWeight="700" fill="#1e293b" textAnchor="middle">DQ</text>
+        <text x="280" y="83" fontSize="7" fill="#64748b" textAnchor="middle">Framework</text>
+        {dims.map(d=>(
+          <g key={d.label}>
+            <line x1="280" y1="75" x2={d.x} y2={d.y+10} stroke={d.color} strokeWidth="1" strokeDasharray="3 2" opacity=".6"/>
+            <rect x={d.x-55} y={d.y} width="110" height="28" rx="6" fill={d.color} opacity=".15" stroke={d.color} strokeWidth="1.5"/>
+            <text x={d.x} y={d.y+12} fontSize="8.5" fontWeight="700" fill={d.color} textAnchor="middle">{d.label}</text>
+            <text x={d.x} y={d.y+23} fontSize="7.5" fill="#475569" textAnchor="middle">{d.desc}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function DataGovernanceDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 500 150" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Data Governance Hierarchy</text>
+        {/* Council */}
+        <rect x="175" y="20" width="150" height="22" rx="5" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="250" y="35" fontSize="9" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Data Governance Council</text>
+        {/* Stewards */}
+        <line x1="250" y1="42" x2="250" y2="55" stroke="#4f8ef7" strokeWidth="1.2"/>
+        <rect x="125" y="55" width="250" height="20" rx="4" fill="#8b5cf6" opacity=".18" stroke="#8b5cf6" strokeWidth="1.2"/>
+        <text x="250" y="68" fontSize="9" fontWeight="600" fill="#8b5cf6" textAnchor="middle">Data Stewards (domain leads)</text>
+        {/* Owners */}
+        <line x1="250" y1="75" x2="250" y2="88" stroke="#8b5cf6" strokeWidth="1.2"/>
+        {['Data Owners','Platform Owners'].map((o,i)=>(
+          <g key={o}>
+            <rect x={90+i*185} y="88" width="160" height="18" rx="4" fill="#f59e0b" opacity=".18" stroke="#f59e0b" strokeWidth="1.2"/>
+            <text x={170+i*185} y="100" fontSize="8.5" fontWeight="600" fill="#f59e0b" textAnchor="middle">{o}</text>
+            <line x1="250" y1="88" x2={170+i*185} y2="88" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3 2"/>
+          </g>
+        ))}
+        {/* Users */}
+        <line x1="250" y1="106" x2="250" y2="118" stroke="#f59e0b" strokeWidth="1.2"/>
+        <rect x="90" y="118" width="320" height="18" rx="4" fill="#22c55e" opacity=".15" stroke="#22c55e" strokeWidth="1.2"/>
+        <text x="250" y="130" fontSize="8.5" fontWeight="600" fill="#22c55e" textAnchor="middle">Data Consumers (analysts, scientists, engineers)</text>
+        <text x="8" y="148" fontSize="8" fill="#94a3b8">Policies flow top-down; access requests flow bottom-up</text>
+      </svg>
+    </div>
+  )
+}
+
+function BatchStreamDiagram() {
+  return (
+    <div className="anim-wrap" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-xl)',padding:16,marginBottom:20}}>
+      <svg viewBox="0 0 520 130" width="100%" style={{display:'block'}}>
+        <text x="8" y="14" fontSize="11" fontWeight="700" fill="#1e293b">Batch vs Streaming Processing</text>
+        {/* Batch */}
+        <text x="8" y="30" fontSize="9" fontWeight="700" fill="#4f8ef7">BATCH</text>
+        {[0,1,2,3,4,5].map(i=>(
+          <g key={i}>
+            <rect x={8+i*40} y="34" width="34" height="18" rx="2" fill="#4f8ef7" opacity=".2" stroke="#4f8ef7" strokeWidth="1"/>
+            <text x={25+i*40} y="47" fontSize="7" fill="#475569" textAnchor="middle">t={i}</text>
+          </g>
+        ))}
+        <rect x="8" y="58" width="232" height="14" rx="3" fill="#4f8ef7" opacity=".3" stroke="#4f8ef7" strokeWidth="1.5"/>
+        <text x="124" y="68" fontSize="8" fontWeight="700" fill="#4f8ef7" textAnchor="middle">Process entire batch at midnight</text>
+        <text x="8" y="82" fontSize="7.5" fill="#64748b">Latency: hours   Throughput: very high   Cost: efficient</text>
+        {/* Streaming */}
+        <text x="8" y="98" fontSize="9" fontWeight="700" fill="#22c55e">STREAMING</text>
+        {[0,1,2,3,4,5,6,7].map(i=>(
+          <g key={i}>
+            <rect x={8+i*30} y="102" width="24" height="14" rx="2" fill="#22c55e" opacity={0.1+i*0.1} stroke="#22c55e" strokeWidth="1"/>
+            <polygon points={`${37+i*30},109 ${33+i*30},105 ${33+i*30},113`} fill="#22c55e" opacity=".6"/>
+          </g>
+        ))}
+        <text x="8" y="126" fontSize="7.5" fill="#64748b">Latency: ms–sec   Each event processed individually   Always-on</text>
+      </svg>
     </div>
   )
 }
